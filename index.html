@@ -72,22 +72,6 @@ button, input, select { font: inherit; color: inherit; }
 .chip[data-tone="danger"] .dot { background: var(--danger); }
 .chip-row .spacer { flex: 1; }
 .chip button { border: 0; background: none; padding: 0; cursor: pointer; font-size: 12px; font-weight: 500; }
-.sgauge { position: absolute; right: 12px; bottom: 10px; margin: 0; width: 236px; max-width: calc(100% - 24px); padding: 8px 10px 9px; border-radius: 8px; background: color-mix(in srgb, var(--panel) 92%, transparent); border: 1px solid var(--line); box-shadow: 0 6px 18px rgba(0,0,0,.12); pointer-events: none; z-index: 4; }
-.sgauge figcaption { font-family: var(--mono); font-size: 11px; color: var(--muted); letter-spacing: .03em; }
-.sgauge svg { display: block; width: 100%; height: auto; margin: 2px 0 4px; }
-.sgauge dl { margin: 0; display: grid; grid-template-columns: 1fr 1fr; gap: 2px 10px; }
-.sgauge dl div { min-width: 0; }
-.sgauge dt { font-size: 10.5px; color: var(--muted); }
-.sgauge dd { margin: 0; font-family: var(--mono); font-size: 13px; color: var(--ink); font-variant-numeric: tabular-nums; }
-.sgauge .sg-e { grid-column: 1 / -1; }
-.sgauge .sg-e dd { font-size: 17px; font-weight: 600; }
-.sgauge[data-live="1"] .sg-e dd { color: #1f7a34; }
-.sgauge #sgCoil { fill: none; stroke: #2f9e44; stroke-width: 3.2; stroke-linejoin: round; stroke-linecap: round; }
-.sgauge #sgFree rect { fill: none; stroke: var(--muted); stroke-dasharray: 3 3; stroke-width: 1; }
-.sgauge #sgDim line, .sgauge #sgDim path { stroke: #c0392b; stroke-width: 1.4; fill: none; }
-.sgauge #sgDim text { fill: #c0392b; font: 600 10px var(--mono); }
-.sgauge .wall { fill: var(--muted); }
-@media (max-width: 640px) { .sgauge { width: 180px; padding: 6px 8px; } .sgauge dd { font-size: 12px; } .sgauge .sg-e dd { font-size: 15px; } }
 .note { position: absolute; left: 12px; bottom: 10px; font-family: var(--mono); font-size: 11px; color: var(--muted); background: color-mix(in srgb, var(--scene) 80%, transparent); padding: 2px 6px; border-radius: 4px; pointer-events: none; }
 .flash { position: absolute; inset: 0; pointer-events: none; background: radial-gradient(ellipse at center, transparent 35%, var(--flash, var(--danger)) 120%); opacity: 0; }
 .banner { position: absolute; left: 50%; top: 56px; transform: translateX(-50%); pointer-events: none; text-align: center; font-family: var(--display); color: #fff; background: var(--danger); padding: 8px 18px 10px; border-radius: 6px; box-shadow: 0 8px 30px rgba(0,0,0,.25); max-width: calc(100% - 32px); }
@@ -198,6 +182,7 @@ details.params summary { cursor: pointer; padding: 10px 14px; font-weight: 600; 
 .pgrid .fine { font-size: 12.5px; color: var(--muted); margin: 0; }
 .reset { justify-self: start; border: 1px solid var(--line); background: var(--bg); border-radius: 6px; padding: 5px 10px; cursor: pointer; font-size: 13px; }
 
+.vsrc { margin: 0; padding-left: 18px; display: grid; gap: 6px; }
 .remontage { font-size: 13.5px; }
 .remontage ul { margin: 0; padding-left: 18px; display: grid; gap: 4px; }
 .remontage b { font-family: var(--mono); font-weight: 500; }
@@ -242,15 +227,6 @@ details.params summary { cursor: pointer; padding: 10px 14px; font-weight: 600; 
       </div>
       <div class="banner" id="banner" hidden><strong id="bannerTitle">PROJECTION</strong><span id="bannerSub"></span></div>
       <div class="note" id="note">Course des ressorts affichée ×6</div>
-      <figure class="sgauge" id="sgauge" aria-label="Ressort témoin : compression et énergie résiduelle">
-        <figcaption>Ressort témoin 5200517</figcaption>
-        <svg viewBox="0 0 220 64" role="img"><g id="sgFree"></g><path id="sgCoil" /><g id="sgDim"></g></svg>
-        <dl>
-          <div><dt>Compression</dt><dd id="sgX">—</dd></div>
-          <div><dt>Force / ressort</dt><dd id="sgF">—</dd></div>
-          <div class="sg-e"><dt>Énergie résiduelle (18)</dt><dd id="sgE">—</dd></div>
-        </dl>
-      </figure>
     </div>
     <div class="dock" id="dock" data-tone="ok">
       <div class="caption" aria-live="polite">
@@ -328,6 +304,21 @@ details.params summary { cursor: pointer; padding: 10px 14px; font-weight: 600; 
         <label for="pX">Compression à libérer <output id="oX">6,35 mm (¼ po)</output><input type="range" id="pX" min="2" max="15" step="0.05" value="6.35"></label>
         <label for="pM">Masse du cône projeté <output id="oM">22 kg</output><input type="range" id="pM" min="3" max="40" step="1" value="22"></label>
         <button type="button" class="reset" id="pReset">Valeurs par défaut</button>
+      </div>
+    </details>
+    <details class="params">
+      <summary>Validation de l'énergie des ressorts</summary>
+      <div class="pgrid">
+        <p class="fine"><b>Énergie résiduelle : 127 J (94 pi·lb), plage plausible 106 à 159 J.</b></p>
+        <ol class="fine vsrc">
+          <li><b>Cotes du ressort 5200517</b> : Ø ext. 1 ½ po, Ø int. ¾ po, longueur 6 po ; fil ⅜ po, diamètre moyen 1 ⅛ po. Fiches des distributeurs : Geo Mines, « Wire Spring Boyles 1.5'' x 6'' », remplacement du 5200517 (geo-mines.com) ; Mirow Regent 18100155, « Spring for 12HH & P Chuck… 1-1/2″ OD x 3/4″ ID x 6″ LG » (mirowregent.ca).</li>
+          <li><b>Raideur</b> : k = G d⁴ / (8 D³ n) (Acxess Spring, « Compression spring rate » ; SMI, <i>Handbook of Spring Design</i> ; Shigley, ch. 10). G = 79,3 GPa (11,5 Mpsi), acier chrome-silicium (Optimum Spring). Le nombre de spires actives n'est pas publié : 10 retenues → 350 N/mm ; 8 à 12 → 440 à 290 N/mm.</li>
+          <li><b>Énergie</b> : E = ½ k x² par ressort (loi de Hooke), × 18 ressorts, avec x = ¼ po (6,35 mm) à libérer selon PRO-OP-DD-005 → 127 J ; force totale 40 kN (9 000 lbf).</li>
+          <li><b>Contrôle de résistance</b> : à ¼ po, 2,2 kN (500 lbf) par ressort ; facteur de Wahl 1,58 (C = 3) ; contrainte de cisaillement ≈ 43 ksi, bien sous l'admissible du fil Cr-Si (≈ 45 % de 235 ksi ≈ 105 ksi). Les valeurs sont donc physiquement possibles.</li>
+          <li><b>Ordre de grandeur du mandrin</b> : JKS Boyles annonce 11 800 kg (26 000 lb) de serrage pour le mandrin 12HH à mâchoires 12,5° (jksboyles.nl). Les 40 kN des ressorts, multipliés par l'effet de coin des mâchoires, sont cohérents avec cette valeur.</li>
+          <li><b>Réglementation</b> : RSST, art. 188.7 (Québec) : contrôler toute énergie résiduelle ou emmagasinée ; OSHA 29 CFR 1910.147(d)(5)(i) ; CCHST : un ressort comprimé est une énergie résiduelle.</li>
+        </ol>
+        <p class="fine">Limites : les pages des distributeurs et de JKS Boyles ont été consultées par résumé de moteur de recherche (accès direct bloqué depuis l'environnement de travail) ; à confirmer en ouvrant les liens. Pour une valeur certaine : compter les spires d'un ressort 5200517 et mesurer sa charge à une longueur connue.</p>
       </div>
     </details>
 
@@ -747,7 +738,7 @@ Object.assign(mat, {
   blue: PAINT, paint: PAINT,
   green: new THREE.MeshStandardMaterial({ color: 0x3fa65a, roughness: .38, metalness: .3 }),
 });
-mat.spring = mat.green;
+mat.spring = new THREE.MeshPhysicalMaterial({ color: 0x2e8a44, roughness: .42, metalness: .35, clearcoat: .5, clearcoatRoughness: .35 });   // acier à ressort, peinture verte (ressort 5200517)
 const floor = mesh(new THREE.PlaneGeometry(200, 200), mat.floor, { cast: false });
 floor.rotation.x = -Math.PI / 2; floor.position.y = FLOOR;
 scene.add(floor);
@@ -830,12 +821,13 @@ part({ id: 'ZNPT250', ref: 'ZNPT250', name: 'Graisseur 1/8 NPT', qty: 1, grp: 'r
 part({ id: '5041022', ref: '5041022', name: 'Joint en V (V-ring)', qty: 1, grp: 'rear', ext: [6.94, 7.06], r: 5.9, role: 'Étanchéité tournante entre le cylindre et le boîtier.' }, placeIn(oring(5.7, .07, mat.green), 0, 7.0, 0));
 
 /* ---------- Boîtier 3506870 ---------- */
+mat.springBlock = mat.grey.clone();   // bloc des logements de ressorts : coupé plus profond en vue coupée
 const body = new THREE.Group();
 let bodyMain = null, pocketGroup = null;
 function buildBody() {
   if (bodyMain) { body.remove(bodyMain); bodyMain.geometry.dispose(); }
   if (pocketGroup) body.remove(pocketGroup);
-  bodyMain = mesh(annulus(u(R.springBlockIn), u(R.rimIn), u(Y.plateB - Y.housB), SPRINGS.map(s => [s.x, s.z, u(R.springBore)])), mat.grey);
+  bodyMain = mesh(annulus(u(R.springBlockIn), u(R.rimIn), u(Y.plateB - Y.housB), SPRINGS.map(s => [s.x, s.z, u(R.springBore)])), mat.springBlock);
   bodyMain.position.y = u(Y.housB);
   body.add(bodyMain);
   pocketGroup = new THREE.Group();
@@ -874,19 +866,45 @@ class Helix extends THREE.Curve {
     return target.set(Math.cos(a) * this.r, t, Math.sin(a) * this.r);
   }
 }
-const springGeo = new THREE.TubeGeometry(new Helix(u(.43), 9), 520, u(.13), 8, false);   // fil épais, spires espacées : la compression se voit
+// Ressort réaliste : fil rond de section constante ; en compression, seul l'écart entre les spires diminue.
+// Géométrie de référence (longueur 1) ; chaque ressort a sa copie, recalculée quand sa longueur change.
+const SPR_TURNS = 11, SPR_WIRE = .15, SPR_TUB = 660, SPR_RAD = 10;
+const springHelix = new Helix(u(.43), SPR_TURNS);
+const springGeo = new THREE.TubeGeometry(springHelix, SPR_TUB, u(SPR_WIRE), SPR_RAD, false);
+const springRef = (() => {   // pour chaque sommet : position le long de l'axe (0..1) et décalage par rapport à la ligne moyenne du fil
+  const pos = springGeo.attributes.position, n = pos.count, ty = new Float32Array(n), off = new Float32Array(n * 3), c = new THREE.Vector3();
+  for (let i = 0; i < n; i++) {
+    const j = Math.floor(i / (SPR_RAD + 1)), t = j / SPR_TUB;
+    springHelix.getPoint(t, c);
+    ty[i] = c.y; off[i * 3] = pos.getX(i) - c.x; off[i * 3 + 1] = pos.getY(i) - c.y; off[i * 3 + 2] = pos.getZ(i) - c.z;
+  }
+  const cx = new Float32Array(n), cz = new Float32Array(n);
+  for (let i = 0; i < n; i++) { const j = Math.floor(i / (SPR_RAD + 1)); springHelix.getPoint(j / SPR_TUB, c); cx[i] = c.x; cz[i] = c.z; }
+  return { ty, off, cx, cz, n };
+})();
+function setSpringLen(m, L) {
+  if (Math.abs((m.userData.len ?? -1) - L) < 1e-4) return;
+  m.userData.len = L;
+  const R = springRef, a = m.geometry.attributes.position.array;
+  // le fil garde sa section : la ligne moyenne est comprimée, pas le décalage de la section
+  for (let i = 0; i < R.n; i++) {
+    a[i * 3] = R.cx[i] + R.off[i * 3];
+    a[i * 3 + 1] = R.ty[i] * L + R.off[i * 3 + 1];
+    a[i * 3 + 2] = R.cz[i] + R.off[i * 3 + 2];
+  }
+  m.geometry.attributes.position.needsUpdate = true;
+  m.geometry.computeVertexNormals();
+  m.geometry.computeBoundingSphere();
+}
 let springMeshes = [];
-const SPR_FREE = new THREE.Color(0x2f9e44), SPR_GLOW = new THREE.Color(0x7dff6a);
 const springGroup = new THREE.Group();
 clampG.add(springGroup);
 const springPart = part({ id: '5200517', ref: '5200517', name: 'Ressort', qty: 'n', grp: 'front', ext: [Y.pocket, Y.plateB], r: 5.4, anim: true, role: 'Logés dans le boîtier, ils poussent le bol vers l\'avant pour serrer les mâchoires. C\'est eux qui emmagasinent l\'énergie.' }, []);
 function buildSprings() {
   springMeshes.forEach(s => springGroup.remove(s));
   springMeshes = SPRINGS.map(s => {
-    const m = mesh(springGeo, mat.spring.clone()); m.position.set(s.x, POCKET, s.z); m.userData.part = springPart;
-    // silhouette visible à travers le boîtier en vue coupée
-    const x = new THREE.Mesh(springGeo, new THREE.MeshBasicMaterial({ color: 0x2f9e44, transparent: true, opacity: .55, depthTest: false, depthWrite: false }));
-    x.userData.xray = true; x.renderOrder = 6; m.add(x); m.userData.xr = x;
+    const m = mesh(springGeo.clone(), mat.spring); m.position.set(s.x, POCKET, s.z); m.userData.part = springPart;
+    setSpringLen(m, LC + travel());
     springGroup.add(m); return m;
   });
   springPart.objs = springMeshes;
@@ -1822,7 +1840,7 @@ function applyExplode(e) {
     const target = jp.row.clone().sub(plate.position);
     jaws.forEach(j => { j.position.lerp(new THREE.Vector3(target.x, target.y - u(JAW_H / 2), target.z), k); });
   }
-  if (k > 0) springMeshes.forEach(m => { m.scale.y = lerp(m.scale.y, LC + travel(), k); });
+  if (k > 0) springMeshes.forEach(m => { setSpringLen(m, lerp(m.userData.len, LC + travel(), k)); });
   // Repères
   for (const p of PARTS) {
     if (!p.lbl || p.head) continue;
@@ -1947,6 +1965,7 @@ function applyHeadExplode(h) {
 
 /* ================= Sélection d'une pièce et vue en coupe ================= */
 const CUT = new THREE.Plane(new THREE.Vector3(0, 0, -1), 0);   // garde la moitié arrière (z ≤ 0)
+const CUT_DEEP = new THREE.Plane(new THREE.Vector3(0, 0, -1), -u(2.0));   // bloc des ressorts : ouvert 2 po plus loin, une rangée de ressorts apparaît
 let cutOn = true, selected = null;
 const ghostMat = new THREE.MeshStandardMaterial({ color: 0x9aa4ab, transparent: true, opacity: 0.12, depthWrite: false, roughness: 1 });
 // La tête garde ses propres matériaux : la coupe ne tranche que le mandrin.
@@ -1990,7 +2009,9 @@ function applyCut() {
     if (m.isSpriteMaterial) continue;
     const inS = S => S.has(m) || [...S].some(pm => hiCache.get(pm) === m);
     const free = (cutFree.plate && inS(plateMats)) || (cutFree.cover && inS(coverMats)) || (cutFree.jc && inS(jcMats));
-    m.clippingPlanes = cutOn && !free ? [CUT] : null;
+    // ressorts dessinés entiers (convention des vues en coupe) ; bloc des logements coupé plus profond pour les montrer
+    const spring = inS(new Set([mat.spring]));
+    m.clippingPlanes = !cutOn || free || spring ? null : inS(new Set([mat.springBlock])) ? [CUT_DEEP] : [CUT];
     if (m !== ghostMat && !(m.side === THREE.BackSide)) m.side = cutOn ? THREE.DoubleSide : THREE.FrontSide;
     m.needsUpdate = true;
   }
@@ -2494,17 +2515,13 @@ function applyScene(S) {
     if (flying.has(j)) {
       const [x, y, z, a] = flying.get(j);
       m.position.set(x, y, z); m.rotation.set(a, 0, a * 0.6);
-      m.scale.set(1, LC + t, 1);
+      setSpringLen(m, LC + t);
       return;
     }
     m.position.set(s.x, POCKET, s.z); m.rotation.set(0, 0, 0);
+    m.visible = !(cutOn && explodeE === 0 && hexE === 0 && s.x > u(.7));   // en coupe : ressorts de la moitié retirée masqués
     const compVis = D.comp[j] / 1000 / U * X;
-    m.scale.set(1, Math.max(0.3, LC + t - compVis), 1);
-    // ressorts verts (couleur réelle), sans clignotement : c'est leur longueur qui montre la compression
-    if (!selected) { m.material.color.copy(SPR_FREE); m.material.emissive.setRGB(0, 0, 0); }
-    m.userData.xr.material.color.copy(SPR_GLOW);
-    m.userData.xr.material.opacity = .5;
-    m.userData.xr.visible = cutOn && explodeE === 0 && hexE === 0 && !selected;
+    setSpringLen(m, Math.max(u(3.2), LC + t - compVis));   // ne descend jamais sous la longueur à spires jointives
   });
 
   // Boulons du cône
@@ -2708,29 +2725,6 @@ pin.n.value = P.n; pin.k.value = P.k; pin.x0.value = P.x0; pin.m.value = P.m;   
 showParams();
 
 let lastStep = -1, uiTick = 0;
-// Ressort témoin : un ressort dessiné à sa longueur détendue (pointillé) et à sa longueur actuelle ;
-// la compression est amplifiée ×6 comme dans la vue 3D, les valeurs sont réelles.
-function updateGauge(S) {
-  const g = $('sgauge');
-  g.hidden = !!(explodeTarget || hexTarget);
-  if (g.hidden) return;
-  const D = S.D, fl = D.flightS;
-  const comp = fl || S.catchD && S.catchP >= CATCH_T0 ? 0 : D.comp.reduce((a, b) => Math.max(a, b), 0);   // ressort le plus comprimé (mm)
-  const x0 = 12, Lfree = 190, pxPerMm = Lfree * X / 1000 / U / (LC + travel());   // même échelle (×6) que la 3D
-  const L = Lfree - comp * pxPerMm, turns = 9, y0 = 30, amp = 13;
-  let d = `M${x0} ${y0}`;
-  for (let i = 1; i <= turns * 2; i++) d += ` L${(x0 + L * (i - .5) / (turns * 2)).toFixed(1)} ${i % 2 ? y0 - amp : y0 + amp}`;
-  d += ` L${(x0 + L).toFixed(1)} ${y0}`;
-  $('sgCoil').setAttribute('d', d);
-  $('sgFree').innerHTML = `<rect class="wall" x="4" y="${y0 - 18}" width="7" height="36" rx="1"></rect><rect x="${x0}" y="${y0 - amp - 2}" width="${Lfree}" height="${2 * amp + 4}" rx="3"></rect><rect class="wall" x="${(x0 + L).toFixed(1)}" y="${y0 - 18}" width="6" height="36" rx="1" style="stroke:none"></rect>`;
-  const cx = x0 + L + 6;
-  $('sgDim').innerHTML = comp > .05 ? `<line x1="${cx.toFixed(1)}" y1="${y0 + 21}" x2="${x0 + Lfree}" y2="${y0 + 21}"></line><path d="M${(cx + 4).toFixed(1)} ${y0 + 18} L${cx.toFixed(1)} ${y0 + 21} L${(cx + 4).toFixed(1)} ${y0 + 24} M${x0 + Lfree - 4} ${y0 + 18} L${x0 + Lfree} ${y0 + 21} L${x0 + Lfree - 4} ${y0 + 24}"></path><text x="${((cx + x0 + Lfree) / 2).toFixed(1)}" y="${y0 + 33}" text-anchor="middle">${xS(comp)}</text>` : '';
-  const E = D.E ?? 0;
-  $('sgX').textContent = xS(comp);
-  $('sgF').textContent = fS(P.k * comp);
-  $('sgE').textContent = `${eS(fl || (S.catchD && S.catchP >= CATCH_T0) ? 0 : E)} (${eS(fl || (S.catchD && S.catchP >= CATCH_T0) ? 0 : E, OTHER())})`;
-  g.dataset.live = comp > .05 ? '1' : '0';
-}
 function updateUI(S, force) {
   const s = steps[S.i];
   const D = S.D;
@@ -2764,7 +2758,6 @@ function updateUI(S, force) {
   }
   $('scrub').value = Math.round(T / total * 1000);
   if (!force && ++uiTick % 3) return;
-  updateGauge(S);
 
   // Énergie
   const E0 = 0.5 * P.k * P.x0 * P.x0 * P.n / 1000;

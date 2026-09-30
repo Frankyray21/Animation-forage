@@ -61,9 +61,9 @@ Les 9 boulons du cône traversent le voile du boîtier (entretoises inférieures
 
 Le travailleur dévisse les boulons avec une clé à chocs électrique à fil (d'après la photo du chantier) : corps métallique usé, nez conique, douille longue 12 pans, poignée arrière fermée avec gâchette, anneau latéral et cordon. Seule la douille tourne avec le boulon.
 
-## Ressort témoin
+## Ressorts
 
-En bas à droite de la vue 3D, un ressort 5200517 est dessiné à sa longueur détendue (pointillé) et à sa longueur actuelle, avec la cote de compression (amplifiée ×6, comme dans la 3D), la force par ressort et l'énergie résiduelle des 18 ressorts. Il suit l'animation en direct. Les ressorts restent verts (leur vraie couleur) et ne clignotent pas : c'est leur longueur qui montre la compression.
+Les 18 ressorts sont modélisés avec un fil rond de section constante : en compression, seul l'écart entre les spires diminue, comme sur un vrai ressort (course amplifiée ×6 pour être visible). En vue coupée, le bloc des logements est ouvert plus profondément pour montrer deux rangées de ressorts entiers.
 
 ## Commandes
 
@@ -72,6 +72,20 @@ En bas à droite de la vue 3D, un ressort 5200517 est dessiné à sa longueur d�
 - **Éclaté : tête** : les pièces de la tête écartées de la boîte, le mandrin soulevé d'un bloc. Les pièces principales sont étiquetées ; les autres le sont quand on les sélectionne.
 - **Éclaté : mandrin** : toutes les pièces du mandrin séparées, avec leur numéro.
 - **SI / Impérial** : énergie en J ou en pi·lb, force en kN ou en lbf, compression en mm ou en po, vitesse en m/s ou en pi/s. Les équivalences (masse lâchée d'une hauteur, tonnes) sont données dans les deux systèmes.
+
+## Validation de l'énergie des ressorts
+
+| Élément | Valeur | Source |
+| --- | --- | --- |
+| Cotes du ressort 5200517 | Ø 1 ½ po × Ø int. ¾ po × 6 po | Geo Mines (« Wire Spring Boyles 1.5'' x 6'' », remplacement du 5200517) ; Mirow Regent 18100155 (« Spring for 12HH & P Chuck… 1-1/2″ OD x 3/4″ ID x 6″ LG ») |
+| Raideur | k = G d⁴ / (8 D³ n) = 350 N/mm (n = 10, non publié ; 8 à 12 → 440 à 290 N/mm) | Acxess Spring ; SMI *Handbook of Spring Design* ; Shigley ch. 10 ; G = 11,5 Mpsi (Optimum Spring, Cr-Si) |
+| Énergie à libérer | 18 × ½ k x², x = ¼ po → **127 J** (plage 106 à 159 J) | Loi de Hooke ; x : procédure PRO-OP-DD-005 |
+| Force totale | 40 kN (9 000 lbf) | idem |
+| Contrôle de contrainte | 43 ksi (Wahl K = 1,58) < ≈ 105 ksi admissible | Newcomb Spring (Wahl) ; Optimum Spring (45 % de la résistance min.) |
+| Cohérence mandrin | serrage publié 26 000 lb (mâchoires 12,5°) | JKS Boyles, fiche 12HH |
+| Énergie résiduelle (règle) | contrôler toute énergie résiduelle ou emmagasinée | RSST art. 188.7 ; OSHA 1910.147(d)(5)(i) ; CCHST |
+
+Limites : les pages des distributeurs et de JKS Boyles ont été consultées par résumé de moteur de recherche (accès direct bloqué depuis l'environnement de travail). Pour une valeur certaine, compter les spires d'un ressort 5200517 et mesurer sa charge à une longueur connue.
 
 ## Physique utilisée (estimations)
 
