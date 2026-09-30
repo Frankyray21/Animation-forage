@@ -297,9 +297,9 @@ details.params summary { cursor: pointer; padding: 10px 14px; font-weight: 600; 
     <details class="params">
       <summary>Paramètres des ressorts</summary>
       <div class="pgrid">
-        <p class="fine">Valeurs indicatives. Pour un calcul réel, entrez la raideur et la compression du ressort 5200517 (fiche du fabricant) et la masse réelle du cône 2920390 avec ses mâchoires. La masse par défaut (22 kg) est celle du bol 2920390 et des mâchoires du modèle 3D en acier. La raideur par défaut (100 N/mm) n'est qu'un exemple.</p>
+        <p class="fine"><b>Raideur calculée : 350 N/mm (2 000 lbf/po).</b> Le ressort 5200517 (équivalent Mirow 18100155) mesure Ø 1 ½ po × Ø int. ¾ po × 6 po : fil de ⅜ po, diamètre moyen 1 ⅛ po. Avec l'acier à ressort (G = 79,3 GPa) et environ 10 spires actives (nombre non publié ; 8 à 12 donnent 440 à 290 N/mm), k = G d⁴ / (8 D³ n) ≈ 350 N/mm. Contrôle : la fiche du mandrin 12HH (JKS Boyles) annonce 26 000 lb de serrage avec des mâchoires à 12,5° ; avec cette raideur, cela demande environ 0,8 po de compression des ressorts en service, dans leur course. La compression de ¼ po vient de la procédure ; la masse (22 kg) est celle du bol et des mâchoires du modèle en acier. Mesurez un ressort ou demandez sa fiche pour un calcul exact.</p>
         <label for="pN">Nombre de ressorts <output id="oN">18</output><input type="range" id="pN" min="6" max="18" step="1" value="18"></label>
-        <label for="pK">Raideur par ressort <output id="oK">100 N/mm</output><input type="range" id="pK" min="50" max="600" step="10" value="100"></label>
+        <label for="pK">Raideur par ressort <output id="oK">350 N/mm</output><input type="range" id="pK" min="50" max="600" step="10" value="350"></label>
         <label for="pX">Compression à libérer <output id="oX">6,35 mm (¼ po)</output><input type="range" id="pX" min="2" max="15" step="0.05" value="6.35"></label>
         <label for="pM">Masse du cône projeté <output id="oM">22 kg</output><input type="range" id="pM" min="3" max="40" step="1" value="22"></label>
         <button type="button" class="reset" id="pReset">Valeurs par défaut</button>
@@ -316,7 +316,7 @@ details.params summary { cursor: pointer; padding: 10px 14px; font-weight: 600; 
       </ul>
     </section>
 
-    <p class="src">Sources : procédure PRO-OP-DD-005, <i>Démonter et remonter un clam et un chuck (mandrin) sur la foreuse</i>, révision mai 2021 ; planches de la tête de forage Boyles UM-012-100UG (cotes d'ensemble 2.1, vue éclatée et liste de pièces 2.2, raccords et boyaux 2.3, spécifications et coupe B-B 2.4) et liste de pièces, coupe A-A et vue éclatée du mandrin Boyles H UM-070-142AA / UM-012-142AA (pages 2.5 à 2.7), manuel de la foreuse STM-1500 (Usinage Marcotte). Toutes les pièces des listes sont représentées avec leurs quantités. La boîte de la tête est mise à l'échelle d'après les cotes hors tout de la planche 2.1 (dessin N.T.S.) ; le tracé des boyaux et l'emplacement des raccords sont approximatifs ; le chariot et le mât de la foreuse sont schématiques (hors documents). Pour le mandrin, le diamètre, la longueur et l'alésage suivent les cotes de la coupe A-A ; les autres cotes sont relevées sur le dessin (N.T.S.) et les pièces du mandrin marquées « emplacement approximatif » sont placées d'après cette coupe. La raideur des ressorts n'est pas dans ces documents (100 N/mm est un exemple) : les forces, énergies et trajectoires sont des estimations à des fins de formation.</p>
+    <p class="src">Sources : procédure PRO-OP-DD-005, <i>Démonter et remonter un clam et un chuck (mandrin) sur la foreuse</i>, révision mai 2021 ; planches de la tête de forage Boyles UM-012-100UG (cotes d'ensemble 2.1, vue éclatée et liste de pièces 2.2, raccords et boyaux 2.3, spécifications et coupe B-B 2.4) et liste de pièces, coupe A-A et vue éclatée du mandrin Boyles H UM-070-142AA / UM-012-142AA (pages 2.5 à 2.7), manuel de la foreuse STM-1500 (Usinage Marcotte). Toutes les pièces des listes sont représentées avec leurs quantités. La boîte de la tête est mise à l'échelle d'après les cotes hors tout de la planche 2.1 (dessin N.T.S.) ; le tracé des boyaux et l'emplacement des raccords sont approximatifs ; le chariot et le mât de la foreuse sont schématiques (hors documents). Pour le mandrin, le diamètre, la longueur et l'alésage suivent les cotes de la coupe A-A ; les autres cotes sont relevées sur le dessin (N.T.S.) et les pièces du mandrin marquées « emplacement approximatif » sont placées d'après cette coupe. La raideur des ressorts n'est pas dans ces documents : elle est calculée (350 N/mm) d'après les cotes publiées du ressort 5200517 (Ø 1 ½ × Ø int. ¾ × 6 po, fiches Geo Mines et Mirow Regent) et contrôlée avec la force de serrage publiée du mandrin 12HH (26 000 lb, JKS Boyles) ; les forces, énergies et trajectoires sont des estimations à des fins de formation.</p>
   </aside>
 </div>
 
@@ -339,7 +339,14 @@ const PITCH = 25.4 / 13;       // pas d'un boulon ½-13 UNC (mm/tour)
 const ENG = 13;                // tours pour sortir complètement un boulon (≈ 1 po d'engagement)
 const G = 9.81 / U;            // gravité en unités/s²
 const SPRING_MASS = 0.3;       // kg, pour l'éjection des ressorts
-const DEFAULTS = { n: 18, k: 100, x0: 6.35, m: 22 };   // n : liste de pièces (18 × 5200517) ; k : exemple ; m : bol + mâchoires du modèle en acier (≈ 22 kg)
+// Ressort 5200517 (équivalent Mirow 18100155) : Ø ext. 1 ½ po, Ø int. ¾ po, longueur 6 po (fiches des distributeurs)
+// → fil d = ⅜ po, diamètre moyen D = 1 ⅛ po. Raideur k = G d⁴ / (8 D³ n), G = 79,3 GPa (acier à ressort) ;
+// spires actives n non publiées : ≈ 10 retenues (8 à 12 plausibles → 440 à 290 N/mm).
+const SPRING = { od: 1.5, id: .75, L0: 6, G: 79300, n: 10 };
+const springRate = (n = SPRING.n) => { const d = (SPRING.od - SPRING.id) / 2 * 25.4, D = (SPRING.od + SPRING.id) / 2 * 25.4; return SPRING.G * d ** 4 / (8 * D ** 3 * n); };   // N/mm
+const K_CALC = Math.round(springRate() / 10) * 10;   // 350 N/mm
+const PISTON_A = Math.PI * (5.0 ** 2 - 3.9 ** 2) * 645.16;   // mm² : piston 3506908 (Ø 7,8 po dans le cylindre Ø 10 po) ≈ 198 cm²
+const DEFAULTS = { n: 18, k: K_CALC, x0: 6.35, m: 22 };   // n : liste de pièces (18 × 5200517) ; k : calculée ; x0 : procédure (¼ po) ; m : bol + mâchoires du modèle en acier
 const P = { ...DEFAULTS };
 
 /* Mandrin Boyles H, UM-070-142AA (Usinage Marcotte), cotes en pouces.
@@ -1558,10 +1565,8 @@ const zone = new THREE.Mesh(new THREE.CylinderGeometry(u(R.plate) + 0.1, u(R.pla
 zone.position.y = PLATE_TOP0 + 2.5;
 rig.add(zone);
 
-/* ---------- Travailleur debout devant la face du mandrin (tête horizontale) ---------- */
-const KNEE = new THREE.Vector3(5.3, FLOOR, 0);   // pivot au sol (recul du corps en cas d'impact)
-const worker = new THREE.Group();
-worker.position.copy(KNEE);
+/* ---------- Travailleur debout devant la face du mandrin (tête horizontale), articulé ---------- */
+const worker = new THREE.Group();   // membres placés en coordonnées monde, recalculés à chaque image (cinématique inverse)
 scene.add(worker);
 const HEAD = new THREE.Vector3(4.3, FLOOR + 16.2, 0);   // centre de la tête (monde), ≈ 1,62 m
 const HEAD_R = 0.88;
@@ -1577,44 +1582,67 @@ function bodyFront(y) {
   return HEAD.x - HEAD_R;                                                      // tête
 }
 const bodyZone = y => y > BODY.neck ? 'visage' : y > BODY.hip + 2.2 ? 'tronc' : y > BODY.hip - 1.6 ? 'hanches' : 'jambes';
-function limb(a, b, r, m) {
-  const len = a.distanceTo(b);
-  const o = mesh(new THREE.CapsuleGeometry(r, len, 6, 14), m);
-  o.position.copy(a).add(b).multiplyScalar(.5).sub(KNEE);
-  o.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), b.clone().sub(a).normalize());
-  worker.add(o); return o;
-}
-{
-  const V = (x, y, z) => new THREE.Vector3(x, y, z);
-  for (const z of [-0.6, 0.6]) {
-    limb(V(5.3, FLOOR + .9, z), V(5.15, FLOOR + 5.0, z * .95), 0.5, mat.coverall);
-    limb(V(5.15, FLOOR + 5.0, z * .95), V(5.3, BODY.hip, z * .85), 0.6, mat.coverall);
-    const boot = mesh(new THREE.BoxGeometry(1.2, 0.9, 0.9), mat.boot); boot.position.set(5.05 - KNEE.x, 0.45, z); worker.add(boot);
-  }
-  const hip = V(5.3, BODY.hip, 0), sh = V(4.7, BODY.sh, 0);
-  const torso = limb(hip, sh, 1.0, mat.coverall);
-  for (const t of [0.35, 0.62]) {
-    const band = mesh(new THREE.CylinderGeometry(1.03, 1.03, 0.22, 32, 1, true), t < .5 ? mat.hivis : mat.reflect);
-    band.position.copy(hip.clone().lerp(sh, t)).sub(KNEE);
-    band.quaternion.copy(torso.quaternion);
-    worker.add(band);
-  }
-  for (const zs of [-1, 1]) {
-    const shoulder = V(4.7, BODY.sh, zs * 1.05), elbow = V(3.0, BODY.sh - 2.6, zs * 1.2), hand = V(HANDS.x, HANDS.y, zs * HANDS.z);
-    limb(shoulder, elbow, 0.3, mat.coverall);
-    limb(elbow, hand, 0.27, mat.coverall);
-    const glove = mesh(new THREE.SphereGeometry(0.3, 16, 12), mat.glove); glove.position.copy(hand).sub(KNEE); worker.add(glove);
-  }
-  const headG2 = new THREE.Group();
-  headG2.position.copy(HEAD).sub(KNEE);
-  headG2.rotation.z = 0.3;
+const WL = { shin: 4.1, thigh: 4.62, torso: 4.74, neck: 1.94, upper: 3.0, fore: 2.95 };
+const ANKLE = [-1, 1].map(s => new THREE.Vector3(5.3, FLOOR + .9, s * .6));
+const Y_UP = new THREE.Vector3(0, 1, 0);
+const W = (() => {
+  const cap = (r, len, m) => { const o = mesh(new THREE.CapsuleGeometry(r, len, 6, 14), m); worker.add(o); return o; };
+  const legs = [-1, 1].map(s => {
+    const boot = mesh(new THREE.BoxGeometry(1.2, 0.9, 0.9), mat.boot); boot.position.set(5.05, FLOOR + .45, s * .6); worker.add(boot);
+    return { s, thigh: cap(.6, WL.thigh, mat.coverall), shin: cap(.5, WL.shin, mat.coverall) };
+  });
+  const torso = cap(1.0, WL.torso, mat.coverall);
+  const bands = [0.35, 0.62].map(t => { const b = mesh(new THREE.CylinderGeometry(1.03, 1.03, 0.22, 32, 1, true), t < .5 ? mat.hivis : mat.reflect); b.userData.t = t; worker.add(b); return b; });
+  const arms = [-1, 1].map(s => ({ s, up: cap(.3, WL.upper, mat.coverall), fore: cap(.27, WL.fore, mat.coverall), glove: (() => { const g = mesh(new THREE.SphereGeometry(0.3, 16, 12), mat.glove); worker.add(g); return g; })() }));
+  const head = new THREE.Group();
   const skull = mesh(new THREE.SphereGeometry(HEAD_R * 0.95, 28, 20), mat.skin);
   const hat = mesh(new THREE.SphereGeometry(HEAD_R * 1.08, 28, 14, 0, Math.PI * 2, 0, Math.PI / 2), mat.helmet); hat.position.y = 0.12;
   const brim = mesh(new THREE.CylinderGeometry(HEAD_R * 1.32, HEAD_R * 1.32, 0.06, 32), mat.helmet); brim.position.y = 0.14;
   const glasses = mesh(new THREE.BoxGeometry(0.16, 0.26, 1.05), mat.dark); glasses.position.set(-0.8, -0.1, 0);
-  headG2.add(skull, hat, brim, glasses);
-  worker.add(headG2);
+  head.add(skull, hat, brim, glasses); worker.add(head);
+  return { legs, torso, bands, arms, head };
+})();
+const wTmp = new THREE.Vector3(), wTmp2 = new THREE.Vector3();
+function placeSeg(o, a, b) { o.position.copy(a).add(b).multiplyScalar(.5); o.quaternion.setFromUnitVectors(Y_UP, wTmp.subVectors(b, a).normalize()); }
+// Cinématique inverse à 2 segments : articulation intermédiaire du côté du vecteur « pole »
+function ik2(A, T, l1, l2, pole) {
+  const d = Math.min(wTmp.subVectors(T, A).length(), (l1 + l2) * .999), dir = wTmp.clone().normalize();
+  const E = A.clone().addScaledVector(dir, d);
+  const ca = (l1 * l1 + d * d - l2 * l2) / (2 * l1 * d), sa = Math.sqrt(Math.max(0, 1 - ca * ca));
+  const n = pole.clone().addScaledVector(dir, -pole.dot(dir)).normalize();
+  return { J: A.clone().addScaledVector(dir, l1 * ca).addScaledVector(n, l1 * sa), E };
 }
+// Pose : hanches (monde), inclinaison du tronc vers la tête de forage, inclinaison de la tête, cibles des mains
+function poseWorker(hip, lean, tilt, hands) {
+  W.legs.forEach((L, k) => {
+    const H = hip.clone().add(wTmp2.set(0, -.2, L.s * .52));
+    const { J } = ik2(ANKLE[k], H, WL.shin, WL.thigh, new THREE.Vector3(-1, 0, 0));   // genou vers l'avant
+    placeSeg(L.shin, ANKLE[k], J); placeSeg(L.thigh, J, H);
+  });
+  const sh = hip.clone().add(new THREE.Vector3(-Math.sin(lean), Math.cos(lean), 0).multiplyScalar(WL.torso));
+  placeSeg(W.torso, hip, sh);
+  W.bands.forEach(b => { b.position.copy(hip).lerp(sh, b.userData.t); b.quaternion.copy(W.torso.quaternion); });
+  const hd = sh.clone().add(new THREE.Vector3(-Math.sin(lean + tilt), Math.cos(lean + tilt), 0).multiplyScalar(WL.neck));
+  W.head.position.copy(hd); W.head.rotation.set(0, 0, 0.3 + (lean - .127) + tilt - .08);
+  W.arms.forEach((A, k) => {
+    const S0 = sh.clone().add(new THREE.Vector3(Math.sin(lean) * .25, -.25, A.s * 1.05));
+    const { J, E } = ik2(S0, hands[k], WL.upper, WL.fore, new THREE.Vector3(.3, -1, A.s * .7));
+    placeSeg(A.up, S0, J); placeSeg(A.fore, J, E); A.glove.position.copy(E);
+  });
+  return { sh, hd };
+}
+// Éclats d'impact (mains, corps)
+const burstTex = (() => {
+  const c = document.createElement('canvas'); c.width = c.height = 128; const x = c.getContext('2d');
+  const g = x.createRadialGradient(64, 64, 4, 64, 64, 62); g.addColorStop(0, 'rgba(255,245,200,1)'); g.addColorStop(.35, 'rgba(255,170,40,.9)'); g.addColorStop(1, 'rgba(220,40,20,0)');
+  x.fillStyle = g; x.beginPath();
+  for (let i = 0; i < 24; i++) { const a = i / 24 * Math.PI * 2, r = i % 2 ? 26 : 62; x.lineTo(64 + r * Math.cos(a), 64 + r * Math.sin(a)); }
+  x.closePath(); x.fill();
+  const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; return t;
+})();
+const bursts = [0, 1].map(() => { const b = new THREE.Sprite(new THREE.SpriteMaterial({ map: burstTex, transparent: true, depthTest: false })); b.renderOrder = 9; b.visible = false; scene.add(b); return b; });
+function showBurst(b, pos, a) { b.visible = a > 0 && a < 1; if (!b.visible) return; b.position.copy(pos); b.scale.setScalar(0.8 + 2.6 * a); b.material.opacity = 1 - a; }
+poseWorker(new THREE.Vector3(5.3, BODY.hip, 0), .127, .08, [new THREE.Vector3(HANDS.x, HANDS.y, -HANDS.z), new THREE.Vector3(HANDS.x, HANDS.y, HANDS.z)]);
 
 /* ---------- Étiquettes ---------- */
 function makeLabel(text, { bg = '#111518', fg = '#ffffff', h = 0.36, font = '600 44px "IBM Plex Sans", sans-serif', pad = 22, round = 14, parent = scene } = {}) {
@@ -2165,7 +2193,7 @@ function computeFlight(S0, step) {
     pos.addScaledVector(vel, dt);
     ang += w * dt;
     t += dt;
-    if (!out.hands && pos.y >= HANDS_AX - 0.3) out.hands = { t, speed: vel.length() * U };
+    if (!out.hands && pos.y >= HANDS_AX - 0.3) out.hands = { t, speed: vel.length() * U, h: AXIS_Y + pos.z };
     if (!hitDone && Math.abs(pos.x) < BODY.half + Rp * .5) {
       // contact avec le corps : la face avant du cône atteint la silhouette sur la hauteur du disque
       const wx = RIG_X + pos.y, wy = AXIS_Y + pos.z, span = Rp * Math.abs(Math.cos(ang)) + BOWL_DEPTH * Math.abs(Math.sin(ang)) * .5;
@@ -2173,7 +2201,7 @@ function computeFlight(S0, step) {
       for (let j = -4; j <= 4; j++) { const y = wy + span * j / 4, f = bodyFront(y); if (wx >= f && (!best || f < best.f)) best = { f, y }; }
       if (best) {
         hitDone = true;
-        out.impact = { t, speed: vel.length() * U, zone: bodyZone(best.y) };
+        out.impact = { t, speed: vel.length() * U, zone: bodyZone(best.y), w: [best.f, best.y, pos.x] };
         vel.y = -Math.abs(vel.y) * 0.25; vel.x *= 0.3; vel.z = Math.min(vel.z, 0);
       }
     }
@@ -2297,6 +2325,54 @@ function movePart(obj, base, rest, p, up = 1.8) {
   obj.position.set(lerp(base.x, rest.x, eb), p < .3 ? lerp(base.y, yOut, ease(a)) : lerp(yOut, rest.y, eb), p < .75 ? base.z : lerp(base.z, rest.z, ease(c)));
   obj.rotation.set(Math.PI / 2 * eb, 0, 0);
 }
+const GRIP_L = new THREE.Vector3(u(5.3), u(3.5), 0), RATCH_L = new THREE.Vector3(u(.6), u(3.5), 0);
+const REST_HANDS = [new THREE.Vector3(5.0, FLOOR + 8.3, -1.4), new THREE.Vector3(5.0, FLOOR + 8.3, 1.4)];
+function animateWorker(S, fl) {
+  const tt = performance.now() / 1000;
+  const hip = new THREE.Vector3(5.3, BODY.hip, 0);
+  let lean = .127 + .012 * Math.sin(tt * 1.4), tilt = .08;
+  let hands;
+  if (wrench.visible) {
+    wrench.updateMatrixWorld(true);
+    hands = [wrench.localToWorld(RATCH_L.clone()).add(new THREE.Vector3(.15, .05, -.25)), wrench.localToWorld(GRIP_L.clone())];
+  } else if (S.shake > 0 || S.stuck) {
+    // se penche et frappe le cône pour le décoincer
+    const k = ease(Math.min(1, (S.shake || 0) * 3)), tap = S.shake > 0 && !fl ? Math.max(0, Math.sin(tt * 9)) * .35 : 0;
+    lean += .28 * k; tilt += .1 * k;
+    const fx = RIG_X + PLATE_TOP0 + .35 + tap;
+    hands = [new THREE.Vector3(fx, AXIS_Y + .9, -.7), new THREE.Vector3(fx, AXIS_Y + .9, .7)].map((h, i) => REST_HANDS[i].clone().lerp(h, Math.max(k, S.stuck ? 1 : 0)));
+  } else hands = REST_HANDS.map(h => h.clone().add(new THREE.Vector3(0, .05 * Math.sin(tt * 1.4), 0)));
+  bursts.forEach(b => { b.visible = false; });
+  if (fl && S.flight) {
+    const F = S.flight, lt = S.launchT;
+    const tH = F.hands ? F.hands.t : 1e9, tB = F.impact ? F.impact.t : 1e9, tHit = Math.min(tH, tB);
+    // mains frappées : projetées vers l'arrière et le haut ; la clé est arrachée
+    const r1 = ease(seg(lt, tH, tH + .12));
+    const fling = [new THREE.Vector3(2.8, 2.4, -1.2), new THREE.Vector3(2.6, 1.6, 1.4)];
+    hands = hands.map((h, i) => h.addScaledVector(fling[i], r1));
+    if (F.hands && S.ride >= 0) {
+      const w = seg(lt, tH, tH + .5), fall = Z_FLOOR + .15 - wrench.position.z;
+      wrench.position.x += 1.4 * w; wrench.position.y += 3.2 * w; wrench.position.z += 1.2 * Math.sin(Math.PI * w) + fall * w * w;
+      wrench.rotation.set(5 * w, 0, 3 * w);
+    }
+    // corps frappé : recul
+    const r2 = ease(seg(lt, tB, tB + .25));
+    lean -= .38 * r2; hip.x += 1.1 * r2; tilt -= .15 * r2;
+    // puis se replie, mains contre la poitrine
+    const r3 = ease(seg(lt, tHit + .45, tHit + 1.3)) * (tHit < 1e8 ? 1 : 0);
+    hip.y -= 2.3 * r3; hip.x += 1.4 * r3; lean += .55 * r3; tilt += .2 * r3;   // recule et se replie, loin du mandrin
+    const chest = hip.clone().add(new THREE.Vector3(-Math.sin(lean) * 3.2 - .9, Math.cos(lean) * 3.2 - .3, 0));
+    hands = hands.map((h, i) => h.lerp(chest.clone().add(new THREE.Vector3(0, 0, i ? .35 : -.35)), r3));
+    if (F.hands) showBurst(bursts[0], new THREE.Vector3(HANDS.x + .3, F.hands.h + .3, 0), seg(lt, tH, tH + .35));
+    if (F.impact) showBurst(bursts[1], new THREE.Vector3(...F.impact.w), seg(lt, tB, tB + .35));
+  }
+  if (S.catchD) {   // arrêté par la retenue : sursaut
+    const r = ease(seg(S.catchP, CATCH_HIT, CATCH_HIT + .1)) * (1 - .6 * ease(seg(S.catchP, .6, 1)));
+    hands = hands.map((h, i) => h.add(new THREE.Vector3(1.6, .9, (i ? 1 : -1) * .4).multiplyScalar(r)));
+    lean -= .14 * r; hip.x += .4 * r;
+  }
+  poseWorker(hip, lean, tilt, hands);
+}
 function applyScene(S) {
   const D = S.D;
   levers.forEach(L => { L.rotation.z = lerp(-0.55, 0.55, S.lever); });
@@ -2395,8 +2471,12 @@ function applyScene(S) {
     }
   });
 
-  // Outil sur le boulon actif
-  if (S.active >= 0 && !fl) {
+  // Outil sur le boulon actif (pendant une projection : sur le boulon qui a cédé, puis arraché des mains)
+  if (fl && S.ride >= 0) {
+    const B = BOLTS[S.ride];
+    wrench.visible = true; activeRing.visible = false;
+    wrench.position.set(B.x, PLATE_TOP0 - 0.02, B.z); wrench.rotation.set(0, 0, 0);
+  } else if (S.active >= 0 && !fl) {
     const o = pBolts[S.active], B = BOLTS[S.active];
     wrench.visible = true; activeRing.visible = true;
     wrench.position.set(B.x, o.position.y - 0.02, B.z);
@@ -2413,11 +2493,8 @@ function applyScene(S) {
   zone.material.opacity = 0.09 * S.zone * (fl ? 0.5 : 1);
   labelOpacity(labels.zone[0], fl ? 0 : S.zone);
 
-  // Travailleur
-  let knock = 0;
-  if (fl && S.flight.impact) knock = ease(seg(S.launchT, S.flight.impact.t, S.flight.impact.t + 0.25));
-  if (S.catchD) knock = 0.25 * ease(seg(S.catchP, CATCH_HIT, CATCH_HIT + .12));
-  worker.rotation.z = -0.22 * knock;
+  // Travailleur : mains sur la clé, se penche, réagit à l'impact
+  animateWorker(S, fl);
   worker.visible = document.getElementById('optWorker').checked;
   pallet.visible = stand.visible = consoleG.visible = headG.visible = carriage.visible = zone.visible = true;
 
@@ -2609,7 +2686,7 @@ function updateUI(S, force) {
   $('kvX').textContent = xS(fl ? 0 : mc);
   const maxLoad = Math.max(...D.loads);
   $('kvB').textContent = fl || released || S.stuck ? '—' : fS(maxLoad);
-  $('equiv').textContent = `Au départ : ${eS(E0, 'SI')} = ${eS(E0, 'IMP')}. Force des ressorts : ${fS(F0, 'SI')} = ${fS(F0, 'IMP')}, le poids d'environ ${fr(F0 / 9.81 / 1000, 1)} tonne. Même énergie qu'une masse de 5 kg (11 lb) lâchée de ${hS(E0 / (5 * 9.81), 'SI')} (${fr(E0 / (5 * 9.81) * 3.28084, 1)} pi), ou que le cône de ${mS(P.m, 'SI')} lâché de ${hS(E0 / (P.m * 9.81), 'SI')} sur un pied.`;
+  $('equiv').textContent = `Au départ : ${eS(E0, 'SI')} = ${eS(E0, 'IMP')}. Force des ressorts : ${fS(F0, 'SI')} = ${fS(F0, 'IMP')}, le poids d'environ ${fr(F0 / 9.81 / 1000, 1)} tonne ; il faudrait ${fr(F0 / PISTON_A * 10, 0)}\u00a0bar (${fr(F0 / PISTON_A * 145.038, 0)}\u00a0psi) sur le piston 3506908 pour les retenir. Même énergie qu'une masse de 5 kg (11 lb) lâchée de ${hS(E0 / (5 * 9.81), 'SI')} (${fr(E0 / (5 * 9.81) * 3.28084, 1)} pi), ou que le cône de ${mS(P.m, 'SI')} lâché de ${hS(E0 / (P.m * 9.81), 'SI')} sur un pied.`;
 
   // Boulons
   const normal = F0 / 9;
@@ -2669,7 +2746,7 @@ function summaryText(ev) {
     return `Le filet du boulon 6 a cédé : ${eS(c.E)} (${eS(c.E, OTHER())}) libérés d'un coup, le cône 2920390 part à ${vS(c.v)}. Les 3 boulons B500-8000 remis sans bushing à l'étape 6 l'arrêtent après environ ${xS(c.gapMm)} de course, en quelques millisecondes. Les mains et le visage du travailleur sont épargnés. C'est un quasi-accident : même erreur que le scénario « boulons retirés un par un », mais la retenue a fait son travail. Les 3 boulons ont encaissé le choc : il faut les remplacer par des neufs avant de remonter le mandrin.`;
   }
   const F = ev.F;
-  const hands = F.hands ? 'Il frappe d\'abord les mains posées sur la clé, juste devant la face du mandrin. ' : '';
+  const hands = F.hands ? `Il frappe d'abord les mains posées sur la clé, ${fr(F.hands.t * 1000, 0)}\u00a0ms après la rupture, à ${vS(F.hands.speed)} : impossible de les retirer à temps. ` : '';
   const hit = F.impact ? `Il atteint ensuite ${ZONE_TXT[F.impact.zone]} du travailleur, encore à ${vS(F.impact.speed)}, puis tombe au sol.` : F.feet ? `Avec ces paramètres, il n'atteint pas le corps du travailleur, mais ce bloc de ${mS(P.m)} retombe à ses pieds.` : 'Avec ces paramètres, il n\'atteint pas le corps du travailleur, mais il tombe au sol de façon imprévisible.';
   const spr = F.springs.length ? ` Des ressorts 5200517 peuvent aussi être éjectés : jusqu'à ${vS(Math.sqrt(2 * F.sprE / SPRING_MASS))} chacun.` : '';
   return `${eS(F.E)} (${eS(F.E, OTHER())}) libérés en une fraction de seconde. Le cône 2920390 et ses mâchoires (${mS(P.m)}) partent à ${vS(F.v)} dans l'axe du mandrin, à l'horizontale. ${hands}${hit}${spr} La procédure (1 tour à la fois, retenue de l'étape 6) évite ce scénario.`;

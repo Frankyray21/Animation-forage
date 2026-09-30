@@ -69,8 +69,10 @@ Les 9 boulons du cône traversent le voile du boîtier (entretoises inférieures
 
 - Énergie des ressorts : `E = n × ½ k x²` ; force : `F = n × k x`.
 - Nombre de ressorts : 18, selon la liste de pièces. Compression : 6,35 mm (¼ po), selon la procédure.
-- La **raideur du ressort 5200517 n'est pas dans les documents**. Valeur d'exemple : 100 N/mm (571 lbf/po). Résultat : environ 36 J (27 pi·lb) et 11,4 kN (2 570 lbf). Entrez la valeur de la fiche du ressort dans « Paramètres des ressorts » pour un calcul réel.
-- Masse projetée : 22 kg (49 lb), celle du cône et des mâchoires du modèle en acier.
+- **Raideur du ressort 5200517 : 350 N/mm (2 000 lbf/po), calculée.** Les distributeurs donnent ses cotes : Ø 1 ½ po, Ø int. ¾ po, longueur 6 po (Geo Mines ; équivalent Mirow Regent 18100155, « Spring for 12HH & P Chuck »). Fil de ⅜ po, diamètre moyen 1 ⅛ po, acier G = 79,3 GPa, environ 10 spires actives (non publié : 8 à 12 spires donnent 440 à 290 N/mm) : `k = G d⁴ / (8 D³ n)`.
+- Résultat à ¼ po : environ 127 J (94 pi·lb) et 40 kN (9 000 lbf), soit 4,4 kN par boulon du cône quand les 9 sont serrés. Il faudrait environ 20 bar (290 psi) sur le piston 3506908 (≈ 198 cm², 31 po²) pour retenir cette force.
+- Contrôle : JKS Boyles annonce 26 000 lb de serrage pour le mandrin 12HH (mâchoires 12,5°). Avec un coin de 12,5° et des frottements estimés (0,1 bol/mâchoires, 0,3 plaquettes/tige), cela demande environ 120 kN de poussée axiale, soit environ 0,8 po de compression des ressorts en service : cohérent avec un ressort de 6 po. Aucune fiche ne donne la raideur elle-même : mesurez un ressort ou demandez sa fiche pour un calcul exact (réglable dans « Paramètres des ressorts »).
+- Masse projetée : 22 kg (49 lb), celle du cône et des mâchoires du modèle en acier. Vitesse de départ à 127 J : environ 3,4 m/s (12 km/h).
 - Position du cône : plan retenu par les boulons encore engagés (pas ½-13 UNC, 1 tour = 1,95 mm), qui minimise l'énergie des ressorts. Le basculement est limité, parce que le cône est guidé dans le boîtier.
 - Projection : vitesse de départ `v = √(2E/m)` dans l'axe du mandrin, donc à l'horizontale ; trajectoire balistique (le cône de 22 kg retombe pendant son vol), ralentie ×6 à l'écran. Il frappe d'abord les mains sur la clé, puis le corps du travailleur à la hauteur qu'il a encore (hanches, jambes…), et se pose à plat au sol.
 - La course des ressorts est amplifiée ×6 à l'écran pour être visible.
