@@ -1,0 +1,1460 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Clam sous tension</title>
+<meta name="description" content="Animation 3D : l'énergie des ressorts d'un clam de foreuse quand la séquence de démontage PRO-OP-DD-005 n'est pas respectée.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+/* Layout : atelier 3D à gauche (scène + barre de lecture), rail de procédure à droite ; tout s'empile sur téléphone. */
+:root {
+  --bg: #e8ebed;
+  --panel: #f6f7f8;
+  --ink: #1b2125;
+  --muted: #56626b;
+  --line: #cfd6db;
+  --accent: #e8b21c;        /* jaune sécurité */
+  --accent-ink: #1b2125;
+  --ok: #2c7a4c;
+  --warn: #9a5b00;
+  --danger: #c42b1f;
+  --scene: #d7dce0;
+  --floor: #b7bec3;
+  --shade: rgba(20, 26, 30, .06);
+  --display: "Barlow Condensed", "Arial Narrow", "Roboto Condensed", sans-serif;
+  --body: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #111518; --panel: #171c20; --ink: #e3e8eb; --muted: #93a0a8; --line: #29323a;
+    --accent: #f2c230; --accent-ink: #111518; --ok: #57c486; --warn: #f0a53a; --danger: #ff5d52;
+    --scene: #1a2024; --floor: #2b3238; --shade: rgba(0, 0, 0, .25);
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #111518; --panel: #171c20; --ink: #e3e8eb; --muted: #93a0a8; --line: #29323a;
+  --accent: #f2c230; --accent-ink: #111518; --ok: #57c486; --warn: #f0a53a; --danger: #ff5d52;
+  --scene: #1a2024; --floor: #2b3238; --shade: rgba(0, 0, 0, .25);
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+html, body { margin: 0; }
+body { background: var(--bg); color: var(--ink); font-family: var(--body); font-size: 15px; line-height: 1.5; }
+h1, h2, h3 { font-family: var(--display); text-wrap: balance; margin: 0; letter-spacing: .01em; }
+button, input, select { font: inherit; color: inherit; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+.app { display: grid; grid-template-columns: minmax(0, 1fr); gap: 16px; padding: 16px; }
+@media (min-width: 960px) {
+  html, body { height: 100%; }
+  .app { height: 100%; grid-template-columns: minmax(0, 1fr) 390px; }
+  .rail { overflow-y: auto; min-height: 0; }
+}
+
+/* ---------- Scène ---------- */
+.stage { display: grid; grid-template-rows: minmax(0, 1fr) auto; min-height: 0; border: 1px solid var(--line); border-radius: 10px; overflow: hidden; background: var(--scene); }
+.view { position: relative; min-height: 340px; height: 58vh; }
+@media (min-width: 960px) { .view { height: auto; } }
+.view canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; touch-action: none; }
+.chip-row { position: absolute; top: 12px; left: 12px; right: 12px; display: flex; flex-wrap: wrap; gap: 8px; align-items: center; pointer-events: none; }
+.chip { pointer-events: auto; display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; border-radius: 999px; background: var(--panel); border: 1px solid var(--line); font-size: 12px; font-weight: 500; letter-spacing: .02em; }
+.chip .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--ok); }
+.chip[data-tone="warn"] .dot { background: var(--warn); }
+.chip[data-tone="danger"] .dot { background: var(--danger); }
+.chip-row .spacer { flex: 1; }
+.chip button { border: 0; background: none; padding: 0; cursor: pointer; font-size: 12px; font-weight: 500; }
+.note { position: absolute; left: 12px; bottom: 10px; font-family: var(--mono); font-size: 11px; color: var(--muted); background: color-mix(in srgb, var(--scene) 80%, transparent); padding: 2px 6px; border-radius: 4px; pointer-events: none; }
+.flash { position: absolute; inset: 0; pointer-events: none; background: radial-gradient(ellipse at center, transparent 35%, var(--danger) 120%); opacity: 0; }
+.banner { position: absolute; left: 50%; top: 56px; transform: translateX(-50%); pointer-events: none; text-align: center; font-family: var(--display); color: #fff; background: var(--danger); padding: 8px 18px 10px; border-radius: 6px; box-shadow: 0 8px 30px rgba(0,0,0,.25); max-width: calc(100% - 32px); }
+.banner strong { display: block; font-size: clamp(26px, 4vw, 40px); letter-spacing: .06em; line-height: 1.05; }
+.banner span { font-family: var(--mono); font-size: 13px; }
+
+.dock { background: var(--panel); border-top: 1px solid var(--line); display: grid; gap: 10px; padding: 12px 16px 14px; position: relative; }
+.dock::before { content: ""; position: absolute; left: 0; right: 0; top: -1px; height: 5px; opacity: 0; transition: opacity .3s; background: repeating-linear-gradient(-45deg, var(--accent) 0 10px, #1b2125 10px 20px); }
+.dock[data-tone="warn"]::before, .dock[data-tone="danger"]::before { opacity: 1; }
+.caption { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 4px 14px; align-items: baseline; }
+.cap-num { grid-row: span 2; font-family: var(--display); font-weight: 700; font-size: 44px; line-height: .9; color: var(--muted); font-variant-numeric: tabular-nums; min-width: 1.4ch; }
+.dock[data-tone="warn"] .cap-num { color: var(--warn); }
+.dock[data-tone="danger"] .cap-num { color: var(--danger); }
+.cap-title { font-family: var(--display); font-size: 24px; font-weight: 600; line-height: 1.1; }
+.cap-text { margin: 0; color: var(--ink); max-width: 72ch; min-height: 3em; }
+.cap-tag { display: inline-block; font-family: var(--body); font-size: 11px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; padding: 1px 7px; border-radius: 3px; margin-left: 8px; vertical-align: 3px; color: #fff; background: var(--warn); }
+.cap-tag[data-tone="danger"] { background: var(--danger); }
+
+.transport { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 10px; }
+.tbtn { width: 38px; height: 34px; display: inline-grid; place-items: center; border-radius: 6px; border: 1px solid var(--line); background: var(--bg); cursor: pointer; }
+.tbtn:hover { border-color: var(--muted); }
+.tbtn.play { width: 52px; background: var(--accent); color: var(--accent-ink); border-color: transparent; }
+.tbtn svg { width: 16px; height: 16px; fill: currentColor; }
+.scrub { flex: 1 1 220px; min-width: 0; position: relative; height: 34px; display: flex; align-items: center; }
+.scrub input { width: 100%; margin: 0; accent-color: var(--accent); position: relative; z-index: 1; background: transparent; }
+.ticks { position: absolute; left: 8px; right: 8px; top: 50%; height: 12px; transform: translateY(-50%); pointer-events: none; }
+.ticks i { position: absolute; top: 0; width: 2px; height: 12px; background: var(--line); border-radius: 1px; }
+.ticks i[data-tone="warn"] { background: var(--warn); }
+.ticks i[data-tone="danger"] { background: var(--danger); }
+.tmeta { font-family: var(--mono); font-size: 12px; color: var(--muted); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.topt { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; font-size: 13px; color: var(--muted); }
+.topt label { display: inline-flex; gap: 6px; align-items: center; cursor: pointer; }
+.topt select { background: var(--bg); border: 1px solid var(--line); border-radius: 5px; padding: 3px 6px; font-size: 13px; }
+
+/* ---------- Rail ---------- */
+.rail { display: flex; flex-direction: column; gap: 18px; min-width: 0; padding-bottom: 8px; }
+.eyebrow { margin: 0; font-family: var(--mono); font-size: 11.5px; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
+.brand h1 { font-size: 40px; line-height: 1; font-weight: 700; text-transform: uppercase; margin-top: 4px; }
+.brand p.lede { margin: 6px 0 0; color: var(--muted); max-width: 46ch; }
+.sec-title { font-family: var(--body); font-size: 11.5px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); margin: 0 0 8px; }
+
+.scen { display: grid; gap: 6px; }
+.scen button { text-align: left; display: grid; grid-template-columns: 12px minmax(0, 1fr); gap: 2px 10px; padding: 9px 12px; border-radius: 8px; border: 1px solid var(--line); background: var(--panel); cursor: pointer; }
+.scen button:hover { border-color: var(--muted); }
+.scen button[aria-selected="true"] { border-color: var(--ink); box-shadow: inset 0 0 0 1px var(--ink); }
+.scen .sw { grid-row: span 2; width: 12px; height: 12px; border-radius: 3px; margin-top: 4px; background: var(--ok); }
+.scen button[data-tone="danger"] .sw { background: var(--danger); }
+.scen b { font-weight: 600; }
+.scen small { color: var(--muted); font-size: 13px; }
+
+.readout { display: grid; gap: 10px; padding: 14px; border-radius: 8px; background: var(--panel); border: 1px solid var(--line); }
+.big { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; }
+.big .num { font-family: var(--display); font-weight: 700; font-size: 46px; line-height: 1; font-variant-numeric: tabular-nums; }
+.big .unit { font-family: var(--display); font-size: 22px; font-weight: 600; color: var(--muted); }
+.big .state { margin-left: auto; font-size: 12px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; padding: 2px 8px; border-radius: 3px; color: var(--accent-ink); background: var(--accent); }
+.big .state[data-tone="ok"] { background: var(--ok); color: #fff; }
+.big .state[data-tone="danger"] { background: var(--danger); color: #fff; }
+.meter { position: relative; height: 10px; border-radius: 5px; background: var(--bg); border: 1px solid var(--line); overflow: hidden; }
+.meter i { position: absolute; left: 0; top: 0; bottom: 0; width: 0; background: var(--accent); }
+.meter[data-tone="danger"] i { background: var(--danger); }
+.meter[data-tone="ok"] i { background: var(--ok); }
+.kv { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+.kv div { min-width: 0; }
+.kv dt { font-size: 11.5px; color: var(--muted); }
+.kv dd { margin: 0; font-family: var(--mono); font-size: 14px; font-variant-numeric: tabular-nums; }
+.equiv { margin: 0; font-size: 13px; color: var(--muted); }
+
+.steps ol { list-style: none; margin: 0; padding: 0; display: grid; gap: 2px; }
+.steps li button { width: 100%; text-align: left; display: grid; grid-template-columns: 3.2ch minmax(0, 1fr); gap: 10px; padding: 6px 8px; border: 0; border-radius: 6px; background: none; cursor: pointer; align-items: baseline; }
+.steps li button:hover { background: var(--shade); }
+.steps .n { white-space: nowrap; font-family: var(--display); font-weight: 700; font-size: 18px; color: var(--muted); text-align: right; font-variant-numeric: tabular-nums; }
+.steps .t { font-size: 14px; }
+.steps .flag { display: inline-block; margin-left: 6px; font-size: 10.5px; font-weight: 600; letter-spacing: .05em; text-transform: uppercase; color: #fff; background: var(--warn); border-radius: 3px; padding: 0 5px; vertical-align: 1px; }
+.steps .flag[data-tone="danger"] { background: var(--danger); }
+.steps li.done .t { color: var(--muted); }
+.steps li.now button { background: var(--shade); box-shadow: inset 3px 0 0 var(--accent); }
+.steps li.now .n { color: var(--ink); }
+
+.bolts .grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; }
+.bolt { border: 1px solid var(--line); border-radius: 6px; padding: 6px 8px 7px; background: var(--panel); display: grid; gap: 3px; min-width: 0; }
+.bolt .top { display: flex; justify-content: space-between; align-items: baseline; gap: 4px; }
+.bolt .id { font-family: var(--display); font-weight: 700; font-size: 18px; line-height: 1; }
+.bolt .st { font-size: 10.5px; letter-spacing: .04em; text-transform: uppercase; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.bolt .bar { height: 5px; border-radius: 3px; background: var(--bg); overflow: hidden; }
+.bolt .bar i { display: block; height: 100%; width: 0; background: var(--muted); }
+.bolt .vals { display: flex; justify-content: space-between; font-family: var(--mono); font-size: 11.5px; color: var(--muted); font-variant-numeric: tabular-nums; gap: 4px; }
+.bolt[data-load="high"] .bar i { background: var(--danger); }
+.bolt[data-load="high"] .vals b { color: var(--danger); }
+.bolt[data-active="true"] { border-color: var(--accent); box-shadow: inset 0 0 0 1px var(--accent); }
+.bolt[data-gone="true"] { opacity: .45; }
+.bolt .vals b { font-weight: 500; color: var(--ink); }
+.hint { margin: 6px 0 0; font-size: 12.5px; color: var(--muted); }
+
+details.params { border: 1px solid var(--line); border-radius: 8px; background: var(--panel); }
+details.params summary { cursor: pointer; padding: 10px 14px; font-weight: 600; font-size: 14px; }
+.pgrid { display: grid; gap: 12px; padding: 0 14px 14px; }
+.pgrid label { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 2px 10px; font-size: 13.5px; }
+.pgrid output { font-family: var(--mono); font-size: 13px; font-variant-numeric: tabular-nums; }
+.pgrid input[type="range"] { grid-column: 1 / -1; width: 100%; accent-color: var(--accent); }
+.pgrid .fine { font-size: 12.5px; color: var(--muted); margin: 0; }
+.reset { justify-self: start; border: 1px solid var(--line); background: var(--bg); border-radius: 6px; padding: 5px 10px; cursor: pointer; font-size: 13px; }
+
+.remontage { font-size: 13.5px; }
+.remontage ul { margin: 0; padding-left: 18px; display: grid; gap: 4px; }
+.remontage b { font-family: var(--mono); font-weight: 500; }
+.src { font-size: 12px; color: var(--muted); margin: 0; border-top: 1px solid var(--line); padding-top: 12px; }
+
+@media (prefers-reduced-motion: reduce) { .dock::before { transition: none; } }
+</style>
+</head>
+<body>
+<div class="app">
+  <section class="stage" aria-label="Animation 3D">
+    <div class="view" id="view">
+      <canvas id="c" aria-label="Vue 3D du clam, des ressorts et du travailleur"></canvas>
+      <div class="flash" id="flash"></div>
+      <div class="chip-row">
+        <span class="chip" id="scenChip" data-tone="ok"><span class="dot"></span><span id="scenChipText">Procédure respectée</span></span>
+        <span class="spacer"></span>
+        <span class="chip" id="camChip" hidden><button type="button" id="camBtn">Recentrer la caméra</button></span>
+      </div>
+      <div class="banner" id="banner" hidden><strong id="bannerTitle">PROJECTION</strong><span id="bannerSub"></span></div>
+      <div class="note" id="note">Course des ressorts affichée ×6</div>
+    </div>
+    <div class="dock" id="dock" data-tone="ok">
+      <div class="caption" aria-live="polite">
+        <span class="cap-num" id="capNum">1</span>
+        <h2 class="cap-title"><span id="capTitle">Manettes en position fermée</span><span class="cap-tag" id="capTag" hidden></span></h2>
+        <p class="cap-text" id="capText"></p>
+      </div>
+      <div class="transport">
+        <button class="tbtn" id="bRestart" type="button" aria-label="Recommencer"><svg viewBox="0 0 16 16"><path d="M3 2h2v12H3zM14 2v12L6 8z"/></svg></button>
+        <button class="tbtn" id="bPrev" type="button" aria-label="Étape précédente"><svg viewBox="0 0 16 16"><path d="M10 2v12L2 8zM12 2h2v12h-2z"/></svg></button>
+        <button class="tbtn play" id="bPlay" type="button" aria-label="Lecture"><svg viewBox="0 0 16 16" id="playIcon"><path d="M4 2l10 6-10 6z"/></svg></button>
+        <button class="tbtn" id="bNext" type="button" aria-label="Étape suivante"><svg viewBox="0 0 16 16"><path d="M6 2v12l8-6zM2 2h2v12H2z"/></svg></button>
+        <div class="scrub"><div class="ticks" id="ticks"></div><input type="range" id="scrub" min="0" max="1000" step="1" value="0" aria-label="Position dans l'animation"></div>
+        <span class="tmeta" id="tmeta">Étape 1/9</span>
+      </div>
+      <div class="topt">
+        <label><input type="checkbox" id="optPause" checked> Pause à chaque étape</label>
+        <label>Vitesse
+          <select id="optSpeed"><option value="0.5">0,5×</option><option value="1" selected>1×</option><option value="2">2×</option></select>
+        </label>
+        <label><input type="checkbox" id="optWorker" checked> Travailleur</label>
+      </div>
+    </div>
+  </section>
+
+  <aside class="rail">
+    <header class="brand">
+      <p class="eyebrow">PRO-OP-DD-005 · Clam / chuck de foreuse</p>
+      <h1>Clam sous tension</h1>
+      <p class="lede">Les ressorts du clam restent comprimés tant que le cône est boulonné. La séquence de démontage sert à libérer cette énergie lentement.</p>
+    </header>
+
+    <section>
+      <h3 class="sec-title">Scénario</h3>
+      <div class="scen" role="tablist" id="scenList"></div>
+    </section>
+
+    <section class="readout" aria-label="Énergie des ressorts">
+      <div class="big"><span class="num" id="eNum">48</span><span class="unit">J</span><span class="state" id="eState">Stockée</span></div>
+      <div class="meter" id="eMeter"><i id="eFill"></i></div>
+      <dl class="kv">
+        <div><dt>Force des ressorts</dt><dd id="kvF">15,2 kN</dd></div>
+        <div><dt>Compression moy.</dt><dd id="kvX">6,35 mm</dd></div>
+        <div><dt>Charge max / boulon</dt><dd id="kvB">1,7 kN</dd></div>
+      </dl>
+      <p class="equiv" id="equiv"></p>
+    </section>
+
+    <section class="steps">
+      <h3 class="sec-title">Séquence</h3>
+      <ol id="stepList"></ol>
+    </section>
+
+    <section class="bolts">
+      <h3 class="sec-title">Boulons ½ du cône</h3>
+      <div class="grid" id="boltGrid"></div>
+      <p class="hint">Numéros 1 à 6 : ordre de dévissage de la procédure. R : boulons avec bushing, remis sans bushing comme retenue.</p>
+    </section>
+
+    <details class="params">
+      <summary>Paramètres des ressorts</summary>
+      <div class="pgrid">
+        <p class="fine">Valeurs indicatives pour la démonstration. Remplacez-les par les données du fabricant du clam pour un calcul réel.</p>
+        <label for="pN">Nombre de ressorts <output id="oN">12</output><input type="range" id="pN" min="6" max="24" step="1" value="12"></label>
+        <label for="pK">Raideur par ressort <output id="oK">200 N/mm</output><input type="range" id="pK" min="50" max="600" step="10" value="200"></label>
+        <label for="pX">Compression à libérer <output id="oX">6,35 mm (¼ po)</output><input type="range" id="pX" min="2" max="15" step="0.05" value="6.35"></label>
+        <label for="pM">Masse du cône projeté <output id="oM">12 kg</output><input type="range" id="pM" min="3" max="40" step="1" value="12"></label>
+        <button type="button" class="reset" id="pReset">Valeurs par défaut</button>
+      </div>
+    </details>
+
+    <section class="remontage">
+      <h3 class="sec-title">Au remontage (étapes 10 à 13)</h3>
+      <ul>
+        <li>Nettoyer les deux côtés du couvercle avant de le remettre.</li>
+        <li>Remettre d'abord les 3 boulons, puis visser les autres 1 tour à la fois dans l'ordre de l'étape 7, pour ne pas écraser les ressorts d'un seul côté.</li>
+        <li>Les 9 boulons ½ × 2 ¼ po enlevés sur un chuck sont remplacés par des neufs.</li>
+        <li>Serrer les 9 boulons à la clé dynamométrique : <b>105 lb·pi</b> (≈ 142 N·m).</li>
+      </ul>
+    </section>
+
+    <p class="src">Source : procédure PRO-OP-DD-005, <i>Démonter et remonter un clam et un chuck (mandrin) sur la foreuse</i>, révision mai 2021. Modèle 3D simplifié, inspiré de la vue éclatée du clam UM-079. Les forces, énergies et trajectoires sont des estimations physiques simples, à des fins de formation.</p>
+  </aside>
+</div>
+
+<script type="importmap">
+{ "imports": {
+  "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+  "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+} }
+</script>
+<script type="module">
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
+
+/* ================= Constantes physiques et géométriques ================= */
+const U = 0.1;                 // 1 unité de scène = 0,1 m
+const X = 6;                   // amplification visuelle de la course des ressorts
+const SLOWMO = 6;              // ralenti de la projection
+const PITCH = 25.4 / 13;       // pas d'un boulon ½-13 UNC (mm/tour)
+const ENG = 13;                // tours pour sortir complètement un boulon (≈ 1 po d'engagement)
+const G = 9.81 / U;            // gravité en unités/s²
+const SPRING_MASS = 0.3;       // kg, pour l'éjection des ressorts
+const DEFAULTS = { n: 12, k: 200, x0: 6.35, m: 12 };
+const P = { ...DEFAULTS };
+
+const FLOOR = -1.4;
+const BODY_TOP = 2.2;
+const POCKET = 1.75;           // fond des logements de ressorts
+const GAP = 0.28;              // espace visible entre bâti et cône (ressorts comprimés)
+const PLATE_T = 0.32;
+const PLATE_TOP0 = BODY_TOP + GAP + PLATE_T;   // 2,80
+const HUB_H = 0.5;
+const BUSH_H = 0.25;
+const LC = PLATE_TOP0 - PLATE_T - POCKET;      // longueur comprimée visible des ressorts
+const R_BOLT = 1.18, R_SPRING = 1.42, R_COVER_BOLT = 1.79, R_JC_BOLT = 0.8;
+
+const pv = () => PITCH / 1000 / U * X;          // montée visuelle par tour
+const travel = () => P.x0 / 1000 / U * X;       // course visuelle totale
+const rounds = () => Math.ceil(P.x0 / PITCH - 1e-6);
+const H = t => pv() * Math.min(t, rounds()) + 0.3 * pv() * Math.max(0, t - rounds());
+const invH = h => h <= pv() * rounds() ? h / pv() : rounds() + (h - pv() * rounds()) / (0.3 * pv());
+const retainTurns = () => invH(travel() + 0.045);
+
+// 9 boulons du cône, à 40° d'intervalle. 3 avec bushing (0°, 120°, 240°), 6 numérotés selon l'ordre de la photo de l'étape 7.
+const STAR = { 2: 1, 7: 2, 4: 3, 1: 4, 5: 5, 8: 6 };  // index de position → numéro de la procédure
+const BOLTS = [...Array(9)].map((_, i) => {
+  const a = i * 40 * Math.PI / 180;
+  const bushing = i % 3 === 0;
+  return { i, x: R_BOLT * Math.cos(a), z: -R_BOLT * Math.sin(a), bushing, num: bushing ? null : STAR[i], rIdx: bushing ? i / 3 + 1 : null };
+});
+const ORDER = [1, 2, 3, 4, 5, 6].map(n => BOLTS.find(b => b.num === n).i);   // positions dans l'ordre 1→6
+const BUSHED = [0, 3, 6];
+const byNum = n => BOLTS.find(b => b.num === n).i;
+
+let SPRINGS = [];
+function layoutSprings() {
+  SPRINGS = [...Array(P.n)].map((_, j) => {
+    const a = (j + 0.5) * 2 * Math.PI / P.n;
+    return { x: R_SPRING * Math.cos(a), z: -R_SPRING * Math.sin(a) };
+  });
+}
+layoutSprings();
+
+/* ================= Utilitaires ================= */
+const clamp01 = v => Math.max(0, Math.min(1, v));
+const seg = (p, a, b) => clamp01((p - a) / (b - a));
+const ease = t => t < .5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
+const lerp = (a, b, t) => a + (b - a) * t;
+const fr = (v, d = 1) => v.toLocaleString('fr-CA', { minimumFractionDigits: d, maximumFractionDigits: d });
+const css = name => getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+/* ================= Solveur : position du cône retenu par les boulons =================
+   Le cône est un plan d = a + b·x + c·z (déplacement vers le haut). Les ressorts le poussent
+   vers leur longueur libre ; chaque boulon engagé impose d ≤ h. On minimise l'énergie des
+   ressorts (moindres carrés) sous ces contraintes par énumération des ensembles actifs. */
+function gauss(M, n) {
+  for (let c = 0; c < n; c++) {
+    let piv = c;
+    for (let r = c + 1; r < n; r++) if (Math.abs(M[r][c]) > Math.abs(M[piv][c])) piv = r;
+    if (Math.abs(M[piv][c]) < 1e-10) return null;
+    [M[c], M[piv]] = [M[piv], M[c]];
+    for (let r = 0; r < n; r++) {
+      if (r === c) continue;
+      const f = M[r][c] / M[c][c];
+      if (f) for (let k = c; k <= n; k++) M[r][k] -= f * M[c][k];
+    }
+  }
+  return M.map((row, i) => row[n] / row[i]);
+}
+function solvePlate(cons, t) {
+  const A = [[0, 0, 0], [0, 0, 0], [0, 0, 0]], r = [0, 0, 0];
+  for (const s of SPRINGS) {
+    const row = [1, s.x, s.z];
+    for (let i = 0; i < 3; i++) { r[i] += row[i] * t; for (let j = 0; j < 3; j++) A[i][j] += row[i] * row[j]; }
+  }
+  const f = th => SPRINGS.reduce((acc, s) => acc + (t - (th[0] + th[1] * s.x + th[2] * s.z)) ** 2, 0);
+  let best = null;
+  const tryS = S => {
+    const m = 3 + S.length;
+    const M = [...Array(m)].map(() => new Array(m + 1).fill(0));
+    for (let i = 0; i < 3; i++) { for (let j = 0; j < 3; j++) M[i][j] = 2 * A[i][j]; M[i][m] = 2 * r[i]; }
+    S.forEach((ci, k) => {
+      const c = cons[ci], row = [1, c.x, c.z];
+      for (let i = 0; i < 3; i++) { M[i][3 + k] = row[i]; M[3 + k][i] = row[i]; }
+      M[3 + k][m] = c.h;
+    });
+    const sol = gauss(M, m);
+    if (!sol) return;
+    const th = sol.slice(0, 3);
+    for (let i = 0; i < cons.length; i++) {
+      if (S.includes(i)) continue;
+      const c = cons[i];
+      if (th[0] + th[1] * c.x + th[2] * c.z > c.h + 1e-7) return;
+    }
+    const val = f(th);
+    if (!best || val < best.val - 1e-12) best = { val, th, S, lam: sol.slice(3) };
+  };
+  const n = cons.length;
+  tryS([]);
+  for (let i = 0; i < n; i++) {
+    tryS([i]);
+    for (let j = i + 1; j < n; j++) {
+      tryS([i, j]);
+      for (let k = j + 1; k < n; k++) tryS([i, j, k]);
+    }
+  }
+  return best || { th: [0, 0, 0], S: [], lam: [] };
+}
+
+/* ================= Scène ================= */
+const canvas = document.getElementById('c');
+const view = document.getElementById('view');
+const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, preserveDrawingBuffer: false });
+renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 1.0;
+
+const scene = new THREE.Scene();
+const pmrem = new THREE.PMREMGenerator(renderer);
+scene.environment = pmrem.fromScene(new RoomEnvironment(renderer), 0.04).texture;
+scene.fog = new THREE.Fog(0xd7dce0, 30, 70);
+
+const camera = new THREE.PerspectiveCamera(38, 1, 0.1, 200);
+camera.position.set(-9, 10, 14);
+const controls = new OrbitControls(camera, canvas);
+controls.enableDamping = true;
+controls.target.set(0, 2.6, 0);
+controls.maxPolarAngle = Math.PI * 0.49;
+controls.minDistance = 4;
+controls.maxDistance = 45;
+
+scene.add(new THREE.HemisphereLight(0xeef3ff, 0x5a4e44, 0.9));
+const sun = new THREE.DirectionalLight(0xffffff, 2.1);
+sun.position.set(7, 16, 9);
+sun.castShadow = true;
+sun.shadow.mapSize.set(2048, 2048);
+Object.assign(sun.shadow.camera, { left: -14, right: 14, top: 14, bottom: -14, near: 1, far: 50 });
+sun.shadow.bias = -0.0004;
+scene.add(sun);
+
+const mat = {
+  red: new THREE.MeshStandardMaterial({ color: 0xb3301e, roughness: .5, metalness: .15 }),
+  steel: new THREE.MeshStandardMaterial({ color: 0x2c3135, roughness: .42, metalness: .65 }),
+  steelLight: new THREE.MeshStandardMaterial({ color: 0x9aa3a9, roughness: .3, metalness: .85 }),
+  bolt: new THREE.MeshStandardMaterial({ color: 0xc9a54a, roughness: .35, metalness: .8 }),
+  spring: new THREE.MeshStandardMaterial({ color: 0x2a5bd7, roughness: .35, metalness: .35 }),
+  pocket: new THREE.MeshStandardMaterial({ color: 0x0d0f10, roughness: 1 }),
+  wood: new THREE.MeshStandardMaterial({ color: 0xa98357, roughness: .9 }),
+  woodDark: new THREE.MeshStandardMaterial({ color: 0x8a6a45, roughness: .95 }),
+  floor: new THREE.MeshStandardMaterial({ color: 0xb7bec3, roughness: .95 }),
+  console: new THREE.MeshStandardMaterial({ color: 0x3b4247, roughness: .6, metalness: .3 }),
+  knob: new THREE.MeshStandardMaterial({ color: 0x1b1b1b, roughness: .4 }),
+  lockRed: new THREE.MeshStandardMaterial({ color: 0xc62828, roughness: .45 }),
+  coverall: new THREE.MeshStandardMaterial({ color: 0x2c3e55, roughness: .85 }),
+  hivis: new THREE.MeshStandardMaterial({ color: 0xff8a1f, roughness: .6, emissive: 0x401800 }),
+  reflect: new THREE.MeshStandardMaterial({ color: 0xd9dde0, roughness: .2, metalness: .6 }),
+  skin: new THREE.MeshStandardMaterial({ color: 0xc49a7e, roughness: .7 }),
+  helmet: new THREE.MeshStandardMaterial({ color: 0xf2c230, roughness: .35 }),
+  dark: new THREE.MeshStandardMaterial({ color: 0x151719, roughness: .3, metalness: .2 }),
+  glove: new THREE.MeshStandardMaterial({ color: 0x8c8f7a, roughness: .9 }),
+  boot: new THREE.MeshStandardMaterial({ color: 0x3a2a1c, roughness: .8 }),
+};
+
+function mesh(geo, m, { cast = true, receive = true } = {}) {
+  const o = new THREE.Mesh(geo, m);
+  o.castShadow = cast; o.receiveShadow = receive;
+  return o;
+}
+// Anneau plein extrudé vers le haut (y de 0 à h), avec trous optionnels [x, z, r].
+function annulus(rIn, rOut, h, holes = [], segs = 72) {
+  const s = new THREE.Shape();
+  s.absarc(0, 0, rOut, 0, Math.PI * 2, false);
+  if (rIn > 0) { const p = new THREE.Path(); p.absarc(0, 0, rIn, 0, Math.PI * 2, true); s.holes.push(p); }
+  for (const [x, z, r] of holes) { const p = new THREE.Path(); p.absarc(x, -z, r, 0, Math.PI * 2, true); s.holes.push(p); }
+  const g = new THREE.ExtrudeGeometry(s, { depth: h, bevelEnabled: false, curveSegments: segs });
+  g.rotateX(-Math.PI / 2);
+  return g;
+}
+const ring = (n, r, off = 0) => [...Array(n)].map((_, i) => { const a = (i * 360 / n + off) * Math.PI / 180; return [r * Math.cos(a), -r * Math.sin(a)]; });
+
+function makeBolt({ headR, headH, shankR, shankL }, m) {
+  const g = new THREE.Group();
+  const head = mesh(new THREE.CylinderGeometry(headR, headR, headH, 6), m);
+  head.position.y = headH / 2;
+  const washer = mesh(new THREE.CylinderGeometry(headR * 1.08, headR * 1.08, 0.02, 24), m);
+  washer.position.y = 0.01;
+  const shank = mesh(new THREE.CylinderGeometry(shankR, shankR, shankL, 12), m);
+  shank.position.y = -shankL / 2;
+  g.add(head, washer, shank);
+  return g;
+}
+function fadeable(obj) {
+  const m = new Map();
+  obj.traverse(o => { if (o.isMesh) { if (!m.has(o.material)) m.set(o.material, o.material.clone()); o.material = m.get(o.material); o.material.transparent = true; } });
+  obj.userData.mats = [...m.values()];
+  return obj;
+}
+function setOpacity(obj, a) {
+  obj.visible = a > 0.01;
+  for (const m of obj.userData.mats || []) { m.opacity = a; m.depthWrite = a > 0.99; }
+}
+
+/* ---------- Sol et palette ---------- */
+const floor = mesh(new THREE.PlaneGeometry(200, 200), mat.floor, { cast: false });
+floor.rotation.x = -Math.PI / 2; floor.position.y = FLOOR;
+scene.add(floor);
+const pallet = new THREE.Group();
+for (const z of [-2.3, -1.15, 0, 1.15, 2.3]) { const b = mesh(new THREE.BoxGeometry(5.8, 0.2, 0.95), mat.wood); b.position.set(0, -0.1, z); pallet.add(b); }
+for (const x of [-2.4, 0, 2.4]) { const b = mesh(new THREE.BoxGeometry(0.95, 1.2, 5.6), mat.woodDark); b.position.set(x, -0.8, 0); pallet.add(b); }
+scene.add(pallet);
+
+/* ---------- Bâti (rouge) ---------- */
+const body = new THREE.Group();
+scene.add(body);
+const flange = mesh(annulus(0.62, 2.05, 0.3), mat.red);
+body.add(flange);
+for (const [x, z] of ring(16, 1.98, 11.25)) { const s = mesh(new THREE.CylinderGeometry(0.06, 0.06, 0.06, 16), mat.dark); s.position.set(x, 0.33, z); body.add(s); }
+let bodyMain = null, pocketGroup = null;
+function buildBody() {
+  if (bodyMain) { body.remove(bodyMain); bodyMain.geometry.dispose(); }
+  if (pocketGroup) body.remove(pocketGroup);
+  bodyMain = mesh(annulus(0.62, 1.9, BODY_TOP - 0.3, SPRINGS.map(s => [s.x, s.z, 0.155])), mat.red);
+  bodyMain.position.y = 0.3;
+  body.add(bodyMain);
+  pocketGroup = new THREE.Group();
+  for (const s of SPRINGS) { const d = mesh(new THREE.CircleGeometry(0.155, 24), mat.pocket, { cast: false }); d.rotation.x = -Math.PI / 2; d.position.set(s.x, POCKET, s.z); pocketGroup.add(d); }
+  body.add(pocketGroup);
+}
+buildBody();
+const handle = mesh(new THREE.TorusGeometry(0.45, 0.07, 12, 24, Math.PI), mat.red);
+handle.rotation.z = Math.PI / 2; handle.position.set(-1.9, 1.3, 0);
+body.add(handle);
+const grease = mesh(new THREE.CylinderGeometry(0.05, 0.07, 0.18, 12), mat.steelLight);
+grease.position.set(0, 1.7, -1.92); grease.rotation.x = Math.PI / 2;
+body.add(grease);
+
+/* ---------- Ressorts ---------- */
+class Helix extends THREE.Curve {
+  constructor(r, turns) { super(); this.r = r; this.turns = turns; }
+  getPoint(t, target = new THREE.Vector3()) { const a = t * this.turns * Math.PI * 2; return target.set(Math.cos(a) * this.r, t, Math.sin(a) * this.r); }
+}
+const springGeo = new THREE.TubeGeometry(new Helix(0.118, 6.5), 220, 0.03, 8, false);
+let springMeshes = [];
+const springGroup = new THREE.Group();
+scene.add(springGroup);
+function buildSprings() {
+  springMeshes.forEach(s => springGroup.remove(s));
+  springMeshes = SPRINGS.map(s => { const m = mesh(springGeo, mat.spring); m.position.set(s.x, POCKET, s.z); springGroup.add(m); return m; });
+}
+buildSprings();
+
+/* ---------- Cône / piston (plaque + moyeu + mâchoires) ---------- */
+const plate = new THREE.Group();     // origine = dessus de la plaque, au centre
+scene.add(plate);
+const plateDisc = mesh(annulus(0.62, 1.62, PLATE_T, BOLTS.map(b => [b.x, b.z, 0.075])), mat.steel);
+plateDisc.position.y = -PLATE_T;
+const hub = mesh(annulus(0.62, 1.0, HUB_H), mat.steel);
+const hubRing = mesh(annulus(0.62, 0.7, 0.02), mat.steelLight);
+hubRing.position.y = HUB_H;
+plate.add(plateDisc, hub, hubRing);
+const jaws = [0, 1, 2, 3].map(k => {
+  const j = new THREE.Group();
+  const block = mesh(new THREE.BoxGeometry(0.2, 0.42, 0.34), mat.steelLight);
+  j.add(block);
+  for (let t = 0; t < 4; t++) { const tooth = mesh(new THREE.BoxGeometry(0.04, 0.03, 0.34), mat.dark); tooth.position.set(-0.11, -0.15 + t * 0.1, 0); j.add(tooth); }
+  j.userData.a = k * Math.PI / 2 + Math.PI / 4;
+  j.rotation.y = -j.userData.a;
+  plate.add(j);
+  return j;
+});
+
+/* ---------- Couvert des mâchoires (6 boulons ¾) ---------- */
+const JC_BASE = new THREE.Vector3(0, PLATE_TOP0 + HUB_H, 0);
+const JC_REST = new THREE.Vector3(-2.6, FLOOR, 5.0);
+const jawCover = mesh(annulus(0.5, 1.02, 0.18, ring(6, R_JC_BOLT, 30).map(([x, z]) => [x, z, 0.1])), mat.steel);
+fadeable(jawCover);
+scene.add(jawCover);
+const jcBolts = ring(6, R_JC_BOLT, 30).map(([x, z]) => {
+  const b = fadeable(makeBolt({ headR: 0.165, headH: 0.12, shankR: 0.095, shankL: 0.9 }, mat.bolt));
+  b.userData.base = new THREE.Vector3(x, JC_BASE.y + 0.18, z);
+  scene.add(b); return b;
+});
+
+/* ---------- Couvercle (9 boulons ½) ---------- */
+const CV_BASE = new THREE.Vector3(0, BODY_TOP, 0);
+const CV_REST = new THREE.Vector3(-5.6, FLOOR, 2.2);
+const cover = mesh(annulus(1.66, 1.9, PLATE_TOP0 - BODY_TOP, ring(9, R_COVER_BOLT, 20).map(([x, z]) => [x, z, 0.07])), mat.red);
+fadeable(cover);
+scene.add(cover);
+const cvBolts = ring(9, R_COVER_BOLT, 20).map(([x, z]) => {
+  const b = fadeable(makeBolt({ headR: 0.11, headH: 0.08, shankR: 0.064, shankL: 0.8 }, mat.bolt));
+  b.userData.base = new THREE.Vector3(x, PLATE_TOP0, z);
+  scene.add(b); return b;
+});
+
+/* ---------- Boulons du cône + bushings ---------- */
+const pBolts = BOLTS.map(b => {
+  const o = fadeable(makeBolt({ headR: 0.11, headH: 0.08, shankR: 0.064, shankL: 1.1 }, mat.bolt));
+  scene.add(o); return o;
+});
+const bushings = BUSHED.map(i => {
+  const o = fadeable(mesh(annulus(0.07, 0.13, BUSH_H, [], 32), mat.steelLight));
+  o.position.set(BOLTS[i].x, PLATE_TOP0, BOLTS[i].z);
+  scene.add(o); return o;
+});
+
+/* ---------- Clé à cliquet sur le boulon actif ---------- */
+const wrench = new THREE.Group();
+{
+  const socket = mesh(new THREE.CylinderGeometry(0.15, 0.15, 0.26, 20), mat.steelLight);
+  socket.position.y = 0.13;
+  const head = mesh(new THREE.CylinderGeometry(0.2, 0.2, 0.12, 24), mat.steelLight);
+  head.position.y = 0.32;
+  const arm = mesh(new THREE.BoxGeometry(1.5, 0.07, 0.16), mat.steelLight);
+  arm.position.set(0.75, 0.32, 0);
+  const grip = mesh(new THREE.CylinderGeometry(0.08, 0.08, 0.6, 16), mat.lockRed);
+  grip.rotation.z = Math.PI / 2; grip.position.set(1.3, 0.32, 0);
+  wrench.add(socket, head, arm, grip);
+}
+scene.add(wrench);
+const activeRing = new THREE.Mesh(new THREE.TorusGeometry(0.22, 0.025, 8, 40), new THREE.MeshBasicMaterial({ color: 0xf2c230, transparent: true, depthTest: false }));
+activeRing.rotation.x = -Math.PI / 2; activeRing.renderOrder = 5;
+scene.add(activeRing);
+
+/* ---------- Poste de commande de la foreuse (manettes + cadenas) ---------- */
+const consoleG = new THREE.Group();
+consoleG.position.set(-3.4, FLOOR, -4.6);
+scene.add(consoleG);
+{
+  const ped = mesh(new THREE.BoxGeometry(1.3, 3.9, 1.1), mat.console); ped.position.y = 1.95;
+  const bank = mesh(new THREE.BoxGeometry(1.9, 0.55, 1.2), mat.console); bank.position.y = 4.18;
+  consoleG.add(ped, bank);
+  for (const x of [-0.6, 0.6]) for (const z of [-0.61]) { const port = mesh(new THREE.CylinderGeometry(0.09, 0.09, 0.1, 16), mat.steelLight); port.rotation.x = Math.PI / 2; port.position.set(x, 4.18, z); consoleG.add(port); }
+}
+const levers = [-0.3, 0.3].map(z => {
+  const L = new THREE.Group();
+  L.position.set(0, 4.45, z);
+  const rod = mesh(new THREE.CylinderGeometry(0.045, 0.045, 1.7, 12), mat.steelLight); rod.position.y = 0.85;
+  const knob = mesh(new THREE.SphereGeometry(0.16, 20, 14), mat.knob); knob.position.y = 1.75;
+  L.add(rod, knob);
+  consoleG.add(L); return L;
+});
+const lockG = new THREE.Group();
+{
+  const lb = mesh(new THREE.BoxGeometry(0.36, 0.42, 0.16), mat.lockRed);
+  const sh = mesh(new THREE.TorusGeometry(0.12, 0.032, 8, 20, Math.PI), mat.steelLight); sh.position.y = 0.21;
+  const tagTex = (() => {
+    const c = document.createElement('canvas'); c.width = 256; c.height = 400;
+    const x = c.getContext('2d');
+    x.fillStyle = '#fff'; x.fillRect(0, 0, 256, 400);
+    x.fillStyle = '#c62828'; x.fillRect(0, 0, 256, 120);
+    x.fillStyle = '#fff'; x.font = '700 58px "Barlow Condensed", sans-serif'; x.textAlign = 'center'; x.fillText('DANGER', 128, 82);
+    x.fillStyle = '#111'; x.font = '600 38px "Barlow Condensed", sans-serif';
+    ['NE PAS', 'OPÉRER', 'Cadenassé'].forEach((t, i) => x.fillText(t, 128, 190 + i * 56));
+    return new THREE.CanvasTexture(c);
+  })();
+  tagTex.colorSpace = THREE.SRGBColorSpace;
+  const tag = new THREE.Mesh(new THREE.PlaneGeometry(0.5, 0.78), new THREE.MeshStandardMaterial({ map: tagTex, roughness: .8, side: THREE.DoubleSide }));
+  tag.position.set(0, -0.62, 0.02);
+  lockG.add(lb, sh, tag);
+}
+lockG.position.set(0.3, 4.0, 0.62);
+consoleG.add(lockG);
+
+/* ---------- Zone de projection ---------- */
+const zone = new THREE.Mesh(new THREE.CylinderGeometry(1.75, 1.75, 5, 48, 1, true), new THREE.MeshBasicMaterial({ color: 0xc42b1f, transparent: true, opacity: 0, depthWrite: false, side: THREE.DoubleSide }));
+zone.position.y = PLATE_TOP0 + 2.5;
+scene.add(zone);
+
+/* ---------- Travailleur agenouillé, penché au-dessus du clam ---------- */
+const KNEE = new THREE.Vector3(5.9, -1.05, 0);
+const worker = new THREE.Group();
+worker.position.copy(KNEE);
+scene.add(worker);
+const HEAD = new THREE.Vector3(2.15, 6.45, 0);   // position du visage (monde)
+const HEAD_R = 0.88;
+function limb(a, b, r, m) {
+  const len = a.distanceTo(b);
+  const o = mesh(new THREE.CapsuleGeometry(r, len, 6, 14), m);
+  o.position.copy(a).add(b).multiplyScalar(.5).sub(KNEE);
+  o.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), b.clone().sub(a).normalize());
+  worker.add(o); return o;
+}
+{
+  const V = (x, y, z) => new THREE.Vector3(x, y, z);
+  for (const z of [-0.55, 0.55]) {
+    limb(V(5.9, -1.05, z), V(8.2, -1.1, z), 0.45, mat.coverall);
+    limb(V(5.9, -1.0, z), V(6.5, 2.8, z * 0.9), 0.55, mat.coverall);
+    const boot = mesh(new THREE.BoxGeometry(0.9, 0.6, 0.8), mat.boot); boot.position.set(8.6 - KNEE.x, -1.1 - KNEE.y, z); worker.add(boot);
+    const pad = mesh(new THREE.BoxGeometry(0.6, 0.35, 0.8), mat.hivis); pad.position.set(5.85 - KNEE.x, -1.2 - KNEE.y, z); worker.add(pad);
+  }
+  const hip = V(6.5, 2.9, 0), sh = V(3.35, 5.5, 0);
+  const torso = limb(hip, sh, 1.0, mat.coverall);
+  const dir = sh.clone().sub(hip).normalize();
+  for (const t of [0.35, 0.62]) {
+    const band = mesh(new THREE.CylinderGeometry(1.03, 1.03, 0.22, 32, 1, true), t < .5 ? mat.hivis : mat.reflect);
+    band.position.copy(hip.clone().lerp(sh, t)).sub(KNEE);
+    band.quaternion.copy(torso.quaternion);
+    worker.add(band);
+  }
+  for (const z of [-1.05, 1.05]) {
+    const shoulder = V(3.35, 5.5, z), hand = V(1.35, 3.3, z * 0.5);
+    limb(shoulder, hand, 0.3, mat.coverall);
+    const glove = mesh(new THREE.SphereGeometry(0.3, 16, 12), mat.glove); glove.position.copy(hand).sub(KNEE); worker.add(glove);
+  }
+  const headG = new THREE.Group();
+  headG.position.copy(HEAD).sub(KNEE);
+  headG.rotation.z = 0.75;
+  const skull = mesh(new THREE.SphereGeometry(HEAD_R * 0.95, 28, 20), mat.skin);
+  const hat = mesh(new THREE.SphereGeometry(HEAD_R * 1.08, 28, 14, 0, Math.PI * 2, 0, Math.PI / 2), mat.helmet); hat.position.y = 0.12;
+  const brim = mesh(new THREE.CylinderGeometry(HEAD_R * 1.32, HEAD_R * 1.32, 0.06, 32), mat.helmet); brim.position.y = 0.14;
+  const glasses = mesh(new THREE.BoxGeometry(0.16, 0.26, 1.05), mat.dark); glasses.position.set(-0.8, -0.1, 0);
+  headG.add(skull, hat, brim, glasses);
+  worker.add(headG);
+}
+
+/* ---------- Étiquettes ---------- */
+function makeLabel(text, { bg = '#111518', fg = '#ffffff', h = 0.36, font = '600 44px "IBM Plex Sans", sans-serif', pad = 22, round = 14 } = {}) {
+  const c = document.createElement('canvas');
+  const x = c.getContext('2d');
+  x.font = font;
+  const w = Math.ceil(x.measureText(text).width) + pad * 2;
+  c.width = Math.max(w, 64); c.height = 64;
+  x.font = font;
+  x.fillStyle = bg;
+  x.beginPath(); x.roundRect(0, 0, c.width, c.height, round); x.fill();
+  x.fillStyle = fg; x.textAlign = 'center'; x.textBaseline = 'middle';
+  x.fillText(text, c.width / 2, 34);
+  const tex = new THREE.CanvasTexture(c); tex.colorSpace = THREE.SRGBColorSpace;
+  const s = new THREE.Sprite(new THREE.SpriteMaterial({ map: tex, depthTest: false, transparent: true }));
+  s.scale.set(h * c.width / c.height, h, 1);
+  s.renderOrder = 10;
+  scene.add(s);
+  return s;
+}
+let labels = null;
+function buildLabels() {
+  if (labels) Object.values(labels).flat().forEach(s => scene.remove(s));
+  labels = {
+    nums: BOLTS.map(b => b.num ? makeLabel(String(b.num), { font: '700 46px "Barlow Condensed", sans-serif', h: 0.42, bg: '#f2c230', fg: '#111518', round: 32 }) : null),
+    ret: BUSHED.map(() => makeLabel('R', { font: '700 46px "Barlow Condensed", sans-serif', h: 0.42, bg: '#2c7a4c', round: 32 })),
+    springsC: [makeLabel('Ressorts comprimés', { bg: '#2a5bd7', h: 0.34 })],
+    springsF: [makeLabel('Ressorts détendus', { bg: '#2c7a4c', h: 0.34 })],
+    stuck: [makeLabel('Cône coincé : ressorts toujours comprimés', { bg: '#c42b1f', h: 0.34 })],
+    open: [makeLabel('Manettes ouvertes', { h: 0.32 })],
+    closed: [makeLabel('Manettes fermées', { bg: '#2c7a4c', h: 0.32 })],
+    zone: [makeLabel('Zone de projection', { bg: '#c42b1f', h: 0.34 })],
+  };
+  labels.springsC[0].position.set(-2.3, 2.5, 1.9);
+  labels.springsF[0].position.set(-2.3, 2.5, 1.9);
+  labels.stuck[0].position.set(0, 4.3, 1.8);
+  labels.open[0].position.set(-3.4, 4.9, -3.4);
+  labels.closed[0].position.set(-3.4, 4.9, -3.4);
+  labels.zone[0].position.set(-1.9, 7.2, 0.4);
+}
+const labelOpacity = (s, a) => { if (!s) return; s.visible = a > 0.01; s.material.opacity = a; };
+
+/* ---------- Trajectoire ---------- */
+const trailGeo = new THREE.BufferGeometry();
+const trail = new THREE.Line(trailGeo, new THREE.LineDashedMaterial({ color: 0xc42b1f, dashSize: 0.25, gapSize: 0.15, transparent: true, depthTest: false }));
+trail.renderOrder = 4;
+scene.add(trail);
+
+/* ================= État de l'animation ================= */
+function initState() {
+  return {
+    lever: 0, jaws: 0, lock: 0,
+    jc: { bolts: Array(6).fill(0), lift: 0 },
+    cv: { bolts: Array(9).fill(0), lift: 0 },
+    pb: BOLTS.map(() => ({ turns: 0, lift: 0, gone: 0, bushOut: 0 })),
+    stuck: false, shake: 0, active: -1,
+    nums: 0, ret: 0, springLbl: 0, zone: 0, stuckLbl: 0,
+    plateOut: 0, flight: null, launchT: 0, ride: -1, time: 0,
+    cam: 'intro',
+  };
+}
+// Retrait complet d'un boulon du cône : dévissage (0–0,7) puis retrait (0,7–1)
+function removeBolt(S, i, p, from = null) {
+  const b = S.pb[i];
+  const t0 = from ?? b.turns;
+  b.turns = lerp(t0, ENG, ease(seg(p, 0, .7)));
+  b.gone = seg(p, .7, 1);
+}
+
+/* ---------- Étapes communes ---------- */
+const st = {
+  lever: { n: '1', title: 'Manettes en position fermée', cam: 'intro', dur: 3.5,
+    text: 'Sur la foreuse, placer les manettes du clam ou du chuck en position fermée : les ressorts sont alors étirés au maximum.',
+    apply(S, p) { S.lever = ease(p); } },
+  jaws: { n: '2', title: 'Mâchoires fermées', cam: 'top', dur: 3,
+    text: 'S\'assurer que les jaws (mâchoires) dans le clam ou le chuck sont en position fermée.',
+    apply(S, p) { S.jaws = ease(p); } },
+  lock: { n: '3', title: 'Cadenasser la foreuse', cam: 'intro', dur: 3,
+    text: 'Appliquer la procédure de cadenassage. Le cadenassage coupe l\'énergie hydraulique, mais pas celle des ressorts : elle reste emmagasinée dans le clam.',
+    apply(S, p) { S.lock = ease(p); } },
+  jawCover: { n: '4', title: 'Couvert des mâchoires', cam: 'overview', dur: 5,
+    text: 'Dévisser les 6 boulons ¾ du couvert des jaws avec une clé 1 1/8, puis retirer le couvert.',
+    apply(S, p) { for (let k = 0; k < 6; k++) S.jc.bolts[k] = seg(p, k * .07, k * .07 + .45); S.jc.lift = seg(p, .58, 1); } },
+  cover: { n: '5', title: 'Couvercle : 9 boulons ½', cam: 'overview', dur: 6,
+    text: 'Enlever les 9 boulons ½ du couvercle avec une clé ¾. Les ressorts deviennent visibles : ils sont toujours comprimés sous le cône.',
+    apply(S, p) { for (let k = 0; k < 9; k++) S.cv.bolts[k] = seg(p, k * .045, k * .045 + .4); S.cv.lift = seg(p, .6, 1); S.springLbl = seg(p, .85, 1); } },
+};
+const first5 = { n: '1–5', title: 'Étapes 1 à 5 respectées', cam: 'overview', dur: 8,
+  text: 'Manettes fermées, mâchoires fermées, foreuse cadenassée, couvert des mâchoires et couvercle retirés. Les ressorts sont visibles et comprimés.',
+  apply(S, p) {
+    st.lever.apply(S, seg(p, 0, .15)); st.jaws.apply(S, seg(p, .1, .25)); st.lock.apply(S, seg(p, .2, .35));
+    st.jawCover.apply(S, seg(p, .3, .62)); st.cover.apply(S, seg(p, .62, 1));
+  } };
+const skip6 = { n: '6', title: 'Boulons à bushing retirés, non remis', cam: 'bolts', dur: 5, tone: 'warn', flag: 'Omise',
+  text: 'Les 3 boulons avec bushing sont enlevés et ne sont pas remis sans les bushings. Plus rien n\'empêchera la projection du cône.',
+  apply(S, p) {
+    S.springLbl = 1;
+    BUSHED.forEach((i, k) => { removeBolt(S, i, seg(p, k * .1, .6 + k * .1)); S.pb[i].bushOut = seg(p, .75, 1); });
+    S.zone = seg(p, .7, 1);
+  } };
+
+/* Desserrage en étoile : 1 tour à la fois, ordre 1 → 6, sur `rounds()` tours */
+function starLoosen(S, p) {
+  const R = rounds();
+  const g = p * 6 * R;
+  ORDER.forEach((i, o) => {
+    let t = 0;
+    for (let r = 0; r < R; r++) t += clamp01(g - (r * 6 + o));
+    S.pb[i].turns = t;
+  });
+  S.active = p < 1 ? ORDER[Math.floor(g) % 6] : -1;
+  S.nums = 1;
+}
+
+/* ================= Scénarios ================= */
+const SCEN = {
+  A: {
+    label: 'Procédure respectée', sub: 'Étapes 1 à 9 de PRO-OP-DD-005', tone: 'ok',
+    make: () => [
+      st.lever, st.jaws, st.lock, st.jawCover, st.cover,
+      { n: '6', title: 'Boulons de retenue remis sans bushing', cam: 'bolts', dur: 8,
+        text: 'Enlever les 3 boulons ½ avec les bushings sur le cône, puis les remettre sans les bushings. Ils laissent monter le cône de la course des ressorts, mais empêchent sa projection.',
+        apply(S, p) {
+          S.springLbl = 1;
+          BUSHED.forEach(i => {
+            const b = S.pb[i];
+            b.turns = seg(p, .6, .78) > 0 ? lerp(ENG, retainTurns(), ease(seg(p, .7, .95))) : ENG * ease(seg(p, 0, .32));
+            b.lift = 1.0 * ease(seg(p, .32, .45)) * (1 - ease(seg(p, .6, .72)));
+            b.bushOut = seg(p, .42, .6);
+          });
+          S.ret = seg(p, .9, 1);
+        } },
+      { n: '7', title: 'Dévisser 1 tour à la fois, ordre 1 à 6', cam: 'bolts', dur: rounds() * 6 * 0.62 / 0.84,
+        text: 'Dévisser les 6 autres boulons ½ un seul tour à la fois, dans l\'ordre de la photo. Les ressorts, comprimés de ¼ po, se détendent graduellement et de façon égale. On retire ensuite les 6 boulons.',
+        apply(S, p) {
+          S.springLbl = 1; S.ret = 1;
+          starLoosen(S, seg(p, 0, .84));
+          ORDER.forEach((i, o) => { if (p > .84) removeBolt(S, i, seg(p, .84 + o * .012, .95 + o * .01), rounds()); });
+          S.nums = 1 - seg(p, .9, 1);
+        } },
+      { n: '8', title: 'Dévisser les 3 derniers boulons', cam: 'bolts', dur: 4,
+        text: 'Les ressorts sont détendus : les 3 boulons de retenue ne portent plus de charge. On peut les enlever.',
+        apply(S, p) { S.springLbl = 1; S.ret = 1 - seg(p, .6, .9); BUSHED.forEach((i, k) => removeBolt(S, i, seg(p, k * .08, .75 + k * .08), retainTurns())); } },
+      { n: '9', title: 'Changer les pièces', cam: 'overview', dur: 4.5,
+        text: 'Le cône et les ressorts sont accessibles sans énergie résiduelle : ressorts, chuck bowl, piston peuvent être remplacés.',
+        apply(S, p) { S.springLbl = 1 - seg(p, .5, 1); S.plateOut = ease(p); } },
+    ],
+  },
+  B: {
+    label: 'Erreur : boulons retirés un par un', sub: 'Étapes 6 et 7 non respectées', tone: 'danger',
+    make: () => [
+      first5, skip6,
+      { n: '7', title: 'Boulons 4, 1 et 3 retirés au complet', cam: 'bolts', dur: 9, tone: 'warn', flag: 'Non respectée',
+        text: 'Au lieu d\'un tour à la fois, chaque boulon est sorti au complet avant de passer au suivant, en faisant le tour du cercle. Les boulons restants reprennent la charge.',
+        apply(S, p) { S.springLbl = 1; S.zone = 1; S.nums = 1; [4, 1, 3].forEach((n, k) => { const q = seg(p, k / 3, (k + 1) / 3); removeBolt(S, byNum(n), q); if (q > 0 && q < 1) S.active = byNum(n); }); } },
+      { n: '7', title: 'Boulon 5 retiré : le cône bascule', cam: 'bolts', dur: 5, tone: 'warn', flag: 'Non respectée',
+        text: 'Il ne reste que les boulons 2 et 6, du même côté. Le cône bascule vers le côté libre et se coince dans son logement : ces 2 boulons portent presque toute la force des ressorts.',
+        apply(S, p) { S.springLbl = 1; S.zone = 1; S.nums = 1; removeBolt(S, byNum(5), p); S.active = p < 1 ? byNum(5) : -1; } },
+      { n: '7', title: 'Boulon 2 retiré : un seul boulon retient tout', cam: 'bolts', dur: 5, tone: 'warn', flag: 'Non respectée',
+        text: 'Le boulon 6 porte maintenant toute la force des ressorts, soit 9 fois la charge qu\'il partage normalement avec les 8 autres.',
+        apply(S, p) { S.springLbl = 1; S.zone = 1; S.nums = 1; removeBolt(S, byNum(2), p); S.active = p < 1 ? byNum(2) : byNum(6); } },
+      { n: '7', title: 'Dévissage du boulon 6 sous pleine charge', cam: 'bolts', dur: 3.5, tone: 'danger', flag: 'Danger',
+        text: 'Le travailleur se penche pour dévisser le dernier boulon. Son filet, surchargé, commence à céder.',
+        apply(S, p) { S.springLbl = 1; S.zone = 1; S.nums = 1; S.pb[byNum(6)].turns = 0.25 * ease(p); S.active = byNum(6); } },
+      { n: '!', title: 'Le filet cède : projection du cône', cam: 'wide', flight: true, tone: 'danger', flag: 'Projection', dir: null, ride: byNum(6),
+        text: 'Toute l\'énergie restante des ressorts est libérée d\'un coup. Le cône et les mâchoires partent vers le haut, dans l\'axe du clam, là où se trouve le visage du travailleur.' },
+      { n: '⚠', title: 'Bilan', cam: 'wide', dur: 6, tone: 'danger', summary: true, text: '' },
+    ],
+  },
+  C: {
+    label: 'Erreur : cône coincé, sans retenue', sub: 'Étape 6 omise', tone: 'danger',
+    make: () => [
+      first5, skip6,
+      { n: '7', title: 'Desserrage 1 tour à la fois… le cône ne bouge pas', cam: 'bolts', dur: rounds() * 6 * 0.5, tone: 'warn',
+        text: 'Les boulons sont desserrés correctement, mais le cône reste coincé dans son logement (saleté, rouille). Les têtes de boulons montent, le cône reste en place : les ressorts sont toujours comprimés.',
+        apply(S, p) { S.springLbl = 1; S.zone = 1; S.stuck = true; starLoosen(S, p); S.stuckLbl = seg(p, .5, .7); } },
+      { n: '7', title: 'Boulons retirés : rien ne bouge', cam: 'bolts', dur: 5, tone: 'warn',
+        text: 'Tous les boulons sont enlevés. Le cône semble stable et les boulons ne portaient aucune charge. C\'est trompeur : 100 % de l\'énergie est encore dans les ressorts.',
+        apply(S, p) { S.springLbl = 1; S.zone = 1; S.stuck = true; S.stuckLbl = 1; S.nums = 1 - seg(p, .7, 1); ORDER.forEach((i, o) => removeBolt(S, i, seg(p, o * .06, .7 + o * .05), rounds())); } },
+      { n: '8', title: 'Le travailleur se penche pour décoincer le cône', cam: 'bolts', dur: 3.5, tone: 'danger', flag: 'Danger',
+        text: 'Un coup ou une vibration suffit : le cône se décoince brusquement. Sans les 3 boulons de retenue de l\'étape 6, rien ne l\'arrête.',
+        apply(S, p) { S.springLbl = 1; S.zone = 1; S.stuck = true; S.stuckLbl = 1; S.shake = seg(p, .35, 1); } },
+      { n: '!', title: 'Le cône se décoince : projection', cam: 'wide', flight: true, tone: 'danger', flag: 'Projection', dir: [0.22, 1, 0.04], ride: -1,
+        text: 'L\'énergie des ressorts, restée intacte, est libérée d\'un coup. Avec l\'étape 6, les 3 boulons remis sans bushing auraient retenu le cône après quelques millimètres.' },
+      { n: '⚠', title: 'Bilan', cam: 'wide', dur: 6, tone: 'danger', summary: true, text: '' },
+    ],
+  },
+};
+
+/* ================= Dérivation : pose du cône, énergie, charges ================= */
+function derive(S) {
+  const t = travel();
+  const D = { pose: { a: 0, b: 0, c: 0 }, loads: Array(9).fill(0), comp: [], E: 0, F: 0, flightS: null };
+  if (S.flight) {
+    D.flightS = sampleFlight(S.flight, S.launchT);
+    D.comp = SPRINGS.map(() => 0);
+  } else {
+    const cons = [];
+    if (S.stuck) {
+      const w = S.shake;
+      D.pose = { a: w * 0.012 * Math.sin(S.time * 90), b: w * 0.004 * Math.sin(S.time * 70), c: 0 };
+    } else {
+      S.pb.forEach((b, i) => { if (b.gone === 0 && b.turns < ENG - 1e-6) cons.push({ i, x: BOLTS[i].x, z: BOLTS[i].z, h: H(b.turns) }); });
+      const sol = solvePlate(cons, t);
+      let [a, b, c] = sol.th;
+      // Le cône est guidé dans son logement : il ne peut que peu basculer avant de se coincer.
+      const g = Math.hypot(b, c);
+      if (g > GMAX) {
+        b *= GMAX / g; c *= GMAX / g;
+        a = cons.reduce((m, k) => Math.min(m, k.h - b * k.x - c * k.z), t);
+      }
+      D.pose = { a, b, c };
+    }
+    D.comp = SPRINGS.map(s => {
+      const d = D.pose.a + D.pose.b * s.x + D.pose.c * s.z;
+      return Math.max(0, P.x0 - d * U * 1000 / X);
+    });
+    D.F = D.comp.reduce((a, x) => a + P.k * x, 0);           // N
+    D.E = D.comp.reduce((a, x) => a + 0.5 * P.k * x * x, 0) / 1000;  // J
+    if (!S.stuck) boltLoads(D, cons);
+  }
+  S.D = D;
+  return S;
+}
+
+/* Répartition de la force des ressorts sur les boulons en contact : équilibre des forces et des
+   moments, solution de norme minimale (plaque légèrement flexible). */
+const GMAX = 0.025;
+function boltLoads(D, cons) {
+  const { a, b, c } = D.pose;
+  const contact = cons.filter(k => k.h - (a + b * k.x + c * k.z) < 0.02);
+  if (!contact.length || D.F <= 0) return;
+  let F = 0, Mx = 0, Mz = 0;
+  SPRINGS.forEach((s, j) => { const f = P.k * D.comp[j]; F += f; Mx += f * s.x; Mz += f * s.z; });
+  const M = [[0, 0, 0, F], [0, 0, 0, Mx], [0, 0, 0, Mz]];
+  for (const k of contact) { const r = [1, k.x, k.z]; for (let i = 0; i < 3; i++) for (let j = 0; j < 3; j++) M[i][j] += r[i] * r[j]; }
+  for (let i = 0; i < 3; i++) M[i][i] += 1e-3;
+  const y = gauss(M, 3) || [F / contact.length, 0, 0];
+  const f = contact.map(k => Math.max(0, y[0] + y[1] * k.x + y[2] * k.z));
+  const sum = f.reduce((s, v) => s + v, 0);
+  contact.forEach((k, n) => { D.loads[k.i] = sum > 0 ? D.F * f[n] / sum : D.F / contact.length; });
+}
+
+/* ================= Projection : trajectoire balistique pré-calculée ================= */
+const HIT_R = 1.62 + HEAD_R - 0.25;
+const HANDS_Y = 3.3;   // gants du travailleur, au-dessus du cône (clé sur le boulon)
+function groundAt(x, z) {
+  const r = Math.hypot(x, z);
+  if (r < 2.0) return PLATE_TOP0 - PLATE_T + 0.05;
+  if (r < 2.9 && Math.abs(x) < 2.9 && Math.abs(z) < 2.8) return 0.2;
+  return FLOOR + 0.35;
+}
+function computeFlight(S0, step) {
+  const D = S0.D;
+  const E = D.E;
+  const v = Math.sqrt(2 * E / P.m);                     // m/s
+  const pose = D.pose;
+  const n = new THREE.Vector3(-pose.b, 1, -pose.c).normalize();
+  const q0 = new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0, 1, 0), n);
+  const dir = step.dir ? new THREE.Vector3(...step.dir).normalize() : n.clone().add(new THREE.Vector3(0.12, 0, 0)).normalize();
+  const vel = dir.clone().multiplyScalar(v / U);
+  const pos = new THREE.Vector3(0, PLATE_TOP0 + pose.a, 0);
+  const axis = new THREE.Vector3(0, 1, 0).cross(dir).normalize();
+  if (axis.lengthSq() < 1e-6) axis.set(0, 0, 1);
+  const w = -2.5 - v * 1.6;                               // rad/s
+  const dt = 1 / 480;
+  const out = { E, v, h: v * v / (2 * 9.81), samples: [], dt, q0, axis, impact: null, springs: [], tEnd: 0 };
+  let ang = 0, t = 0, landed = false, hitDone = false;
+  out.hands = null;
+  for (let k = 0; k < 480 * 4; k++) {
+    out.samples.push(pos.x, pos.y, pos.z, ang);
+    if (landed) break;
+    vel.y -= G * dt;
+    pos.addScaledVector(vel, dt);
+    ang += w * dt;
+    t += dt;
+    if (!out.hands && pos.y >= HANDS_Y - 0.3) out.hands = { t, speed: vel.length() * U };
+    if (!hitDone) {
+      const dx = Math.hypot(pos.x - HEAD.x, pos.z - HEAD.z), dy = Math.abs(pos.y - HEAD.y);
+      if (dx < HIT_R && dy < HEAD_R + 0.25) {
+        hitDone = true;
+        out.impact = { t, speed: vel.length() * U };
+        vel.x = -Math.abs(vel.x) * 0.3 - 1.5; vel.z *= 0.3; vel.y = -Math.abs(vel.y) * 0.25;
+      }
+    }
+    if (vel.y < 0 && pos.y <= groundAt(pos.x, pos.z)) { pos.y = groundAt(pos.x, pos.z); landed = true; }
+  }
+  out.tEnd = t;
+  // Éjection de quelques ressorts (les plus comprimés)
+  const idx = D.comp.map((c, j) => [c, j]).sort((a, b) => b[0] - a[0]).slice(0, Math.min(4, P.n)).map(e => e[1]);
+  let seed = 7;
+  const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+  for (const j of idx) {
+    const s = SPRINGS[j];
+    const Es = 0.5 * P.k * 1000 * (D.comp[j] / 1000) ** 2;
+    const vs = Math.sqrt(2 * Es / SPRING_MASS) / U;
+    const d = new THREE.Vector3(s.x * 0.5 + (rnd() - .5) * .4, 1, s.z * 0.5 + (rnd() - .5) * .4).normalize();
+    const p = new THREE.Vector3(s.x, POCKET, s.z), vv = d.multiplyScalar(vs);
+    const sm = [], spin = (rnd() - .5) * 20;
+    let a = 0, done = false;
+    for (let k = 0; k < 480 * 4; k++) {
+      sm.push(p.x, p.y, p.z, a);
+      if (done) break;
+      vv.y -= G * dt; p.addScaledVector(vv, dt); a += spin * dt;
+      const gnd = Math.hypot(p.x, p.z) < 2 ? POCKET : groundAt(p.x, p.z) - 0.2;
+      if (vv.y < 0 && p.y <= gnd && k > 20) { p.y = gnd; done = true; }
+    }
+    out.springs.push({ j, sm, E: Es });
+    out.tEnd = Math.max(out.tEnd, sm.length / 4 * dt);
+  }
+  out.sprE = out.springs.length ? Math.max(...out.springs.map(s => s.E)) : 0;
+  return out;
+}
+function sampleAt(arr, dt, t) {
+  const n = arr.length / 4;
+  const k = Math.min(n - 1, Math.max(0, Math.floor(t / dt)));
+  return [arr[k * 4], arr[k * 4 + 1], arr[k * 4 + 2], arr[k * 4 + 3], k];
+}
+function sampleFlight(F, t) { return { plate: sampleAt(F.samples, F.dt, t), springs: F.springs.map(s => ({ j: s.j, v: sampleAt(s.sm, F.dt, t) })) }; }
+
+/* ================= Timeline ================= */
+let scen = 'A', steps = [], starts = [], total = 0, T = 0, playing = false, speed = 1;
+function build(keep = false) {
+  const prev = keep ? locate(T) : null;
+  steps = SCEN[scen].make().map(s => ({ ...s }));
+  // Les étapes de projection dépendent de l'état au moment du lancement
+  steps.forEach((s, i) => {
+    if (!s.flight) return;
+    const S = initState();
+    for (let k = 0; k < i; k++) steps[k].apply(S, 1);
+    derive(S);
+    const F = computeFlight(S, s);
+    s.F = F;
+    s.dur = F.tEnd * SLOWMO + 1.2;
+    s.apply = (S2, p) => { S2.flight = F; S2.launchT = Math.max(0, (p * s.dur - 0.4) / SLOWMO); S2.ride = s.ride; S2.zone = 1; };
+  });
+  steps.forEach(s => {
+    if (s.summary) {
+      const F = steps.find(x => x.flight).F;
+      s.F = F;
+      s.apply = (S2) => { S2.flight = F; S2.launchT = 99; S2.ride = steps.find(x => x.flight).ride; };
+    }
+  });
+  starts = []; total = 0;
+  steps.forEach(s => { starts.push(total); total += s.dur; });
+  if (prev) T = Math.min(total - 1e-3, starts[Math.min(prev.i, steps.length - 1)] + prev.p * steps[Math.min(prev.i, steps.length - 1)].dur);
+  renderStepList(); renderTicks();
+  lastStep = -1;
+}
+function locate(t) {
+  let i = steps.length - 1;
+  for (let k = 0; k < steps.length; k++) if (t < starts[k] + steps[k].dur) { i = k; break; }
+  return { i, p: clamp01((t - starts[i]) / steps[i].dur) };
+}
+function stateAt(t) {
+  const { i, p } = locate(t);
+  const S = initState();
+  for (let k = 0; k < i; k++) steps[k].apply(S, 1);
+  steps[i].apply(S, p);
+  S.i = i; S.p = p; S.cam = steps[i].cam;
+  S.time = t;
+  return derive(S);
+}
+
+/* ================= Application de l'état à la scène ================= */
+const tmpQ = new THREE.Quaternion(), tmpQ2 = new THREE.Quaternion(), tmpV = new THREE.Vector3();
+const PLATE_BASE = new THREE.Vector3(), PLATE_REST = new THREE.Vector3(-6.6, FLOOR + PLATE_T, -2.4);
+function movePart(obj, base, rest, p, up = 1.8) {
+  const yTop = base.y + up;
+  const a = seg(p, 0, .3), b = seg(p, .3, .75), c = seg(p, .75, 1);
+  obj.position.set(lerp(base.x, rest.x, ease(b)), p < .3 ? lerp(base.y, yTop, ease(a)) : p < .75 ? yTop : lerp(yTop, rest.y, ease(c)), lerp(base.z, rest.z, ease(b)));
+}
+function applyScene(S) {
+  const D = S.D;
+  levers.forEach(L => { L.rotation.z = lerp(-0.55, 0.55, S.lever); });
+  labelOpacity(labels.open[0], S.i <= 2 && scen === 'A' ? 1 - S.lever : 0);
+  labelOpacity(labels.closed[0], S.i <= 2 && scen === 'A' ? S.lever : 0);
+  lockG.visible = S.lock > 0.01;
+  lockG.position.y = 4.0 + (1 - S.lock) * 0.8;
+  lockG.scale.setScalar(Math.max(0.01, S.lock));
+
+  // Couvert des mâchoires + boulons ¾
+  S.jc.bolts.forEach((r, k) => {
+    const b = jcBolts[k], base = b.userData.base, s = seg(r, 0, .6);
+    b.position.set(base.x, base.y + 0.3 * s + 0.9 * seg(r, .6, 1), base.z);
+    b.rotation.y = s * 6 * Math.PI * 2;
+    setOpacity(b, 1 - seg(r, .6, 1));
+  });
+  movePart(jawCover, JC_BASE, JC_REST, S.jc.lift);
+  // Couvercle + boulons ½
+  S.cv.bolts.forEach((r, k) => {
+    const b = cvBolts[k], base = b.userData.base, s = seg(r, 0, .6);
+    b.position.set(base.x, base.y + 0.25 * s + 0.9 * seg(r, .6, 1), base.z);
+    b.rotation.y = s * 5 * Math.PI * 2;
+    setOpacity(b, 1 - seg(r, .6, 1));
+  });
+  movePart(cover, CV_BASE, CV_REST, S.cv.lift);
+
+  // Cône
+  const fl = D.flightS;
+  if (fl) {
+    const [x, y, z, ang] = fl.plate;
+    plate.position.set(x, y, z);
+    tmpQ2.setFromAxisAngle(S.flight.axis, ang);
+    plate.quaternion.copy(tmpQ2).multiply(S.flight.q0);
+  } else {
+    const { a, b, c } = D.pose;
+    const n = tmpV.set(-b, 1, -c).normalize();
+    plate.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), n);
+    plate.position.set(0, PLATE_TOP0 + a, 0);
+    if (S.plateOut > 0) movePart(plate, PLATE_BASE.set(0, PLATE_TOP0 + a, 0), PLATE_REST, S.plateOut, 2.2);
+  }
+  jaws.forEach(j => {
+    const r = lerp(0.44, 0.34, S.jaws);
+    j.position.set(r * Math.cos(j.userData.a), 0.25, -r * Math.sin(j.userData.a));
+  });
+
+  // Ressorts
+  const t = travel();
+  const flying = new Map();
+  if (fl) fl.springs.forEach(s => flying.set(s.j, s.v));
+  springMeshes.forEach((m, j) => {
+    const s = SPRINGS[j];
+    if (flying.has(j)) {
+      const [x, y, z, a] = flying.get(j);
+      m.position.set(x, y, z); m.rotation.set(a, 0, a * 0.6);
+      m.scale.set(1, LC + t, 1);
+      return;
+    }
+    m.position.set(s.x, POCKET, s.z); m.rotation.set(0, 0, 0);
+    const compVis = D.comp[j] / 1000 / U * X;
+    m.scale.set(1, Math.max(0.3, LC + t - compVis), 1);
+  });
+
+  // Boulons du cône
+  S.pb.forEach((b, i) => {
+    const o = pBolts[i], B = BOLTS[i];
+    const bush = B.bushing ? BUSH_H * (1 - b.bushOut) : 0;
+    if (fl && S.ride === i) {
+      tmpV.set(B.x, 0.02, B.z);
+      o.position.copy(plate.localToWorld(tmpV));
+      o.quaternion.copy(plate.quaternion);
+      setOpacity(o, 1);
+    } else {
+      o.quaternion.identity();
+      o.position.set(B.x, PLATE_TOP0 + bush + H(b.turns) + b.lift + 0.9 * b.gone, B.z);
+      o.rotation.y = b.turns * Math.PI * 2;
+      setOpacity(o, fl && S.ride === -1 && b.gone < 1 ? 0 : 1 - b.gone);
+    }
+    if (B.bushing) {
+      const k = BUSHED.indexOf(i), bo = b.bushOut;
+      bushings[k].position.set(B.x + 0.6 * seg(bo, .3, 1), PLATE_TOP0 + 1.4 * ease(seg(bo, 0, .5)), B.z);
+      setOpacity(bushings[k], 1 - seg(bo, .6, 1));
+    }
+    if (labels.nums[i]) {
+      labels.nums[i].position.set(o.position.x, o.position.y + 0.55, o.position.z);
+      labelOpacity(labels.nums[i], fl ? 0 : S.nums * (1 - b.gone));
+    }
+    if (B.bushing) {
+      const L = labels.ret[BUSHED.indexOf(i)];
+      L.position.set(o.position.x, o.position.y + 0.55, o.position.z);
+      labelOpacity(L, S.ret * (1 - b.gone));
+    }
+  });
+
+  // Outil sur le boulon actif
+  if (S.active >= 0 && !fl) {
+    const o = pBolts[S.active], B = BOLTS[S.active];
+    wrench.visible = true; activeRing.visible = true;
+    wrench.position.set(B.x, o.position.y - 0.02, B.z);
+    wrench.rotation.y = o.rotation.y;
+    activeRing.position.set(B.x, o.position.y + 0.05, B.z);
+  } else { wrench.visible = false; activeRing.visible = false; }
+
+  // Étiquettes et zone
+  const meanComp = D.comp.reduce((a, b) => a + b, 0) / Math.max(1, D.comp.length);
+  const compressed = meanComp > 0.15 * P.x0;
+  labelOpacity(labels.springsC[0], S.springLbl * (compressed && !fl ? 1 : 0) * (S.stuckLbl > 0.5 ? 0 : 1));
+  labelOpacity(labels.springsF[0], S.springLbl * (!compressed && !fl ? 1 : 0));
+  labelOpacity(labels.stuck[0], fl ? 0 : S.stuckLbl);
+  zone.material.opacity = 0.09 * S.zone * (fl ? 0.5 : 1);
+  labelOpacity(labels.zone[0], fl ? 0 : S.zone);
+
+  // Travailleur
+  let knock = 0;
+  if (fl && S.flight.impact) knock = ease(seg(S.launchT, S.flight.impact.t, S.flight.impact.t + 0.25));
+  worker.rotation.z = -0.38 * knock;
+  worker.visible = document.getElementById('optWorker').checked;
+
+  // Trajectoire
+  if (fl) {
+    const k = fl.plate[4];
+    if (trail.userData.F !== S.flight) {
+      const pts = [];
+      for (let m = 0; m < S.flight.samples.length; m += 16) pts.push(new THREE.Vector3(S.flight.samples[m], S.flight.samples[m + 1], S.flight.samples[m + 2]));
+      trailGeo.setFromPoints(pts); trail.computeLineDistances();
+      trail.userData.F = S.flight;
+    }
+    trail.visible = true;
+    trailGeo.setDrawRange(0, Math.floor(k / 4) + 1);
+  } else trail.visible = false;
+}
+
+/* ================= Caméra ================= */
+const CAMS = {
+  intro: { p: [-9.5, 9.5, 13], t: [-0.8, 3.2, -1.4] },
+  overview: { p: [-9, 8.8, 11.5], t: [-0.4, 2.8, 0.4] },
+  top: { p: [-1.6, 11.5, 5.4], t: [0, 2.9, 0] },
+  bolts: { p: [-3.6, 9.6, 8.2], t: [0.2, 3.0, 0] },
+  wide: { p: [-12, 10.5, 19], t: [0.8, 4.4, 0] },
+};
+let autoCam = true, camGoal = CAMS.intro;
+controls.addEventListener('start', () => { autoCam = false; document.getElementById('camChip').hidden = false; });
+document.getElementById('camBtn').addEventListener('click', () => { autoCam = true; document.getElementById('camChip').hidden = true; });
+camera.position.set(...CAMS.intro.p); controls.target.set(...CAMS.intro.t);
+const goalP = new THREE.Vector3(), goalT = new THREE.Vector3();
+function updateCamera(dt) {
+  if (!autoCam) return;
+  goalP.set(...camGoal.p); goalT.set(...camGoal.t);
+  const aspect = camera.aspect;
+  if (aspect < 1.1) goalP.sub(goalT).multiplyScalar(1 + (1.1 - aspect) * 0.9).add(goalT);
+  const k = reduceMotion ? 1 : 1 - Math.exp(-dt * 2.2);
+  camera.position.lerp(goalP, k);
+  controls.target.lerp(goalT, k);
+}
+
+/* ================= Interface ================= */
+const $ = id => document.getElementById(id);
+const scenList = $('scenList');
+Object.entries(SCEN).forEach(([key, s]) => {
+  const b = document.createElement('button');
+  b.type = 'button'; b.role = 'tab'; b.dataset.key = key; b.dataset.tone = s.tone;
+  b.innerHTML = `<span class="sw"></span><b>${s.label}</b><small>${s.sub}</small>`;
+  b.addEventListener('click', () => selectScen(key));
+  scenList.appendChild(b);
+});
+function selectScen(key) {
+  scen = key; T = 0; playing = false; autoCam = true; $('camChip').hidden = true;
+  [...scenList.children].forEach(b => b.setAttribute('aria-selected', String(b.dataset.key === key)));
+  $('scenChipText').textContent = SCEN[key].label;
+  $('scenChip').dataset.tone = SCEN[key].tone;
+  try { localStorage.setItem('clam-scen', key); } catch (e) {}
+  build();
+}
+function renderStepList() {
+  const ol = $('stepList');
+  ol.innerHTML = '';
+  steps.forEach((s, i) => {
+    const li = document.createElement('li');
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.innerHTML = `<span class="n">${s.n}</span><span class="t">${s.title}${s.flag ? `<span class="flag" data-tone="${s.tone}">${s.flag}</span>` : ''}</span>`;
+    b.addEventListener('click', () => { T = starts[i]; playing = false; autoCam = true; $('camChip').hidden = true; });
+    li.appendChild(b); ol.appendChild(li);
+  });
+}
+function renderTicks() {
+  const el = $('ticks'); el.innerHTML = '';
+  steps.forEach((s, i) => { if (!i) return; const t = document.createElement('i'); t.style.left = (starts[i] / total * 100) + '%'; if (s.tone) t.dataset.tone = s.tone; el.appendChild(t); });
+}
+function setPlaying(v) {
+  playing = v;
+  $('bPlay').setAttribute('aria-label', v ? 'Pause' : 'Lecture');
+  $('playIcon').innerHTML = v ? '<path d="M3 2h4v12H3zM9 2h4v12H9z"/>' : '<path d="M4 2l10 6-10 6z"/>';
+}
+$('bPlay').addEventListener('click', () => { if (!playing && T >= total - 1e-3) T = 0; setPlaying(!playing); });
+$('bRestart').addEventListener('click', () => { T = 0; setPlaying(false); autoCam = true; $('camChip').hidden = true; });
+$('bPrev').addEventListener('click', () => { const { i, p } = locate(T); T = starts[p < 0.05 && i > 0 ? i - 1 : i]; setPlaying(false); });
+$('bNext').addEventListener('click', () => { const { i } = locate(T); T = i < steps.length - 1 ? starts[i + 1] : total - 1e-3; setPlaying(false); });
+$('scrub').addEventListener('input', e => { T = e.target.value / 1000 * total; setPlaying(false); });
+$('optSpeed').addEventListener('change', e => { speed = +e.target.value; });
+addEventListener('keydown', e => {
+  if (e.target.closest('input, select, textarea')) return;
+  if (e.code === 'Space') { e.preventDefault(); $('bPlay').click(); }
+  else if (e.key === 'ArrowRight') $('bNext').click();
+  else if (e.key === 'ArrowLeft') $('bPrev').click();
+});
+
+// Grille des boulons
+const grid = $('boltGrid');
+const tileOrder = [...ORDER, ...BUSHED];
+const tiles = tileOrder.map(i => {
+  const B = BOLTS[i];
+  const d = document.createElement('div');
+  d.className = 'bolt';
+  d.innerHTML = `<div class="top"><span class="id">${B.num ?? 'R' + B.rIdx}</span><span class="st"></span></div><div class="bar"><i></i></div><div class="vals"><span class="tr"></span><b class="ld"></b></div>`;
+  grid.appendChild(d);
+  return { i, el: d, st: d.querySelector('.st'), bar: d.querySelector('.bar i'), tr: d.querySelector('.tr'), ld: d.querySelector('.ld') };
+});
+
+// Paramètres
+const pin = { n: $('pN'), k: $('pK'), x0: $('pX'), m: $('pM') };
+function showParams() {
+  $('oN').textContent = P.n;
+  $('oK').textContent = `${P.k} N/mm`;
+  $('oX').textContent = `${fr(P.x0, 2)} mm (${fr(P.x0 / 25.4, 2)} po)`;
+  $('oM').textContent = `${P.m} kg`;
+}
+function onParam() {
+  const nChanged = +pin.n.value !== P.n;
+  P.n = +pin.n.value; P.k = +pin.k.value; P.x0 = +pin.x0.value; P.m = +pin.m.value;
+  if (nChanged) { layoutSprings(); buildBody(); buildSprings(); }
+  showParams(); build(true);
+}
+Object.values(pin).forEach(el => el.addEventListener('input', onParam));
+$('pReset').addEventListener('click', () => { pin.n.value = DEFAULTS.n; pin.k.value = DEFAULTS.k; pin.x0.value = DEFAULTS.x0; pin.m.value = DEFAULTS.m; onParam(); });
+showParams();
+
+let lastStep = -1, uiTick = 0;
+function updateUI(S, force) {
+  const s = steps[S.i];
+  const D = S.D;
+  if (S.i !== lastStep) {
+    lastStep = S.i;
+    $('capNum').textContent = s.n;
+    $('capTitle').textContent = s.title;
+    const tag = $('capTag');
+    tag.hidden = !s.flag; tag.textContent = s.flag || ''; tag.dataset.tone = s.tone || '';
+    $('dock').dataset.tone = s.tone || 'ok';
+    $('capText').textContent = s.summary ? summaryText(s.F) : s.text;
+    [...$('stepList').children].forEach((li, k) => { li.className = k < S.i ? 'done' : k === S.i ? 'now' : ''; });
+    $('tmeta').textContent = `Étape ${S.i + 1}/${steps.length}`;
+    camGoal = CAMS[s.cam] || CAMS.overview;
+  }
+  $('scrub').value = Math.round(T / total * 1000);
+  if (!force && ++uiTick % 3) return;
+
+  // Énergie
+  const E0 = 0.5 * P.k * P.x0 * P.x0 * P.n / 1000;
+  const F0 = P.k * P.x0 * P.n;
+  const fl = !!S.flight;
+  const released = fl && S.launchT > 0;
+  const E = fl ? S.flight.E : D.E;
+  $('eNum').textContent = fr(E, E < 10 ? 1 : 0);
+  const state = $('eState');
+  if (released) { state.textContent = 'Libérée d\'un coup'; state.dataset.tone = 'danger'; }
+  else if (E < 0.02 * E0) { state.textContent = 'Libérée graduellement'; state.dataset.tone = 'ok'; }
+  else { state.textContent = S.stuck ? 'Stockée, cône coincé' : 'Stockée'; state.dataset.tone = S.stuck ? 'danger' : ''; }
+  $('eFill').style.width = `${Math.min(100, E / E0 * 100)}%`;
+  $('eMeter').dataset.tone = released ? 'danger' : E < 0.02 * E0 ? 'ok' : '';
+  $('kvF').textContent = fl ? '—' : `${fr(D.F / 1000)} kN`;
+  const mc = D.comp.reduce((a, b) => a + b, 0) / Math.max(1, D.comp.length);
+  $('kvX').textContent = fl ? '0,0 mm' : `${fr(mc, 2)} mm`;
+  const maxLoad = Math.max(...D.loads);
+  $('kvB').textContent = fl || S.stuck ? '—' : `${fr(maxLoad / 1000)} kN`;
+  const hEq = E0 / (5 * 9.81);
+  $('equiv').textContent = `Au départ : ${fr(E0, 0)} J et ${fr(F0 / 1000)} kN (≈ ${fr(F0 / 9.81 / 1000, 1)} tonne-force). C'est l'énergie d'une masse de 5 kg qui tombe de ${fr(hEq, 1)} m.`;
+
+  // Boulons
+  const normal = F0 / 9;
+  tiles.forEach(tl => {
+    const b = S.pb[tl.i];
+    const gone = b.gone > 0.5 || b.turns >= ENG - 1e-3;
+    const load = D.loads[tl.i];
+    let st;
+    if (gone) st = 'retiré';
+    else if (BOLTS[tl.i].bushing && b.bushOut > 0.5) st = 'retenue';
+    else if (b.turns < 0.05) st = 'serré';
+    else st = 'desserré';
+    tl.st.textContent = st;
+    tl.tr.textContent = gone ? '' : `${fr(b.turns, 1)} tr`;
+    tl.ld.textContent = gone || fl ? '—' : `${fr(load / 1000)} kN`;
+    tl.bar.style.width = `${gone || fl ? 0 : Math.min(100, load / F0 * 100)}%`;
+    tl.el.dataset.load = load > 2.5 * normal ? 'high' : '';
+    tl.el.dataset.active = String(S.active === tl.i);
+    tl.el.dataset.gone = String(gone);
+  });
+
+  $('note').textContent = fl && steps[S.i].flight ? `Projection au ralenti ×${SLOWMO}` : 'Course des ressorts affichée ×6';
+
+  // Bandeau d'impact
+  const banner = $('banner'), flash = $('flash');
+  if (fl && steps[S.i].flight) {
+    const imp = S.flight.impact, hands = S.flight.hands, lt = S.launchT;
+    const hitHead = imp && lt >= imp.t, hitHands = hands && lt >= hands.t;
+    banner.hidden = !(lt > 0);
+    $('bannerTitle').textContent = hitHead ? 'IMPACT À LA TÊTE' : hitHands ? 'IMPACT AUX MAINS' : 'PROJECTION';
+    $('bannerSub').textContent = hitHead ? `${fr(imp.speed)} m/s · ${fr(S.flight.E, 0)} J` : `${fr(S.flight.v)} m/s au départ · ${fr(S.flight.E, 0)} J`;
+    const since = Math.min(hitHead ? lt - imp.t : 99, hitHands ? lt - hands.t + (imp ? 0.4 : 0) : 99);
+    flash.style.opacity = reduceMotion ? (hitHead || hitHands ? 0.35 : 0) : Math.max(0, 0.85 - since * 1.2);
+  } else { banner.hidden = true; flash.style.opacity = 0; }
+}
+function summaryText(F) {
+  const hands = F.hands ? 'Il frappe d\'abord les mains posées sur la clé, juste au-dessus. ' : '';
+  const hit = F.impact ? `Il atteint ensuite la tête du travailleur penché, encore à ${fr(F.impact.speed)} m/s (${fr(F.impact.speed * 3.6, 0)} km/h).` : 'Avec ces paramètres, il n\'atteint pas la tête, mais il retombe sur le clam ou au sol de façon imprévisible.';
+  const spr = F.springs.length ? ` Des ressorts peuvent aussi être éjectés : jusqu'à ${fr(Math.sqrt(2 * F.sprE / SPRING_MASS))} m/s chacun.` : '';
+  return `${fr(F.E, 0)} J libérés en une fraction de seconde. Le cône de ${P.m} kg part à ${fr(F.v)} m/s et peut monter jusqu'à ${fr(F.h, 2)} m. ${hands}${hit}${spr} La procédure (1 tour à la fois, retenue de l'étape 6) évite ce scénario.`;
+}
+
+/* ================= Thème ================= */
+function applyTheme() {
+  const bg = new THREE.Color(css('--scene') || '#d7dce0');
+  scene.background = bg;
+  scene.fog.color.copy(bg);
+  mat.floor.color.set(css('--floor') || '#b7bec3');
+}
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change', applyTheme);
+new MutationObserver(applyTheme).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme', 'class'] });
+applyTheme();
+
+/* ================= Boucle ================= */
+function resize() {
+  const w = view.clientWidth, h = view.clientHeight;
+  if (!w || !h) return;
+  renderer.setSize(w, h, false);
+  camera.aspect = w / h;
+  camera.updateProjectionMatrix();
+}
+new ResizeObserver(resize).observe(view);
+
+let last = performance.now();
+function frame(now) {
+  const dt = Math.min(0.1, (now - last) / 1000);
+  last = now;
+  if (playing) {
+    const { i } = locate(T);
+    const end = starts[i] + steps[i].dur;
+    T += dt * speed;
+    if ($('optPause').checked && T >= end && i < steps.length - 1) { T = end; setPlaying(false); }
+    if (T >= total) { T = total - 1e-3; setPlaying(false); }
+  }
+  const S = stateAt(T);
+  applyScene(S);
+  updateUI(S);
+  updateCamera(dt);
+  controls.update();
+  renderer.render(scene, camera);
+  requestAnimationFrame(frame);
+}
+
+async function start() {
+  try { await Promise.race([document.fonts.ready, new Promise(r => setTimeout(r, 1500))]); } catch (e) {}
+  buildLabels();
+  let saved = 'A';
+  try { saved = localStorage.getItem('clam-scen') || 'A'; } catch (e) {}
+  selectScen(SCEN[saved] ? saved : 'A');
+  resize();
+  const S = stateAt(T); applyScene(S); updateUI(S, true);
+  requestAnimationFrame(frame);
+  window.__clam = { stateAt, steps: () => steps, starts: () => starts, total: () => total, setT: v => { T = v; }, P };
+}
+start();
+</script>
+</body>
+</html>
