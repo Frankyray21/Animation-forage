@@ -2,13 +2,15 @@
 
 Animation 3D de formation sur la **tête de forage Boyles UM-012-100UG** et son **mandrin Boyles H** (UM-070-142AA / UM-012-142AA, Usinage Marcotte). Elle montre l'énergie emmagasinée dans les 18 ressorts du mandrin, et ce qui arrive quand la séquence de démontage de la procédure **PRO-OP-DD-005** n'est pas respectée.
 
+Comme lors de l'accident, la tête est **à l'horizontale** : axe de broche à 1,25 m du plancher, face du mandrin vers le travailleur debout devant elle, boîte et moteur à côté du mandrin, chariot et mât dessous, le long de l'axe. Les vues éclatées ramènent la tête à la verticale, comme sur les planches.
+
 Ouvrir `index.html` dans un navigateur récent. Une connexion Internet est requise : Three.js et les polices sont chargés depuis un CDN.
 
 ## Modèle 3D
 
 Sources : manuel de la foreuse STM-1500, pages 2.1 à 2.7 (planches de la tête de forage UM-012-100UG, puis liste de pièces, coupe A-A et vue éclatée du mandrin Boyles H). Toutes les pièces des listes sont modélisées avec leurs quantités. La tête est rouge, comme sur les planches ; les pièces usinées sont en acier, les ressorts en vert.
 
-Le bouton **Éclaté : tête** écarte les pièces de la tête autour de la boîte ; **Éclaté : mandrin** dispose les pièces du mandrin le long de son axe, comme sur le dessin. La **nomenclature** de la page permet de cliquer une pièce pour l'identifier ; on peut aussi la cliquer dans la vue 3D.
+Le bouton **Éclaté : tête** écarte les pièces de la tête autour de la boîte ; **Éclaté : mandrin** dispose les pièces du mandrin le long de son axe, comme sur le dessin. Dans les vues éclatées, chaque étiquette donne le numéro de la pièce et son nom. La **nomenclature** de la page permet de cliquer une pièce pour l'identifier ; on peut aussi la cliquer dans la vue 3D.
 
 ### Tête de forage UM-012-100UG (planches 2.1 à 2.4)
 
@@ -28,8 +30,12 @@ La broche est à 152 mm du centre de la boîte ; l'axe d'entraînement (transmis
 | --- | --- |
 | Arrière | Clés 3506881 (×3), ressort de verrouillage 3506879, anneau de retenue 5054078, bague d'appui 3506882, roulement 5000199, goupilles 5222624 (×4), piston 3506908 + 5035015 + 5035017, manchon d'actionnement 3506928, adaptateur 3506910 (tête UM-012) + B500-1500 (×8) + W500 (×8), cylindre 3506909 + 5035016 + 5035018, joint en V 5041022, B500-4500 (×10) + NC500 (×10), raccord 2501-8-6, graisseur ZNPT250 |
 | Boîtier | 3506870 |
-| Avant | Entretoises inférieures 3506880 (×9), joints d'huile 5040192 (×9), ressorts 5200517 (×18), cône / bol 2920390, entretoises supérieures 3506878 (×3), B500-6500 (×6), B500-8000 (×3), porte-capuchon 3506906 + B500-2250 (×9), adaptateur de capuchon 3506907 + B750-1500 (×3), mâchoires UM-021-01-03 H |
-| Options | Adaptateur UM-070-608A (tête UM-070), mâchoires UM-021-01-01 B, -02 N, -04 BW, anneau WH-500, bagues de guidage UM-021-06 (BW, B, N, H) |
+| Avant | Entretoises inférieures 3506880 (×9), joints d'huile 5040192 (×9), ressorts 5200517 (×18), cône / bol 2920390, entretoises supérieures 3506878 (×3), B500-6500 (×6), B500-8000 (×3), porte-capuchon 3506906 + B500-2250 (×9), adaptateur de capuchon 3506907 + B750-1500 (×3), mâchoires UM-021-01-01 B |
+| Options | Adaptateur UM-070-608A (tête UM-070), anneau WH-500, bagues de guidage B (UM-021-06-02 tige, UM-021-06-22 tubage) |
+
+Les mâchoires reprennent le jeu Boyles 12HH : 8 segments coniques, 3 trous de liaison et leurs goupilles entre les segments, 3 plaquettes de carbure moletées sur la face de serrage.
+
+Seule la **grosseur B** (tige BQ) est représentée : jeu de mâchoires B, bagues de guidage B et manchon de guidage BQ UM-012-108 de la tête. Les pièces des grosseurs N, H et BW des listes ne sont pas modélisées.
 
 Les cotes de référence viennent de la coupe A-A : Ø 12 ⅛ po (308 mm), alésage Ø 3 ⅞ po (98 mm). Les cercles de boulons sont mesurés sur la vue de face. Le dessin n'est pas à l'échelle (N.T.S.) : les autres cotes sont relevées sur la coupe. Certaines pièces internes sont marquées « emplacement approximatif » dans la nomenclature.
 
@@ -66,5 +72,5 @@ Les 9 boulons du cône traversent le voile du boîtier (entretoises inférieures
 - La **raideur du ressort 5200517 n'est pas dans les documents**. Valeur d'exemple : 100 N/mm (571 lbf/po). Résultat : environ 36 J (27 pi·lb) et 11,4 kN (2 570 lbf). Entrez la valeur de la fiche du ressort dans « Paramètres des ressorts » pour un calcul réel.
 - Masse projetée : 22 kg (49 lb), celle du cône et des mâchoires du modèle en acier.
 - Position du cône : plan retenu par les boulons encore engagés (pas ½-13 UNC, 1 tour = 1,95 mm), qui minimise l'énergie des ressorts. Le basculement est limité, parce que le cône est guidé dans le boîtier.
-- Projection : vitesse de départ `v = √(2E/m)`, trajectoire balistique, ralentie ×6 à l'écran. Le cône retombe et se pose à plat.
+- Projection : vitesse de départ `v = √(2E/m)` dans l'axe du mandrin, donc à l'horizontale ; trajectoire balistique (le cône de 22 kg retombe pendant son vol), ralentie ×6 à l'écran. Il frappe d'abord les mains sur la clé, puis le corps du travailleur à la hauteur qu'il a encore (hanches, jambes…), et se pose à plat au sol.
 - La course des ressorts est amplifiée ×6 à l'écran pour être visible.
