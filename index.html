@@ -72,6 +72,22 @@ button, input, select { font: inherit; color: inherit; }
 .chip[data-tone="danger"] .dot { background: var(--danger); }
 .chip-row .spacer { flex: 1; }
 .chip button { border: 0; background: none; padding: 0; cursor: pointer; font-size: 12px; font-weight: 500; }
+.sgauge { position: absolute; right: 12px; bottom: 10px; margin: 0; width: 236px; max-width: calc(100% - 24px); padding: 8px 10px 9px; border-radius: 8px; background: color-mix(in srgb, var(--panel) 92%, transparent); border: 1px solid var(--line); box-shadow: 0 6px 18px rgba(0,0,0,.12); pointer-events: none; z-index: 4; }
+.sgauge figcaption { font-family: var(--mono); font-size: 11px; color: var(--muted); letter-spacing: .03em; }
+.sgauge svg { display: block; width: 100%; height: auto; margin: 2px 0 4px; }
+.sgauge dl { margin: 0; display: grid; grid-template-columns: 1fr 1fr; gap: 2px 10px; }
+.sgauge dl div { min-width: 0; }
+.sgauge dt { font-size: 10.5px; color: var(--muted); }
+.sgauge dd { margin: 0; font-family: var(--mono); font-size: 13px; color: var(--ink); font-variant-numeric: tabular-nums; }
+.sgauge .sg-e { grid-column: 1 / -1; }
+.sgauge .sg-e dd { font-size: 17px; font-weight: 600; }
+.sgauge[data-live="1"] .sg-e dd { color: #1f7a34; }
+.sgauge #sgCoil { fill: none; stroke: #2f9e44; stroke-width: 3.2; stroke-linejoin: round; stroke-linecap: round; }
+.sgauge #sgFree rect { fill: none; stroke: var(--muted); stroke-dasharray: 3 3; stroke-width: 1; }
+.sgauge #sgDim line, .sgauge #sgDim path { stroke: #c0392b; stroke-width: 1.4; fill: none; }
+.sgauge #sgDim text { fill: #c0392b; font: 600 10px var(--mono); }
+.sgauge .wall { fill: var(--muted); }
+@media (max-width: 640px) { .sgauge { width: 180px; padding: 6px 8px; } .sgauge dd { font-size: 12px; } .sgauge .sg-e dd { font-size: 15px; } }
 .note { position: absolute; left: 12px; bottom: 10px; font-family: var(--mono); font-size: 11px; color: var(--muted); background: color-mix(in srgb, var(--scene) 80%, transparent); padding: 2px 6px; border-radius: 4px; pointer-events: none; }
 .flash { position: absolute; inset: 0; pointer-events: none; background: radial-gradient(ellipse at center, transparent 35%, var(--flash, var(--danger)) 120%); opacity: 0; }
 .banner { position: absolute; left: 50%; top: 56px; transform: translateX(-50%); pointer-events: none; text-align: center; font-family: var(--display); color: #fff; background: var(--danger); padding: 8px 18px 10px; border-radius: 6px; box-shadow: 0 8px 30px rgba(0,0,0,.25); max-width: calc(100% - 32px); }
@@ -226,6 +242,15 @@ details.params summary { cursor: pointer; padding: 10px 14px; font-weight: 600; 
       </div>
       <div class="banner" id="banner" hidden><strong id="bannerTitle">PROJECTION</strong><span id="bannerSub"></span></div>
       <div class="note" id="note">Course des ressorts affichée ×6</div>
+      <figure class="sgauge" id="sgauge" aria-label="Ressort témoin : compression et énergie résiduelle">
+        <figcaption>Ressort témoin 5200517</figcaption>
+        <svg viewBox="0 0 220 64" role="img"><g id="sgFree"></g><path id="sgCoil" /><g id="sgDim"></g></svg>
+        <dl>
+          <div><dt>Compression</dt><dd id="sgX">—</dd></div>
+          <div><dt>Force / ressort</dt><dd id="sgF">—</dd></div>
+          <div class="sg-e"><dt>Énergie résiduelle (18)</dt><dd id="sgE">—</dd></div>
+        </dl>
+      </figure>
     </div>
     <div class="dock" id="dock" data-tone="ok">
       <div class="caption" aria-live="polite">
@@ -2475,11 +2500,10 @@ function applyScene(S) {
     m.position.set(s.x, POCKET, s.z); m.rotation.set(0, 0, 0);
     const compVis = D.comp[j] / 1000 / U * X;
     m.scale.set(1, Math.max(0.3, LC + t - compVis), 1);
-    // ressorts verts (couleur réelle) ; tant qu'ils sont comprimés, ils pulsent en vert vif (énergie stockée)
-    const c = clamp01(D.comp[j] / Math.max(.01, P.x0)), pulse = c * (.55 + .45 * Math.sin(performance.now() / 260));
-    if (!selected) { m.material.color.copy(SPR_FREE); m.material.emissive.copy(SPR_GLOW).multiplyScalar(.9 * pulse); }
-    m.userData.xr.material.color.copy(SPR_FREE).lerp(SPR_GLOW, pulse);
-    m.userData.xr.material.opacity = .35 + .4 * pulse;
+    // ressorts verts (couleur réelle), sans clignotement : c'est leur longueur qui montre la compression
+    if (!selected) { m.material.color.copy(SPR_FREE); m.material.emissive.setRGB(0, 0, 0); }
+    m.userData.xr.material.color.copy(SPR_GLOW);
+    m.userData.xr.material.opacity = .5;
     m.userData.xr.visible = cutOn && explodeE === 0 && hexE === 0 && !selected;
   });
 
@@ -2684,6 +2708,29 @@ pin.n.value = P.n; pin.k.value = P.k; pin.x0.value = P.x0; pin.m.value = P.m;   
 showParams();
 
 let lastStep = -1, uiTick = 0;
+// Ressort témoin : un ressort dessiné à sa longueur détendue (pointillé) et à sa longueur actuelle ;
+// la compression est amplifiée ×6 comme dans la vue 3D, les valeurs sont réelles.
+function updateGauge(S) {
+  const g = $('sgauge');
+  g.hidden = !!(explodeTarget || hexTarget);
+  if (g.hidden) return;
+  const D = S.D, fl = D.flightS;
+  const comp = fl || S.catchD && S.catchP >= CATCH_T0 ? 0 : D.comp.reduce((a, b) => Math.max(a, b), 0);   // ressort le plus comprimé (mm)
+  const x0 = 12, Lfree = 190, pxPerMm = Lfree * X / 1000 / U / (LC + travel());   // même échelle (×6) que la 3D
+  const L = Lfree - comp * pxPerMm, turns = 9, y0 = 30, amp = 13;
+  let d = `M${x0} ${y0}`;
+  for (let i = 1; i <= turns * 2; i++) d += ` L${(x0 + L * (i - .5) / (turns * 2)).toFixed(1)} ${i % 2 ? y0 - amp : y0 + amp}`;
+  d += ` L${(x0 + L).toFixed(1)} ${y0}`;
+  $('sgCoil').setAttribute('d', d);
+  $('sgFree').innerHTML = `<rect class="wall" x="4" y="${y0 - 18}" width="7" height="36" rx="1"></rect><rect x="${x0}" y="${y0 - amp - 2}" width="${Lfree}" height="${2 * amp + 4}" rx="3"></rect><rect class="wall" x="${(x0 + L).toFixed(1)}" y="${y0 - 18}" width="6" height="36" rx="1" style="stroke:none"></rect>`;
+  const cx = x0 + L + 6;
+  $('sgDim').innerHTML = comp > .05 ? `<line x1="${cx.toFixed(1)}" y1="${y0 + 21}" x2="${x0 + Lfree}" y2="${y0 + 21}"></line><path d="M${(cx + 4).toFixed(1)} ${y0 + 18} L${cx.toFixed(1)} ${y0 + 21} L${(cx + 4).toFixed(1)} ${y0 + 24} M${x0 + Lfree - 4} ${y0 + 18} L${x0 + Lfree} ${y0 + 21} L${x0 + Lfree - 4} ${y0 + 24}"></path><text x="${((cx + x0 + Lfree) / 2).toFixed(1)}" y="${y0 + 33}" text-anchor="middle">${xS(comp)}</text>` : '';
+  const E = D.E ?? 0;
+  $('sgX').textContent = xS(comp);
+  $('sgF').textContent = fS(P.k * comp);
+  $('sgE').textContent = `${eS(fl || (S.catchD && S.catchP >= CATCH_T0) ? 0 : E)} (${eS(fl || (S.catchD && S.catchP >= CATCH_T0) ? 0 : E, OTHER())})`;
+  g.dataset.live = comp > .05 ? '1' : '0';
+}
 function updateUI(S, force) {
   const s = steps[S.i];
   const D = S.D;
@@ -2717,6 +2764,7 @@ function updateUI(S, force) {
   }
   $('scrub').value = Math.round(T / total * 1000);
   if (!force && ++uiTick % 3) return;
+  updateGauge(S);
 
   // Énergie
   const E0 = 0.5 * P.k * P.x0 * P.x0 * P.n / 1000;

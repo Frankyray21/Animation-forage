@@ -61,6 +61,10 @@ Les 9 boulons du cône traversent le voile du boîtier (entretoises inférieures
 
 Le travailleur dévisse les boulons avec une clé à chocs électrique à fil (d'après la photo du chantier) : corps métallique usé, nez conique, douille longue 12 pans, poignée arrière fermée avec gâchette, anneau latéral et cordon. Seule la douille tourne avec le boulon.
 
+## Ressort témoin
+
+En bas à droite de la vue 3D, un ressort 5200517 est dessiné à sa longueur détendue (pointillé) et à sa longueur actuelle, avec la cote de compression (amplifiée ×6, comme dans la 3D), la force par ressort et l'énergie résiduelle des 18 ressorts. Il suit l'animation en direct. Les ressorts restent verts (leur vraie couleur) et ne clignotent pas : c'est leur longueur qui montre la compression.
+
 ## Commandes
 
 - Lecture / pause : bouton jaune ou barre d'espace. Étape précédente / suivante : flèches.
