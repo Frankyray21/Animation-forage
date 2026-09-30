@@ -63,6 +63,8 @@ button, input, select { font: inherit; color: inherit; }
 .view { position: relative; min-height: 340px; height: 58vh; }
 @media (min-width: 960px) { .view { height: auto; } }
 .view canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; touch-action: none; }
+.tip { position: absolute; z-index: 6; pointer-events: none; max-width: 280px; padding: 6px 10px 7px; border-radius: 6px; background: var(--panel); color: var(--ink); border: 1px solid var(--line); box-shadow: 0 6px 18px rgba(0,0,0,.18); font-size: 13px; line-height: 1.3; display: grid; gap: 2px; }
+.tip b { font-family: var(--mono); font-weight: 600; font-size: 12px; color: var(--muted); }
 .chip-row { position: absolute; top: 12px; left: 12px; right: 12px; display: flex; flex-wrap: wrap; gap: 8px; align-items: center; pointer-events: none; }
 .chip { pointer-events: auto; display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; border-radius: 999px; background: var(--panel); border: 1px solid var(--line); font-size: 12px; font-weight: 500; letter-spacing: .02em; }
 .chip .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--ok); }
@@ -213,6 +215,7 @@ details.params summary { cursor: pointer; padding: 10px 14px; font-weight: 600; 
     <div class="view" id="view">
       <canvas id="c" aria-label="Vue 3D de la tête de forage UM-012-100UG, de son mandrin Boyles H et de ses ressorts, du poste de commande et du travailleur"></canvas>
       <div class="flash" id="flash"></div>
+      <div class="tip" id="tip" hidden><b id="tipRef"></b><span id="tipName"></span></div>
       <div class="chip-row">
         <span class="chip" id="scenChip" data-tone="ok"><span class="dot"></span><span id="scenChipText">Procédure respectée</span></span>
         <span class="spacer"></span>
@@ -1078,7 +1081,7 @@ const hbox = new THREE.Group();
 {
   const holes = [[0, 0, 4.2], [DRIVE_X, DRIVE_Z, 2.3]];
   const bottom = mesh(plateXZ(HB.x0, HB.x1, HB.z0, HB.z1, HB.wall, holes), mat.paint); placeIn(bottom, 0, HB.y0, 0);
-  const top = mesh(plateXZ(HB.x0, HB.x1, HB.z0, HB.z1, HB.wall, [...holes, [-4.5, -4, .9]]), mat.paint); placeIn(top, 0, HB.y1 - HB.wall, 0);
+  const top = mesh(plateXZ(HB.x0, HB.x1, HB.z0, HB.z1, HB.wall, [...holes, [-7.5, -4.8, 1.07]]), mat.paint); placeIn(top, 0, HB.y1 - HB.wall, 0);
   const H = HB.y1 - HB.y0 - 2 * HB.wall, yc = (HB.y0 + HB.y1) / 2;
   const endL = box(HB.wall, H, HB.z1 - HB.z0, mat.paint); placeIn(endL, HB.x0 + HB.wall / 2, yc, 0);
   const endR = box(HB.wall, H, HB.z1 - HB.z0, mat.paint); placeIn(endR, HB.x1 - HB.wall / 2, yc, 0);
@@ -1134,17 +1137,33 @@ hpart({ id: 'W375', ref: 'W375', name: 'Rondelle plate 3/8', qty: 16, grp: 'hbox
   const small = (y, z) => { const g = new THREE.Group(); const h = hexHead(.56, .35, mat.steelLight); h.rotation.z = -Math.PI / 2; h.position.x = u(.17); g.add(h); placeIn(g, HB.x1, y, z); return g; };
   hpart({ id: 'UM-102-132', ref: 'UM-102-132', name: 'Bouchon 3/8 po NPT', qty: 2, grp: 'hbox', hx: [3, 0, 0] }, [small(-3.6, -.9), small(-3.6, .9)]);
 }
-// Reniflard (détail A de la planche 2.2)
+// Couvercle d'évent UM-1214-121P (détail A de la planche 2.2) : bouchon étagé à deux gorges et joint torique,
+// bride ronde à un méplat, trou d'évent central, fixée par 1 boulon B312-1000 + W312.
+const EVT = { x: -7.5, z: -4.8 };
 {
   const g = new THREE.Group();
-  const dome = mesh(new THREE.SphereGeometry(u(1.3), 24, 12, 0, Math.PI * 2, 0, Math.PI / 2), mat.paint); dome.scale.y = .6; g.add(dome);
-  const base = hcyl(1.5, .3, mat.paint); base.position.y = -u(.15); g.add(base);
-  placeIn(g, -4.5, HB.y1 + .3, -4);
-  hpart({ id: 'UM-1214-121P', ref: 'UM-1214-121P', name: 'Couvercle d\'évent', qty: 1, grp: 'hbox', note: 'Liste : « BLIDDER COVER » (détail A, planche 2.2).', hx: [0, 6, 0] }, g);
-  hpart({ id: 'UM-012-167', ref: 'UM-012-167', name: 'Joint torique du couvercle d\'évent', qty: 1, grp: 'hbox', hx: [0, 5, 0] }, placeIn(oring(1.25, .08), -4.5, HB.y1 + .04, -4));
-  const pos = ringAt(6, 1.15, 0).map(([x, z]) => [x - 4.5, z - 4]);
-  hpart({ id: 'B312-1000', ref: 'B312-1000', name: 'Boulon 5/16 × 1 po', qty: 6, grp: 'hbox', hx: [0, 7, 0] }, pos.map(([x, z]) => placeIn(makeBolt({ af: .5, headH: .21, d: .3125, L: 1.0, tpi: 18 }, mat.boltBlack), x, HB.y1 + .32, z)));
-  hpart({ id: 'W312', ref: 'W312', name: 'Rondelle plate 5/16', qty: 6, grp: 'hbox', hx: [0, 6.6, 0] }, pos.map(([x, z]) => placeIn(mesh(annulusIn(.17, .35, .04, [], 18), mat.steelLight), x, HB.y1 + .3, z)));
+  // queue (dans l'alésage de la paroi) : épaulements et 2 gorges, trou d'évent au centre
+  let y = -1.1;
+  for (const [r, h] of [[1.05, .2], [.94, .12], [1.05, .3], [.94, .12], [1.05, .36]]) { const c = mesh(annulusIn(.2, r, h, [], 40), mat.paint); c.position.y = u(y); g.add(c); y += h; }
+  // bride : cercle Ø 3,4 po avec un méplat, trou de boulon et trou d'évent
+  const R0 = 1.7, cut = 1.15, a0 = Math.acos(cut / R0);
+  const sh = new THREE.Shape();
+  sh.absarc(0, 0, u(R0), a0, Math.PI * 2 - a0, false); sh.closePath();
+  for (const [hx, hz, hr] of [[-1.2, 0, .18], [0, 0, .2]]) { const hp = new THREE.Path(); hp.absarc(u(hx), -u(hz), u(hr), 0, Math.PI * 2, true); sh.holes.push(hp); }
+  const fg = new THREE.ExtrudeGeometry(sh, { depth: u(.5), bevelEnabled: true, bevelThickness: u(.05), bevelSize: u(.05), bevelSegments: 1, curveSegments: 40 });
+  fg.rotateX(-Math.PI / 2);
+  const fl = mesh(fg, mat.paint); g.add(fl);
+  const port = hcyl(.2, .06, mat.pocket, 20); port.position.y = u(.53); g.add(port);
+  g.rotation.y = Math.PI / 2;   // méplat vers la transmission
+  placeIn(g, EVT.x, HB.y1, EVT.z);
+  hpart({ id: 'UM-1214-121P', ref: 'UM-1214-121P', name: 'Couvercle d\'évent', qty: 1, grp: 'hbox', note: 'Liste : « BLIDDER COVER » (détail A, planche 2.2). Bouchon étagé à deux gorges, bride à méplat, 1 boulon.', hx: [0, 6, 0] }, g);
+  hpart({ id: 'UM-012-167', ref: 'UM-012-167', name: 'Joint torique du couvercle d\'évent', qty: 1, grp: 'hbox', hx: [0, 4, 0] }, placeIn(oring(.98, .09), EVT.x, HB.y1 - .42, EVT.z));
+  // boulon de la bride (les 5 autres B312-1000 fixent le refroidisseur et la tête de filtre, plus bas)
+  const bx = EVT.x, bz = EVT.z + 1.2;   // trou de la bride après rotation
+  const b = placeIn(makeBolt({ af: .5, headH: .21, d: .3125, L: 1.0, tpi: 18 }, mat.boltBlack), bx, HB.y1 + .6, bz); b.userData.hx = [0, 7.5, 0];
+  hpart({ id: 'B312-1000', ref: 'B312-1000', name: 'Boulon 5/16 × 1 po', qty: 6, grp: 'hbox', role: '1 fixe le couvercle d\'évent (détail A) ; 4 fixent le refroidisseur et 1 la tête de filtre (emplacements déduits).', hx: [0, 7.5, 0] }, [b]);
+  const w = placeIn(mesh(annulusIn(.17, .35, .04, [], 18), mat.steelLight), bx, HB.y1 + .56, bz); w.userData.hx = [0, 7, 0];
+  hpart({ id: 'W312', ref: 'W312', name: 'Rondelle plate 5/16', qty: 6, grp: 'hbox', hx: [0, 7, 0] }, [w]);
 }
 
 /* ---------- Broche UM-012-101, roulements et joints ---------- */
@@ -1362,6 +1381,16 @@ hpart({ id: 'W750', ref: 'W750', name: 'Rondelle plate ¾', qty: 8, grp: 'hdrive
   const tubeF = hcyl(1.3, COOL.L, mat.white, 32); tubeF.rotation.x = Math.PI / 2; fh.add(tubeF);
   for (const s of [-1, 1]) { const br = box(2.6, 2.6, 1.0, mat.white); br.position.z = s * u(COOL.L / 2 - .5); fh.add(br); const st = box(1.2, 1.1, .8, mat.white); st.position.set(0, u(1.8), s * u(COOL.L / 2 - .5)); fh.add(st); }
   placeIn(fh, COOL.x, COOL.y, COOL.z);
+  {
+    const bb = [], ww = [];
+    const add = (x, y, z, hx) => {
+      const b = makeBolt({ af: .5, headH: .21, d: .3125, L: 1.0, tpi: 18 }, mat.boltBlack); b.rotation.x = Math.PI; placeIn(b, x, y, z); b.userData.hx = hx; bb.push(b);
+      const w = placeIn(mesh(annulusIn(.17, .35, .04, [], 18), mat.steelLight), x, y + .02, z); w.userData.hx = hx; ww.push(w);
+    };
+    for (const zs of [-1, 1]) for (const xs of [-1, 1]) add(COOL.x + xs * .35, HB.y0 - 1.07, COOL.z + zs * (COOL.L / 2 - .5), [0, -10, 0]);
+    add(-8.9 - .9, HB.y0 - 2.93, 6.3, [0, -12, 0]);   // tête de filtre
+    for (const [id, arr] of [['B312-1000', bb], ['W312', ww]]) { const pp = byId(id); pp.objs.push(...arr); arr.forEach(o => { o.traverse(m => { m.userData.part = pp; }); headG.add(o); }); }
+  }
   hpart({ id: 'COOLER', ref: 'Refroidisseur', name: 'Refroidisseur d\'huile (hors liste)', qty: 1, grp: 'hlube', role: 'Refroidit l\'huile de lubrification (boyaux UM-012-H17C et H18C).', note: 'Visible sur les planches 2.1 et 2.3, mais absent des listes de pièces.', hx: [0, -10, 0] }, fh);
   // Tête de filtre UM-012-177 et cartouche UM-012-178 (boîtier argent sur le nez, près du couvercle)
   const FIL = { x: -8.9, y: HB.y0 - 1.9, z: 6.3 };
@@ -1606,22 +1635,10 @@ function makeLabel(text, { bg = '#111518', fg = '#ffffff', h = 0.36, font = '600
   parent.add(s);
   return s;
 }
-// Étiquette de pièce sur deux lignes : numéro (police mono) et nom abrégé
-const shortName = n => { const t = n.replace(/\s*\([^)]*\)/g, '').replace(/\s+/g, ' ').trim(); return t.length > 34 ? t.slice(0, 33).trimEnd() + '…' : t; };
+// Étiquette de pièce compacte : numéro seulement ; le nom s'affiche au survol (info-bulle)
 function makePartLabel(p, { h, parent }) {
-  const c = document.createElement('canvas'), x = c.getContext('2d');
-  const f1 = '600 40px "IBM Plex Mono", monospace', f2 = '500 31px "IBM Plex Sans", sans-serif', nm = nb(shortName(p.name));
-  x.font = f1; const w1 = x.measureText(p.ref).width; x.font = f2; const w2 = x.measureText(nm).width;
-  c.width = Math.ceil(Math.max(w1, w2)) + 32; c.height = 100;
-  x.fillStyle = 'rgba(17,21,24,.9)'; x.beginPath(); x.roundRect(0, 0, c.width, c.height, 12); x.fill();
-  x.textAlign = 'center'; x.textBaseline = 'middle';
-  x.fillStyle = '#f2c230'; x.font = f1; x.fillText(p.ref, c.width / 2, 32);
-  x.fillStyle = '#ffffff'; x.font = f2; x.fillText(nm, c.width / 2, 72);
-  const tex = new THREE.CanvasTexture(c); tex.colorSpace = THREE.SRGBColorSpace;
-  const s = new THREE.Sprite(new THREE.SpriteMaterial({ map: tex, depthTest: false, transparent: true }));
-  s.scale.set(h * c.width / c.height, h, 1);
-  s.renderOrder = 10;
-  parent.add(s);
+  const s = makeLabel(p.ref, { parent, h, font: '600 40px "IBM Plex Mono", monospace', fg: '#f2c230', bg: 'rgba(17,21,24,.88)', round: 10, pad: 14 });
+  s.userData.part = p;
   return s;
 }
 let labels = null;
@@ -1647,7 +1664,7 @@ function buildLabels() {
   // Repères de pièces pour la vue éclatée (dans le groupe du clam)
   PARTS.forEach(p => {
     if (p.lbl && p.lbl.parent) p.lbl.parent.remove(p.lbl);
-    p.lbl = makePartLabel(p, { parent: p.head ? headG : clampG, h: p.head ? 1.15 : 0.46 });
+    p.lbl = makePartLabel(p, { parent: p.head ? headG : clampG, h: p.head ? 0.62 : 0.24 });
     p.lbl.visible = false;
   });
 }
@@ -2730,18 +2747,49 @@ document.querySelectorAll('.units button').forEach(x => x.setAttribute('aria-pre
 const ray = new THREE.Raycaster(), ptr = new THREE.Vector2();
 let downAt = null;
 canvas.addEventListener('pointerdown', e => { downAt = [e.clientX, e.clientY]; });
-canvas.addEventListener('pointerup', e => {
-  if (!downAt || Math.hypot(e.clientX - downAt[0], e.clientY - downAt[1]) > 5) return;
+// Pièce sous le curseur : une étiquette visible d'abord, sinon la pièce elle-même
+function pickPart(e) {
   const r = canvas.getBoundingClientRect();
   ptr.set((e.clientX - r.left) / r.width * 2 - 1, -(e.clientY - r.top) / r.height * 2 + 1);
   ray.setFromCamera(ptr, camera);
+  const lbls = PARTS.filter(p => p.lbl && p.lbl.visible).map(p => p.lbl);
+  const lh = lbls.length ? ray.intersectObjects(lbls, false) : [];
+  if (lh.length) return lh[0].object.userData.part;
   const hits = ray.intersectObjects([...clampG.children, ...headG.children], true).filter(h => {
     if (cutOn && h.point.z > 0.002 && (!inHead(h.object) || h.object.userData.cutWithChuck)) return false;
     let o = h.object; while (o) { if (!o.visible) return false; o = o.parent; }
     return h.object.isMesh && h.object.userData.part && h.object.material !== ghostMat && h.object.material !== ghostHead;
   });
-  select(hits.length ? hits[0].object.userData.part : null);
+  return hits.length ? hits[0].object.userData.part : null;
+}
+canvas.addEventListener('pointerup', e => {
+  if (!downAt || Math.hypot(e.clientX - downAt[0], e.clientY - downAt[1]) > 5) return;
+  select(pickPart(e));
 });
+// Info-bulle au survol : numéro et nom de la pièce
+const tip = $('tip');
+let hoverEv = null, hoverQueued = false;
+function hideTip() { tip.hidden = true; canvas.style.cursor = ''; }
+canvas.addEventListener('pointermove', e => {
+  if (e.pointerType === 'touch' || e.buttons) { hideTip(); return; }
+  hoverEv = e;
+  if (hoverQueued) return;
+  hoverQueued = true;
+  requestAnimationFrame(() => {
+    hoverQueued = false;
+    const ev = hoverEv, p = pickPart(ev);
+    if (!p) { hideTip(); return; }
+    $('tipRef').textContent = p.ref + (p.qty && p.qty !== 1 ? ` · ×${qtyOf(p)}` : '');
+    $('tipName').textContent = nb(p.name);
+    tip.hidden = false; canvas.style.cursor = 'pointer';
+    const r = canvas.getBoundingClientRect(), w = tip.offsetWidth, h = tip.offsetHeight;
+    let x = ev.clientX - r.left + 14, y = ev.clientY - r.top + 16;
+    if (x + w > r.width - 8) x = ev.clientX - r.left - w - 12;
+    if (y + h > r.height - 8) y = ev.clientY - r.top - h - 12;
+    tip.style.left = `${Math.max(8, x)}px`; tip.style.top = `${Math.max(8, y)}px`;
+  });
+});
+canvas.addEventListener('pointerleave', hideTip);
 
 /* ================= Thème ================= */
 function applyTheme() {
