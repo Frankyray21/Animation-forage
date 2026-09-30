@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Clam sous tension</title>
-<meta name="description" content="Animation 3D : l'énergie des ressorts d'un clam de foreuse quand la séquence de démontage PRO-OP-DD-005 n'est pas respectée.">
+<meta name="description" content="Animation 3D du mandrin Boyles H : l'énergie de ses 18 ressorts quand la séquence de démontage PRO-OP-DD-005 n'est pas respectée.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
@@ -76,6 +76,11 @@ button, input, select { font: inherit; color: inherit; }
 .banner[data-tone="ok"] { background: var(--ok); }
 .banner strong { display: block; font-size: clamp(26px, 4vw, 40px); letter-spacing: .06em; line-height: 1.05; }
 .banner span { font-family: var(--mono); font-size: 13px; }
+@media (max-width: 600px) {
+  .banner { top: 46px; padding: 5px 12px 7px; }
+  .banner strong { font-size: 20px; letter-spacing: .04em; }
+  .banner span { font-size: 11px; }
+}
 
 .dock { background: var(--panel); border-top: 1px solid var(--line); display: grid; gap: 10px; padding: 12px 16px 14px; position: relative; }
 .dock::before { content: ""; position: absolute; left: 0; right: 0; top: -1px; height: 5px; opacity: 0; transition: opacity .3s; background: repeating-linear-gradient(-45deg, var(--accent) 0 10px, #1b2125 10px 20px); }
@@ -205,7 +210,7 @@ details.params summary { cursor: pointer; padding: 10px 14px; font-weight: 600; 
 <div class="app">
   <section class="stage" aria-label="Animation 3D">
     <div class="view" id="view">
-      <canvas id="c" aria-label="Vue 3D du clam, des ressorts et du travailleur"></canvas>
+      <canvas id="c" aria-label="Vue 3D du mandrin Boyles H, de ses ressorts et du travailleur"></canvas>
       <div class="flash" id="flash"></div>
       <div class="chip-row">
         <span class="chip" id="scenChip" data-tone="ok"><span class="dot"></span><span id="scenChipText">Procédure respectée</span></span>
@@ -243,9 +248,9 @@ details.params summary { cursor: pointer; padding: 10px 14px; font-weight: 600; 
 
   <aside class="rail">
     <header class="brand">
-      <p class="eyebrow">PRO-OP-DD-005 · Clam / chuck de foreuse</p>
+      <p class="eyebrow">PRO-OP-DD-005 · Mandrin Boyles H · UM-070-142AA</p>
       <h1>Clam sous tension</h1>
-      <p class="lede">Les ressorts 5200517 du clam restent comprimés tant que le cône 2920390 est boulonné. La séquence de démontage sert à libérer cette énergie lentement.</p>
+      <p class="lede">Les 18 ressorts 5200517 du mandrin restent comprimés tant que le cône (bol 2920390) est boulonné. La séquence de démontage sert à libérer cette énergie lentement.</p>
     </header>
 
     <section>
@@ -275,11 +280,11 @@ details.params summary { cursor: pointer; padding: 10px 14px; font-weight: 600; 
     <section class="bolts">
       <h3 class="sec-title">Boulons ½ du cône 2920390</h3>
       <div class="grid" id="boltGrid"></div>
-      <p class="hint">1 à 6 : B500-6500 (½ × 6 ½ po), dans l'ordre de dévissage de la procédure. R : B500-8000 (½ × 8 po) avec bushing 3506878, remis sans bushing comme retenue.</p>
+      <p class="hint">1 à 6 : B500-6500 (½ × 6 ½ po), dans l'ordre de dévissage de la procédure. R : B500-8000 (½ × 8 po) avec bushing (entretoise supérieure 3506878), remis sans bushing comme retenue.</p>
     </section>
 
     <section class="bom" id="bomSec">
-      <h3 class="sec-title">Nomenclature UM-079-100AA 12 HH</h3>
+      <h3 class="sec-title">Nomenclature UM-070-142AA (Boyles H)</h3>
       <div class="card" id="partCard"></div>
       <div id="bomList" style="margin-top:10px"></div>
     </section>
@@ -306,7 +311,7 @@ details.params summary { cursor: pointer; padding: 10px 14px; font-weight: 600; 
       </ul>
     </section>
 
-    <p class="src">Sources : procédure PRO-OP-DD-005, <i>Démonter et remonter un clam et un chuck (mandrin) sur la foreuse</i>, révision mai 2021, et vue éclatée « Explosed rod clamp 12 HH » (UM-079, Usinage Marcotte). Toutes les pièces numérotées du dessin sont modélisées. Le dessin n'est pas à l'échelle : les cotes sont estimées d'après ses proportions, et les pièces marquées « à confirmer » ont une fonction ou un emplacement déduits. Les forces, énergies et trajectoires sont des estimations physiques simples, à des fins de formation.</p>
+    <p class="src">Sources : procédure PRO-OP-DD-005, <i>Démonter et remonter un clam et un chuck (mandrin) sur la foreuse</i>, révision mai 2021 ; liste de pièces, coupe A-A et vue éclatée du mandrin Boyles H UM-070-142AA / UM-012-142AA (Usinage Marcotte, pages 2.5 à 2.7 du manuel de la tête de forage). Toutes les pièces de la liste sont modélisées avec leurs quantités. Diamètre, longueur et alésage suivent les cotes de la coupe ; les autres cotes sont relevées sur le dessin (N.T.S.) et les pièces marquées « emplacement approximatif » sont placées d'après la coupe. La raideur des ressorts n'est pas dans ces documents : les forces, énergies et trajectoires sont des estimations à des fins de formation.</p>
   </aside>
 </div>
 
@@ -329,39 +334,45 @@ const PITCH = 25.4 / 13;       // pas d'un boulon ½-13 UNC (mm/tour)
 const ENG = 13;                // tours pour sortir complètement un boulon (≈ 1 po d'engagement)
 const G = 9.81 / U;            // gravité en unités/s²
 const SPRING_MASS = 0.3;       // kg, pour l'éjection des ressorts
-const DEFAULTS = { n: 12, k: 200, x0: 6.35, m: 16 };   // m : cône + mâchoires du modèle, acier (≈ 16 kg)
+const DEFAULTS = { n: 18, k: 100, x0: 6.35, m: 22 };   // n : liste de pièces (18 × 5200517) ; k : exemple ; m : bol + mâchoires du modèle en acier (≈ 22 kg)
 const P = { ...DEFAULTS };
 
-/* Cotes du clam UM-079-100AA 12 HH, en pouces. Le dessin est « N.T.S. » (pas à l'échelle) :
-   les cotes sont estimées d'après ses proportions et rendues cohérentes entre elles
-   (ex. B500-8000 = B500-6500 + bushing 3506878 de 1 ½ po). Le clam est debout, l'avant (mâchoires) en haut. */
+/* Mandrin Boyles H, UM-070-142AA (Usinage Marcotte), cotes en pouces.
+   Cotes de référence de la coupe A-A : Ø 12 1/8 po (308 mm), longueur 13 5/16 po (338 mm) boulons compris, alésage Ø 3 7/8 po (98 mm).
+   Cercles de boulons mesurés sur la vue de face ; les autres cotes sont relevées sur la coupe (dessin N.T.S.).
+   Le mandrin est debout sur un support, l'avant (capuchon, mâchoires) en haut : y = 15,2 − profondeur depuis la face avant. */
 const IN = 0.254;                   // 1 po en unités de scène
 const u = v => v * IN;
 const Y = {
-  stand: 4.0,
-  ringB: 3.4, capB: 4.0, capT: 5.0, cylT: 8.5, pistonB: 6.5,
-  bodyRear: 8.5, face: 12.3, pocket: 10.8, rimT: 16.0,
-  plateB: 13.1, plateT: 14.1, hubT: 16.95,
-  coverT: 17.0, jcT: 17.8,
+  stand: 3.0,
+  adB: 3.0, adT: 3.7,               // adaptateur UM-070-608A
+  cylB: 3.7, cylT: 7.0,             // cylindre 3506909
+  housB: 7.0, pocket: 7.5,          // boîtier 3506870, fond des logements de ressorts
+  webB: 9.1, webT: 10.4,            // voile du boîtier (entretoises inférieures)
+  bowlB: 10.6, plateB: 13.14, plateT: 13.7,   // bol 2920390 : arrière, dessous et dessus de la bride
+  rimT: 13.6,                       // dessus de l'enveloppe du boîtier
+  lipB: 13.75, lipT: 14.3,          // lèvre du porte-capuchon 3506906
+  capB: 14.3, front: 15.2,          // adaptateur de capuchon 3506907, face avant
 };
 const R = {
-  body: 6.0, rimIn: 5.4, bore: 2.4, nose: 2.9, cylIn: 5.0, capIn: 2.5,
-  ringIn: 2.5, ringOut: 3.2,
-  plate: 5.3, hub: 3.4, bowlB: 2.9, bowlT: 2.6,
-  bolt: 3.95, spring: 4.85, coverBolt: 5.7, coverIn: 3.9, jcBolt: 4.4, jcOut: 5.0, jcIn: 2.2,
-  capBolt: 5.6, shcs: 5.5, stand: 4.4, standIn: 3.75, jawIn: 1.8,
+  body: 6.06, rimIn: 5.45, springBlockIn: 4.2, web: 2.3, hubIn: 1.9,
+  plate: 5.4, bowlOut: 4.2, bowlTop: 2.96, bowlBot: 2.47, jawIn: 1.75,
+  bolt: 3.39, spring: 4.8, springBore: .56, coverBolt: 5.64, jcBolt: 3.93, capIn: 1.94, capOut: 4.6, lipIn: 2.9,
+  cylIn: 5.0, piston: 3.9, bearIn: 2.9, act: 2.3, actFl: 3.95, actTube: 2.9,
+  adIn: 2.9, adBolt: 4.6, tie: 5.55, key: 2.1,
+  stand: 4.0, standIn: 2.6,
 };
 
 const FLOOR = -1.4;
-const BODY_TOP = u(Y.face);
 const POCKET = u(Y.pocket);         // fond des logements de ressorts
-const GAP = u(Y.plateB - Y.face);   // espace entre bâti et cône (ressorts comprimés)
-const PLATE_T = u(Y.plateT - Y.plateB);
-const PLATE_TOP0 = u(Y.plateT);
-const HUB_H = u(Y.hubT - Y.plateT);
-const BUSH_H = u(1.5);              // bushing 3506878
-const LC = PLATE_TOP0 - PLATE_T - POCKET;      // longueur comprimée visible des ressorts
+const PLATE_T = u(Y.plateT - Y.plateB);   // épaisseur de la bride du bol (les ressorts poussent dessous)
+const PLATE_TOP0 = u(Y.plateT);           // face avant du bol = appui des 9 boulons
+const HUB_H = 0;                          // rien du bol ne dépasse au-dessus de la bride
+const BOWL_DEPTH = u(Y.plateT - Y.bowlB); // le bol descend de 3,1 po sous sa face avant
+const BUSH_H = u(1.5);                    // entretoise supérieure 3506878
+const LC = PLATE_TOP0 - PLATE_T - POCKET; // longueur comprimée des ressorts (5,64 po)
 const R_BOLT = u(R.bolt), R_SPRING = u(R.spring), R_COVER_BOLT = u(R.coverBolt), R_JC_BOLT = u(R.jcBolt);
+const BOLT_A0 = 2;                        // angle (°) du 1er des 9 boulons du bol ; B500-8000 à 82°, 202°, 322°
 
 const pv = () => PITCH / 1000 / U * X;          // montée visuelle par tour
 const travel = () => P.x0 / 1000 / U * X;       // course visuelle totale
@@ -370,29 +381,22 @@ const H = t => pv() * Math.min(t, rounds()) + 0.3 * pv() * Math.max(0, t - round
 const invH = h => h <= pv() * rounds() ? h / pv() : rounds() + (h - pv() * rounds()) / (0.3 * pv());
 const retainTurns = () => invH(travel() + 0.045);
 
-// 9 boulons du cône, à 40° d'intervalle. 3 avec bushing (0°, 120°, 240°), 6 numérotés selon l'ordre de la photo de l'étape 7.
-const STAR = { 2: 1, 7: 2, 4: 3, 1: 4, 5: 5, 8: 6 };  // index de position → numéro de la procédure
+// 9 boulons du bol, à 40° d'intervalle depuis 2°. 3 B500-8000 avec entretoise (82°, 202°, 322°, vue de face), 6 B500-6500 numérotés selon l'ordre de la photo de l'étape 7.
+const STAR = { 3: 1, 7: 2, 4: 3, 1: 4, 6: 5, 0: 6 };  // index de position → numéro de la procédure (ordre en étoile de la photo)
 const BOLTS = [...Array(9)].map((_, i) => {
-  const a = i * 40 * Math.PI / 180;
-  const bushing = i % 3 === 0;
+  const a = (BOLT_A0 + i * 40) * Math.PI / 180;
+  const bushing = i % 3 === 2;
   return { i, x: R_BOLT * Math.cos(a), z: -R_BOLT * Math.sin(a), bushing, num: bushing ? null : STAR[i], rIdx: bushing ? i / 3 + 1 : null };
 });
 const ORDER = [1, 2, 3, 4, 5, 6].map(n => BOLTS.find(b => b.num === n).i);   // positions dans l'ordre 1→6
-const BUSHED = [0, 3, 6];
+const BUSHED = [2, 5, 8];
 const byNum = n => BOLTS.find(b => b.num === n).i;
 
 let SPRINGS = [];
 function layoutSprings() {
-  // décalage angulaire qui éloigne le plus les ressorts des 9 boulons du cône (à 40° d'intervalle)
-  const step = 360 / P.n;
-  let best = 0, bestD = -1;
-  for (let off = 0; off < step; off += 0.5) {
-    let d = 1e9;
-    for (let j = 0; j < P.n; j++) { const a = (j * step + off) % 40; d = Math.min(d, a, 40 - a); }
-    if (d > bestD) { bestD = d; best = off; }
-  }
+  // 18 ressorts à 20° d'intervalle, alignés derrière les 9 boulons du bol (rayons différents : pas de conflit)
   SPRINGS = [...Array(P.n)].map((_, j) => {
-    const a = (j * step + best) * Math.PI / 180;
+    const a = (BOLT_A0 + j * 360 / P.n) * Math.PI / 180;
     return { x: R_SPRING * Math.cos(a), z: -R_SPRING * Math.sin(a) };
   });
 }
@@ -597,7 +601,7 @@ function lobedAnnulus(rIn, rLobe, rOut, h, holes, lobeDeg = [0, 120, 240], half 
   const N = 240;
   for (let i = 0; i <= N; i++) {
     const a = -i / N * Math.PI * 2;
-    const deg = ((-a * 180 / Math.PI) % 360 + 360) % 360;
+    const deg = ((a * 180 / Math.PI) % 360 + 360) % 360;
     const d = Math.min(...lobeDeg.map(L => { const x = Math.abs(deg - L) % 360; return Math.min(x, 360 - x); }));
     const r = d < half ? rLobe : d < half + 3 ? lerp(rLobe, rIn, (d - half) / 3) : rIn;
     const x = u(r) * Math.cos(a), y = u(r) * Math.sin(a);
@@ -684,6 +688,11 @@ const BOLT = {
 };
 
 /* ---------- Sol, palette, support d'atelier ---------- */
+Object.assign(mat, {
+  blue: new THREE.MeshStandardMaterial({ color: 0x2b3f9e, roughness: .42, metalness: .2 }),
+  green: new THREE.MeshStandardMaterial({ color: 0x3fa65a, roughness: .38, metalness: .3 }),
+});
+mat.spring = mat.green;
 const floor = mesh(new THREE.PlaneGeometry(200, 200), mat.floor, { cast: false });
 floor.rotation.x = -Math.PI / 2; floor.position.y = FLOOR;
 scene.add(floor);
@@ -691,118 +700,133 @@ const pallet = new THREE.Group();
 for (const z of [-2.3, -1.15, 0, 1.15, 2.3]) { const b = mesh(new THREE.BoxGeometry(5.8, 0.2, 0.95), mat.wood); b.position.set(0, -0.1, z); pallet.add(b); }
 for (const x of [-2.4, 0, 2.4]) { const b = mesh(new THREE.BoxGeometry(0.95, 1.2, 5.6), mat.woodDark); b.position.set(x, -0.8, 0); pallet.add(b); }
 scene.add(pallet);
-const stand = mesh(annulusIn(R.standIn, R.stand, Y.stand), mat.console);
+const stand = mesh(annulusIn(R.standIn, R.stand, Y.stand), mat.console);   // anneau d'appui : dégage les clés et les têtes arrière
 scene.add(stand);
+const band = (r, y0, y1, m) => { const o = mesh(new THREE.CylinderGeometry(u(r + .005), u(r + .005), u(y1 - y0), 96, 1, true), m); o.position.y = u((y0 + y1) / 2); return o; };
+const boltAt = (i) => (BOLT_A0 + i * 40);
 
-/* ---------- Arrière : vérin hydraulique ---------- */
-const rearRing = mesh(annulusIn(R.ringIn, R.ringOut, 0.6, ringAt(6, 2.85, 30).map(([x, z]) => [x, z, .17])), mat.red);
-placeIn(rearRing, 0, Y.ringB, 0);
-part({ id: '2920452', ref: '2920452', name: 'Bague de retenue arrière', qty: 1, grp: 'rear', ext: [3.4, 4.0], r: 3.2 }, rearRing);
-part({ id: 'B312-1000', ref: 'B312-1000', name: 'Boulon 5/16 × 1 po', qty: 6, qtyEst: true, grp: 'rear', ext: [3.19, 4.4], r: 3.2, role: 'Fixent la bague 2920452 au couvercle arrière 2920333.' },
-  ringAt(6, 2.85, 30).map(([x, z]) => { const b = makeBolt(BOLT.B312_1000, mat.boltBlack); b.rotation.x = Math.PI; return placeIn(b, x, Y.ringB, z); }));
-const pin321 = new THREE.Group();
-{ const hex = mesh(new THREE.CylinderGeometry(u(.36), u(.36), u(.35), 6), mat.machined); hex.position.y = u(.65);
-  const nip = mesh(new THREE.CylinderGeometry(u(.24), u(.28), u(.55), 20), mat.machined); nip.position.y = u(.25);
-  const thr = mesh(new THREE.CylinderGeometry(u(.2), u(.2), u(.4), 16), threadMat(mat.machined, .4, 18)); thr.position.y = u(1.0);
-  pin321.add(hex, nip, thr); }
-{ const [x, z] = polar(4.95, 150); placeIn(pin321, x, 3.0, z); }
-part({ id: '321620', ref: '321620', name: 'Raccord hydraulique du couvercle arrière', qty: 1, grp: 'rear', ext: [3.0, 4.2], r: 5.0, note: 'Identification probable : orifice d\'huile du vérin.' }, pin321);
-const cap = mesh(annulusIn(R.capIn, R.body, 1.0, ringAt(8, R.capBolt, 22.5).map(([x, z]) => [x, z, .28])), mat.red);
-placeIn(cap, 0, Y.capB, 0);
-part({ id: '2920333', ref: '2920333', name: 'Couvercle arrière du vérin (détail D)', qty: 1, grp: 'rear', ext: [4.0, 5.0], r: 6.0, role: 'Ferme la chambre hydraulique à l\'arrière.' }, cap);
-part({ id: 'B500-2000', ref: 'B500-2000', name: 'Boulon ½ × 2 po', qty: 8, qtyEst: true, grp: 'rear', ext: [3.69, 6.0], r: 6.0, role: 'Fixent le couvercle arrière 2920333 au cylindre 2920332.' },
-  ringAt(8, R.capBolt, 22.5).map(([x, z]) => { const b = makeBolt(BOLT.B500_2000, mat.boltBlack); b.rotation.x = Math.PI; return placeIn(b, x, Y.capB, z); }));
-part({ id: '5030274', ref: '5030274', name: 'Joint torique du couvercle arrière (détail D)', qty: 1, grp: 'rear', ext: [4.95, 5.09], r: 5.4 }, placeIn(oring(5.3, .07), 0, 5.02, 0));
+/* ---------- Arrière : clés, roulement, piston, cylindre, adaptateur ---------- */
+const keys = [90, 210, 330].map(deg => {
+  const k = mesh(new THREE.BoxGeometry(u(.45), u(5.2), u(.45)), mat.steelLight);
+  const [x, z] = polar(R.key, deg); placeIn(k, x, 2.7 + 2.6, z); k.rotation.y = deg * Math.PI / 180;
+  return k;
+});
+part({ id: '3506881', ref: '3506881', name: 'Clé Boyle 12HH (UM-012-189)', qty: 3, grp: 'rear', ext: [2.7, 7.9], r: 2.4, role: 'Clés d\'entraînement : transmettent la rotation de la broche au mandrin.' }, keys);
+part({ id: '3506879', ref: '3506879', name: 'Ressort de verrouillage des clés', qty: 1, grp: 'rear', ext: [3.14, 3.26], r: 2.1 }, placeIn(oring(1.95, .05, mat.steelLight), 0, 3.2, 0));
+const adapter = new THREE.Group();
+adapter.add(mesh(annulusIn(R.adIn, R.body, Y.adT - Y.adB, [
+  ...ringAt(8, R.adBolt, 22.5).map(([x, z]) => [x, z, .28]),
+  ...ringAt(10, R.tie, 18).map(([x, z]) => [x, z, .45]),
+]), mat.blue));
+placeIn(adapter, 0, Y.adB, 0);
+part({ id: 'UM-070-608A', ref: 'UM-070-608A', name: 'Adaptateur de mandrin (option 1, tête UM-070)', qty: 1, grp: 'rear', ext: [3.0, 3.7], r: 6.1, role: 'Fixe le mandrin à la tête de forage.' }, adapter);
+part({ id: 'B500-1500', ref: 'B500-1500', name: 'Boulon ½ × 1 ½ po', qty: 8, grp: 'rear', ext: [2.69, 4.5], r: 5.0, role: 'Fixent l\'adaptateur UM-070-608A au cylindre.' },
+  ringAt(8, R.adBolt, 22.5).map(([x, z]) => { const b = makeBolt({ af: .75, headH: .31, d: .5, L: 1.5 }, mat.boltBlack); b.rotation.x = Math.PI; return placeIn(b, x, Y.adB - .04, z); }));
+part({ id: 'W500', ref: 'W500', name: 'Rondelle plate ½ po', qty: 8, grp: 'rear', ext: [2.96, 3.0], r: 5.0, with: 'B500-1500' },
+  ringAt(8, R.adBolt, 22.5).map(([x, z]) => placeIn(mesh(annulusIn(.27, .53, .04, [], 24), mat.steelLight), x, Y.adB - .04, z)));
+part({ id: 'B500-4500', ref: 'B500-4500', name: 'Boulon ½ × 4 ½ po', qty: 10, grp: 'rear', ext: [3.39, 8.2], r: 6.2, role: 'Assemblent le cylindre 3506909 au boîtier 3506870.' },
+  ringAt(10, R.tie, 18).map(([x, z]) => { const b = makeBolt({ af: .75, headH: .31, d: .5, L: 4.5 }, mat.boltBlack); b.rotation.x = Math.PI; return placeIn(b, x, Y.adT, z); }));
+part({ id: 'NC500', ref: 'NC500', name: 'Écrou ½-13 UNC', qty: 10, grp: 'rear', ext: [7.7, 8.14], r: 6.2, with: 'B500-4500', note: 'Emplacement approximatif.' },
+  ringAt(10, R.tie, 18).map(([x, z]) => placeIn(mesh(new THREE.CylinderGeometry(u(.433), u(.433), u(.44), 6), mat.boltBlack), x, 7.92, z)));
+const cyl = new THREE.Group();
+cyl.add(mesh(annulusIn(R.cylIn, R.body, Y.cylT - Y.cylB, ringAt(10, R.tie, 18).map(([x, z]) => [x, z, .28])), mat.blue));
+{ const wall = mesh(annulusIn(3.95, R.cylIn, .5), mat.grey); cyl.add(wall); }
+cyl.add(band(R.body, 6.6 - Y.cylB, 6.85 - Y.cylB, mat.machined));
+placeIn(cyl, 0, Y.cylB, 0);
+part({ id: '3506909', ref: '3506909', name: 'Cylindre hydraulique', qty: 1, grp: 'rear', ext: [3.7, 7.0], r: 6.1, role: 'Chambre du piston hydraulique qui ouvre le mandrin.' }, cyl);
+part({ id: '5035016', ref: '5035016', name: 'Joint en U (U-cup)', qty: 1, grp: 'rear', ext: [3.84, 3.96], r: 4.1, note: 'Voir « How assembly the seal » ; emplacement approximatif.' }, placeIn(oring(3.97, .07), 0, 3.9, 0));
+part({ id: '5035018', ref: '5035018', name: 'Bague d\'usure', qty: 1, grp: 'rear', ext: [4.04, 4.16], r: 4.1, note: 'Emplacement approximatif.' }, placeIn(oring(3.97, .06, mat.sealRed), 0, 4.1, 0));
 const piston = new THREE.Group();
-{ const b = mesh(annulusIn(R.nose, R.cylIn - 0.01, 2.0), mat.grey); piston.add(b);
-  for (const y of [.5, 1.5]) { const gr = mesh(new THREE.TorusGeometry(u(R.cylIn - .02), u(.05), 6, 96), mat.pocket); gr.rotation.x = Math.PI / 2; gr.position.y = u(y); piston.add(gr); } }
-placeIn(piston, 0, Y.pistonB, 0);
-part({ id: '2920331', ref: '2920331', name: 'Piston hydraulique', qty: 1, grp: 'rear', ext: [6.5, 8.5], r: 5.0, role: 'La pression hydraulique le pousse vers l\'arrière : par les boulons, il tire le cône et comprime les ressorts, ce qui ouvre les mâchoires.' }, piston);
-part({ id: '5035015', ref: '5035015', name: 'Joint de piston, épais (détail B)', qty: 1, grp: 'rear', ext: [6.9, 7.1], r: 5.1 }, placeIn(oring(5.0, .1), 0, 7.0, 0));
-part({ id: '5035017', ref: '5035017', name: 'Joint de piston, mince (détail B)', qty: 1, grp: 'rear', ext: [7.9, 8.1], r: 5.1 }, placeIn(oring(5.0, .065), 0, 8.0, 0));
-part({ id: '5035016', ref: '5035016', name: 'Joint du cylindre (détail C)', qty: 1, grp: 'rear', ext: [8.36, 8.54], r: 5.3, note: 'Emplacement approximatif, voir détail C.' }, placeIn(oring(5.18, .09), 0, 8.45, 0));
-part({ id: '5035018', ref: '5035018', name: 'Joint du cylindre (détail C)', qty: 1, grp: 'rear', ext: [8.36, 8.54], r: 5.5, note: 'Emplacement approximatif, voir détail C.' }, placeIn(oring(5.38, .09), 0, 8.45, 0));
-const cyl = mesh(annulusIn(R.cylIn, R.body, Y.cylT - Y.capT, ringAt(12, R.shcs, 0).map(([x, z]) => [x, z, .4])), mat.red);
-placeIn(cyl, 0, Y.capT, 0);
-part({ id: '2920332', ref: '2920332', name: 'Cylindre hydraulique', qty: 1, grp: 'rear', ext: [5.0, 8.5], r: 6.0, role: 'Chambre du piston hydraulique.' }, cyl);
-const plug = new THREE.Group();
-{ const h = mesh(new THREE.CylinderGeometry(u(.33), u(.33), u(.25), 6), mat.boltBlack); h.rotation.z = Math.PI / 2; h.position.x = u(.12); plug.add(h); }
-{ const [x, z] = polar(R.body, 175); placeIn(plug, x, 6.8, z); plug.rotation.y = 175 * Math.PI / 180; }
-part({ id: 'SP250', ref: 'SP250', name: 'Bouchon ¼ NPT', qty: 1, grp: 'rear', ext: [6.6, 7.0], r: 6.4, with: '2920332' }, plug);
-part({ id: 'SHCS500-4000', ref: 'SHCS500-4000', name: 'Vis à tête creuse ½ × 4 po', qty: 12, qtyEst: true, grp: 'rear', ext: [5.0, 9.5], r: 6.0, role: 'Fixe le cylindre au bâti.' },
-  ringAt(12, R.shcs, 0).map(([x, z]) => { const b = makeBolt(BOLT.SHCS500_4000, mat.boltBlack); b.rotation.x = Math.PI; return placeIn(b, x, 5.5, z); }));
-part({ id: '5030269', ref: '5030269', name: 'Joint torique cylindre / bâti (détail C)', qty: 1, grp: 'rear', ext: [8.43, 8.57], r: 5.7 }, placeIn(oring(5.62, .07), 0, 8.5, 0));
-const bush126 = mesh(new THREE.CylinderGeometry(u(.25), u(.25), u(.5), 20), mat.machined);
-{ const [x, z] = polar(2.65, 120); placeIn(bush126, x, 5.35, z); }
-part({ id: '5020126', ref: '5020126', name: 'Douille du nez du bâti', qty: 1, grp: 'body', ext: [5.1, 5.6], r: 3.0, note: 'Fonction non précisée sur le dessin.' }, bush126);
-part({ id: '5030250', ref: '5030250', name: 'Joint torique (détail A)', qty: 1, grp: 'body', ext: [4.98, 5.12], r: 2.9 }, placeIn(oring(2.7, .07), 0, 5.05, 0));
+piston.add(mesh(annulusIn(R.piston, R.cylIn - .01, 1.4), mat.grey));
+for (const y of [.4, 1.0]) { const gr = mesh(new THREE.TorusGeometry(u(R.cylIn - .02), u(.05), 6, 96), mat.pocket); gr.rotation.x = Math.PI / 2; gr.position.y = u(y); piston.add(gr); }
+placeIn(piston, 0, 4.4, 0);
+part({ id: '3506908', ref: '3506908', name: 'Piston', qty: 1, grp: 'rear', ext: [4.4, 5.8], r: 5.0, role: 'Sous pression hydraulique, il pousse le roulement et le manchon d\'actionnement : les 9 boulons tirent le bol vers l\'arrière, les ressorts se compriment et les mâchoires s\'ouvrent.' }, piston);
+part({ id: '5035015', ref: '5035015', name: 'Joint en U du piston', qty: 1, grp: 'rear', ext: [5.33, 5.47], r: 5.1 }, placeIn(oring(5.0, .09), 0, 5.4, 0));
+part({ id: '5035017', ref: '5035017', name: 'Bague d\'usure du piston', qty: 1, grp: 'rear', ext: [4.73, 4.87], r: 5.1 }, placeIn(oring(5.0, .07, mat.sealRed), 0, 4.8, 0));
+part({ id: '5222624', ref: '5222624', name: 'Goupille élastique', qty: 4, grp: 'rear', ext: [5.8, 6.3], r: 4.6 },
+  ringAt(4, 4.45, 45).map(([x, z]) => placeIn(mesh(new THREE.CylinderGeometry(u(.09), u(.09), u(.5), 12), mat.machined), x, 6.05, z)));
+const bearing = new THREE.Group();
+bearing.add(mesh(annulusIn(R.bearIn, 3.2, .9), mat.machined));
+{ const o = mesh(annulusIn(3.6, R.piston, .9), mat.machined); bearing.add(o); }
+{ const cage = mesh(annulusIn(3.3, 3.5, .5), mat.brass); cage.position.y = u(.2); bearing.add(cage); }
+for (let k = 0; k < 18; k++) { const [x, z] = polar(3.4, k * 20); const b = mesh(new THREE.SphereGeometry(u(.2), 12, 10), mat.steelLight); b.position.set(u(x), u(.45), u(z)); bearing.add(b); }
+placeIn(bearing, 0, 4.45, 0);
+part({ id: '5000199', ref: '5000199', name: 'Roulement', qty: 1, grp: 'rear', ext: [4.45, 5.35], r: 3.9, role: 'Le mandrin tourne, le piston non : le roulement transmet la poussée entre les deux.' }, bearing);
+part({ id: '3506882', ref: '3506882', name: 'Bague d\'appui (back-up ring)', qty: 1, grp: 'rear', ext: [4.22, 4.42], r: 3.8 }, placeIn(mesh(annulusIn(2.95, 3.75, .2), mat.machined), 0, 4.22, 0));
+part({ id: '5054078', ref: '5054078', name: 'Anneau de retenue', qty: 1, grp: 'rear', ext: [4.08, 4.18], r: 3.0 }, placeIn(oring(2.93, .05, mat.boltBlack), 0, 4.13, 0));
+const act = new THREE.Group();
+act.add(mesh(annulusIn(R.act, R.actTube, 3.0), mat.grey));
+{ const fl = mesh(annulusIn(R.act, R.actFl, 1.9, BOLTS.map(b => [b.x / IN, b.z / IN, .25])), mat.grey); fl.position.y = u(3.0); act.add(fl); }
+placeIn(act, 0, 4.2, 0);
+part({ id: '3506928', ref: '3506928', name: 'Manchon d\'actionnement (RR 50)', qty: 1, grp: 'rear', ext: [4.2, 9.1], r: 4.0, role: 'Les 9 boulons du bol y sont vissés : c\'est lui qui retient le bol contre les ressorts.' }, act);
+const elbow = new THREE.Group();
+{ const hx = mesh(new THREE.CylinderGeometry(u(.45), u(.45), u(.5), 6), mat.machined); hx.position.y = u(.25);
+  const up = mesh(new THREE.CylinderGeometry(u(.3), u(.3), u(1.0), 16), mat.machined); up.position.y = u(1.0);
+  const bend = mesh(new THREE.SphereGeometry(u(.34), 16, 12), mat.machined); bend.position.y = u(1.5);
+  const side = mesh(new THREE.CylinderGeometry(u(.3), u(.3), u(1.1), 16), mat.machined); side.rotation.z = Math.PI / 2; side.position.set(u(.55), u(1.5), 0);
+  const nut = mesh(new THREE.CylinderGeometry(u(.42), u(.42), u(.35), 6), mat.machined); nut.rotation.z = Math.PI / 2; nut.position.set(u(1.1), u(1.5), 0);
+  elbow.add(hx, up, bend, side, nut); }
+{ const [x, z] = polar(R.body, 90); placeIn(elbow, x, 6.3, z); elbow.rotation.x = -Math.PI / 2; }
+part({ id: '2501-8-6', ref: '2501-8-6', name: 'Raccord coudé 90° MJIC 6 × MP 8', qty: 1, grp: 'rear', ext: [6.0, 6.6], r: 7.0, with: '3506909', role: 'Arrivée d\'huile du vérin.' }, elbow);
+const zerk = new THREE.Group();
+{ const b = mesh(new THREE.CylinderGeometry(u(.22), u(.22), u(.25), 6), mat.brass); b.position.y = u(.12);
+  const n = mesh(new THREE.CylinderGeometry(u(.09), u(.13), u(.3), 12), mat.brass); n.position.y = u(.4);
+  const ball = mesh(new THREE.SphereGeometry(u(.12), 12, 10), mat.brass); ball.position.y = u(.58);
+  zerk.add(b, n, ball); }
+{ const [x, z] = polar(R.body, 110); placeIn(zerk, x, 4.4, z); zerk.rotation.order = 'YXZ'; zerk.rotation.y = (110 - 90) * Math.PI / 180; zerk.rotation.x = -Math.PI / 2; }
+part({ id: 'ZNPT250', ref: 'ZNPT250', name: 'Graisseur 1/8 NPT', qty: 1, grp: 'rear', ext: [4.2, 4.6], r: 6.8, with: '3506909' }, zerk);
+part({ id: '5041022', ref: '5041022', name: 'Joint en V (V-ring)', qty: 1, grp: 'rear', ext: [6.94, 7.06], r: 5.9, role: 'Étanchéité tournante entre le cylindre et le boîtier.' }, placeIn(oring(5.7, .07, mat.green), 0, 7.0, 0));
 
-/* ---------- Bâti 2920455 ---------- */
+/* ---------- Boîtier 3506870 ---------- */
 const body = new THREE.Group();
 let bodyMain = null, pocketGroup = null;
 function buildBody() {
   if (bodyMain) { body.remove(bodyMain); bodyMain.geometry.dispose(); }
   if (pocketGroup) body.remove(pocketGroup);
-  bodyMain = mesh(annulus(u(R.bore), u(R.body), u(Y.face - Y.bodyRear), SPRINGS.map(s => [s.x, s.z, u(0.58)])), mat.red);
-  bodyMain.position.y = u(Y.bodyRear);
+  bodyMain = mesh(annulus(u(R.springBlockIn), u(R.rimIn), u(Y.plateB - Y.housB), SPRINGS.map(s => [s.x, s.z, u(R.springBore)])), mat.grey);
+  bodyMain.position.y = u(Y.housB);
   body.add(bodyMain);
   pocketGroup = new THREE.Group();
-  for (const s of SPRINGS) { const d = mesh(new THREE.CircleGeometry(u(.58), 24), mat.pocket, { cast: false }); d.rotation.x = -Math.PI / 2; d.position.set(s.x, POCKET, s.z); pocketGroup.add(d); }
+  for (const s of SPRINGS) { const d = mesh(new THREE.CircleGeometry(u(R.springBore), 24), mat.pocket, { cast: false }); d.rotation.x = -Math.PI / 2; d.position.set(s.x, POCKET, s.z); pocketGroup.add(d); }
   body.add(pocketGroup);
-  bodyMain.userData.part = pocketGroup.userData.part = byId('2920455');
-  pocketGroup.traverse(m => { m.userData.part = byId('2920455'); });
+  const p = byId('3506870');
+  bodyMain.userData.part = p; pocketGroup.traverse(m => { m.userData.part = p; });
 }
 {
-  const rim = mesh(annulusIn(R.rimIn, R.body, Y.rimT - Y.face, ringAt(9, R.coverBolt, 20).map(([x, z]) => [x, z, .27])), mat.red);
-  placeIn(rim, 0, Y.face, 0);
-  const nose = mesh(annulusIn(R.bore, R.nose, Y.bodyRear - Y.capT), mat.red);
-  placeIn(nose, 0, Y.capT, 0);
-  body.add(rim, nose);
-  // Pied de fixation (base à rainures) et nervures
-  const footG = new THREE.Group();
-  const plate = mesh(new THREE.BoxGeometry(u(.8), u(3.6), u(7)), mat.red); plate.position.set(-u(6.9), u(10.4), 0);
-  const web = mesh(new THREE.BoxGeometry(u(1.2), u(3.6), u(5)), mat.red); web.position.set(-u(6.1), u(10.4), 0);
-  footG.add(plate, web);
-  for (const z of [-2.2, 2.2]) { const sl = mesh(new THREE.BoxGeometry(u(.1), u(2.4), u(.7)), mat.pocket); sl.position.set(-u(7.32), u(10.4), u(z)); footG.add(sl); }
-  footG.rotation.y = -45 * Math.PI / 180;
-  body.add(footG);
-  // Poignée
-  const hp = [[0, 9.2, 5.9], [0, 9.4, 6.9], [0, 11.4, 6.9], [0, 11.6, 5.9]].map(([x, y, z]) => new THREE.Vector3(u(x), u(y), u(z)));
-  const handle = mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(hp, false, 'catmullrom', 0.1), 40, u(.3), 12, false), mat.red);
-  handle.rotation.y = (170 - 90) * Math.PI / 180 + Math.PI;
-  body.add(handle);
+  const shell = mesh(annulusIn(R.rimIn, R.body, Y.rimT - Y.housB), mat.blue);
+  placeIn(shell, 0, Y.housB, 0);
+  const web = mesh(annulusIn(R.web, R.springBlockIn, Y.webT - Y.webB, BOLTS.map(b => [b.x / IN, b.z / IN, .4])), mat.grey);
+  placeIn(web, 0, Y.webB, 0);
+  const hub = mesh(annulusIn(R.hubIn, R.web, Y.webT - 3.3), mat.grey);
+  placeIn(hub, 0, 3.3, 0);
+  const thread = mesh(new THREE.CylinderGeometry(u(R.hubIn - .01), u(R.hubIn - .01), u(4.6), 64, 1, true), threadMat(mat.machined, 4.6, 4));
+  thread.material.side = THREE.BackSide; thread.position.y = u(3.3 + 2.3);
+  const face = mesh(annulusIn(R.rimIn - .02, R.body, .02), mat.machined);
+  placeIn(face, 0, Y.rimT - .02, 0);
+  body.add(shell, web, hub, thread, face, band(R.body, 7.0, 7.25, mat.machined));
 }
-part({ id: '2920455', ref: '2920455', name: 'Bâti du clam', qty: 1, grp: 'body', ext: [5.0, 16.0], r: 6.0, role: 'Pièce principale : loge les ressorts à l\'avant et le vérin à l\'arrière. Porte le pied de fixation et la poignée.' }, body);
+part({ id: '3506870', ref: '3506870', name: 'Boîtier du mandrin', qty: 1, grp: 'body', ext: [3.3, 13.6], r: 6.1, role: 'Pièce principale : loge les 18 ressorts, guide le bol et reçoit le couvercle avant. Son moyeu fileté se visse sur la broche.' }, body);
 buildBody();
-const grease = new THREE.Group();
-{ const b = mesh(new THREE.CylinderGeometry(u(.3), u(.3), u(.3), 6), mat.brass); b.position.y = u(.15);
-  const n = mesh(new THREE.CylinderGeometry(u(.12), u(.16), u(.35), 12), mat.brass); n.position.y = u(.45);
-  const ball = mesh(new THREE.SphereGeometry(u(.14), 12, 10), mat.brass); ball.position.y = u(.65);
-  grease.add(b, n, ball); }
-{ const [x, z] = polar(R.body, 160); placeIn(grease, x, 10.5, z); grease.rotation.z = Math.PI / 2; grease.rotation.y = 160 * Math.PI / 180 + Math.PI; }
-part({ id: 'ZNPT250', ref: 'ZNPT250', name: 'Graisseur ¼ NPT', qty: 1, grp: 'body', ext: [10.2, 10.8], r: 6.8, with: '2920455' }, grease);
 
-/* ---------- Avant : ressorts et cône ---------- */
-const tube880 = mesh(new THREE.CylinderGeometry(u(.375), u(.375), u(1.6), 24), mat.machined);
-{ const [x, z] = polar(3.2, 160); placeIn(tube880, x, 12.7, z); }
-part({ id: '3506880', ref: '3506880', name: 'Douille de guidage', qty: 1, grp: 'front', ext: [11.9, 13.5], r: 3.6, note: 'Emplacement et fonction à confirmer.' }, tube880);
-{ const o = oring(.45, .06); const [x, z] = polar(3.2, 160); placeIn(o, x, 12.36, z);
-  part({ id: '5040192', ref: '5040192', name: 'Joint torique', qty: 1, grp: 'front', ext: [12.3, 12.42], r: 3.6 }, o); }
+/* ---------- Avant : entretoises inférieures, ressorts, bol ---------- */
+part({ id: '3506880', ref: '3506880', name: 'Entretoise inférieure', qty: 9, grp: 'front', ext: [9.1, 10.4], r: 3.9, role: 'Guide chaque boulon du bol à travers le voile du boîtier.' },
+  BOLTS.map(b => placeIn(mesh(annulusIn(.27, .4, 1.3, [], 24), mat.machined), b.x / IN, Y.webB, b.z / IN)));
+part({ id: '5040192', ref: '5040192', name: 'Joint d\'huile', qty: 9, grp: 'front', ext: [10.36, 10.48], r: 3.9, role: 'Étanchéité de chaque boulon dans le voile.' },
+  BOLTS.map(b => placeIn(oring(.36, .06), b.x / IN, 10.42, b.z / IN)));
 
 class Helix extends THREE.Curve {
   constructor(r, turns) { super(); this.r = r; this.turns = turns; }
   getPoint(t, target = new THREE.Vector3()) {
-    // spires jointives aux extrémités (ressort de matrice à bouts rapprochés)
-    const tt = t < .06 ? t * .45 : t > .94 ? 1 - (1 - t) * .45 : .027 + (t - .06) * (0.946 / 0.88);
+    const tt = t < .04 ? t * .45 : t > .96 ? 1 - (1 - t) * .45 : .018 + (t - .04) * (0.964 / 0.92);
     const a = tt * this.turns * Math.PI * 2;
     return target.set(Math.cos(a) * this.r, t, Math.sin(a) * this.r);
   }
 }
-const springGeo = new THREE.TubeGeometry(new Helix(u(.43), 7.5), 320, u(.075), 4, false);
+const springGeo = new THREE.TubeGeometry(new Helix(u(.46), 14), 700, u(.075), 5, false);
 let springMeshes = [];
 const springGroup = new THREE.Group();
 clampG.add(springGroup);
-const springPart = part({ id: '5200517', ref: '5200517', name: 'Ressort (bleu)', qty: 'n', grp: 'front', ext: [10.8, 13.1], r: 5.4, anim: true, role: 'Pousse le cône vers l\'avant pour serrer les mâchoires. C\'est lui qui emmagasine l\'énergie.' }, []);
+const springPart = part({ id: '5200517', ref: '5200517', name: 'Ressort', qty: 'n', grp: 'front', ext: [Y.pocket, Y.plateB], r: 5.4, anim: true, role: 'Logés dans le boîtier, ils poussent le bol vers l\'avant pour serrer les mâchoires. C\'est eux qui emmagasinent l\'énergie.' }, []);
 function buildSprings() {
   springMeshes.forEach(s => springGroup.remove(s));
   springMeshes = SPRINGS.map(s => { const m = mesh(springGeo, mat.spring); m.position.set(s.x, POCKET, s.z); m.userData.part = springPart; springGroup.add(m); return m; });
@@ -810,38 +834,39 @@ function buildSprings() {
 }
 buildSprings();
 
-// Cône 2920390 (« chuck bowl ») : origine = dessus de la bride
+// Bol 2920390 (« chuck bowl 12 ½ L ») : origine = face avant (appui des 9 boulons)
 const plate = new THREE.Group();
 clampG.add(plate);
+const BOWL_L = Y.plateT - Y.bowlB;
 {
-  const holes = BOLTS.map(b => [b.x / IN, b.z / IN, .28]);
-  const [tx, tz] = polar(3.2, 160);
-  const flange = mesh(annulusIn(R.bowlB, R.plate, Y.plateT - Y.plateB, [...holes, [tx, tz, .42]]), mat.grey);
+  const flange = mesh(annulusIn(R.bowlTop, R.plate, Y.plateT - Y.plateB, BOLTS.map(b => [b.x / IN, b.z / IN, .28])), mat.grey);
   flange.position.y = -PLATE_T;
-  const hub = mesh(annulusIn(R.bowlB, R.hub, Y.hubT - Y.plateT), mat.grey);
-  const bowl = mesh(new THREE.CylinderGeometry(u(R.bowlT), u(R.bowlB), u(Y.hubT - Y.plateB), 96, 1, true), mat.red.clone());
+  const hub = mesh(annulusIn(R.bowlTop, R.bowlOut, BOWL_L - (Y.plateT - Y.plateB)), mat.grey);
+  hub.position.y = -BOWL_DEPTH;
+  const bowl = mesh(new THREE.CylinderGeometry(u(R.bowlTop), u(R.bowlBot), BOWL_DEPTH, 96, 1, true), mat.machined.clone());
   bowl.material.side = THREE.BackSide;
-  bowl.position.y = u((Y.hubT - Y.plateB) / 2) - PLATE_T;
-  const lip = mesh(annulusIn(R.bowlT, R.hub, 0.02), mat.machined);
-  lip.position.y = HUB_H;
+  bowl.position.y = -BOWL_DEPTH / 2;
+  const back = mesh(annulusIn(R.bowlBot, R.bowlOut, .02), mat.machined);
+  back.position.y = -BOWL_DEPTH;
   const edge = mesh(new THREE.TorusGeometry(u(R.plate), u(.04), 6, 96), mat.machined);
   edge.rotation.x = Math.PI / 2; edge.position.y = -u(.02);
-  plate.add(flange, hub, bowl, lip, edge);
+  plate.add(flange, hub, bowl, back, edge);
 }
 const plateMats = new Set();
 function ownPlateMats() { plate.traverse(o => { if (o.isMesh && !plateMats.has(o.material)) { o.material = o.material.clone(); plateMats.add(o.material); } }); }
-part({ id: '2920390', ref: '2920390', name: 'Cône (chuck bowl)', qty: 1, grp: 'front', ext: [13.1, 16.95], r: 5.3, anim: true, role: 'Poussé par les ressorts, son bol conique serre les mâchoires. Retenu par 9 boulons ½ vissés dans le piston. C\'est la pièce projetée si les ressorts se détendent d\'un coup.' }, [plate]);
+part({ id: '2920390', ref: '2920390', name: 'Bol du mandrin 12 ½ L (cône)', qty: 1, grp: 'front', ext: [Y.bowlB, Y.plateT], r: 5.4, anim: true, role: 'Poussé vers l\'avant par les 18 ressorts, son alésage conique serre les mâchoires. Retenu par 9 boulons ½ vissés dans le manchon d\'actionnement. C\'est la pièce projetée si les ressorts se détendent d\'un coup.' }, [plate]);
 
-// Mâchoires en anneau WH-500, calibre H (8 segments) — logées dans le bol du cône
-const JAW_H = 2.4, JAW_Y0 = 0.3;   // po, depuis le dessus de la bride
-const bowlR = yLocal => R.bowlB - (R.bowlB - R.bowlT) * (yLocal + (Y.plateT - Y.plateB)) / (Y.hubT - Y.plateB);
-const jawGeoH = jawGeo(R.jawIn, bowlR(JAW_Y0) - .02, bowlR(JAW_Y0 + JAW_H) - .02, JAW_H, 38);
+// Mâchoires WH-500, calibre H (8 segments) — logées dans le bol, conicité parallèle à son alésage
+const JAW_H = BOWL_L, JAW_Y0 = -BOWL_L;   // po, sous la face avant du bol
+const bowlR = yLocal => R.bowlTop - (R.bowlTop - R.bowlBot) * (-yLocal) / BOWL_L;
+const jawSet = (rIn) => jawGeo(rIn, R.bowlBot - .02, R.bowlTop - .02, JAW_H, 38);
+const jawGeoH = jawSet(R.jawIn);
 const jaws = [...Array(8)].map((_, k) => {
   const j = new THREE.Group();
   j.add(mesh(jawGeoH, mat.machined));
-  for (let t = 0; t < 7; t++) { const tooth = mesh(new THREE.BoxGeometry(u(.08), u(.06), u(1.0)), mat.boltBlack); tooth.position.set(u(R.jawIn + .03), u(.35 + t * .3), 0); j.add(tooth); }
+  for (let t = 0; t < 9; t++) { const tooth = mesh(new THREE.BoxGeometry(u(.08), u(.06), u(1.0)), mat.boltBlack); tooth.position.set(u(R.jawIn + .03), u(.3 + t * .32), 0); j.add(tooth); }
   const bar = mesh(new THREE.CylinderGeometry(u(.11), u(.11), u(JAW_H + .2), 12), mat.steelLight);
-  bar.position.set(u(R.jawIn + .45) * Math.cos(Math.PI / 8), u(JAW_H / 2), -u(R.jawIn + .45) * Math.sin(Math.PI / 8));
+  bar.position.set(u(R.jawIn + .4) * Math.cos(Math.PI / 8), u(JAW_H / 2), -u(R.jawIn + .4) * Math.sin(Math.PI / 8));
   j.add(bar);
   j.userData.a = k * Math.PI / 4;
   j.rotation.y = j.userData.a;
@@ -849,9 +874,9 @@ const jaws = [...Array(8)].map((_, k) => {
   return j;
 });
 ownPlateMats();
-part({ id: 'UM-021-01-03', ref: 'UM-021-01-03 H', name: 'Mâchoires en anneau WH-500, calibre H', qty: 8, grp: 'front', ext: [14.4, 16.8], r: 2.8, anim: true, rowJaw: 'H', role: 'Serrent la tige. Le jeu de mâchoires change selon le calibre de tige (B, N, H, BW).', note: 'Jeu H installé dans ce modèle.' }, jaws);
+part({ id: 'UM-021-01-03', ref: 'UM-021-01-03 H', name: 'Jeu de mâchoires Boyle H, calibre H', qty: 1, grp: 'front', ext: [Y.bowlB, Y.plateT], r: 3.0, anim: true, rowJaw: 'H', role: 'Serrent la tige. Le jeu change selon le calibre (B, N, H, BW).', note: 'Jeu H installé dans ce modèle.' }, jaws);
 
-// Boulons du cône : 6 × B500-6500 (étape 7) et 3 × B500-8000 avec bushing 3506878 (étapes 6 et 8)
+// 9 boulons du bol : 6 × B500-6500 (étape 7) et 3 × B500-8000 avec entretoise 3506878 (étapes 6 et 8)
 const pBolts = BOLTS.map(b => fadeable(makeBolt(b.bushing ? BOLT.B500_8000 : BOLT.B500_6500)));
 pBolts.forEach(o => clampG.add(o));
 const bushings = BUSHED.map(i => {
@@ -859,89 +884,85 @@ const bushings = BUSHED.map(i => {
   o.position.set(BOLTS[i].x, PLATE_TOP0, BOLTS[i].z);
   clampG.add(o); return o;
 });
-part({ id: 'B500-6500', ref: 'B500-6500', name: 'Boulon ½ × 6 ½ po', qty: 6, grp: 'front', ext: [7.6, 14.41], r: 4.4, anim: true, role: 'Retiennent le cône contre les ressorts (vissés dans le piston).', step: 'Étape 7 : dévissés 1 tour à la fois, dans l\'ordre 1 à 6.' }, ORDER.map(i => pBolts[i]));
-part({ id: '3506878', ref: '3506878', name: 'Bushing (entretoise 1 ½ po)', qty: 3, grp: 'front', ext: [14.1, 15.6], r: 4.5, anim: true, step: 'Étape 6 : retirés, les boulons B500-8000 sont remis sans eux.' }, bushings);
-part({ id: 'B500-8000', ref: 'B500-8000', name: 'Boulon ½ × 8 po (avec bushing)', qty: 3, grp: 'front', ext: [7.6, 15.91], r: 4.5, anim: true, role: '8 po = 6 ½ po + bushing de 1 ½ po. Remis sans bushing, ils restent vissés dans le piston même si le cône monte : ils le retiennent.', step: 'Étape 6 : remis sans bushing. Étape 8 : dévissés en dernier.' }, BUSHED.map(i => pBolts[i]));
+part({ id: 'B500-6500', ref: 'B500-6500', name: 'Boulon ½ × 6 ½ po', qty: 6, grp: 'front', ext: [7.2, 14.01], r: 3.9, anim: true, role: 'Retiennent le bol contre les ressorts : ils traversent le voile du boîtier et se vissent dans le manchon d\'actionnement.', step: 'Étape 7 : dévissés 1 tour à la fois, dans l\'ordre 1 à 6.' }, ORDER.map(i => pBolts[i]));
+part({ id: '3506878', ref: '3506878', name: 'Entretoise supérieure (bushing 1 ½ po)', qty: 3, grp: 'front', ext: [13.7, 15.2], r: 3.9, anim: true, step: 'Étape 6 : retirées ; les boulons B500-8000 sont remis sans elles.' }, bushings);
+part({ id: 'B500-8000', ref: 'B500-8000', name: 'Boulon ½ × 8 po (avec entretoise)', qty: 3, grp: 'front', ext: [7.2, 15.51], r: 3.9, anim: true, role: '8 po = 6 ½ po + entretoise de 1 ½ po. Remis sans entretoise, ils gardent 1 ½ po de filets de plus en prise dans le manchon : ils retiennent le bol s\'il est projeté.', step: 'Étape 6 : remis sans entretoise. Étape 8 : dévissés en dernier.' }, BUSHED.map(i => pBolts[i]));
 
-/* ---------- Avant : couvercle 3506906 et couvert des mâchoires 3506907 ---------- */
+/* ---------- Avant : porte-capuchon 3506906 (couvercle) et adaptateur de capuchon 3506907 (couvert des mâchoires) ---------- */
 const CV_BASE = new THREE.Vector3(0, u(Y.rimT), 0);
 const CV_REST = new THREE.Vector3(-5.6, FLOOR, 2.2);
-const cover = fadeable(mesh(lobedAnnulus(R.coverIn, 4.6, R.body, Y.coverT - Y.rimT, [
-  ...ringAt(9, R.coverBolt, 20).map(([x, z]) => [x, z, .27]),
-  ...ringAt(6, R.jcBolt, 30).map(([x, z]) => [x, z, .38]),
-]), mat.red));
+const cover = new THREE.Group();
+{
+  cover.add(mesh(annulusIn(R.capOut, R.body, Y.front - Y.rimT, ringAt(9, R.coverBolt, 12).map(([x, z]) => [x, z, .27])), mat.grey));
+  const lip = mesh(lobedAnnulus(R.lipIn, 3.95, R.capOut + .01, Y.lipT - Y.lipB, ringAt(3, R.jcBolt, 22).map(([x, z]) => [x, z, .38]), BOLTS.map((b, i) => boltAt(i)), 8.5), mat.grey);
+  lip.position.y = u(Y.lipB - Y.rimT);
+  const rim = band(R.body, Y.front - .6 - Y.rimT, Y.front - Y.rimT, mat.blue);
+  cover.add(lip, rim);
+}
+fadeable(cover);
 clampG.add(cover);
-part({ id: '3506906', ref: '3506906', name: 'Couvercle', qty: 1, grp: 'front', ext: [16.0, 17.0], r: 6.0, anim: true, step: 'Étape 5 : retiré après ses 9 boulons ½. Étape 10 : nettoyer ses deux faces avant de le remettre.' }, cover);
-const cvBolts = ringAt(9, R.coverBolt, 20).map(([x, z]) => {
+part({ id: '3506906', ref: '3506906', name: 'Porte-capuchon (couvercle)', qty: 1, grp: 'front', ext: [Y.rimT, Y.front], r: 6.1, anim: true, role: 'Couvercle avant, fixé au boîtier. Sa lèvre intérieure recouvre les 9 boulons du bol.', step: 'Étape 5 : retiré après ses 9 boulons ½ × 2 ¼. Étape 10 : nettoyer ses deux faces avant de le remettre.' }, cover);
+const cvBolts = ringAt(9, R.coverBolt, 12).map(([x, z]) => {
   const b = fadeable(makeBolt(BOLT.B500_2250));
-  b.userData.base = new THREE.Vector3(u(x), u(Y.coverT), u(z));
+  b.userData.base = new THREE.Vector3(u(x), u(Y.front), u(z));
   clampG.add(b); return b;
 });
-part({ id: 'B500-2250', ref: 'B500-2250', name: 'Boulon ½ × 2 ¼ po', qty: 9, grp: 'front', ext: [14.75, 17.31], r: 6.1, anim: true, role: 'Fixent le couvercle au bâti.', step: 'Étape 5 : clé ¾. Étapes 12 et 13 : remplacés par des neufs, serrés à 105 lb·pi.' }, cvBolts);
-const JC_BASE = new THREE.Vector3(0, u(Y.coverT), 0);
+part({ id: 'B500-2250', ref: 'B500-2250', name: 'Boulon ½ × 2 ¼ po', qty: 9, grp: 'front', ext: [12.95, 15.51], r: 6.1, anim: true, role: 'Fixent le porte-capuchon au boîtier.', step: 'Étape 5 : clé ¾. Étapes 12 et 13 : remplacés par des neufs, serrés à 105 lb·pi (≈ 142 N·m).' }, cvBolts);
+const JC_BASE = new THREE.Vector3(0, u(Y.capB), 0);
 const JC_REST = new THREE.Vector3(-2.6, FLOOR, 5.0);
 const jawCover = new THREE.Group();
 {
-  jawCover.add(mesh(annulusIn(R.jcIn, R.jcOut, Y.jcT - Y.coverT, ringAt(6, R.jcBolt, 30).map(([x, z]) => [x, z, .41])), mat.red));
+  jawCover.add(mesh(annulusIn(R.capIn, R.capOut, Y.front - Y.capB, [
+    ...ringAt(3, R.jcBolt, 22).map(([x, z]) => [x, z, .41]),
+    ...BUSHED.map(i => [BOLTS[i].x / IN, BOLTS[i].z / IN, .55]),
+    ...ringAt(6, 2.35, 30).map(([x, z]) => [x, z, .12]),
+  ]), mat.grey));
   for (let k = 0; k < 8; k++) {
-    const t = mesh(new THREE.BoxGeometry(u(.6), u(.6), u(.42)), mat.red);
+    const t = mesh(new THREE.BoxGeometry(u(.55), u(.6), u(.24)), mat.grey);
     const a = (k + .5) * Math.PI / 4;
-    t.position.set(u(2.2) * Math.cos(a), -u(.3), -u(2.2) * Math.sin(a));
+    t.position.set(u(2.25) * Math.cos(a), -u(.3), -u(2.25) * Math.sin(a));
     t.rotation.y = a;
     jawCover.add(t);
   }
+  jawCover.add(band(R.capOut, Y.front - .35 - Y.capB, Y.front - Y.capB, mat.blue));
 }
 fadeable(jawCover);
 clampG.add(jawCover);
-part({ id: '3506907', ref: '3506907', name: 'Couvert des mâchoires', qty: 1, grp: 'front', ext: [16.4, 17.8], r: 5.0, anim: true, role: 'Retient et guide les mâchoires à l\'avant.', step: 'Étape 4 : retiré après ses 6 boulons ¾.' }, jawCover);
-const jcBolts = ringAt(6, R.jcBolt, 30).map(([x, z]) => {
+part({ id: '3506907', ref: '3506907', name: 'Adaptateur de capuchon (couvert des mâchoires)', qty: 1, grp: 'front', ext: [Y.plateT, Y.front], r: 4.6, anim: true, role: 'Retient et guide les mâchoires à l\'avant (8 dents entre les mâchoires).', step: 'Étape 4 : retiré après ses boulons ¾ × 1 ½ (clé 1 1/8).' }, jawCover);
+const jcBolts = ringAt(3, R.jcBolt, 22).map(([x, z]) => {
   const b = fadeable(makeBolt(BOLT.B750_1500));
-  b.userData.base = new THREE.Vector3(u(x), u(Y.jcT), u(z));
+  b.userData.base = new THREE.Vector3(u(x), u(Y.front), u(z));
   clampG.add(b); return b;
 });
-part({ id: 'B750-1500', ref: 'B750-1500', name: 'Boulon ¾ × 1 ½ po', qty: 6, grp: 'front', ext: [16.3, 18.27], r: 5.0, anim: true, role: 'Fixent le couvert des mâchoires au couvercle.', step: 'Étape 4 : clé 1 1/8.' }, jcBolts);
+part({ id: 'B750-1500', ref: 'B750-1500', name: 'Boulon ¾ × 1 ½ po', qty: 3, grp: 'front', ext: [13.7, 15.67], r: 4.6, anim: true, role: 'Fixent l\'adaptateur de capuchon au porte-capuchon.', step: 'Étape 4 : clé 1 1/8.', note: 'La liste de pièces UM-070-142AA en compte 3 ; la procédure parle de 6 boulons ¾.' }, jcBolts);
 
-/* ---------- Options de guidage (affichées seulement en vue éclatée) ---------- */
+/* ---------- Options (affichées en vue éclatée seulement) ---------- */
 function optPart(def, obj) {
   fadeable(obj);
   return part({ grp: 'opt', opt: true, ...def }, obj);
 }
 {
-  const gb01 = new THREE.Group();
-  const s = new THREE.Shape(); s.absarc(0, 0, u(3.3), 0, Math.PI * 2, false);
-  const hole = new THREE.Path(); hole.absarc(0, 0, u(2.15), 0, Math.PI * 2, true); s.holes.push(hole);
-  for (let k = 0; k < 3; k++) { const [x, z] = polar(2.75, 60 + k * 120); const p = new THREE.Path(); p.absarc(u(x), -u(z), u(.3), 0, Math.PI * 2, true); s.holes.push(p); }
-  const g = new THREE.ExtrudeGeometry(s, { depth: u(.6), bevelEnabled: false, curveSegments: 64 }); g.rotateX(-Math.PI / 2);
-  gb01.add(mesh(g, mat.grey));
-  for (let k = 0; k < 3; k++) { const n = mesh(new THREE.BoxGeometry(u(1.3), u(.62), u(1.0)), mat.pocket); const [x, z] = polar(3.2, k * 120); n.position.set(u(x), u(.3), u(z)); n.rotation.y = k * 120 * Math.PI / 180; gb01.add(n); }
-  optPart({ id: 'GB01', ref: '#UM-021-15-GB01', name: 'Bride porte-bague (option UM-021-15)', qty: 1, r: 3.3, len: .6 }, gb01);
-  const gb02 = new THREE.Group();
-  gb02.add(mesh(annulusIn(1.55, 2.2, .9), mat.machined));
-  const sr = oring(1.9, .07, mat.sealRed); sr.position.y = u(.92); gb02.add(sr);
-  optPart({ id: 'GB02', ref: '#UM-021-15-GB02', name: 'Bague / roulement (option UM-021-15)', qty: 1, r: 2.2, len: .9 }, gb02);
-  const clip = new THREE.Group();
-  clip.add(mesh(new THREE.TorusGeometry(u(1.77), u(.06), 6, 80, Math.PI * 1.85), mat.boltBlack));
-  clip.children[0].rotation.x = Math.PI / 2;
-  optPart({ id: 'R3100-354', ref: 'R3100-354', name: 'Anneau de retenue (option UM-021-15)', qty: 1, r: 1.8, len: .1 }, clip);
-  const bush = (rIn) => { const g = new THREE.Group(); g.add(mesh(annulusIn(rIn, 1.6, 1.8), mat.grey)); const gr = mesh(new THREE.TorusGeometry(u(1.6), u(.07), 6, 64), mat.pocket); gr.rotation.x = Math.PI / 2; gr.position.y = u(.9); g.add(gr); return g; };
-  optPart({ id: 'GB03-N', ref: '#UM-021-15-GB03-N', name: 'Bague de guidage, tige N', qty: 1, r: 1.6, len: 1.8 }, bush(1.40));
-  optPart({ id: 'GB03-N+', ref: '#UM-021-15-GB03-N+', name: 'Bague de guidage, tige N (+)', qty: 1, r: 1.6, len: 1.8 }, bush(1.45));
-  optPart({ id: 'GB04-B', ref: '#UM-021-15-GB04-B', name: 'Bague de guidage, tige B', qty: 1, r: 1.6, len: 1.8 }, bush(1.12));
-  optPart({ id: 'GB04-B+', ref: '#UM-021-15-GB04-B+', name: 'Bague de guidage, tige B (+)', qty: 1, r: 1.6, len: 1.8 }, bush(1.17));
-  const plateOpt = (rIn) => mesh(annulusIn(rIn, 2.6, .6, ringAt(4, 2.2, 45).map(([x, z]) => [x, z, .12])), mat.grey);
-  [['06-06-BW ROD', 'tige BW', 1.08], ['06-02-B ROD', 'tige B', 1.12], ['06-22-B SHELL', 'tubage B', 1.2], ['06-03-N ROD', 'tige N', 1.4], ['06-33-N SHELL', 'tubage N', 1.52], ['06-04-H ROD', 'tige H', 1.78], ['06-44-H SHELL', 'tubage H', 1.93]]
-    .forEach(([ref, lbl, rIn]) => optPart({ id: ref, ref: `UM-021-${ref}`, name: `Plaque de guidage, ${lbl}`, qty: 1, r: 2.6, len: .6 }, plateOpt(rIn)));
-  // Autres jeux de mâchoires WH-500
+  const ad2 = new THREE.Group();
+  const s = new THREE.Shape(); s.absarc(0, 0, u(6.9), 0, Math.PI * 2, false);
+  const hole = new THREE.Path(); hole.absarc(0, 0, u(3.1), 0, Math.PI * 2, true); s.holes.push(hole);
+  for (const [x, z] of ringAt(12, 6.35, 15)) { const p = new THREE.Path(); p.absarc(u(x), -u(z), u(.3), 0, Math.PI * 2, true); s.holes.push(p); }
+  for (const [x, z] of ringAt(10, R.tie, 18)) { const p = new THREE.Path(); p.absarc(u(x), -u(z), u(.3), 0, Math.PI * 2, true); s.holes.push(p); }
+  const g = new THREE.ExtrudeGeometry(s, { depth: u(.9), bevelEnabled: false, curveSegments: 72 }); g.rotateX(-Math.PI / 2);
+  ad2.add(mesh(g, mat.machined));
+  optPart({ id: '3506910', ref: '3506910', name: 'Adaptateur de mandrin (option 2, tête UM-012)', qty: 1, r: 6.9, len: .9 }, ad2);
   [['01-01 B', 'B', 1.12], ['01-02 N', 'N', 1.4], ['01-04 BW', 'BW', 1.08]].forEach(([ref, cal, rIn]) => {
-    const g = new THREE.Group();
-    const geo = jawGeo(rIn, bowlR(JAW_Y0) - .02, bowlR(JAW_Y0 + JAW_H) - .02, JAW_H, 38);
+    const g2 = new THREE.Group(), geo = jawSet(rIn);
     for (let k = 0; k < 8; k++) {
-      const j = mesh(geo, mat.machined); j.rotation.y = k * Math.PI / 4; g.add(j);
+      const j = mesh(geo, mat.machined); j.rotation.y = k * Math.PI / 4; g2.add(j);
       const bar = mesh(new THREE.CylinderGeometry(u(.11), u(.11), u(JAW_H + .2), 12), mat.steelLight);
-      const a = k * Math.PI / 4 + Math.PI / 8; bar.position.set(u(rIn + .45) * Math.cos(a), u(JAW_H / 2), -u(rIn + .45) * Math.sin(a)); g.add(bar);
+      const a = k * Math.PI / 4 + Math.PI / 8; bar.position.set(u(rIn + .4) * Math.cos(a), u(JAW_H / 2), -u(rIn + .4) * Math.sin(a)); g2.add(bar);
     }
-    optPart({ id: `JAW-${cal}`, ref: `UM-021-${ref}`, name: `Mâchoires en anneau WH-500, calibre ${cal}`, qty: 8, r: 2.8, len: JAW_H, rowJaw: cal }, g);
+    optPart({ id: `JAW-${cal}`, ref: `UM-021-${ref}`, name: `Jeu de mâchoires Boyle H, calibre ${cal}`, qty: 1, r: 3.0, len: JAW_H, rowJaw: cal }, g2);
   });
+  optPart({ id: 'RING-WH500', ref: 'RING JAWS WH-500', name: 'Anneau des mâchoires WH-500', qty: 1, r: 3.1, len: .2, rowJaw: 'R' }, (() => { const o = new THREE.Group(); const t = mesh(new THREE.TorusGeometry(u(3.0), u(.09), 8, 96), mat.brass); t.rotation.x = Math.PI / 2; o.add(t); return o; })());
+  const guide = (rIn) => { const g3 = new THREE.Group(); g3.add(mesh(annulusIn(rIn, 2.1, 1.6), mat.grey)); const f = mesh(annulusIn(rIn, 2.9, .5, ringAt(3, 2.55, 90).map(([x, z]) => [x, z, .14])), mat.grey); f.position.y = u(1.6); g3.add(f); return g3; };
+  [['06-06', 'BW ROD', 'tige BW', 1.08], ['06-02', 'B ROD', 'tige B', 1.12], ['06-22', 'B SHELL', 'tubage B', 1.2], ['06-03', 'N ROD', 'tige N', 1.4], ['06-33', 'N SHELL', 'tubage N', 1.52], ['06-04', 'H ROD', 'tige H', 1.78], ['06-44', 'H SHELL', 'tubage H', 1.93]]
+    .forEach(([ref, lbl, fr2, rIn]) => optPart({ id: ref, ref: `UM-021-${ref} ${lbl}`, name: `Bague de guidage, ${fr2}`, qty: 1, r: 2.9, len: 2.1 }, guide(rIn)));
 }
 
 /* ---------- Clé à cliquet avec rallonge sur le boulon actif ---------- */
@@ -1016,7 +1037,7 @@ worker.position.copy(KNEE);
 scene.add(worker);
 const HEAD = new THREE.Vector3(2.1, 7.5, 0);     // centre de la tête (monde)
 const HEAD_R = 0.88;
-const HANDS_Y = 5.2;                             // gants, au-dessus de la clé
+const HANDS_Y = 4.6;                             // gants sur la poignée de la clé à cliquet
 function limb(a, b, r, m) {
   const len = a.distanceTo(b);
   const o = mesh(new THREE.CapsuleGeometry(r, len, 6, 14), m);
@@ -1041,7 +1062,7 @@ function limb(a, b, r, m) {
     worker.add(band);
   }
   for (const z of [-1.05, 1.05]) {
-    const shoulder = V(3.3, 6.7, z), elbow = V(2.9, 4.9, z * 1.15), hand = V(1.5, HANDS_Y, z * 0.48);
+    const shoulder = V(3.3, 6.7, z), elbow = V(3.0, 5.0, z * 1.2), hand = V(1.6, HANDS_Y, z * 0.48);
     limb(shoulder, elbow, 0.3, mat.coverall);
     limb(elbow, hand, 0.27, mat.coverall);
     const glove = mesh(new THREE.SphereGeometry(0.3, 16, 12), mat.glove); glove.position.copy(hand).sub(KNEE); worker.add(glove);
@@ -1084,13 +1105,13 @@ function buildLabels() {
     ret: BUSHED.map(() => makeLabel('R', { font: '700 46px "Barlow Condensed", sans-serif', h: 0.4, bg: '#2c7a4c', round: 32 })),
     springsC: [makeLabel('Ressorts 5200517 comprimés', { bg: '#2a5bd7', h: 0.32 })],
     springsF: [makeLabel('Ressorts 5200517 détendus', { bg: '#2c7a4c', h: 0.32 })],
-    stuck: [makeLabel('Cône coincé : ressorts toujours comprimés', { bg: '#c42b1f', h: 0.32 })],
+    stuck: [makeLabel('Cône (bol) coincé : ressorts toujours comprimés', { bg: '#c42b1f', h: 0.32 })],
     open: [makeLabel('Manettes ouvertes', { h: 0.32 })],
     closed: [makeLabel('Manettes fermées', { bg: '#2c7a4c', h: 0.32 })],
     zone: [makeLabel('Zone de projection', { bg: '#c42b1f', h: 0.32 })],
   };
-  labels.springsC[0].position.set(-2.4, 3.15, -0.2);
-  labels.springsF[0].position.set(-2.4, 3.15, -0.2);
+  labels.springsC[0].position.set(-2.7, 2.7, -0.4);
+  labels.springsF[0].position.set(-2.7, 2.7, -0.4);
   labels.stuck[0].position.set(0, 5.4, 0.6);
   labels.open[0].position.set(-3.4, 4.9, -3.4);
   labels.closed[0].position.set(-3.4, 4.9, -3.4);
@@ -1112,12 +1133,12 @@ scene.add(trail);
 
 /* ================= Vue éclatée : disposition le long de l'axe, comme le dessin ================= */
 // Ordre de l'arrière (vérin) vers l'avant (mâchoires), depuis le bâti vers l'extérieur.
-const REAR_SEQ = ['5030250', '5020126', '5035018', '5035016', '5030269', '2920332', 'SHCS500-4000', '5035015', '5035017', '2920331', '5030274', '2920333', 'B500-2000', '321620', '2920452', 'B312-1000'];
-const FRONT_SEQ = ['5040192', '3506880', '5200517', '2920390', '3506878', 'B500-6500', 'B500-8000', '3506906', 'B500-2250', '3506907', 'B750-1500'];
-const EX_GAP = 0.9;   // po entre deux pièces éclatées
+const REAR_SEQ = ['5041022', 'NC500', '5035018', '5035016', '3506909', 'B500-4500', 'UM-070-608A', 'W500', 'B500-1500', '3506928', '5035017', '5035015', '3506908', '5222624', '5000199', '3506882', '5054078', '3506879', '3506881'];
+const FRONT_SEQ = ['3506880', '5040192', '5200517', '2920390', '3506878', 'B500-6500', 'B500-8000', '3506906', 'B500-2250', '3506907', 'B750-1500'];
+const EX_GAP = 0.7;   // po entre deux pièces éclatées
 let EX_MIN = 0, EX_MAX = 0;
 function layoutExplode() {
-  const body = byId('2920455');
+  const body = byId('3506870');
   body.ex = 0;
   let cur = body.ext[0];
   for (const id of REAR_SEQ) { const p = byId(id); p.ex = (cur - EX_GAP) - p.ext[1]; cur = p.ext[0] + p.ex; }
@@ -1135,7 +1156,7 @@ function layoutExplode() {
   const opts = PARTS.filter(p => p.opt && !p.rowJaw);
   const mid = (EX_MIN + EX_MAX) / 2, span = Math.min(EX_MAX - EX_MIN - 6, opts.length * 5.2);
   opts.forEach((p, k) => { p.row = new THREE.Vector3(-u(13), u(mid - span / 2 + span * k / Math.max(1, opts.length - 1)), 0); });
-  const sets = ['B', 'N', 'H', 'BW'];
+  const sets = ['B', 'N', 'H', 'BW', 'R'];
   PARTS.filter(p => p.rowJaw).forEach(p => { const k = sets.indexOf(p.rowJaw); p.row = new THREE.Vector3(u(13), u(mid + 8 + k * 7.5), 0); });
 }
 
@@ -1168,17 +1189,18 @@ function applyExplode(e) {
   // Repères
   for (const p of PARTS) {
     if (!p.lbl) continue;
-    const show = k > 0.85 || (selected === p && k > 0.02);
+    const show = (k > 0.85 && !(selected && selected !== p)) || selected === p;
     p.lbl.visible = show;
     if (!show) continue;
     p.lbl.material.opacity = k > 0.85 ? (k - 0.85) / 0.15 : 1;
-    const o = p.opt || p.rowJaw ? null : p.objs[0];
-    if (p.row && (p.opt || p.rowJaw)) {
+    const o = p.opt ? null : p.objs[0];
+    if (p.opt && k <= 0.02) { p.lbl.visible = false; continue; }
+    if (p.row && (p.opt || p.rowJaw) && k > 0.02) {
       const stag = (PARTS.filter(q => q.row && q.row.x === p.row.x).indexOf(p) % 2) * 0.42;
       partLblPos.copy(p.row); partLblPos.x += (p.row.x < 0 ? -1 : 1) * (u(p.r) + 0.3 + stag);
     } else if (o) {
       const side = (PARTS.indexOf(p) % 2) ? 1 : -1;
-      const yc = u((p.ext[0] + p.ext[1]) / 2 + (p.ex || 0));
+      const yc = u((p.ext[0] + p.ext[1]) / 2 + (p.ex || 0) * k);
       partLblPos.set(side * (u(p.r) + 0.45), yc, 0);
     }
     p.lbl.position.copy(partLblPos);
@@ -1231,7 +1253,7 @@ function select(p) {
 function initState() {
   return {
     lever: 0, jaws: 0, lock: 0,
-    jc: { bolts: Array(6).fill(0), lift: 0 },
+    jc: { bolts: Array(3).fill(0), lift: 0 },
     cv: { bolts: Array(9).fill(0), lift: 0 },
     pb: BOLTS.map(() => ({ turns: 0, lift: 0, gone: 0, bushOut: 0 })),
     stuck: false, shake: 0, active: -1,
@@ -1251,19 +1273,19 @@ function removeBolt(S, i, p, from = null) {
 /* ---------- Étapes communes ---------- */
 const st = {
   lever: { n: '1', title: 'Manettes en position fermée', cam: 'intro', dur: 3.5,
-    text: 'Sur la foreuse, placer les manettes du clam ou du chuck en position fermée : les ressorts sont alors étirés au maximum.',
+    text: 'Sur la foreuse, placer les manettes du clam ou du chuck en position fermée : le vérin ne pousse plus, les ressorts sont étirés au maximum.',
     apply(S, p) { S.lever = ease(p); } },
   jaws: { n: '2', title: 'Mâchoires fermées', cam: 'top', dur: 3,
-    text: 'S\'assurer que les jaws (mâchoires) dans le clam ou le chuck sont en position fermée.',
+    text: 'S\'assurer que les jaws (mâchoires UM-021-01-03) sont en position fermée.',
     apply(S, p) { S.jaws = ease(p); } },
   lock: { n: '3', title: 'Cadenasser la foreuse', cam: 'intro', dur: 3,
-    text: 'Appliquer la procédure de cadenassage. Le cadenassage coupe l\'énergie hydraulique, mais pas celle des ressorts : elle reste emmagasinée dans le clam.',
+    text: 'Appliquer la procédure de cadenassage. Le cadenassage coupe l\'énergie hydraulique, mais pas celle des 18 ressorts : elle reste emmagasinée dans le mandrin.',
     apply(S, p) { S.lock = ease(p); } },
   jawCover: { n: '4', title: 'Couvert des mâchoires', cam: 'overview', dur: 5,
-    text: 'Dévisser les 6 boulons ¾ × 1 ½ (B750-1500) du couvert des mâchoires 3506907 avec une clé 1 1/8, puis retirer le couvert.',
-    apply(S, p) { for (let k = 0; k < 6; k++) S.jc.bolts[k] = seg(p, k * .07, k * .07 + .45); S.jc.lift = seg(p, .58, 1); } },
+    text: 'Dévisser les boulons ¾ × 1 ½ (B750-1500) du couvert des mâchoires (adaptateur de capuchon 3506907) avec une clé 1 1/8, puis retirer le couvert. La procédure parle de 6 boulons ; la liste de pièces du Boyles H en compte 3.',
+    apply(S, p) { for (let k = 0; k < 3; k++) S.jc.bolts[k] = seg(p, k * .1, k * .1 + .45); S.jc.lift = seg(p, .58, 1); } },
   cover: { n: '5', title: 'Couvercle : 9 boulons ½', cam: 'overview', dur: 6,
-    text: 'Enlever les 9 boulons ½ × 2 ¼ (B500-2250) du couvercle 3506906 avec une clé ¾. Le cône 2920390 et ses 9 boulons apparaissent. Dessous, les ressorts 5200517 sont toujours comprimés.',
+    text: 'Enlever les 9 boulons ½ × 2 ¼ (B500-2250) du couvercle (porte-capuchon 3506906) avec une clé ¾. La face du cône 2920390 et ses 9 boulons apparaissent. Dans le boîtier, les 18 ressorts 5200517 sont toujours comprimés.',
     apply(S, p) { for (let k = 0; k < 9; k++) S.cv.bolts[k] = seg(p, k * .045, k * .045 + .4); S.cv.lift = seg(p, .6, 1); S.springLbl = seg(p, .85, 1); } },
 };
 const first5 = { n: '1–5', title: 'Étapes 1 à 5 respectées', cam: 'overview', dur: 8,
@@ -1273,7 +1295,7 @@ const first5 = { n: '1–5', title: 'Étapes 1 à 5 respectées', cam: 'overview
     st.jawCover.apply(S, seg(p, .3, .62)); st.cover.apply(S, seg(p, .62, 1));
   } };
 const skip6 = { n: '6', title: 'Boulons à bushing retirés, non remis', cam: 'bolts', dur: 5, tone: 'warn', flag: 'Omise',
-  text: 'Les 3 boulons avec bushing sont enlevés et ne sont pas remis sans les bushings. Plus rien n\'empêchera la projection du cône.',
+  text: 'Les 3 boulons B500-8000 avec bushing sont enlevés et ne sont pas remis sans les bushings. Plus rien n\'empêchera la projection du cône.',
   apply(S, p) {
     S.springLbl = 1;
     BUSHED.forEach((i, k) => { removeBolt(S, i, seg(p, k * .1, .6 + k * .1)); S.pb[i].bushOut = seg(p, .75, 1); });
@@ -1281,7 +1303,7 @@ const skip6 = { n: '6', title: 'Boulons à bushing retirés, non remis', cam: 'b
   } };
 
 st.retain = { n: '6', title: 'Boulons de retenue remis sans bushing', cam: 'bolts', dur: 8,
-  text: 'Enlever les 3 boulons ½ × 8 (B500-8000) avec leurs bushings 3506878 sur le cône, puis les remettre sans les bushings. Plus longs de 1 ½ po que les autres, ils restent vissés dans le piston : le cône peut monter de la course des ressorts, mais pas être projeté.',
+  text: 'Enlever les 3 boulons ½ × 8 (B500-8000) avec leurs bushings (entretoises supérieures 3506878) sur le cône, puis les remettre sans les bushings. Plus longs de 1 ½ po que les autres, ils restent vissés dans le manchon d\'actionnement : le cône peut monter de la course des ressorts, mais pas être projeté.',
   apply(S, p) {
     S.springLbl = 1;
     BUSHED.forEach(i => {
@@ -1346,7 +1368,7 @@ const SCEN = {
         text: 'Les ressorts sont détendus : les 3 boulons de retenue B500-8000 ne portent plus de charge. On peut les enlever.',
         apply(S, p) { S.springLbl = 1; S.ret = 1 - seg(p, .6, .9); BUSHED.forEach((i, k) => removeBolt(S, i, seg(p, k * .08, .75 + k * .08), retainTurns())); } },
       { n: '9', title: 'Changer les pièces', cam: 'overview', dur: 4.5,
-        text: 'Le cône 2920390 (chuck bowl), les mâchoires et les ressorts 5200517 sont accessibles sans énergie résiduelle. Le piston 2920331 se remplace par l\'arrière.',
+        text: 'Le cône (bol 2920390), les mâchoires et les 18 ressorts 5200517 sont accessibles sans énergie résiduelle. Le piston 3506908 et ses joints se remplacent par l\'arrière.',
         apply(S, p) { S.springLbl = 1 - seg(p, .5, 1); S.plateOut = ease(p); } },
     ],
   },
@@ -1355,7 +1377,7 @@ const SCEN = {
     make: () => [
       first5, skip6, ...oneByOne(false),
       { n: '!', title: 'Le filet cède : projection du cône', cam: 'wide', flight: true, tone: 'danger', flag: 'Projection', dir: null, ride: byNum(6),
-        text: 'Toute l\'énergie restante des ressorts est libérée d\'un coup. Le cône et les mâchoires partent vers le haut, dans l\'axe du clam, là où se trouve le visage du travailleur.' },
+        text: 'Toute l\'énergie restante des ressorts est libérée d\'un coup. Le cône et les mâchoires partent vers le haut, dans l\'axe du mandrin, là où se trouve le visage du travailleur.' },
       { n: '⚠', title: 'Bilan', cam: 'wide', dur: 6, tone: 'danger', summary: true, text: '' },
     ],
   },
@@ -1456,8 +1478,8 @@ function groundAt(x, z) {
   const r = Math.hypot(x, z);
   if (r < u(R.rimIn)) return PLATE_TOP0 + travel();          // retombe sur les ressorts détendus
   if (r < u(R.body) + 0.3) return u(Y.rimT) + PLATE_T;        // sur le rebord du bâti
-  if (Math.abs(x) < 2.9 && Math.abs(z) < 2.8) return PLATE_T; // sur la palette
-  return FLOOR + PLATE_T;
+  if (Math.abs(x) < 2.9 && Math.abs(z) < 2.8) return BOWL_DEPTH; // debout sur la palette
+  return FLOOR + BOWL_DEPTH;
 }
 function computeFlight(S0, step) {
   const D = S0.D;
@@ -1593,7 +1615,7 @@ function stateAt(t) {
 
 /* ================= Application de l'état à la scène ================= */
 const tmpQ = new THREE.Quaternion(), tmpQ2 = new THREE.Quaternion(), tmpV = new THREE.Vector3();
-const PLATE_BASE = new THREE.Vector3(), PLATE_REST = new THREE.Vector3(-6.6, FLOOR + PLATE_T, -2.4);
+const PLATE_BASE = new THREE.Vector3(), PLATE_REST = new THREE.Vector3(-6.6, FLOOR + BOWL_DEPTH, -2.4);
 function movePart(obj, base, rest, p, up = 1.8) {
   const yTop = base.y + up;
   const a = seg(p, 0, .3), b = seg(p, .3, .75), c = seg(p, .75, 1);
@@ -1744,7 +1766,7 @@ const CAMS = {
   bolts: { p: [-3.4, 8.9, 6.6], t: [0.3, 3.9, 0] },
   wide: { p: [-12.5, 11.5, 19.5], t: [0.8, 5.0, 0] },
   catch: { p: [-8.2, 9.4, 11.2], t: [0.6, 4.5, 0] },
-  explode: { p: [-8.5, 12.5, 22], t: [0.2, 4.6, 0] },
+  explode: { p: [-10, 14.5, 26.5], t: [-0.6, 4.6, 0] },
 };
 let autoCam = true, camGoal = CAMS.intro;
 controls.addEventListener('start', () => { autoCam = false; document.getElementById('camChip').hidden = false; });
@@ -1851,10 +1873,10 @@ function updateUI(S, force) {
   if (explodeTarget && lastStep !== 'x') {
     lastStep = 'x';
     $('capNum').textContent = '⊕';
-    $('capTitle').textContent = 'Vue éclatée : clam UM-079-100AA 12 HH';
+    $('capTitle').textContent = 'Vue éclatée : mandrin Boyles H (UM-070-142AA)';
     $('capTag').hidden = true;
     $('dock').dataset.tone = 'ok';
-    $('capText').textContent = 'Toutes les pièces du dessin, dans l\'ordre d\'assemblage : vérin hydraulique à gauche, mâchoires à droite. Au-dessus : options de guidage UM-021-15 et UM-021-06. En dessous : les 4 jeux de mâchoires WH-500. Cliquez une pièce pour l\'identifier ; « Lecture » revient à l\'animation.';
+    $('capText').textContent = 'Toutes les pièces de la liste, dans l\'ordre d\'assemblage : clés, roulement et vérin à gauche, capuchons avant à droite. Au-dessus : l\'adaptateur 3506910 (option tête UM-012) et les bagues de guidage UM-021-06. En dessous : les 4 jeux de mâchoires et l\'anneau WH-500. Cliquez une pièce pour l\'identifier ; « Lecture » revient à l\'animation.';
   }
   if (!explodeTarget && S.i !== lastStep) {
     lastStep = S.i;
@@ -1948,13 +1970,13 @@ function summaryText(ev) {
   }
   const F = ev.F;
   const hands = F.hands ? 'Il frappe d\'abord les mains posées sur la clé, juste au-dessus. ' : '';
-  const hit = F.impact ? `Il atteint ensuite la tête du travailleur penché, encore à ${vS(F.impact.speed)}.` : 'Avec ces paramètres, il n\'atteint pas la tête, mais il retombe sur le clam ou au sol de façon imprévisible.';
+  const hit = F.impact ? `Il atteint ensuite la tête du travailleur penché, encore à ${vS(F.impact.speed)}.` : 'Avec ces paramètres, il n\'atteint pas la tête, mais il retombe sur le mandrin ou au sol de façon imprévisible.';
   const spr = F.springs.length ? ` Des ressorts 5200517 peuvent aussi être éjectés : jusqu'à ${vS(Math.sqrt(2 * F.sprE / SPRING_MASS))} chacun.` : '';
   return `${eS(F.E)} (${eS(F.E, OTHER())}) libérés en une fraction de seconde. Le cône 2920390 et ses mâchoires (${mS(P.m)}) partent à ${vS(F.v)} et peuvent monter jusqu'à ${hS(F.h)}. ${hands}${hit}${spr} La procédure (1 tour à la fois, retenue de l'étape 6) évite ce scénario.`;
 }
 
 /* ================= Nomenclature, fiche de pièce, vues ================= */
-const GRP = { rear: 'Arrière : vérin hydraulique', body: 'Bâti', front: 'Avant : ressorts, cône, couvercles, mâchoires', opt: 'Options de guidage et autres mâchoires (selon le calibre de tige)' };
+const GRP = { rear: 'Arrière : vérin, roulement, adaptateur', body: 'Boîtier', front: 'Avant : ressorts, cône, boulons, couvercles, mâchoires', opt: 'Options : adaptateur tête UM-012, autres mâchoires, bagues de guidage' };
 const qtyOf = p => p.qty === 'n' ? P.n : p.qty;
 function renderBOM() {
   const el = $('bomList'); el.innerHTML = '';
@@ -1976,7 +1998,7 @@ function renderBOM() {
 function renderCard() {
   const c = $('partCard');
   if (!selected) {
-    c.innerHTML = `<p class="meta">${PARTS.length} repères, toutes les pièces numérotées du dessin. Cliquez une pièce dans la vue 3D ou dans la liste pour l'identifier. « Vue éclatée » sépare les pièces le long de l'axe, comme sur le dessin ; « Coupe » montre l'intérieur du clam.</p>`;
+    c.innerHTML = `<p class="meta">${PARTS.length} repères : toutes les pièces de la liste UM-070-142AA et les options du dessin. Cliquez une pièce dans la vue 3D ou dans la liste pour l'identifier. « Vue éclatée » sépare les pièces le long de l'axe, comme sur le dessin ; « Coupe » montre l'intérieur du clam.</p>`;
     return;
   }
   const p = selected;
@@ -1985,7 +2007,7 @@ function renderCard() {
   c.querySelector('h4').textContent = p.name;
   c.querySelector('.role').textContent = p.role || '';
   c.querySelector('.step').textContent = p.step || '';
-  c.querySelector('.meta').textContent = p.note || (p.opt ? 'Pièce optionnelle : non montée sur le clam animé.' : '');
+  c.querySelector('.meta').textContent = p.note || (p.opt ? 'Pièce optionnelle : non montée sur le mandrin animé.' : '');
   c.querySelectorAll('p').forEach(e => { e.hidden = !e.textContent; });
   c.querySelector('button').addEventListener('click', () => select(null));
 }
