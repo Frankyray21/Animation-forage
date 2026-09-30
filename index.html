@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Clam sous tension</title>
-<meta name="description" content="Animation 3D du mandrin Boyles H : l'énergie de ses 18 ressorts quand la séquence de démontage PRO-OP-DD-005 n'est pas respectée.">
+<meta name="description" content="Animation 3D de la tête de forage UM-012-100UG et de son mandrin Boyles H : l'énergie des 18 ressorts du mandrin quand la séquence de démontage PRO-OP-DD-005 n'est pas respectée.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
@@ -217,7 +217,8 @@ details.params summary { cursor: pointer; padding: 10px 14px; font-weight: 600; 
         <span class="spacer"></span>
         <span class="chip" id="camChip" hidden><button type="button" id="camBtn">Recentrer la caméra</button></span>
         <button type="button" class="vbtn" id="btnCut" aria-pressed="true">Coupe</button>
-        <button type="button" class="vbtn" id="btnExplode" aria-pressed="false">Vue éclatée</button>
+        <button type="button" class="vbtn" id="btnHeadExplode" aria-pressed="false">Tête éclatée</button>
+        <button type="button" class="vbtn" id="btnExplode" aria-pressed="false">Mandrin éclaté</button>
       </div>
       <div class="banner" id="banner" hidden><strong id="bannerTitle">PROJECTION</strong><span id="bannerSub"></span></div>
       <div class="note" id="note">Course des ressorts affichée ×6</div>
@@ -248,9 +249,9 @@ details.params summary { cursor: pointer; padding: 10px 14px; font-weight: 600; 
 
   <aside class="rail">
     <header class="brand">
-      <p class="eyebrow">PRO-OP-DD-005 · Mandrin Boyles H · UM-070-142AA</p>
+      <p class="eyebrow">PRO-OP-DD-005 · Tête UM-012-100UG · Mandrin Boyles H</p>
       <h1>Clam sous tension</h1>
-      <p class="lede">Les 18 ressorts 5200517 du mandrin restent comprimés tant que le cône (bol 2920390) est boulonné. La séquence de démontage sert à libérer cette énergie lentement.</p>
+      <p class="lede">Sur la tête de forage UM-012-100UG, les 18 ressorts 5200517 du mandrin Boyles H restent comprimés tant que le cône (bol 2920390) est boulonné. La séquence de démontage sert à libérer cette énergie lentement.</p>
     </header>
 
     <section>
@@ -311,7 +312,7 @@ details.params summary { cursor: pointer; padding: 10px 14px; font-weight: 600; 
       </ul>
     </section>
 
-    <p class="src">Sources : procédure PRO-OP-DD-005, <i>Démonter et remonter un clam et un chuck (mandrin) sur la foreuse</i>, révision mai 2021 ; liste de pièces, coupe A-A et vue éclatée du mandrin Boyles H UM-070-142AA / UM-012-142AA (Usinage Marcotte, pages 2.5 à 2.7 du manuel de la tête de forage). Toutes les pièces de la liste sont modélisées avec leurs quantités. Diamètre, longueur et alésage suivent les cotes de la coupe ; les autres cotes sont relevées sur le dessin (N.T.S.) et les pièces marquées « emplacement approximatif » sont placées d'après la coupe. La raideur des ressorts n'est pas dans ces documents : les forces, énergies et trajectoires sont des estimations à des fins de formation.</p>
+    <p class="src">Sources : procédure PRO-OP-DD-005, <i>Démonter et remonter un clam et un chuck (mandrin) sur la foreuse</i>, révision mai 2021 ; planches de la tête de forage Boyles UM-012-100UG (vue d'ensemble, entraînement, lubrification et montage, pages 2.1 à 2.4) et liste de pièces, coupe A-A et vue éclatée du mandrin Boyles H UM-070-142AA / UM-012-142AA (pages 2.5 à 2.7), manuel de la foreuse STM-1500 (Usinage Marcotte). Toutes les pièces des listes sont modélisées avec leurs quantités. La boîte de la tête suit les cotes de la planche 2.1 ; le tracé des boyaux de lubrification est approximatif, et le chariot de glissière est schématique. Diamètre, longueur et alésage suivent les cotes de la coupe ; les autres cotes sont relevées sur le dessin (N.T.S.) et les pièces marquées « emplacement approximatif » sont placées d'après la coupe. La raideur des ressorts n'est pas dans ces documents : les forces, énergies et trajectoires sont des estimations à des fins de formation.</p>
   </aside>
 </div>
 
@@ -345,7 +346,7 @@ const IN = 0.254;                   // 1 po en unités de scène
 const u = v => v * IN;
 const Y = {
   stand: 3.0,
-  adB: 3.0, adT: 3.7,               // adaptateur UM-070-608A
+  adB: 3.0, adT: 3.7,               // adaptateur 3506910 (tête UM-012)
   cylB: 3.7, cylT: 7.0,             // cylindre 3506909
   housB: 7.0, pocket: 7.5,          // boîtier 3506870, fond des logements de ressorts
   webB: 9.1, webT: 10.4,            // voile du boîtier (entretoises inférieures)
@@ -363,7 +364,7 @@ const R = {
   stand: 4.0, standIn: 2.6,
 };
 
-const FLOOR = -1.4;
+const FLOOR = -7.74;                  // plancher : face avant du mandrin à 1,16 m, boîte de la tête à 0,55 m
 const POCKET = u(Y.pocket);         // fond des logements de ressorts
 const PLATE_T = u(Y.plateT - Y.plateB);   // épaisseur de la bride du bol (les ressorts poussent dessous)
 const PLATE_TOP0 = u(Y.plateT);           // face avant du bol = appui des 9 boulons
@@ -386,7 +387,7 @@ const STAR = { 3: 1, 7: 2, 4: 3, 1: 4, 6: 5, 0: 6 };  // index de position → n
 const BOLTS = [...Array(9)].map((_, i) => {
   const a = (BOLT_A0 + i * 40) * Math.PI / 180;
   const bushing = i % 3 === 2;
-  return { i, x: R_BOLT * Math.cos(a), z: -R_BOLT * Math.sin(a), bushing, num: bushing ? null : STAR[i], rIdx: bushing ? i / 3 + 1 : null };
+  return { i, x: R_BOLT * Math.cos(a), z: -R_BOLT * Math.sin(a), bushing, num: bushing ? null : STAR[i], rIdx: bushing ? (i - 2) / 3 + 1 : null };
 });
 const ORDER = [1, 2, 3, 4, 5, 6].map(n => BOLTS.find(b => b.num === n).i);   // positions dans l'ordre 1→6
 const BUSHED = [2, 5, 8];
@@ -688,8 +689,9 @@ const BOLT = {
 };
 
 /* ---------- Sol, palette, support d'atelier ---------- */
+const PAINT = new THREE.MeshStandardMaterial({ color: 0xc92b20, roughness: .45, metalness: .12 });   // rouge de la tête UM-012 (planches 2.1 à 2.4)
 Object.assign(mat, {
-  blue: new THREE.MeshStandardMaterial({ color: 0x2b3f9e, roughness: .42, metalness: .2 }),
+  blue: PAINT, paint: PAINT,
   green: new THREE.MeshStandardMaterial({ color: 0x3fa65a, roughness: .38, metalness: .3 }),
 });
 mat.spring = mat.green;
@@ -699,9 +701,7 @@ scene.add(floor);
 const pallet = new THREE.Group();
 for (const z of [-2.3, -1.15, 0, 1.15, 2.3]) { const b = mesh(new THREE.BoxGeometry(5.8, 0.2, 0.95), mat.wood); b.position.set(0, -0.1, z); pallet.add(b); }
 for (const x of [-2.4, 0, 2.4]) { const b = mesh(new THREE.BoxGeometry(0.95, 1.2, 5.6), mat.woodDark); b.position.set(x, -0.8, 0); pallet.add(b); }
-scene.add(pallet);
-const stand = mesh(annulusIn(R.standIn, R.stand, Y.stand), mat.console);   // anneau d'appui : dégage les clés et les têtes arrière
-scene.add(stand);
+const stand = new THREE.Group();   // le mandrin est monté sur la tête : plus de palette ni de support d'atelier
 const band = (r, y0, y1, m) => { const o = mesh(new THREE.CylinderGeometry(u(r + .005), u(r + .005), u(y1 - y0), 96, 1, true), m); o.position.y = u((y0 + y1) / 2); return o; };
 const boltAt = (i) => (BOLT_A0 + i * 40);
 
@@ -714,16 +714,15 @@ const keys = [90, 210, 330].map(deg => {
 part({ id: '3506881', ref: '3506881', name: 'Clé Boyle 12HH (UM-012-189)', qty: 3, grp: 'rear', ext: [2.7, 7.9], r: 2.4, role: 'Clés d\'entraînement : transmettent la rotation de la broche au mandrin.' }, keys);
 part({ id: '3506879', ref: '3506879', name: 'Ressort de verrouillage des clés', qty: 1, grp: 'rear', ext: [3.14, 3.26], r: 2.1 }, placeIn(oring(1.95, .05, mat.steelLight), 0, 3.2, 0));
 const adapter = new THREE.Group();
-adapter.add(mesh(annulusIn(R.adIn, R.body, Y.adT - Y.adB, [
+adapter.add(mesh(annulusIn(R.adIn, 6.9, Y.adT - Y.adB, [
   ...ringAt(8, R.adBolt, 22.5).map(([x, z]) => [x, z, .28]),
   ...ringAt(10, R.tie, 18).map(([x, z]) => [x, z, .45]),
-]), mat.blue));
+  ...ringAt(10, 6.35, 18).map(([x, z]) => [x, z, .28]),
+]), mat.machined));
 placeIn(adapter, 0, Y.adB, 0);
-part({ id: 'UM-070-608A', ref: 'UM-070-608A', name: 'Adaptateur de mandrin (option 1, tête UM-070)', qty: 1, grp: 'rear', ext: [3.0, 3.7], r: 6.1, role: 'Fixe le mandrin à la tête de forage.' }, adapter);
-part({ id: 'B500-1500', ref: 'B500-1500', name: 'Boulon ½ × 1 ½ po', qty: 8, grp: 'rear', ext: [2.69, 4.5], r: 5.0, role: 'Fixent l\'adaptateur UM-070-608A au cylindre.' },
+part({ id: '3506910', ref: '3506910', name: 'Adaptateur de mandrin (option 2, tête UM-012)', qty: 1, grp: 'rear', ext: [3.0, 3.7], r: 6.9, role: 'Fixe le mandrin à la tête de forage UM-012 (10 vis SHC500-4000).' }, adapter);
+part({ id: 'B500-1500', ref: 'B500-1500', name: 'Boulon ½ × 1 ½ po', qty: 8, grp: 'rear', ext: [2.69, 4.5], r: 5.0, role: 'Fixent l\'adaptateur 3506910 au cylindre.' },
   ringAt(8, R.adBolt, 22.5).map(([x, z]) => { const b = makeBolt({ af: .75, headH: .31, d: .5, L: 1.5 }, mat.boltBlack); b.rotation.x = Math.PI; return placeIn(b, x, Y.adB - .04, z); }));
-part({ id: 'W500', ref: 'W500', name: 'Rondelle plate ½ po', qty: 8, grp: 'rear', ext: [2.96, 3.0], r: 5.0, with: 'B500-1500' },
-  ringAt(8, R.adBolt, 22.5).map(([x, z]) => placeIn(mesh(annulusIn(.27, .53, .04, [], 24), mat.steelLight), x, Y.adB - .04, z)));
 part({ id: 'B500-4500', ref: 'B500-4500', name: 'Boulon ½ × 4 ½ po', qty: 10, grp: 'rear', ext: [3.39, 8.2], r: 6.2, role: 'Assemblent le cylindre 3506909 au boîtier 3506870.' },
   ringAt(10, R.tie, 18).map(([x, z]) => { const b = makeBolt({ af: .75, headH: .31, d: .5, L: 4.5 }, mat.boltBlack); b.rotation.x = Math.PI; return placeIn(b, x, Y.adT, z); }));
 part({ id: 'NC500', ref: 'NC500', name: 'Écrou ½-13 UNC', qty: 10, grp: 'rear', ext: [7.7, 8.14], r: 6.2, with: 'B500-4500', note: 'Emplacement approximatif.' },
@@ -942,14 +941,9 @@ function optPart(def, obj) {
   return part({ grp: 'opt', opt: true, ...def }, obj);
 }
 {
-  const ad2 = new THREE.Group();
-  const s = new THREE.Shape(); s.absarc(0, 0, u(6.9), 0, Math.PI * 2, false);
-  const hole = new THREE.Path(); hole.absarc(0, 0, u(3.1), 0, Math.PI * 2, true); s.holes.push(hole);
-  for (const [x, z] of ringAt(12, 6.35, 15)) { const p = new THREE.Path(); p.absarc(u(x), -u(z), u(.3), 0, Math.PI * 2, true); s.holes.push(p); }
-  for (const [x, z] of ringAt(10, R.tie, 18)) { const p = new THREE.Path(); p.absarc(u(x), -u(z), u(.3), 0, Math.PI * 2, true); s.holes.push(p); }
-  const g = new THREE.ExtrudeGeometry(s, { depth: u(.9), bevelEnabled: false, curveSegments: 72 }); g.rotateX(-Math.PI / 2);
-  ad2.add(mesh(g, mat.machined));
-  optPart({ id: '3506910', ref: '3506910', name: 'Adaptateur de mandrin (option 2, tête UM-012)', qty: 1, r: 6.9, len: .9 }, ad2);
+  const ad1 = new THREE.Group();
+  ad1.add(mesh(annulusIn(R.adIn, R.body, .7, [...ringAt(8, R.adBolt, 22.5).map(([x, z]) => [x, z, .28]), ...ringAt(10, R.tie, 18).map(([x, z]) => [x, z, .45])]), mat.paint));
+  optPart({ id: 'UM-070-608A', ref: 'UM-070-608A', name: 'Adaptateur de mandrin (option 1, tête UM-070)', qty: 1, r: 6.1, len: .7 }, ad1);
   [['01-01 B', 'B', 1.12], ['01-02 N', 'N', 1.4], ['01-04 BW', 'BW', 1.08]].forEach(([ref, cal, rIn]) => {
     const g2 = new THREE.Group(), geo = jawSet(rIn);
     for (let k = 0; k < 8; k++) {
@@ -964,6 +958,432 @@ function optPart(def, obj) {
   [['06-06', 'BW ROD', 'tige BW', 1.08], ['06-02', 'B ROD', 'tige B', 1.12], ['06-22', 'B SHELL', 'tubage B', 1.2], ['06-03', 'N ROD', 'tige N', 1.4], ['06-33', 'N SHELL', 'tubage N', 1.52], ['06-04', 'H ROD', 'tige H', 1.78], ['06-44', 'H SHELL', 'tubage H', 1.93]]
     .forEach(([ref, lbl, fr2, rIn]) => optPart({ id: ref, ref: `UM-021-${ref} ${lbl}`, name: `Bague de guidage, ${fr2}`, qty: 1, r: 2.9, len: 2.1 }, guide(rIn)));
 }
+
+/* =================== Tête de forage Boyles UM-012-100UG (planches 2.1 à 2.4) ===================
+   Repère : broche verticale (axe y) au centre, mandrin en haut. Cotes en pouces.
+   Boîte 665 × 368 × 245 mm (planche 2.1) ; broche à 152 mm du centre de la boîte ;
+   axe d'entraînement (transmission, pignon moteur, pompe) à 14,3 po de la broche. */
+const HB = { x0: -19.08, x1: 7.10, z0: -7.24, z1: 7.24, y0: -8.7, y1: 0.95, wall: 0.9 };
+const DRIVE_X = -14.3;
+const headG = new THREE.Group();
+scene.add(headG);
+mat.yellowBrg = new THREE.MeshStandardMaterial({ color: 0xd8c63c, roughness: .35, metalness: .5 });
+mat.beigeBrg = new THREE.MeshStandardMaterial({ color: 0xe3dcb4, roughness: .35, metalness: .45 });
+mat.black = new THREE.MeshStandardMaterial({ color: 0x1d1f21, roughness: .55, metalness: .35 });
+mat.hose = new THREE.MeshStandardMaterial({ color: 0x232629, roughness: .62, metalness: .05 });   // caoutchouc
+mat.white = new THREE.MeshStandardMaterial({ color: 0xe8eaeb, roughness: .5 });
+mat.sealBlue = new THREE.MeshStandardMaterial({ color: 0x2a47a8, roughness: .5 });
+const hpart = (def, objs) => {
+  [].concat(objs).forEach(o => { if (!o.parent) headG.add(o); });
+  return part({ head: true, ...def }, objs);
+};
+const box = (w, h, d, m) => mesh(new THREE.BoxGeometry(u(w), u(h), u(d)), m);
+const hcyl = (r, h, m, seg = 32) => mesh(new THREE.CylinderGeometry(u(r), u(r), u(h), seg), m);
+// Plaque rectangulaire (X × Z) percée, extrudée vers le haut
+function plateXZ(x0, x1, z0, z1, h, holes = []) {
+  const s = new THREE.Shape();
+  s.moveTo(u(x0), -u(z0)); s.lineTo(u(x1), -u(z0)); s.lineTo(u(x1), -u(z1)); s.lineTo(u(x0), -u(z1)); s.closePath();
+  for (const [x, z, r] of holes) { const p = new THREE.Path(); p.absarc(u(x), -u(z), u(r), 0, Math.PI * 2, true); s.holes.push(p); }
+  const g = new THREE.ExtrudeGeometry(s, { depth: u(h), bevelEnabled: false, curveSegments: 48 });
+  g.rotateX(-Math.PI / 2);
+  return g;
+}
+// Roue dentée (pignon) : disque à N dents, extrudé vers le haut
+function sprocketGeo(N, rPitch, h, rBore) {
+  const s = new THREE.Shape(), rt = rPitch + .28, rr = rPitch - .32;
+  for (let i = 0; i <= N * 4; i++) {
+    const a = i / (N * 4) * Math.PI * 2, ph = i % 4;
+    const r = ph === 1 || ph === 2 ? rt : rr;
+    const x = u(r) * Math.cos(a), y = u(r) * Math.sin(a);
+    i ? s.lineTo(x, y) : s.moveTo(x, y);
+  }
+  const hole = new THREE.Path(); hole.absarc(0, 0, u(rBore), 0, Math.PI * 2, true); s.holes.push(hole);
+  const g = new THREE.ExtrudeGeometry(s, { depth: u(h), bevelEnabled: false });
+  g.rotateX(-Math.PI / 2);
+  return g;
+}
+function bearingIn(rIn, rOut, w, m) {
+  const g = new THREE.Group();
+  g.add(mesh(annulusIn(rIn, rIn + (rOut - rIn) * .28, w), m));
+  g.add(mesh(annulusIn(rOut - (rOut - rIn) * .28, rOut, w), m));
+  const rm = (rIn + rOut) / 2, rr = (rOut - rIn) * .22, n = Math.max(10, Math.round(2 * Math.PI * rm / (rr * 2.4)));
+  for (let k = 0; k < n; k++) { const a = k / n * Math.PI * 2; const c = hcyl(rr, w * .8, mat.steelLight, 12); c.position.set(u(rm) * Math.cos(a), u(w / 2), -u(rm) * Math.sin(a)); g.add(c); }
+  return g;
+}
+function hexHead(af, h, m = mat.boltBlack) { return hcyl(af / Math.sqrt(3), h, m, 6); }
+// Boyau (tube sur courbe) avec raccords en laiton aux deux bouts
+function hoseIn(pts, r = .33) {
+  const v = pts.map(([x, y, z]) => new THREE.Vector3(u(x), u(y), u(z)));
+  const g = new THREE.Group();
+  g.add(mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(v, false, 'catmullrom', .35), Math.max(24, pts.length * 16), u(r), 10, false), mat.hose));
+  return g;
+}
+function fittingAt([x, y, z], m = mat.brass) {
+  const g = new THREE.Group();
+  const hx = hexHead(.62, .45, m); hx.position.y = u(.22);
+  const nip = hcyl(.24, .5, m, 16); nip.position.y = u(.6);
+  g.add(hx, nip); placeIn(g, x, y, z);
+  return g;
+}
+
+/* ---------- Boîte UM-012-104A et couvercle UM-012-113A ---------- */
+const hbox = new THREE.Group();
+{
+  const holes = [[0, 0, 4.2], [DRIVE_X, 0, 2.3]];
+  const bottom = mesh(plateXZ(HB.x0, HB.x1, HB.z0, HB.z1, HB.wall, holes), mat.paint); placeIn(bottom, 0, HB.y0, 0);
+  const top = mesh(plateXZ(HB.x0, HB.x1, HB.z0, HB.z1, HB.wall, [...holes, [-4.5, -4, .9]]), mat.paint); placeIn(top, 0, HB.y1 - HB.wall, 0);
+  const H = HB.y1 - HB.y0 - 2 * HB.wall, yc = (HB.y0 + HB.y1) / 2;
+  const endL = box(HB.wall, H, HB.z1 - HB.z0, mat.paint); placeIn(endL, HB.x0 + HB.wall / 2, yc, 0);
+  const endR = box(HB.wall, H, HB.z1 - HB.z0, mat.paint); placeIn(endR, HB.x1 - HB.wall / 2, yc, 0);
+  const back = box(HB.x1 - HB.x0 - 2 * HB.wall, H, HB.wall, mat.paint); placeIn(back, (HB.x0 + HB.x1) / 2, yc, HB.z0 + HB.wall / 2);
+  // cadre de la face ouverte (+z), fermée par le couvercle
+  const rimT = box(HB.x1 - HB.x0 - 2 * HB.wall, 1.0, HB.wall, mat.paint); placeIn(rimT, (HB.x0 + HB.x1) / 2, HB.y1 - HB.wall - .5, HB.z1 - HB.wall / 2);
+  const rimB = box(HB.x1 - HB.x0 - 2 * HB.wall, 1.0, HB.wall, mat.paint); placeIn(rimB, (HB.x0 + HB.x1) / 2, HB.y0 + HB.wall + .5, HB.z1 - HB.wall / 2);
+  hbox.add(bottom, top, endL, endR, back, rimT, rimB);
+  // poignée (face +x) et pied à rainures
+  const hp = [[HB.x1, -5.6, 3.2], [HB.x1 + 1.3, -5.2, 3.2], [HB.x1 + 1.3, -1.4, 3.2], [HB.x1, -1.0, 3.2]].map(([x, y, z]) => new THREE.Vector3(u(x), u(y), u(z)));
+  hbox.add(mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(hp, false, 'catmullrom', .1), 30, u(.35), 10, false), mat.paint));
+  const foot = box(4.5, .8, 3.5, mat.paint); placeIn(foot, HB.x1 - 2.5, HB.y0 - .4, HB.z1 - 1.2); hbox.add(foot);
+  for (const z of [-.7, .7]) { const sl = box(1.6, .82, .5, mat.pocket); placeIn(sl, HB.x1 - 1.2, HB.y0 - .4, HB.z1 - 1.2 + z); hbox.add(sl); }
+  // plaque signalétique
+  const tag = box(2.4, 1.4, .05, mat.machined); placeIn(tag, HB.x1 - 3, -4.6, HB.z1 + .02); hbox.add(tag);
+  // oreilles de l'axe de pivot (face -z)
+  for (const y of [HB.y0 + .6, HB.y1 - .6]) { const ear = box(6.5, 1.2, 2.6, mat.paint); placeIn(ear, -9.6, y, HB.z0 - 1.3); hbox.add(ear); }
+}
+hpart({ id: 'UM-012-104A', ref: 'UM-012-104A', name: 'Boîte de la tête de forage', qty: 1, grp: 'hbox', role: 'Carter qui porte la broche, l\'entraînement par chaîne et le bain d\'huile (huile à engrenage 80W90, vidange aux 300 h).', hx: [0, 0, 0] }, hbox);
+const coverTex = (() => {
+  const c = document.createElement('canvas'); c.width = 1024; c.height = 380;
+  const x = c.getContext('2d');
+  x.fillStyle = '#c92b20'; x.fillRect(0, 0, 1024, 380);
+  x.fillStyle = '#b02218'; x.font = '900 230px "Barlow Condensed", sans-serif'; x.textAlign = 'center'; x.fillText('UM', 330, 270);
+  x.fillStyle = '#ffffff'; x.fillRect(560, 70, 400, 110); x.fillRect(560, 210, 400, 110);
+  x.fillStyle = '#c62828'; x.fillRect(570, 80, 380, 38); x.fillRect(570, 220, 380, 38);
+  x.fillStyle = '#ffffff'; x.font = '700 30px "IBM Plex Sans", sans-serif'; x.fillText('⚠ WARNING', 760, 110); x.fillText('⚠ WARNING', 760, 250);
+  x.fillStyle = '#111'; x.font = '600 26px "IBM Plex Sans", sans-serif'; x.fillText('Rotating parts', 760, 160); x.fillText('Do not open while running', 760, 298);
+  const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; return t;
+})();
+const coverPlate = new THREE.Group();
+{
+  const W = HB.x1 - HB.x0, Hh = HB.y1 - HB.y0;
+  const plate = box(W, Hh, .45, [mat.paint, mat.paint, mat.paint, mat.paint, new THREE.MeshStandardMaterial({ map: coverTex, roughness: .5 }), mat.paint]);
+  plate.position.set(u((HB.x0 + HB.x1) / 2), u((HB.y0 + HB.y1) / 2), u(HB.z1 + .225));
+  coverPlate.add(plate);
+  const boss = hcyl(.7, .9, mat.paint); boss.rotation.x = Math.PI / 2; placeIn(boss, -8, -1.8, HB.z1 + .9); coverPlate.add(boss);
+}
+hpart({ id: 'UM-012-113A', ref: 'UM-012-113A', name: 'Couvercle de la boîte (logo UM, avertissements)', qty: 1, grp: 'hbox', hx: [0, 0, 9] }, coverPlate);
+const coverBoltsPos = [];
+for (let k = 0; k < 6; k++) coverBoltsPos.push([HB.x0 + 1.2 + k * (HB.x1 - HB.x0 - 2.4) / 5, HB.y1 - .6]);
+for (let k = 0; k < 4; k++) coverBoltsPos.push([HB.x0 + 1.2 + (k + .5) * (HB.x1 - HB.x0 - 2.4) / 4, HB.y0 + .6]);
+hpart({ id: 'B375-1000', ref: 'B375-1000', name: 'Boulon 3/8 × 1 po', qty: 16, grp: 'hbox', role: 'Couvercle de la boîte (10) et couvercle de pompe (6).', hx: [0, 0, 10] },
+  coverBoltsPos.map(([x, y]) => { const b = makeBolt({ af: .56, headH: .23, d: .375, L: 1.0, tpi: 16 }, mat.boltBlack); b.rotation.x = Math.PI / 2; return placeIn(b, x, y, HB.z1 + .45); }));
+hpart({ id: 'W375', ref: 'W375', name: 'Rondelle plate 3/8', qty: 16, grp: 'hbox', hx: [0, 0, 9.6] },
+  coverBoltsPos.map(([x, y]) => { const w = mesh(annulusIn(.2, .42, .05, [], 20), mat.steelLight); w.rotation.x = Math.PI / 2; return placeIn(w, x, y, HB.z1 + .5); }));
+{
+  const plug = (x, y, z, rx) => { const g = new THREE.Group(); const sq = box(.9, .6, .9, mat.steelLight); sq.position.y = u(.3); const th = hcyl(.6, .5, mat.steelLight, 20); th.position.y = -u(.2); g.add(sq, th); placeIn(g, x, y, z); if (rx) g.rotation.x = rx; return g; };
+  hpart({ id: 'UM-012-131', ref: 'UM-012-131', name: 'Bouchon 1 po NPT (remplissage / vidange)', qty: 2, grp: 'hbox', hx: [0, 0, 11] }, [plug(-8, -1.8, HB.z1 + 1.35, Math.PI / 2), plug(HB.x1 + .1, HB.y0 + 1.6, 4.5, 0)].map((g, k) => { if (k === 1) { g.rotation.z = -Math.PI / 2; } return g; }));
+  const small = (y, z) => { const g = new THREE.Group(); const h = hexHead(.56, .35, mat.steelLight); h.rotation.z = -Math.PI / 2; h.position.x = u(.17); g.add(h); placeIn(g, HB.x1, y, z); return g; };
+  hpart({ id: 'UM-102-132', ref: 'UM-102-132', name: 'Bouchon 3/8 po NPT', qty: 2, grp: 'hbox', hx: [3, 0, 0] }, [small(-3.4, -1.5), small(-3.4, 1.5)]);
+}
+// Reniflard (détail A de la planche 2.2)
+{
+  const g = new THREE.Group();
+  const dome = mesh(new THREE.SphereGeometry(u(1.3), 24, 12, 0, Math.PI * 2, 0, Math.PI / 2), mat.paint); dome.scale.y = .6; g.add(dome);
+  const base = hcyl(1.5, .3, mat.paint); base.position.y = -u(.15); g.add(base);
+  placeIn(g, -4.5, HB.y1 + .3, -4);
+  hpart({ id: 'UM-1214-121P', ref: 'UM-1214-121P', name: 'Couvercle de reniflard (blidder cover)', qty: 1, grp: 'hbox', hx: [0, 6, 0] }, g);
+  hpart({ id: 'UM-012-167', ref: 'UM-012-167', name: 'Joint torique du couvercle de reniflard', qty: 1, grp: 'hbox', hx: [0, 5, 0] }, placeIn(oring(1.25, .08), -4.5, HB.y1 + .04, -4));
+  const pos = ringAt(6, 1.15, 0).map(([x, z]) => [x - 4.5, z - 4]);
+  hpart({ id: 'B312-1000', ref: 'B312-1000', name: 'Boulon 5/16 × 1 po', qty: 6, grp: 'hbox', hx: [0, 7, 0] }, pos.map(([x, z]) => placeIn(makeBolt({ af: .5, headH: .21, d: .3125, L: 1.0, tpi: 18 }, mat.boltBlack), x, HB.y1 + .32, z)));
+  hpart({ id: 'W312', ref: 'W312', name: 'Rondelle plate 5/16', qty: 6, grp: 'hbox', hx: [0, 6.6, 0] }, pos.map(([x, z]) => placeIn(mesh(annulusIn(.17, .35, .04, [], 18), mat.steelLight), x, HB.y1 + .3, z)));
+}
+
+/* ---------- Broche UM-012-101, roulements et joints ---------- */
+{
+  const sp = new THREE.Group();
+  sp.add(mesh(annulusIn(1.5, 1.9, 22.0), mat.machined));
+  const thrTop = hcyl(1.92, 4.5, threadMat(mat.machined, 4.5, 4), 48); thrTop.position.y = u(17.5 + 2.25); sp.add(thrTop);
+  const thrBot = hcyl(1.92, 3.0, threadMat(mat.machined, 3.0, 6), 48); thrBot.position.y = u(1.5); sp.add(thrBot);
+  placeIn(sp, 0, -14.0, 0);
+  hpart({ id: 'UM-012-101', ref: 'UM-012-101', name: 'Broche (spindle) Boyles', qty: 1, grp: 'hspindle', role: 'Arbre creux entraîné par la chaîne ; son bout fileté se visse dans le moyeu du boîtier du mandrin. Vitesse max 1 200 tr/min.', hx: [0, -26, 0] }, sp);
+}
+hpart({ id: 'UM-012-122', ref: 'UM-012-122', name: 'Clavette de broche', qty: 2, grp: 'hspindle', hx: [0, -26, 0] }, [0, 180].map(d => { const k = box(.5, 3.0, .4, mat.steelLight); const [x, z] = polar(1.95, d); placeIn(k, x, -3.9, z); k.rotation.y = d * Math.PI / 180; return k; }));
+hpart({ id: 'UM-012-128', ref: 'UM-012-128', name: 'Roulement supérieur', qty: 1, grp: 'hspindle', hx: [0, 8, 0] }, placeIn(bearingIn(1.92, 3.7, 2.0, mat.yellowBrg), 0, -.9, 0));
+hpart({ id: 'UM-012-129', ref: 'UM-012-129', name: 'Roulement inférieur', qty: 1, grp: 'hspindle', hx: [0, -10, 0] }, placeIn(bearingIn(1.92, 3.7, 2.0, mat.yellowBrg), 0, -8.9, 0));
+{
+  const g = new THREE.Group();
+  g.add(mesh(annulusIn(3.72, 4.5, 1.9), mat.paint));
+  const fl = mesh(annulusIn(3.72, 5.6, .6, ringAt(8, 5.05, 22.5).map(([x, z]) => [x, z, .22])), mat.paint); fl.position.y = u(1.9); g.add(fl);
+  placeIn(g, 0, HB.y1 - 1.9, 0);
+  hpart({ id: 'UM-012-121', ref: 'UM-012-121', name: 'Couvercle latéral de broche (logement du roulement supérieur)', qty: 1, grp: 'hspindle', hx: [0, 10, 0] }, g);
+}
+hpart({ id: 'UM-012-124', ref: 'UM-012-124', name: 'Joint supérieur', qty: 2, grp: 'hspindle', hx: [0, 11, 0] }, [placeIn(oring(2.35, .13, mat.rubber), 0, 1.62, 0), placeIn(oring(2.35, .13, mat.rubber), 0, 2.38, 0)]);
+hpart({ id: 'UM-012-120', ref: 'UM-012-120', name: 'Couvercle adaptateur du mandrin', qty: 1, grp: 'hspindle', role: 'Reçoit le mandrin et son adaptateur 3506910 (10 vis SHC500-4000).', hx: [0, 12, 0] },
+  placeIn(mesh(annulusIn(2.65, 6.9, .7, ringAt(10, 6.35, 18).map(([x, z]) => [x, z, .28])), mat.paint), 0, 2.3, 0));
+hpart({ id: 'SHC500-4000', ref: 'SHC500-4000', name: 'Vis à tête creuse ½-UNC × 4 po', qty: 10, grp: 'hspindle', role: 'Fixent le mandrin (adaptateur 3506910) et les couvercles UM-012-120 / UM-012-121 sur la boîte.', hx: [0, 30, 0] },
+  ringAt(10, 6.35, 18).map(([x, z]) => placeIn(makeBolt({ socket: true, headD: .75, headH: .5, d: .5, L: 4.0 }, mat.boltBlack), x, Y.adT, z)));
+hpart({ id: 'UM-012-107', ref: 'UM-012-107', name: 'Manchon traité thermiquement', qty: 1, grp: 'hspindle', hx: [0, 12.8, 0] }, placeIn(mesh(annulusIn(1.93, 2.2, 1.3), mat.sealRed), 0, 1.6, 0));
+hpart({ id: 'UM-012-106', ref: 'UM-012-106', name: 'Manchon d\'ajustement du mandrin', qty: 1, grp: 'hspindle', hx: [0, 13.5, 0] }, placeIn(mesh(annulusIn(2.2, 2.62, .7), mat.machined), 0, 2.3, 0));
+// Côté nez de broche (dessous)
+hpart({ id: 'UM-012-126', ref: 'UM-012-126', name: 'Joint inférieur', qty: 2, grp: 'hspindle', hx: [0, -12, 0] }, [placeIn(oring(2.3, .13, mat.rubber), 0, -8.6, 0), placeIn(oring(2.3, .13, mat.rubber), 0, -9.6, 0)]);
+{
+  const g = new THREE.Group();
+  g.add(mesh(annulusIn(2.45, 5.8, .8, ringAt(10, 5.1, 0).map(([x, z]) => [x, z, .28])), mat.paint));
+  const zk = new THREE.Group(); { const b = hcyl(.22, .25, mat.brass, 6); b.position.y = u(.12); const bl = mesh(new THREE.SphereGeometry(u(.13), 10, 8), mat.brass); bl.position.y = u(.4); zk.add(b, bl); }
+  zk.rotation.x = Math.PI; zk.position.set(u(3.6), 0, u(1.6)); g.add(zk);
+  placeIn(g, 0, HB.y0 - .8, 0);
+  hpart({ id: 'UM-012-114', ref: 'UM-012-114', name: 'Couvercle de broche 114 (logement du roulement inférieur)', qty: 1, grp: 'hspindle', hx: [0, -13, 0] }, g);
+}
+hpart({ id: 'B500-1750', ref: 'B500-1750', name: 'Boulon ½-13 × 1 ¾ po', qty: 10, grp: 'hspindle', role: 'Fixent le couvercle UM-012-114 sous la boîte.', hx: [0, -14.5, 0] },
+  ringAt(10, 5.1, 0).map(([x, z]) => { const b = makeBolt({ af: .75, headH: .31, d: .5, L: 1.75 }, mat.boltBlack); b.rotation.x = Math.PI; return placeIn(b, x, HB.y0 - .84, z); }));
+hpart({ id: 'W500', ref: 'W500', name: 'Rondelle plate ½ po', qty: '28', grp: 'hspindle', role: '20 sur la tête (sous les B500-1750 et les SHC500-4000) et 8 sur le mandrin (B500-1500).', hx: [0, 0, 0] },
+  [...ringAt(10, 5.1, 0).map(([x, z]) => placeIn(mesh(annulusIn(.27, .53, .04, [], 22), mat.steelLight), x, HB.y0 - .84, z)),
+   ...ringAt(10, 6.35, 18).map(([x, z]) => placeIn(mesh(annulusIn(.27, .53, .04, [], 22), mat.steelLight), x, Y.adT, z)),
+   ...ringAt(8, R.adBolt, 22.5).map(([x, z]) => placeIn(mesh(annulusIn(.27, .53, .04, [], 22), mat.steelLight), x, Y.adB - .04, z))]);
+{
+  const stack = [
+    ['UM-012-119', 'Manchon de joint', 1.92, 2.45, -10.6, 1.0, mat.paint, -15.5],
+    ['UM-012-117', 'Bague d\'appui (sit screw)', 1.92, 3.1, -11.0, .4, mat.paint, -17],
+    ['UM-012-118', 'Écrou de serrage de broche', 1.92, 3.25, -12.0, 1.0, mat.paint, -18.5],
+    ['UM-012-115', 'Contre-écrou de broche', 1.92, 3.0, -12.6, .6, mat.paint, -20],
+    ['UM-012-108', 'Manchon de guidage BQ', 1.12, 1.9, -13.4, .8, mat.paint, -21.5],
+    ['UM-012-110', 'Manchon de guidage NQ', 1.4, 1.92, -14.2, .8, mat.white, -23],
+    ['UM-012-116', 'Couvercle du manchon d\'usure', 1.5, 2.9, -14.8, .6, mat.paint, -24.5],
+  ];
+  for (const [id, name, ri, ro, y, h, m, dy] of stack) {
+    const o = mesh(annulusIn(ri, ro, h), m);
+    hpart({ id, ref: id, name, qty: 1, grp: 'hspindle', hx: [0, dy, 0] }, placeIn(o, 0, y, 0));
+  }
+  hpart({ id: 'SS75-1250', ref: 'SS75-1250', name: 'Vis de pression ¾-10 × 1 ¼ po', qty: 9, grp: 'hspindle', role: 'Bloquent l\'écrou de serrage de broche.', hx: [0, -19, 0] },
+    ringAt(9, 2.6, 10).map(([x, z]) => { const s = hcyl(.36, 1.25, threadMat(mat.boltBlack, 1.25, 10), 16); return placeIn(s, x, -11.4, z); }));
+  hpart({ id: 'SHCS312-1500', ref: 'SHCS312-1500', name: 'Vis à tête creuse 5/16 × 2 ½ po', qty: 6, grp: 'hspindle', hx: [0, -24, 0] },
+    [...ringAt(3, 2.45, 30).map(([x, z]) => { const b = makeBolt({ socket: true, headD: .47, headH: .31, d: .3125, L: 2.5, tpi: 18 }, mat.boltBlack); b.rotation.x = Math.PI; return placeIn(b, x, -12.6, z); }),
+     ...ringAt(3, 2.25, 90).map(([x, z]) => { const b = makeBolt({ socket: true, headD: .47, headH: .31, d: .3125, L: 2.5, tpi: 18 }, mat.boltBlack); b.rotation.x = Math.PI; return placeIn(b, x, -14.8, z); })]);
+}
+
+/* ---------- Entraînement : pignons, chaîne triple, transmission, moteur ---------- */
+const SPR_Y = [-5.3, -3.95, -2.6];      // 3 rangs de la chaîne triple
+{
+  const g = new THREE.Group();
+  const geo = sprocketGeo(28, 4.45, .95, 1.92);
+  SPR_Y.forEach(y => { const s = mesh(geo, mat.black); s.position.y = u(y - .47); g.add(s); });
+  const hub = mesh(annulusIn(1.92, 3.0, 4.6), mat.black); hub.position.y = u(-6.3); g.add(hub);
+  hpart({ id: 'UM-012-102', ref: 'UM-012-102', name: 'Pignon mené (triple)', qty: 1, grp: 'hdrive', hx: [0, 0, 16] }, g);
+}
+{
+  const g = new THREE.Group();
+  const geo = sprocketGeo(15, 2.4, .95, .9);
+  SPR_Y.forEach(y => { const s = mesh(geo, mat.black); s.position.y = u(y - .47); g.add(s); });
+  const sh = hcyl(1.0, 14.0, mat.machined); sh.position.y = u(-3.9); g.add(sh);
+  const spl = hcyl(1.02, 2.2, threadMat(mat.machined, 2.2, 8), 24); spl.position.y = u(3.4); g.add(spl);
+  g.position.x = u(DRIVE_X);
+  hpart({ id: 'UM-012-103', ref: 'UM-012-103', name: 'Pignon d\'entraînement (triple) et arbre', qty: 1, grp: 'hdrive', hx: [0, 0, 16] }, g);
+}
+hpart({ id: 'UM-012-169', ref: 'UM-012-169', name: 'Clavette de pompe hydraulique', qty: 1, grp: 'hdrive', hx: [0, -14, 0] }, placeIn(box(.25, 1.0, .25, mat.steelLight), DRIVE_X + 1.0, -10.2, 0));
+hpart({ id: 'UM-012-127', ref: 'UM-012-127', name: 'Roulement du pignon d\'entraînement', qty: 2, grp: 'hdrive', hx: [0, 0, 16] }, [placeIn(bearingIn(1.0, 2.25, 1.0, mat.beigeBrg), DRIVE_X, HB.y0 + .1, 0), placeIn(bearingIn(1.0, 2.25, 1.0, mat.beigeBrg), DRIVE_X, HB.y1 - 1.1, 0)]);
+// Chaîne triple : trajet = enveloppe convexe des deux pignons, maillons au pas de 1 po
+{
+  const pts = [];
+  for (let i = 0; i < 180; i++) { const a = i / 180 * Math.PI * 2; pts.push([4.45 * Math.cos(a), 4.45 * Math.sin(a)], [DRIVE_X + 2.4 * Math.cos(a), 2.4 * Math.sin(a)]); }
+  pts.sort((p, q) => p[0] - q[0] || p[1] - q[1]);
+  const cross = (o, a, b) => (a[0] - o[0]) * (b[1] - o[1]) - (a[1] - o[1]) * (b[0] - o[0]);
+  const lo = [], hi = [];
+  for (const p of pts) { while (lo.length >= 2 && cross(lo[lo.length - 2], lo[lo.length - 1], p) <= 0) lo.pop(); lo.push(p); }
+  for (const p of [...pts].reverse()) { while (hi.length >= 2 && cross(hi[hi.length - 2], hi[hi.length - 1], p) <= 0) hi.pop(); hi.push(p); }
+  const hull = [...lo.slice(0, -1), ...hi.slice(0, -1)];
+  const segs = []; let L = 0;
+  for (let i = 0; i < hull.length; i++) { const a = hull[i], b = hull[(i + 1) % hull.length]; const l = Math.hypot(b[0] - a[0], b[1] - a[1]); segs.push([a, b, l]); L += l; }
+  const N = Math.round(L), step = L / N;
+  const at = s => { for (const [a, b, l] of segs) { if (s <= l) return [a[0] + (b[0] - a[0]) * s / l, a[1] + (b[1] - a[1]) * s / l]; s -= l; } return segs[0][0]; };
+  const chain = new THREE.Group();
+  const plates = new THREE.InstancedMesh(new THREE.BoxGeometry(u(1.25), u(.08), u(.5)), mat.steelLight, N * SPR_Y.length * 2);
+  const rollers = new THREE.InstancedMesh(new THREE.CylinderGeometry(u(.2), u(.2), u(.62), 10), mat.black, N * SPR_Y.length);
+  const m4 = new THREE.Matrix4(), q = new THREE.Quaternion(), e = new THREE.Euler(), one = new THREE.Vector3(1, 1, 1), pos = new THREE.Vector3();
+  let ip = 0, ir = 0;
+  for (let i = 0; i < N; i++) {
+    const [x, y] = at(i * step), [x2, y2] = at(((i + 1) % N) * step);
+    const ang = Math.atan2(y2 - y, x2 - x);
+    SPR_Y.forEach(sy => {
+      for (const off of [-.36, .36]) {
+        e.set(0, ang, 0); q.setFromEuler(e);
+        pos.set(u((x + x2) / 2), u(sy + off), -u((y + y2) / 2));
+        plates.setMatrixAt(ip++, m4.compose(pos, q, one));
+      }
+      q.identity(); pos.set(u(x), u(sy), -u(y));
+      rollers.setMatrixAt(ir++, m4.compose(pos, q, one));
+    });
+  }
+  plates.castShadow = rollers.castShadow = true;
+  chain.add(plates, rollers);
+  hpart({ id: 'UM-012-130', ref: 'UM-012-130', name: 'Chaîne triple (3 rangs)', qty: 3, grp: 'hdrive', role: `${N} maillons au pas de 1 po par rang. N'utiliser qu'un maillon de raccord riveté ou soudé.`, hx: [0, 0, 16] }, chain);
+}
+hpart({ id: 'UM-012-125', ref: 'UM-012-125', name: 'Joint de transmission', qty: 1, grp: 'hdrive', hx: [0, 9, 0] }, placeIn(oring(1.45, .14, mat.rubber), DRIVE_X, HB.y1 + .1, 0));
+hpart({ id: 'UM-012-123', ref: 'UM-012-123', name: 'Siège de joint', qty: 1, grp: 'hdrive', hx: [0, 9.5, 0] }, placeIn(mesh(annulusIn(1.1, 2.1, .35), mat.sealBlue), DRIVE_X, HB.y1, 0));
+const TR = { y0: HB.y1 + .35, h: 10.6, w: 8.2, d: 8.2 };
+{
+  const g = new THREE.Group();
+  const body = box(TR.w, TR.h * .62, TR.d, mat.paint); body.position.set(0, u(TR.h * .31), 0); g.add(body);
+  const s = new THREE.Shape(); s.moveTo(-u(TR.w / 2), 0); s.lineTo(u(TR.w / 2), 0); s.lineTo(u(TR.w / 2), u(TR.h * .38)); s.lineTo(-u(TR.w * .1), u(TR.h * .38)); s.lineTo(-u(TR.w / 2), u(TR.h * .1)); s.closePath();
+  const upper = new THREE.ExtrudeGeometry(s, { depth: u(TR.d), bevelEnabled: false }); upper.translate(0, 0, -u(TR.d / 2));
+  const up = mesh(upper, mat.paint); up.position.y = u(TR.h * .62); g.add(up);
+  const flange = box(TR.w + 1.2, .6, TR.d + 1.2, mat.paint); flange.position.y = u(.3); g.add(flange);
+  const lever = new THREE.Group();
+  const rod = hcyl(.32, 11, mat.paint, 16); rod.position.y = u(5.5); lever.add(rod);
+  const knob = mesh(new THREE.SphereGeometry(u(1.05), 24, 16), mat.paint); knob.position.y = u(11.4); lever.add(knob);
+  const pivot = box(1.4, 1.8, 1.4, mat.paint); pivot.position.y = u(.4); lever.add(pivot);
+  lever.position.set(u(-.6), u(TR.h * .72), u(TR.d / 2 + .7)); lever.rotation.x = Math.PI / 2 - .25;
+  g.add(lever);
+  const plugT = hexHead(.8, .45, mat.steelLight); plugT.position.set(u(2.2), u(TR.h + .2), 0); g.add(plugT);
+  placeIn(g, DRIVE_X, TR.y0, 0);
+  hpart({ id: 'UM-012-143', ref: 'UM-012-143', name: 'Transmission 4 vitesses (Funk)', qty: 1, grp: 'hdrive', role: 'Réducteur à 4 rapports entre le moteur hydraulique et le pignon d\'entraînement. Le levier choisit la vitesse.', hx: [0, 11, 0] }, g);
+}
+hpart({ id: 'B437-1500', ref: 'B437-1500', name: 'Boulon 7/16-UNC × 1 ½ po', qty: 13, grp: 'hdrive', role: '5 à la base de la transmission, 8 sur les brides du moteur.', hx: [0, 11, 0] },
+  [...[[-4.7, -4.7], [4.7, -4.7], [4.7, 4.7], [-4.7, 4.7], [0, -4.7]].map(([x, z]) => placeIn(makeBolt({ af: .62, headH: .27, d: .4375, L: 1.5, tpi: 14 }, mat.boltBlack), DRIVE_X + x, TR.y0 + .6, z))]);
+hpart({ id: 'W437', ref: 'W437', name: 'Rondelle frein 7/16', qty: 12, grp: 'hdrive', hx: [0, 11, 0] },
+  [[-4.7, -4.7], [4.7, -4.7], [4.7, 4.7], [-4.7, 4.7]].map(([x, z]) => placeIn(mesh(annulusIn(.23, .4, .06, [], 18), mat.steelLight), DRIVE_X + x, TR.y0 + .6, z)));
+const MOT = { y0: TR.y0 + TR.h, fl: 7.6 };
+hpart({ id: 'UM-012-170', ref: 'UM-012-170', name: 'Accouplement transmission / moteur hydraulique', qty: 1, grp: 'hdrive', hx: [0, 20, 0] }, placeIn(mesh(annulusIn(.7, 1.3, 2.6), mat.white), DRIVE_X, MOT.y0 - 2.0, 0));
+hpart({ id: 'UM-012-192', ref: 'UM-012-192', name: 'Anneau de retenue intérieur 1 ½ po', qty: 1, grp: 'hdrive', hx: [0, 20.5, 0] }, placeIn(oring(.75, .05, mat.boltBlack), DRIVE_X, MOT.y0 + .2, 0));
+const motor = new THREE.Group();
+{
+  const fl = box(MOT.fl, 1.1, MOT.fl, mat.black); fl.position.y = u(.55); motor.add(fl);
+  const b1 = hcyl(3.3, 6.5, mat.black, 40); b1.position.y = u(1.1 + 3.25); motor.add(b1);
+  const rear = new THREE.Group();
+  const b2 = hcyl(3.1, 4.2, mat.black, 40); b2.position.y = u(2.1); rear.add(b2);
+  const port = box(6.2, 2.2, 5.0, mat.black); port.position.y = u(5.2); rear.add(port);
+  const reg = box(3.2, 2.0, 3.0, mat.black); reg.position.set(u(-1.0), u(6.9), u(.6)); rear.add(reg);
+  rear.position.y = u(7.6); rear.rotation.z = .3;
+  motor.add(rear);
+  const ring = hcyl(3.45, .5, mat.console, 40); ring.position.y = u(7.6); motor.add(ring);
+}
+placeIn(motor, DRIVE_X, MOT.y0, 0);
+hpart({ id: 'AA6VM', ref: 'AA6VM', name: 'Moteur hydraulique A6VM160HD2-63W-VSD520B', qty: 1, grp: 'hdrive', role: 'Moteur à pistons axiaux (axe brisé) qui entraîne la transmission.', hx: [0, 26, 0] }, motor);
+hpart({ id: 'B750-2000', ref: 'B750-2000', name: 'Boulon ¾-10 × 2 po', qty: 4, grp: 'hdrive', role: 'Fixent le moteur à la transmission.', hx: [0, 26, 0] },
+  [[-3, -3], [3, -3], [3, 3], [-3, 3]].map(([x, z]) => placeIn(makeBolt({ af: 1.125, headH: .47, d: .75, L: 2.0, tpi: 10 }, mat.boltBlack), DRIVE_X + x, MOT.y0 + 1.1, z)));
+hpart({ id: 'W750', ref: 'W750', name: 'Rondelle plate ¾', qty: 8, grp: 'hdrive', hx: [0, 26, 0] },
+  [[-3, -3], [3, -3], [3, 3], [-3, 3]].flatMap(([x, z]) => [placeIn(mesh(annulusIn(.4, .75, .06, [], 22), mat.steelLight), DRIVE_X + x, MOT.y0 + 1.1, z), placeIn(mesh(annulusIn(.4, .75, .06, [], 22), mat.steelLight), DRIVE_X + x, MOT.y0 - .66, z)]));
+// Détail B : brides fendues et coudes 90° en laiton aux orifices A et B du moteur
+{
+  const elbows = [], splits = [], orings = [], bolts = [], washers = [];
+  const portC = new THREE.Vector3(), tmpM = new THREE.Matrix4();
+  motor.updateMatrixWorld(true);
+  for (const s of [-1, 1]) {
+    const lx = s * 3.1, ly = 5.2, ca = Math.cos(.3), sa = Math.sin(.3);
+    const px = DRIVE_X + lx * ca - ly * sa + s * .3, py = MOT.y0 + 7.6 + lx * sa + ly * ca;
+    const e = hoseIn([[px, py, 0], [px + s * 1.4, py, 0], [px + s * 2.0, py + .9, 0], [px + s * 2.0, py + 2.4, 0]], .55);
+    e.children[0].material = mat.brass;
+    elbows.push(e);
+    const sf = box(.9, 2.6, 2.6, mat.steelLight); placeIn(sf, px + s * .5, py, 0); splits.push(sf);
+    const sf2 = box(.9, 2.6, 2.6, mat.steelLight); placeIn(sf2, px + s * .5, py, 0); sf2.scale.set(.9, .5, 1.06); splits.push(sf2);
+    orings.push(placeIn(oring(.62, .07), px, py, 0));
+    orings[orings.length - 1].rotation.set(0, 0, Math.PI / 2);
+    for (const [dy, dz] of [[-.95, -.95], [.95, -.95], [.95, .95], [-.95, .95]]) {
+      const b = makeBolt({ af: .62, headH: .27, d: .4375, L: 1.5, tpi: 14 }, mat.boltBlack); b.rotation.z = -s * Math.PI / 2; placeIn(b, px + s * .95, py + dy, dz); bolts.push(b);
+      const w = mesh(annulusIn(.23, .4, .06, [], 18), mat.steelLight); w.rotation.z = Math.PI / 2; placeIn(w, px + s * .95, py + dy, dz); washers.push(w);
+    }
+  }
+  hpart({ id: 'UM-063-290T', ref: 'UM-063-290T', name: 'Bride coudée 90° 1704-16-20 (laiton)', qty: 2, grp: 'hdrive', hx: [0, 28, 0] }, elbows);
+  hpart({ id: 'UM-063-289T', ref: 'UM-063-289T', name: 'Bride fendue', qty: 4, grp: 'hdrive', hx: [0, 28, 0] }, splits);
+  hpart({ id: 'UM-012-208', ref: 'UM-012-208', name: 'Joint torique des brides', qty: 2, grp: 'hdrive', hx: [0, 28, 0] }, orings);
+  byId('B437-1500').objs.push(...bolts); bolts.forEach(b => { b.traverse(m => { m.userData.part = byId('B437-1500'); }); headG.add(b); });
+  byId('W437').objs.push(...washers); washers.forEach(w => { w.userData.part = byId('W437'); headG.add(w); });
+}
+
+/* ---------- Lubrification : pompe, filtre, vanne, boyaux et raccords (planche 2.3) ---------- */
+{
+  const pc = mesh(annulusIn(1.0, 3.2, .8, ringAt(6, 2.65, 0).map(([x, z]) => [x, z, .2])), mat.paint);
+  placeIn(pc, DRIVE_X, HB.y0 - .8, 0);
+  hpart({ id: 'UM-012-111', ref: 'UM-012-111', name: 'Couvercle de pompe hydraulique', qty: 1, grp: 'hlube', hx: [0, -12, 0] }, pc);
+  const bpos = ringAt(6, 2.65, 0).map(([x, z]) => [DRIVE_X + x, z]);
+  const b375 = bpos.map(([x, z]) => { const b = makeBolt({ af: .56, headH: .23, d: .375, L: 1.0, tpi: 16 }, mat.boltBlack); b.rotation.x = Math.PI; return placeIn(b, x, HB.y0 - .84, z); });
+  const w375 = bpos.map(([x, z]) => placeIn(mesh(annulusIn(.2, .42, .04, [], 18), mat.steelLight), x, HB.y0 - .84, z));
+  byId('B375-1000').objs.push(...b375); b375.forEach(b => { b.traverse(m => { m.userData.part = byId('B375-1000'); }); headG.add(b); });
+  byId('W375').objs.push(...w375); w375.forEach(w => { w.userData.part = byId('W375'); headG.add(w); });
+  const pump = new THREE.Group();
+  const pb = box(3.2, 3.4, 3.4, mat.black); pb.position.y = -u(1.7); pump.add(pb);
+  for (const s of [-1, 1]) { const po = hcyl(.55, .8, mat.black, 16); po.rotation.z = Math.PI / 2; po.position.set(s * u(1.9), -u(2.0), 0); pump.add(po); }
+  placeIn(pump, DRIVE_X, HB.y0 - 1.6, 0);
+  hpart({ id: 'UM-012-139', ref: 'UM-012-139', name: 'Pompe hydraulique de lubrification', qty: 1, grp: 'hlube', role: 'Pompe à engrenages entraînée par l\'arbre du pignon : fait circuler l\'huile vers le filtre, le régulateur et les roulements. Toujours brancher l\'aspiration à l\'entrée B.', hx: [0, -15, 0] }, pump);
+  const pbpos = ringAt(6, 1.3, 30).map(([x, z]) => [DRIVE_X + x, z]);
+  hpart({ id: 'B250-750', ref: 'B250-750', name: 'Boulon ¼-NC × ¾ po', qty: 6, grp: 'hlube', hx: [0, -15, 0] }, pbpos.map(([x, z]) => { const b = makeBolt({ af: .44, headH: .16, d: .25, L: .75, tpi: 20 }, mat.boltBlack); b.rotation.x = Math.PI; return placeIn(b, x, HB.y0 - 1.62, z); }));
+  hpart({ id: 'W250', ref: 'W250', name: 'Rondelle plate ¼', qty: 6, grp: 'hlube', hx: [0, -15, 0] }, pbpos.map(([x, z]) => placeIn(mesh(annulusIn(.14, .3, .03, [], 16), mat.steelLight), x, HB.y0 - 1.64, z)));
+  // Filtre de tête (support à brides) et cartouche, sur la face d'extrémité -x, parallèle à z
+  const fh = new THREE.Group();
+  const tubeF = hcyl(1.3, 9.5, mat.white, 32); tubeF.rotation.x = Math.PI / 2; fh.add(tubeF);
+  for (const s of [-1, 1]) { const br = box(2.6, 2.8, 1.0, mat.white); br.position.z = s * u(4.6); fh.add(br); }
+  placeIn(fh, HB.x0 - 1.6, -5.2, 0);
+  hpart({ id: 'UM-012-177', ref: 'UM-012-177', name: 'Filtre de tête (corps à brides)', qty: 1, grp: 'hlube', hx: [-6, 0, 0] }, fh);
+  const cart = hcyl(1.55, 4.2, mat.white, 32); placeIn(cart, HB.x0 - 1.6, -5.2, 7.2); cart.rotation.x = Math.PI / 2;
+  hpart({ id: 'UM-012-178', ref: 'UM-012-178', name: 'Cartouche filtrante', qty: 1, grp: 'hlube', hx: [-6, 0, 4] }, cart);
+  // Vanne 3 voies (aspiration A/B) avec poignée
+  const v = new THREE.Group();
+  const vb = box(1.6, 1.6, 2.4, mat.steelLight); v.add(vb);
+  const hd = hcyl(.2, 4.5, mat.steelLight, 12); hd.rotation.z = Math.PI / 2; hd.position.set(-u(2.4), u(.9), 0); v.add(hd);
+  const grip = hcyl(.3, 1.4, mat.black, 12); grip.rotation.z = Math.PI / 2; grip.position.set(-u(4.4), u(.9), 0); v.add(grip);
+  placeIn(v, HB.x0 - 1.2, HB.y0 - 1.2, -2.4);
+  hpart({ id: 'UM-10B-TR#6', ref: 'UM-10B-TR#6', name: 'Vanne 3 voies BKH 3/8 NPT', qty: 1, grp: 'hlube', role: 'En forage vers le haut, tourner la poignée pour changer le côté d\'aspiration dans la tête.', hx: [-8, -4, 0] }, v);
+  const reg = new THREE.Group(); { const rb = box(2.2, .9, 1.1, mat.black); rb.position.y = u(.45); reg.add(rb); }
+  placeIn(reg, -8.5, HB.y1 + .1, 5.2);
+  hpart({ id: 'NDV-10-N', ref: 'NDV-10-N', name: 'Régulateur de débit', qty: 1, grp: 'hlube', hx: [0, 8, 3] }, reg);
+  const br2 = new THREE.Group(); { const c1 = hcyl(.35, 1.4, mat.brass, 16); c1.position.y = u(.7); const c2 = hcyl(.55, .5, mat.steelLight, 16); c2.position.y = u(1.6); br2.add(c1, c2); }
+  placeIn(br2, -17.5, HB.y1 + .1, 5.6);
+  hpart({ id: 'A-1199-R-4048', ref: 'A-1199-R-4048', name: 'Reniflard', qty: 1, grp: 'hlube', hx: [0, 8, 3] }, br2);
+  // Boyaux 3/8 (longueurs de la planche 2.3 ; tracés approximatifs)
+  const Z = HB.z1 + 1.0;
+  const HOSES = [
+    ['UM-012-H08C', 'Boyau 3/8 vers le reniflard (24 po)', [[-17.5, 2.6, 5.6], [-17.8, 7, 5.6], [-16.5, 10, 4.8], [-12, 11.5, 4.9]]],
+    ['UM-012-H10C', 'Boyau 3/8 logement / transmission (3 ¾ po)', [[-10.4, 2.4, 3.2], [-10.3, 3.8, 3.3], [-10.3, 5.0, 3.6]]],
+    ['UM-012-H11C', 'Boyau 3/8 transmission / carter (5 po)', [[-18.2, 3.6, 4.2], [-18.9, 2.2, 5.6], [-19.4, -.5, 6.2]]],
+    ['UM-012-H15C-UG', 'Boyau 3/8 carter / aspiration (9 ¾ po)', [[-19.3, -7.6, 3.2], [-20.5, -8.8, 1.4], [-20.3, -9.9, -1.0], [DRIVE_X - 2.2, -10.4, -.2]]],
+    ['UM-012-H16C-UG', 'Boyau 3/8 carter / aspiration (21 po)', [[-19.3, -2.0, 6.6], [-21.2, -4.0, 5.4], [-21.4, -8.5, 2.0], [-20.5, -10.3, -2.4], [DRIVE_X + 2.3, -10.4, -2.0]]],
+    ['UM-012-H17C-UG', 'Boyau 3/8 sortie filtre / refroidisseur (10 po)', [[HB.x0 - 1.6, -3.9, 4.4], [-21.5, -1.0, 4.0], [-21.8, 1.8, 2.6]]],
+    ['UM-012-H18C-UG', 'Boyau 3/8 refroidisseur / régulateur (12 po)', [[-21.8, 1.8, -2.6], [-18, 2.6, 2.4], [-12, 2.0, 5.2], [-9.6, 1.2, 5.3]]],
+    ['UM-012-H20C-UG', 'Boyau 3/8 pression / filtre (6 ¾ po)', [[DRIVE_X - 1.9, -10.4, 0], [-19.6, -9.0, 2.8], [HB.x0 - 1.6, -6.6, 4.6]]],
+    ['UM-012-H21C-UG', 'Boyau 3/8 régulateur / entrée transmission (5 po)', [[-9.0, 1.4, 5.6], [-9.2, 3.0, 5.3], [-10.1, 4.4, 4.7]]],
+    ['UM-012-H22C-UG', 'Boyau 3/8 régulateur / logement (8 po)', [[-7.6, 1.4, 5.6], [-6.0, 2.4, 5.0], [-5.0, 1.5, 2.0], [-6.0, 1.3, -1.0]]],
+    ['UM-012-H23C-UG', 'Boyau 3/8 transmission / couvercle (10 po)', [[-10.2, 7.0, 3.4], [-8.5, 5.0, 6.2], [-7.0, 1.0, Z], [-7.5, -1.5, Z]]],
+    ['UM-012-H24C-UG', 'Boyau 3/8 régulateur / roulement inférieur (9 po)', [[-7.8, .9, 5.9], [-4.5, .2, Z + .4], [1.5, -4.5, Z + .2], [4.2, -9.4, 2.8]]],
+    ['UM-012-H25C-UG', 'Boyau 3/8 régulateur / roulement supérieur (7 po)', [[-8.0, 1.3, 5.7], [-5.2, 2.2, 5.4], [-2.0, 2.6, 5.9], [2.6, 2.0, 5.0]]],
+  ];
+  const ends = [];
+  for (const [id, name, pts] of HOSES) {
+    hpart({ id, ref: id, name, qty: 1, grp: 'hlube', note: 'Longueur de la liste ; tracé approximatif.', hx: [0, 0, 10] }, hoseIn(pts));
+    ends.push(pts[0], pts[pts.length - 1]);
+  }
+  // Raccords de la planche 2.3 (quantités de la liste), placés aux extrémités des boyaux
+  const FITS = [['2404-6-4', 'Raccord MJIC × MP', 3], ['2404-8-6', 'Raccord MJIC × MP', 1], ['2501-6-04', 'Coude 90° MJIC × MP', 1], ['2501-6-6', 'Coude 90° MJIC × MP', 3], ['2501-6-8', 'Coude 90° MJIC × MP', 1], ['2501-8-8', 'Coude 90° MJIC × MP', 4], ['2501LL-8-8', 'Coude 90° long MJIC × MP', 1], ['2601-06-06-08', 'Té MJIC × MJIC × MP', 1], ['5000-6-6', 'Raccord FP × FP', 1], ['6402-8-8', 'Raccord ORB × FJIC tournant', 1], ['6500-06-06', 'Raccord MJIC × FJIC tournant', 4], ['6600-06-06-06', 'Té de dérivation tournant', 2], ['6600-8-8-8', 'Té de dérivation tournant', 1], ['6602-06-06-06', 'Té tournant en ligne', 1], ['6801-6-8', 'Coude 90° MJIC × MORB', 1], ['UM-10B-TR#6-BKH', 'Robinet BKH 3/8 NPT', 0]];
+  let e = 0;
+  for (const [id, name, n] of FITS) {
+    if (!n) continue;
+    const objs = [];
+    for (let k = 0; k < n; k++) { objs.push(fittingAt(ends[e % ends.length])); e++; }
+    hpart({ id, ref: id, name, qty: n, grp: 'hlube', note: 'Emplacement approximatif (planche 2.3).', hx: [0, 0, 10] }, objs);
+  }
+}
+
+/* ---------- Montage sur la foreuse : axe de pivot, bagues, goupille ---------- */
+{
+  const PIN_X = -11.0;   // trou « pin here for underground drill »
+  const pin = new THREE.Group();
+  const shaft = hcyl(.75, 13.5, mat.machined, 24); shaft.position.y = u(-.5); pin.add(shaft);
+  const handle = box(.6, .6, 3.2, mat.machined); handle.position.set(0, u(6.3), -u(1.6)); pin.add(handle);
+  const drop = box(.6, 1.8, .6, mat.machined); drop.position.set(0, u(5.5), -u(3.0)); pin.add(drop);
+  placeIn(pin, PIN_X, (HB.y0 + HB.y1) / 2, HB.z0 - 1.6);
+  hpart({ id: 'UM-012-105A', ref: 'UM-012-105A', name: 'Axe de pivot (swivel pin)', qty: 1, grp: 'hmount', role: 'Relie la tête au chariot de la foreuse. Deux trous : forage souterrain (installé) ou de surface.', hx: [0, 0, -6] }, pin);
+  const bush = [HB.y0 + .05, HB.y0 + 1.05, HB.y1 - 1.15, HB.y1 - .15].map(y => placeIn(mesh(annulusIn(.76, 1.05, .1, [], 24), mat.steelLight), PIN_X, y, HB.z0 - 1.6));
+  hpart({ id: 'UM-012-171', ref: 'UM-012-171', name: 'Bague durcie de l\'axe de pivot', qty: 4, grp: 'hmount', hx: [0, 0, -6] }, bush);
+  const hp = new THREE.Group(); hp.add(mesh(new THREE.TorusGeometry(u(.7), u(.07), 8, 32, Math.PI * 1.6), mat.steelLight));
+  placeIn(hp, PIN_X, -10.8, HB.z0 - 1.6 + .9); hp.rotation.y = Math.PI / 2;
+  hpart({ id: 'HP1000', ref: 'HP1000', name: 'Goupille bêta (hairpin) 1 po', qty: 1, grp: 'hmount', hx: [0, 0, -6] }, hp);
+}
+// Chariot de la foreuse (schématique, hors nomenclature)
+const carriage = new THREE.Group();
+mat.mast = new THREE.MeshStandardMaterial({ color: 0x7d868c, roughness: .55, metalness: .45 });
+{
+  const plate = box(24, 13, 1.0, mat.console); placeIn(plate, -8.5, -3.9, HB.z0 - 4.2); carriage.add(plate);
+  for (const y of [HB.y0 - 1.2, HB.y1 + 1.2]) { const ear = box(6.5, 1.2, 3.4, mat.console); placeIn(ear, -11.0, y, HB.z0 - 2.4); carriage.add(ear); }
+  for (const x of [-22, 5]) { const r = box(3.5, 60, 3.5, mat.mast); placeIn(r, x, -2, HB.z0 - 6.6); carriage.add(r); }
+}
+scene.add(carriage);
 
 /* ---------- Clé à cliquet avec rallonge sur le boulon actif ---------- */
 const wrench = new THREE.Group();
@@ -987,7 +1407,8 @@ scene.add(activeRing);
 
 /* ---------- Poste de commande de la foreuse (manettes + cadenas) ---------- */
 const consoleG = new THREE.Group();
-consoleG.position.set(-3.4, FLOOR, -4.6);
+consoleG.position.set(-10.5, FLOOR, -4.5);
+consoleG.scale.setScalar(1.9);
 scene.add(consoleG);
 {
   const ped = mesh(new THREE.BoxGeometry(1.3, 3.9, 1.1), mat.console); ped.position.y = 1.95;
@@ -1030,12 +1451,12 @@ const zone = new THREE.Mesh(new THREE.CylinderGeometry(u(R.plate) + 0.1, u(R.pla
 zone.position.y = PLATE_TOP0 + 2.5;
 scene.add(zone);
 
-/* ---------- Travailleur agenouillé, penché au-dessus du clam ---------- */
-const KNEE = new THREE.Vector3(6.0, -1.05, 0);
+/* ---------- Travailleur debout, penché au-dessus du mandrin ---------- */
+const KNEE = new THREE.Vector3(6.3, FLOOR, 0);   // pivot au sol (recul du corps en cas d'impact)
 const worker = new THREE.Group();
 worker.position.copy(KNEE);
 scene.add(worker);
-const HEAD = new THREE.Vector3(2.1, 7.5, 0);     // centre de la tête (monde)
+const HEAD = new THREE.Vector3(2.3, 6.9, 0);     // centre de la tête (monde), ≈ 30 cm au-dessus de la face du mandrin
 const HEAD_R = 0.88;
 const HANDS_Y = 4.6;                             // gants sur la poignée de la clé à cliquet
 function limb(a, b, r, m) {
@@ -1047,13 +1468,12 @@ function limb(a, b, r, m) {
 }
 {
   const V = (x, y, z) => new THREE.Vector3(x, y, z);
-  for (const z of [-0.55, 0.55]) {
-    limb(V(6.0, -1.05, z), V(8.4, -1.1, z), 0.45, mat.coverall);
-    limb(V(6.0, -1.0, z), V(6.6, 4.0, z * 0.9), 0.58, mat.coverall);
-    const boot = mesh(new THREE.BoxGeometry(0.9, 0.6, 0.8), mat.boot); boot.position.set(8.8 - KNEE.x, -1.1 - KNEE.y, z); worker.add(boot);
-    const pad = mesh(new THREE.BoxGeometry(0.6, 0.35, 0.8), mat.hivis); pad.position.set(5.95 - KNEE.x, -1.2 - KNEE.y, z); worker.add(pad);
+  for (const z of [-0.6, 0.6]) {
+    limb(V(6.4, FLOOR + .9, z), V(6.0, -3.2, z), 0.5, mat.coverall);
+    limb(V(6.0, -3.2, z), V(6.3, 1.8, z * .85), 0.6, mat.coverall);
+    const boot = mesh(new THREE.BoxGeometry(1.1, 0.9, 0.9), mat.boot); boot.position.set(6.2 - KNEE.x, 0.45, z); worker.add(boot);
   }
-  const hip = V(6.6, 4.1, 0), sh = V(3.3, 6.7, 0);
+  const hip = V(6.3, 1.9, 0), sh = V(3.4, 5.8, 0);
   const torso = limb(hip, sh, 1.0, mat.coverall);
   for (const t of [0.35, 0.62]) {
     const band = mesh(new THREE.CylinderGeometry(1.03, 1.03, 0.22, 32, 1, true), t < .5 ? mat.hivis : mat.reflect);
@@ -1062,20 +1482,20 @@ function limb(a, b, r, m) {
     worker.add(band);
   }
   for (const z of [-1.05, 1.05]) {
-    const shoulder = V(3.3, 6.7, z), elbow = V(3.0, 5.0, z * 1.2), hand = V(1.6, HANDS_Y, z * 0.48);
+    const shoulder = V(3.4, 5.8, z), elbow = V(3.0, 4.2, z * 1.2), hand = V(1.6, HANDS_Y, z * 0.48);
     limb(shoulder, elbow, 0.3, mat.coverall);
     limb(elbow, hand, 0.27, mat.coverall);
     const glove = mesh(new THREE.SphereGeometry(0.3, 16, 12), mat.glove); glove.position.copy(hand).sub(KNEE); worker.add(glove);
   }
-  const headG = new THREE.Group();
-  headG.position.copy(HEAD).sub(KNEE);
-  headG.rotation.z = 0.75;
+  const headG2 = new THREE.Group();
+  headG2.position.copy(HEAD).sub(KNEE);
+  headG2.rotation.z = 0.75;
   const skull = mesh(new THREE.SphereGeometry(HEAD_R * 0.95, 28, 20), mat.skin);
   const hat = mesh(new THREE.SphereGeometry(HEAD_R * 1.08, 28, 14, 0, Math.PI * 2, 0, Math.PI / 2), mat.helmet); hat.position.y = 0.12;
   const brim = mesh(new THREE.CylinderGeometry(HEAD_R * 1.32, HEAD_R * 1.32, 0.06, 32), mat.helmet); brim.position.y = 0.14;
   const glasses = mesh(new THREE.BoxGeometry(0.16, 0.26, 1.05), mat.dark); glasses.position.set(-0.8, -0.1, 0);
-  headG.add(skull, hat, brim, glasses);
-  worker.add(headG);
+  headG2.add(skull, hat, brim, glasses);
+  worker.add(headG2);
 }
 
 /* ---------- Étiquettes ---------- */
@@ -1113,13 +1533,13 @@ function buildLabels() {
   labels.springsC[0].position.set(-2.7, 2.7, -0.4);
   labels.springsF[0].position.set(-2.7, 2.7, -0.4);
   labels.stuck[0].position.set(0, 5.4, 0.6);
-  labels.open[0].position.set(-3.4, 4.9, -3.4);
-  labels.closed[0].position.set(-3.4, 4.9, -3.4);
+  labels.open[0].position.set(-10.5, FLOOR + 1.9 * 6.6, -3.2);
+  labels.closed[0].position.set(-10.5, FLOOR + 1.9 * 6.6, -3.2);
   labels.zone[0].position.set(-1.9, 8.4, 0.4);
   // Repères de pièces pour la vue éclatée (dans le groupe du clam)
   PARTS.forEach(p => {
-    if (p.lbl) clampG.remove(p.lbl);
-    p.lbl = makeLabel(p.ref, { parent: clampG, h: 0.21, font: '500 40px "IBM Plex Mono", monospace', bg: 'rgba(17,21,24,.88)', round: 10, pad: 16 });
+    if (p.lbl && p.lbl.parent) p.lbl.parent.remove(p.lbl);
+    p.lbl = makeLabel(p.ref, { parent: p.head ? headG : clampG, h: p.head ? 0.27 : 0.21, font: '500 40px "IBM Plex Mono", monospace', bg: 'rgba(17,21,24,.88)', round: 10, pad: 16 });
     p.lbl.visible = false;
   });
 }
@@ -1133,7 +1553,7 @@ scene.add(trail);
 
 /* ================= Vue éclatée : disposition le long de l'axe, comme le dessin ================= */
 // Ordre de l'arrière (vérin) vers l'avant (mâchoires), depuis le bâti vers l'extérieur.
-const REAR_SEQ = ['5041022', 'NC500', '5035018', '5035016', '3506909', 'B500-4500', 'UM-070-608A', 'W500', 'B500-1500', '3506928', '5035017', '5035015', '3506908', '5222624', '5000199', '3506882', '5054078', '3506879', '3506881'];
+const REAR_SEQ = ['5041022', 'NC500', '5035018', '5035016', '3506909', 'B500-4500', '3506910', 'B500-1500', '3506928', '5035017', '5035015', '3506908', '5222624', '5000199', '3506882', '5054078', '3506879', '3506881'];
 const FRONT_SEQ = ['3506880', '5040192', '5200517', '2920390', '3506878', 'B500-6500', 'B500-8000', '3506906', 'B500-2250', '3506907', 'B750-1500'];
 const EX_GAP = 0.7;   // po entre deux pièces éclatées
 let EX_MIN = 0, EX_MAX = 0;
@@ -1168,6 +1588,7 @@ function applyExplode(e) {
   clampG.position.set(-u((EX_MIN + EX_MAX) / 2) * k, 5.2 * k, 0);
   const showRows = k > 0.02;
   for (const p of PARTS) {
+    if (p.head) continue;
     if (p.opt) {
       p.objs.forEach(o => { o.position.copy(p.row); o.position.y -= u(p.len / 2); setOpacity(o, k); });
       continue;
@@ -1188,8 +1609,8 @@ function applyExplode(e) {
   if (k > 0) springMeshes.forEach(m => { m.scale.y = lerp(m.scale.y, LC + travel(), k); });
   // Repères
   for (const p of PARTS) {
-    if (!p.lbl) continue;
-    const show = (k > 0.85 && !(selected && selected !== p)) || selected === p;
+    if (!p.lbl || p.head) continue;
+    const show = (k > 0.85 && !(selected && selected !== p)) || (selected === p && hexE === 0);
     p.lbl.visible = show;
     if (!show) continue;
     p.lbl.material.opacity = k > 0.85 ? (k - 0.85) / 0.15 : 1;
@@ -1205,24 +1626,69 @@ function applyExplode(e) {
     }
     p.lbl.position.copy(partLblPos);
   }
-  for (const o of [worker, consoleG, pallet, stand, zone, trail, wrench, activeRing]) o.visible = o.visible && k < 0.05;
+  for (const o of [worker, consoleG, pallet, stand, zone, trail, wrench, activeRing, headG, carriage]) o.visible = o.visible && k < 0.05;
   if (labels) for (const arr of Object.values(labels)) for (const s of arr) if (s && k > 0.02) s.visible = false;
   return showRows;
+}
+
+/* ================= Tête éclatée : chaque pièce s'écarte selon son décalage hx (po) ================= */
+let hexE = 0, hexTarget = 0;
+const hPos = new THREE.Vector3(), hBox = new THREE.Box3();
+function headCenters() {
+  headG.updateMatrixWorld(true);
+  for (const p of PARTS) {
+    if (!p.head) continue;
+    hBox.makeEmpty(); p.objs.forEach(o => hBox.expandByObject(o));
+    p.hc = hBox.getCenter(new THREE.Vector3());
+    p.hr = hBox.getSize(new THREE.Vector3()).length() / 2;
+  }
+}
+function applyHeadExplode(h) {
+  const k = ease(h);
+  if (explodeE === 0) clampG.position.set(0, u(30) * k, 0);
+  for (const p of PARTS) {
+    if (!p.head) continue;
+    const [dx, dy, dz] = p.hx || [0, 0, 0];
+    p.objs.forEach(o => {
+      if (!o.userData.hbase) o.userData.hbase = o.position.clone();
+      o.position.set(o.userData.hbase.x + u(dx) * k, o.userData.hbase.y + u(dy) * k, o.userData.hbase.z + u(dz) * k);
+    });
+    if (!p.lbl) continue;
+    // Quincaillerie, boyaux et raccords : étiquette seulement quand la pièce est sélectionnée.
+    const minor = /^(B\d|W\d|SHC|SS\d|NC\d)/.test(p.id) || / approximati/.test(p.note || '');
+    const show = (k > 0.85 && !selected && !minor) || (selected === p && explodeE === 0);
+    p.lbl.visible = show;
+    if (!show || !p.hc) continue;
+    p.lbl.material.opacity = 1;
+    p.lbl.position.set(p.hc.x + u(dx) * k, p.hc.y + u(dy) * k + Math.min(.6, p.hr * .6 + .2), p.hc.z + u(dz) * k + .3);
+  }
+  if (k > 0.05) for (const o of [worker, consoleG, zone, trail, wrench, activeRing, carriage]) o.visible = false;
+  if (labels && k > 0.02) for (const arr of Object.values(labels)) for (const sp of arr) if (sp) sp.visible = false;
 }
 
 /* ================= Sélection d'une pièce et vue en coupe ================= */
 const CUT = new THREE.Plane(new THREE.Vector3(0, 0, -1), 0);   // garde la moitié arrière (z ≤ 0)
 let cutOn = true, selected = null;
 const ghostMat = new THREE.MeshStandardMaterial({ color: 0x9aa4ab, transparent: true, opacity: 0.12, depthWrite: false, roughness: 1 });
+// La tête garde ses propres matériaux : la coupe ne tranche que le mandrin.
+const headMats = new Set(), ghostHead = ghostMat.clone();
+{
+  const own = new Map();
+  const f = m => { if (!own.has(m)) { const c = m.clone(); own.set(m, c); headMats.add(c); } return own.get(m); };
+  headG.traverse(o => { if (o.isMesh) o.material = Array.isArray(o.material) ? o.material.map(f) : f(o.material); });
+}
+const inHead = o => { for (; o; o = o.parent) if (o === headG) return true; return false; };
 const hiCache = new Map();
 function hiMat(m) {
+  if (Array.isArray(m)) return m.map(hiMat);
   if (!hiCache.has(m)) { const h = m.clone(); h.emissive = new THREE.Color(0xf2c230); h.emissiveIntensity = 0.45; h.transparent = false; h.opacity = 1; hiCache.set(m, h); }
   return hiCache.get(m);
 }
 function clampMaterials() {
-  const set = new Set([ghostMat, ...hiCache.values()]);
-  clampG.traverse(o => { if (o.isMesh) { set.add(o.material); if (o.userData.orig) set.add(o.userData.orig); } });
-  PARTS.forEach(p => p.objs.forEach(o => (o.userData.mats || []).forEach(m => set.add(m))));
+  const set = new Set([ghostMat, ...[...hiCache].filter(([k]) => !headMats.has(k)).map(([, h]) => h)]);
+  const add = m => { if (Array.isArray(m)) m.forEach(add); else if (m) set.add(m); };
+  clampG.traverse(o => { if (o.isMesh) { add(o.material); add(o.userData.orig); } });
+  PARTS.forEach(p => { if (!p.head) p.objs.forEach(o => (o.userData.mats || []).forEach(add)); });
   springMeshes.forEach(m => set.add(m.material));
   return set;
 }
@@ -1238,11 +1704,11 @@ function applyCut() {
 }
 function select(p) {
   selected = p || null;
-  clampG.traverse(m => {
+  for (const [g, ghost] of [[clampG, ghostMat], [headG, ghostHead]]) g.traverse(m => {
     if (!m.isMesh) return;
     if (!m.userData.orig) m.userData.orig = m.material;
     if (!selected) { m.material = m.userData.orig; return; }
-    m.material = m.userData.part === selected ? hiMat(m.userData.orig) : ghostMat;
+    m.material = m.userData.part === selected ? hiMat(m.userData.orig) : ghost;
   });
   applyCut();
   renderCard();
@@ -1478,7 +1944,7 @@ function groundAt(x, z) {
   const r = Math.hypot(x, z);
   if (r < u(R.rimIn)) return PLATE_TOP0 + travel();          // retombe sur les ressorts détendus
   if (r < u(R.body) + 0.3) return u(Y.rimT) + PLATE_T;        // sur le rebord du bâti
-  if (Math.abs(x) < 2.9 && Math.abs(z) < 2.8) return BOWL_DEPTH; // debout sur la palette
+  if (x > u(HB.x0) && x < u(HB.x1) && Math.abs(z) < u(HB.z1)) return u(HB.y1) + BOWL_DEPTH; // sur la boîte de la tête
   return FLOOR + BOWL_DEPTH;
 }
 function computeFlight(S0, step) {
@@ -1615,7 +2081,7 @@ function stateAt(t) {
 
 /* ================= Application de l'état à la scène ================= */
 const tmpQ = new THREE.Quaternion(), tmpQ2 = new THREE.Quaternion(), tmpV = new THREE.Vector3();
-const PLATE_BASE = new THREE.Vector3(), PLATE_REST = new THREE.Vector3(-6.6, FLOOR + BOWL_DEPTH, -2.4);
+const PLATE_BASE = new THREE.Vector3(), PLATE_REST = new THREE.Vector3(-8.2, FLOOR + BOWL_DEPTH, 3.6);
 function movePart(obj, base, rest, p, up = 1.8) {
   const yTop = base.y + up;
   const a = seg(p, 0, .3), b = seg(p, .3, .75), c = seg(p, .75, 1);
@@ -1740,9 +2206,9 @@ function applyScene(S) {
   let knock = 0;
   if (fl && S.flight.impact) knock = ease(seg(S.launchT, S.flight.impact.t, S.flight.impact.t + 0.25));
   if (S.catchD) knock = 0.25 * ease(seg(S.catchP, CATCH_HIT, CATCH_HIT + .12));
-  worker.rotation.z = -0.38 * knock;
+  worker.rotation.z = -0.22 * knock;
   worker.visible = document.getElementById('optWorker').checked;
-  pallet.visible = stand.visible = consoleG.visible = true;
+  pallet.visible = stand.visible = consoleG.visible = headG.visible = carriage.visible = true;
 
   // Trajectoire
   if (fl) {
@@ -1760,11 +2226,12 @@ function applyScene(S) {
 
 /* ================= Caméra ================= */
 const CAMS = {
-  intro: { p: [-10, 10.5, 14], t: [-0.8, 3.4, -1.4] },
-  overview: { p: [-9.5, 9.8, 12.5], t: [-0.3, 3.1, 0.3] },
+  intro: { p: [-17, 9.5, 19], t: [-4.5, 0.5, -1.5] },
+  overview: { p: [-13, 9.5, 16], t: [-1.8, 1.4, 0.3] },
   top: { p: [-1.8, 12.8, 5.8], t: [0, 3.7, 0] },
   bolts: { p: [-3.4, 8.9, 6.6], t: [0.3, 3.9, 0] },
-  wide: { p: [-12.5, 11.5, 19.5], t: [0.8, 5.0, 0] },
+  wide: { p: [-15, 11.5, 22], t: [-0.5, 3.0, 0] },
+  hexplode: { p: [-16.1, 13.1, 32.1], t: [-2.2, 3.6, 2.5] },
   catch: { p: [-8.2, 9.4, 11.2], t: [0.6, 4.5, 0] },
   explode: { p: [-10, 14.5, 26.5], t: [-0.6, 4.6, 0] },
 };
@@ -1775,7 +2242,7 @@ camera.position.set(...CAMS.intro.p); controls.target.set(...CAMS.intro.t);
 const goalP = new THREE.Vector3(), goalT = new THREE.Vector3();
 function updateCamera(dt) {
   if (!autoCam) return;
-  const g = explodeTarget ? CAMS.explode : camGoal;
+  const g = explodeTarget ? CAMS.explode : hexTarget ? CAMS.hexplode : camGoal;
   goalP.set(...g.p); goalT.set(...g.t);
   const aspect = camera.aspect;
   if (aspect < 1.1) goalP.sub(goalT).multiplyScalar(1 + (1.1 - aspect) * 0.9).add(goalT);
@@ -1823,7 +2290,7 @@ function setPlaying(v) {
   $('bPlay').setAttribute('aria-label', v ? 'Pause' : 'Lecture');
   $('playIcon').innerHTML = v ? '<path d="M3 2h4v12H3zM9 2h4v12H9z"/>' : '<path d="M4 2l10 6-10 6z"/>';
 }
-$('bPlay').addEventListener('click', () => { if (explodeTarget) setExplode(false); if (!playing && T >= total - 1e-3) T = 0; setPlaying(!playing); });
+$('bPlay').addEventListener('click', () => { if (explodeTarget) setExplode(false); if (hexTarget) setHeadExplode(false); if (!playing && T >= total - 1e-3) T = 0; setPlaying(!playing); });
 $('bRestart').addEventListener('click', () => { T = 0; setPlaying(false); autoCam = true; $('camChip').hidden = true; });
 $('bPrev').addEventListener('click', () => { const { i, p } = locate(T); T = starts[p < 0.05 && i > 0 ? i - 1 : i]; setPlaying(false); });
 $('bNext').addEventListener('click', () => { const { i } = locate(T); T = i < steps.length - 1 ? starts[i + 1] : total - 1e-3; setPlaying(false); });
@@ -1876,9 +2343,17 @@ function updateUI(S, force) {
     $('capTitle').textContent = 'Vue éclatée : mandrin Boyles H (UM-070-142AA)';
     $('capTag').hidden = true;
     $('dock').dataset.tone = 'ok';
-    $('capText').textContent = 'Toutes les pièces de la liste, dans l\'ordre d\'assemblage : clés, roulement et vérin à gauche, capuchons avant à droite. Au-dessus : l\'adaptateur 3506910 (option tête UM-012) et les bagues de guidage UM-021-06. En dessous : les 4 jeux de mâchoires et l\'anneau WH-500. Cliquez une pièce pour l\'identifier ; « Lecture » revient à l\'animation.';
+    $('capText').textContent = 'Toutes les pièces de la liste, dans l\'ordre d\'assemblage : clés, roulement et vérin à gauche, capuchons avant à droite. Au-dessus : l\'adaptateur UM-070-608A (option, tête UM-070) et les bagues de guidage UM-021-06. En dessous : les 4 jeux de mâchoires et l\'anneau WH-500. Cliquez une pièce pour l\'identifier ; « Lecture » revient à l\'animation.';
   }
-  if (!explodeTarget && S.i !== lastStep) {
+  if (hexTarget && lastStep !== 'h') {
+    lastStep = 'h';
+    $('capNum').textContent = '⊕';
+    $('capTitle').textContent = 'Tête éclatée : tête de forage Boyles UM-012-100UG';
+    $('capTag').hidden = true;
+    $('dock').dataset.tone = 'ok';
+    $('capText').textContent = 'Les pièces de la tête s\'écartent de la boîte : broche et nez de broche vers le bas, transmission et moteur vers le haut, pignons et chaîne triple vers l\'avant, couvercle et boyaux devant. Le mandrin monte d\'un bloc. Cliquez une pièce pour l\'identifier ; « Lecture » revient à l\'animation.';
+  }
+  if (!explodeTarget && !hexTarget && S.i !== lastStep) {
     lastStep = S.i;
     $('capNum').textContent = s.n;
     $('capTitle').textContent = s.title;
@@ -1976,7 +2451,7 @@ function summaryText(ev) {
 }
 
 /* ================= Nomenclature, fiche de pièce, vues ================= */
-const GRP = { rear: 'Arrière : vérin, roulement, adaptateur', body: 'Boîtier', front: 'Avant : ressorts, cône, boulons, couvercles, mâchoires', opt: 'Options : adaptateur tête UM-012, autres mâchoires, bagues de guidage' };
+const GRP = { hbox: 'Tête : boîte et couvercle', hspindle: 'Tête : broche, roulements, joints', hdrive: 'Tête : entraînement (pignons, chaîne, transmission, moteur)', hlube: 'Tête : lubrification (pompe, filtre, boyaux, raccords)', hmount: 'Tête : montage sur la foreuse', rear: 'Mandrin : arrière (vérin, roulement, adaptateur)', body: 'Mandrin : boîtier', front: 'Mandrin : avant (ressorts, cône, boulons, couvercles, mâchoires)', opt: 'Mandrin : options (adaptateur UM-070, autres mâchoires, bagues de guidage)' };
 const qtyOf = p => p.qty === 'n' ? P.n : p.qty;
 function renderBOM() {
   const el = $('bomList'); el.innerHTML = '';
@@ -2013,7 +2488,17 @@ function renderCard() {
 }
 let cutBeforeExplode = null;
 function setCut(v) { cutOn = v; $('btnCut').setAttribute('aria-pressed', String(cutOn)); applyCut(); }
+function setHeadExplode(on) {
+  if (on && explodeTarget) setExplode(false);
+  hexTarget = on ? 1 : 0;
+  $('btnHeadExplode').setAttribute('aria-pressed', String(on));
+  if (on) setPlaying(false);
+  autoCam = true; $('camChip').hidden = true;
+  lastStep = -1;
+}
+$('btnHeadExplode').addEventListener('click', () => setHeadExplode(!hexTarget));
 function setExplode(on) {
+  if (on && hexTarget) setHeadExplode(false);
   if (on && !explodeTarget) { cutBeforeExplode = cutOn; if (cutOn) setCut(false); }
   if (!on && explodeTarget && cutBeforeExplode !== null) { setCut(cutBeforeExplode); cutBeforeExplode = null; }
   explodeTarget = on ? 1 : 0;
@@ -2040,10 +2525,10 @@ canvas.addEventListener('pointerup', e => {
   const r = canvas.getBoundingClientRect();
   ptr.set((e.clientX - r.left) / r.width * 2 - 1, -(e.clientY - r.top) / r.height * 2 + 1);
   ray.setFromCamera(ptr, camera);
-  const hits = ray.intersectObjects(clampG.children, true).filter(h => {
-    if (cutOn && h.point.z > 0.002) return false;
+  const hits = ray.intersectObjects([...clampG.children, ...headG.children], true).filter(h => {
+    if (cutOn && h.point.z > 0.002 && !inHead(h.object)) return false;
     let o = h.object; while (o) { if (!o.visible) return false; o = o.parent; }
-    return h.object.isMesh && h.object.userData.part && h.object.material !== ghostMat;
+    return h.object.isMesh && h.object.userData.part && h.object.material !== ghostMat && h.object.material !== ghostHead;
   });
   select(hits.length ? hits[0].object.userData.part : null);
 });
@@ -2081,9 +2566,11 @@ function frame(now) {
     if (T >= total) { T = total - 1e-3; setPlaying(false); }
   }
   explodeE = reduceMotion ? explodeTarget : explodeE + Math.sign(explodeTarget - explodeE) * Math.min(Math.abs(explodeTarget - explodeE), dt / 1.4);
-  const S = explodeE > 0 ? stateAt(0) : stateAt(T);
+  hexE = reduceMotion ? hexTarget : hexE + Math.sign(hexTarget - hexE) * Math.min(Math.abs(hexTarget - hexE), dt / 1.4);
+  const S = explodeE > 0 || hexE > 0 ? stateAt(0) : stateAt(T);
   applyScene(S);
   applyExplode(explodeE);
+  applyHeadExplode(hexE);
   updateUI(S);
   updateCamera(dt);
   controls.update();
@@ -2094,6 +2581,7 @@ function frame(now) {
 async function start() {
   try { await Promise.race([document.fonts.ready, new Promise(r => setTimeout(r, 1500))]); } catch (e) {}
   buildLabels();
+  headCenters();
   layoutExplode();
   renderBOM(); renderCard();
   applyCut();
@@ -2103,7 +2591,7 @@ async function start() {
   resize();
   const S = stateAt(T); applyScene(S); updateUI(S, true);
   requestAnimationFrame(frame);
-  window.__clam = { stateAt, steps: () => steps, starts: () => starts, total: () => total, setT: v => { T = v; }, P, setExplode, setCutUI: setCut, explodeNow: v => { setExplode(v); explodeE = v ? 1 : 0; }, select: id => select(byId(id)), PARTS, setCut: v => { cutOn = v; applyCut(); } };
+  window.__clam = { stateAt, steps: () => steps, starts: () => starts, total: () => total, setT: v => { T = v; }, P, setExplode, setHeadExplode, headExplodeNow: v => { setHeadExplode(v); hexE = v ? 1 : 0; }, setCutUI: setCut, explodeNow: v => { setExplode(v); explodeE = v ? 1 : 0; }, select: id => select(byId(id)), PARTS, setCut: v => { cutOn = v; applyCut(); } };
 }
 start();
 </script>
