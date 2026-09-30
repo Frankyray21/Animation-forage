@@ -851,7 +851,7 @@ class Helix extends THREE.Curve {
 }
 const springGeo = new THREE.TubeGeometry(new Helix(u(.43), 9), 520, u(.13), 8, false);   // fil épais, spires espacées : la compression se voit
 let springMeshes = [];
-const SPR_FREE = new THREE.Color(0x2f9e44), SPR_COMP = new THREE.Color(0xe0391c), SPR_COL = new THREE.Color();
+const SPR_FREE = new THREE.Color(0x2f9e44), SPR_GLOW = new THREE.Color(0x7dff6a);
 const springGroup = new THREE.Group();
 clampG.add(springGroup);
 const springPart = part({ id: '5200517', ref: '5200517', name: 'Ressort', qty: 'n', grp: 'front', ext: [Y.pocket, Y.plateB], r: 5.4, anim: true, role: 'Logés dans le boîtier, ils poussent le bol vers l\'avant pour serrer les mâchoires. C\'est eux qui emmagasinent l\'énergie.' }, []);
@@ -1682,7 +1682,7 @@ function buildLabels() {
   labels = {
     nums: BOLTS.map(b => b.num ? makeLabel(String(b.num), { font: '700 46px "Barlow Condensed", sans-serif', h: 0.4, bg: '#f2c230', fg: '#111518', round: 32, parent: rig }) : null),
     ret: BUSHED.map(() => makeLabel('R', { font: '700 46px "Barlow Condensed", sans-serif', h: 0.4, bg: '#2c7a4c', round: 32, parent: rig })),
-    springsC: [makeLabel('Ressorts 5200517 comprimés', { bg: '#c0392b', h: 0.32, parent: rig })],
+    springsC: [makeLabel('Ressorts 5200517 comprimés', { bg: '#1f7a34', h: 0.32, parent: rig })],
     springsF: [makeLabel('Ressorts 5200517 détendus', { bg: '#2c7a4c', h: 0.32, parent: rig })],
     stuck: [makeLabel('Cône (bol) coincé : ressorts toujours comprimés', { bg: '#c42b1f', h: 0.32, parent: rig })],
     open: [makeLabel('Manettes ouvertes', { h: 0.32 })],
@@ -2442,11 +2442,11 @@ function applyScene(S) {
     m.position.set(s.x, POCKET, s.z); m.rotation.set(0, 0, 0);
     const compVis = D.comp[j] / 1000 / U * X;
     m.scale.set(1, Math.max(0.3, LC + t - compVis), 1);
-    // couleur selon la compression : vert = détendu, rouge = comprimé
-    const c = clamp01(D.comp[j] / Math.max(.01, P.x0));
-    SPR_COL.copy(SPR_FREE).lerp(SPR_COMP, c);
-    if (!selected) { m.material.color.copy(SPR_COL); m.material.emissive.copy(SPR_COL).multiplyScalar(.35 * c); }
-    m.userData.xr.material.color.copy(SPR_COL);
+    // ressorts verts (couleur réelle) ; tant qu'ils sont comprimés, ils pulsent en vert vif (énergie stockée)
+    const c = clamp01(D.comp[j] / Math.max(.01, P.x0)), pulse = c * (.55 + .45 * Math.sin(performance.now() / 260));
+    if (!selected) { m.material.color.copy(SPR_FREE); m.material.emissive.copy(SPR_GLOW).multiplyScalar(.9 * pulse); }
+    m.userData.xr.material.color.copy(SPR_FREE).lerp(SPR_GLOW, pulse);
+    m.userData.xr.material.opacity = .35 + .4 * pulse;
     m.userData.xr.visible = cutOn && explodeE === 0 && hexE === 0 && !selected;
   });
 
