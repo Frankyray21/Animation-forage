@@ -71,8 +71,9 @@ button, input, select { font: inherit; color: inherit; }
 .chip-row .spacer { flex: 1; }
 .chip button { border: 0; background: none; padding: 0; cursor: pointer; font-size: 12px; font-weight: 500; }
 .note { position: absolute; left: 12px; bottom: 10px; font-family: var(--mono); font-size: 11px; color: var(--muted); background: color-mix(in srgb, var(--scene) 80%, transparent); padding: 2px 6px; border-radius: 4px; pointer-events: none; }
-.flash { position: absolute; inset: 0; pointer-events: none; background: radial-gradient(ellipse at center, transparent 35%, var(--danger) 120%); opacity: 0; }
+.flash { position: absolute; inset: 0; pointer-events: none; background: radial-gradient(ellipse at center, transparent 35%, var(--flash, var(--danger)) 120%); opacity: 0; }
 .banner { position: absolute; left: 50%; top: 56px; transform: translateX(-50%); pointer-events: none; text-align: center; font-family: var(--display); color: #fff; background: var(--danger); padding: 8px 18px 10px; border-radius: 6px; box-shadow: 0 8px 30px rgba(0,0,0,.25); max-width: calc(100% - 32px); }
+.banner[data-tone="ok"] { background: var(--ok); }
 .banner strong { display: block; font-size: clamp(26px, 4vw, 40px); letter-spacing: .06em; line-height: 1.05; }
 .banner span { font-family: var(--mono); font-size: 13px; }
 
@@ -117,6 +118,7 @@ button, input, select { font: inherit; color: inherit; }
 .scen button[aria-selected="true"] { border-color: var(--ink); box-shadow: inset 0 0 0 1px var(--ink); }
 .scen .sw { grid-row: span 2; width: 12px; height: 12px; border-radius: 3px; margin-top: 4px; background: var(--ok); }
 .scen button[data-tone="danger"] .sw { background: var(--danger); }
+.scen button[data-tone="warn"] .sw { background: var(--warn); }
 .scen b { font-weight: 600; }
 .scen small { color: var(--muted); font-size: 13px; }
 
@@ -175,6 +177,25 @@ details.params summary { cursor: pointer; padding: 10px 14px; font-weight: 600; 
 .remontage { font-size: 13.5px; }
 .remontage ul { margin: 0; padding-left: 18px; display: grid; gap: 4px; }
 .remontage b { font-family: var(--mono); font-weight: 500; }
+.vbtn { pointer-events: auto; border: 1px solid var(--line); background: var(--panel); border-radius: 999px; padding: 4px 11px; font-size: 12px; font-weight: 600; cursor: pointer; }
+.vbtn[aria-pressed="true"] { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+.units { display: inline-flex; border: 1px solid var(--line); border-radius: 6px; overflow: hidden; margin-left: auto; }
+.units button { border: 0; background: none; padding: 2px 9px; font-size: 12px; font-weight: 600; cursor: pointer; color: var(--muted); }
+.units button[aria-pressed="true"] { background: var(--ink); color: var(--bg); }
+.alt { font-family: var(--mono); font-size: 13px; color: var(--muted); }
+.card { border: 1px solid var(--line); border-radius: 8px; background: var(--panel); padding: 12px 14px; display: grid; gap: 6px; }
+.card .ref { font-family: var(--mono); font-size: 13px; color: var(--muted); }
+.card h4 { margin: 0; font-family: var(--display); font-size: 22px; font-weight: 600; line-height: 1.1; }
+.card p { margin: 0; font-size: 13.5px; }
+.card .meta { font-size: 12.5px; color: var(--muted); }
+.card button { justify-self: start; border: 1px solid var(--line); background: var(--bg); border-radius: 6px; padding: 4px 10px; cursor: pointer; font-size: 13px; }
+.bom h5 { margin: 12px 0 4px; font-size: 12px; font-weight: 600; letter-spacing: .05em; text-transform: uppercase; color: var(--muted); }
+.bom h5:first-of-type { margin-top: 0; }
+.bom-row { width: 100%; display: grid; grid-template-columns: minmax(0, 9.5em) minmax(0, 1fr) 3.2em; gap: 8px; align-items: baseline; text-align: left; border: 0; background: none; padding: 4px 6px; border-radius: 5px; cursor: pointer; font-size: 13px; }
+.bom-row:hover { background: var(--shade); }
+.bom-row[aria-pressed="true"] { background: var(--shade); box-shadow: inset 3px 0 0 var(--accent); }
+.bom-row .r { font-family: var(--mono); font-size: 12px; overflow-wrap: anywhere; }
+.bom-row .q { font-family: var(--mono); font-size: 12px; color: var(--muted); text-align: right; }
 .src { font-size: 12px; color: var(--muted); margin: 0; border-top: 1px solid var(--line); padding-top: 12px; }
 
 @media (prefers-reduced-motion: reduce) { .dock::before { transition: none; } }
@@ -190,6 +211,8 @@ details.params summary { cursor: pointer; padding: 10px 14px; font-weight: 600; 
         <span class="chip" id="scenChip" data-tone="ok"><span class="dot"></span><span id="scenChipText">Procédure respectée</span></span>
         <span class="spacer"></span>
         <span class="chip" id="camChip" hidden><button type="button" id="camBtn">Recentrer la caméra</button></span>
+        <button type="button" class="vbtn" id="btnCut" aria-pressed="true">Coupe</button>
+        <button type="button" class="vbtn" id="btnExplode" aria-pressed="false">Vue éclatée</button>
       </div>
       <div class="banner" id="banner" hidden><strong id="bannerTitle">PROJECTION</strong><span id="bannerSub"></span></div>
       <div class="note" id="note">Course des ressorts affichée ×6</div>
@@ -222,7 +245,7 @@ details.params summary { cursor: pointer; padding: 10px 14px; font-weight: 600; 
     <header class="brand">
       <p class="eyebrow">PRO-OP-DD-005 · Clam / chuck de foreuse</p>
       <h1>Clam sous tension</h1>
-      <p class="lede">Les ressorts du clam restent comprimés tant que le cône est boulonné. La séquence de démontage sert à libérer cette énergie lentement.</p>
+      <p class="lede">Les ressorts 5200517 du clam restent comprimés tant que le cône 2920390 est boulonné. La séquence de démontage sert à libérer cette énergie lentement.</p>
     </header>
 
     <section>
@@ -231,7 +254,10 @@ details.params summary { cursor: pointer; padding: 10px 14px; font-weight: 600; 
     </section>
 
     <section class="readout" aria-label="Énergie des ressorts">
-      <div class="big"><span class="num" id="eNum">48</span><span class="unit">J</span><span class="state" id="eState">Stockée</span></div>
+      <div class="big"><span class="num" id="eNum">48</span><span class="unit" id="eUnit">J</span><span class="alt" id="eAlt">= 36 pi·lb</span>
+        <div class="units" role="group" aria-label="Unités"><button type="button" data-u="SI" aria-pressed="true">SI</button><button type="button" data-u="IMP" aria-pressed="false">Impérial</button></div>
+      </div>
+      <div class="big" style="margin-top:-6px"><span class="state" id="eState" style="margin-left:0">Stockée</span></div>
       <div class="meter" id="eMeter"><i id="eFill"></i></div>
       <dl class="kv">
         <div><dt>Force des ressorts</dt><dd id="kvF">15,2 kN</dd></div>
@@ -247,19 +273,25 @@ details.params summary { cursor: pointer; padding: 10px 14px; font-weight: 600; 
     </section>
 
     <section class="bolts">
-      <h3 class="sec-title">Boulons ½ du cône</h3>
+      <h3 class="sec-title">Boulons ½ du cône 2920390</h3>
       <div class="grid" id="boltGrid"></div>
-      <p class="hint">Numéros 1 à 6 : ordre de dévissage de la procédure. R : boulons avec bushing, remis sans bushing comme retenue.</p>
+      <p class="hint">1 à 6 : B500-6500 (½ × 6 ½ po), dans l'ordre de dévissage de la procédure. R : B500-8000 (½ × 8 po) avec bushing 3506878, remis sans bushing comme retenue.</p>
+    </section>
+
+    <section class="bom" id="bomSec">
+      <h3 class="sec-title">Nomenclature UM-079-100AA 12 HH</h3>
+      <div class="card" id="partCard"></div>
+      <div id="bomList" style="margin-top:10px"></div>
     </section>
 
     <details class="params">
       <summary>Paramètres des ressorts</summary>
       <div class="pgrid">
-        <p class="fine">Valeurs indicatives pour la démonstration. Remplacez-les par les données du fabricant du clam pour un calcul réel.</p>
-        <label for="pN">Nombre de ressorts <output id="oN">12</output><input type="range" id="pN" min="6" max="24" step="1" value="12"></label>
+        <p class="fine">Valeurs indicatives. Pour un calcul réel, entrez la raideur et la compression du ressort 5200517 (fiche du fabricant) et la masse réelle du cône 2920390 avec ses mâchoires. La masse par défaut (16 kg) est celle du modèle 3D en acier.</p>
+        <label for="pN">Nombre de ressorts <output id="oN">12</output><input type="range" id="pN" min="6" max="18" step="1" value="12"></label>
         <label for="pK">Raideur par ressort <output id="oK">200 N/mm</output><input type="range" id="pK" min="50" max="600" step="10" value="200"></label>
         <label for="pX">Compression à libérer <output id="oX">6,35 mm (¼ po)</output><input type="range" id="pX" min="2" max="15" step="0.05" value="6.35"></label>
-        <label for="pM">Masse du cône projeté <output id="oM">12 kg</output><input type="range" id="pM" min="3" max="40" step="1" value="12"></label>
+        <label for="pM">Masse du cône projeté <output id="oM">16 kg</output><input type="range" id="pM" min="3" max="40" step="1" value="16"></label>
         <button type="button" class="reset" id="pReset">Valeurs par défaut</button>
       </div>
     </details>
@@ -274,7 +306,7 @@ details.params summary { cursor: pointer; padding: 10px 14px; font-weight: 600; 
       </ul>
     </section>
 
-    <p class="src">Source : procédure PRO-OP-DD-005, <i>Démonter et remonter un clam et un chuck (mandrin) sur la foreuse</i>, révision mai 2021. Modèle 3D simplifié, inspiré de la vue éclatée du clam UM-079. Les forces, énergies et trajectoires sont des estimations physiques simples, à des fins de formation.</p>
+    <p class="src">Sources : procédure PRO-OP-DD-005, <i>Démonter et remonter un clam et un chuck (mandrin) sur la foreuse</i>, révision mai 2021, et vue éclatée « Explosed rod clamp 12 HH » (UM-079, Usinage Marcotte). Toutes les pièces numérotées du dessin sont modélisées. Le dessin n'est pas à l'échelle : les cotes sont estimées d'après ses proportions, et les pièces marquées « à confirmer » ont une fonction ou un emplacement déduits. Les forces, énergies et trajectoires sont des estimations physiques simples, à des fins de formation.</p>
   </aside>
 </div>
 
@@ -297,19 +329,39 @@ const PITCH = 25.4 / 13;       // pas d'un boulon ½-13 UNC (mm/tour)
 const ENG = 13;                // tours pour sortir complètement un boulon (≈ 1 po d'engagement)
 const G = 9.81 / U;            // gravité en unités/s²
 const SPRING_MASS = 0.3;       // kg, pour l'éjection des ressorts
-const DEFAULTS = { n: 12, k: 200, x0: 6.35, m: 12 };
+const DEFAULTS = { n: 12, k: 200, x0: 6.35, m: 16 };   // m : cône + mâchoires du modèle, acier (≈ 16 kg)
 const P = { ...DEFAULTS };
 
+/* Cotes du clam UM-079-100AA 12 HH, en pouces. Le dessin est « N.T.S. » (pas à l'échelle) :
+   les cotes sont estimées d'après ses proportions et rendues cohérentes entre elles
+   (ex. B500-8000 = B500-6500 + bushing 3506878 de 1 ½ po). Le clam est debout, l'avant (mâchoires) en haut. */
+const IN = 0.254;                   // 1 po en unités de scène
+const u = v => v * IN;
+const Y = {
+  stand: 4.0,
+  ringB: 3.4, capB: 4.0, capT: 5.0, cylT: 8.5, pistonB: 6.5,
+  bodyRear: 8.5, face: 12.3, pocket: 10.8, rimT: 16.0,
+  plateB: 13.1, plateT: 14.1, hubT: 16.95,
+  coverT: 17.0, jcT: 17.8,
+};
+const R = {
+  body: 6.0, rimIn: 5.4, bore: 2.4, nose: 2.9, cylIn: 5.0, capIn: 2.5,
+  ringIn: 2.5, ringOut: 3.2,
+  plate: 5.3, hub: 3.4, bowlB: 2.9, bowlT: 2.6,
+  bolt: 3.95, spring: 4.85, coverBolt: 5.7, coverIn: 3.9, jcBolt: 4.4, jcOut: 5.0, jcIn: 2.2,
+  capBolt: 5.6, shcs: 5.5, stand: 4.4, standIn: 3.75, jawIn: 1.8,
+};
+
 const FLOOR = -1.4;
-const BODY_TOP = 2.2;
-const POCKET = 1.75;           // fond des logements de ressorts
-const GAP = 0.28;              // espace visible entre bâti et cône (ressorts comprimés)
-const PLATE_T = 0.32;
-const PLATE_TOP0 = BODY_TOP + GAP + PLATE_T;   // 2,80
-const HUB_H = 0.5;
-const BUSH_H = 0.25;
+const BODY_TOP = u(Y.face);
+const POCKET = u(Y.pocket);         // fond des logements de ressorts
+const GAP = u(Y.plateB - Y.face);   // espace entre bâti et cône (ressorts comprimés)
+const PLATE_T = u(Y.plateT - Y.plateB);
+const PLATE_TOP0 = u(Y.plateT);
+const HUB_H = u(Y.hubT - Y.plateT);
+const BUSH_H = u(1.5);              // bushing 3506878
 const LC = PLATE_TOP0 - PLATE_T - POCKET;      // longueur comprimée visible des ressorts
-const R_BOLT = 1.18, R_SPRING = 1.42, R_COVER_BOLT = 1.79, R_JC_BOLT = 0.8;
+const R_BOLT = u(R.bolt), R_SPRING = u(R.spring), R_COVER_BOLT = u(R.coverBolt), R_JC_BOLT = u(R.jcBolt);
 
 const pv = () => PITCH / 1000 / U * X;          // montée visuelle par tour
 const travel = () => P.x0 / 1000 / U * X;       // course visuelle totale
@@ -331,8 +383,16 @@ const byNum = n => BOLTS.find(b => b.num === n).i;
 
 let SPRINGS = [];
 function layoutSprings() {
+  // décalage angulaire qui éloigne le plus les ressorts des 9 boulons du cône (à 40° d'intervalle)
+  const step = 360 / P.n;
+  let best = 0, bestD = -1;
+  for (let off = 0; off < step; off += 0.5) {
+    let d = 1e9;
+    for (let j = 0; j < P.n; j++) { const a = (j * step + off) % 40; d = Math.min(d, a, 40 - a); }
+    if (d > bestD) { bestD = d; best = off; }
+  }
   SPRINGS = [...Array(P.n)].map((_, j) => {
-    const a = (j + 0.5) * 2 * Math.PI / P.n;
+    const a = (j * step + best) * Math.PI / 180;
     return { x: R_SPRING * Math.cos(a), z: -R_SPRING * Math.sin(a) };
   });
 }
@@ -344,6 +404,17 @@ const seg = (p, a, b) => clamp01((p - a) / (b - a));
 const ease = t => t < .5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
 const lerp = (a, b, t) => a + (b - a) * t;
 const fr = (v, d = 1) => v.toLocaleString('fr-CA', { minimumFractionDigits: d, maximumFractionDigits: d });
+/* Unités : SI (J, kN, mm, m/s) ou impériales (pi·lb, lbf, po, pi/s) */
+let UNITS = 'SI';
+try { UNITS = localStorage.getItem('clam-units') === 'IMP' ? 'IMP' : 'SI'; } catch (e) {}
+const OTHER = () => UNITS === 'SI' ? 'IMP' : 'SI';
+const fmtE = (J, un = UNITS) => { const v = un === 'SI' ? J : J * 0.737562; return [fr(v, v < 10 ? 1 : 0), un === 'SI' ? 'J' : 'pi·lb']; };
+const eS = (J, un = UNITS) => fmtE(J, un).join('\u00a0');
+const fS = (N, un = UNITS) => un === 'SI' ? `${fr(N / 1000)}\u00a0kN` : `${fr(N * 0.224809, 0)}\u00a0lbf`;
+const xS = (mm, un = UNITS) => un === 'SI' ? `${fr(mm, 2)}\u00a0mm` : `${fr(mm / 25.4, 3)}\u00a0po`;
+const vS = (ms, un = UNITS) => un === 'SI' ? `${fr(ms)}\u00a0m/s (${fr(ms * 3.6, 0)}\u00a0km/h)` : `${fr(ms * 3.28084)}\u00a0pi/s (${fr(ms * 2.23694, 0)}\u00a0mi/h)`;
+const hS = (m, un = UNITS) => un === 'SI' ? `${fr(m, 2)}\u00a0m` : `${fr(m * 39.3701, 1)}\u00a0po`;
+const mS = (kg, un = UNITS) => un === 'SI' ? `${fr(kg, 0)}\u00a0kg` : `${fr(kg * 2.20462, 0)}\u00a0lb`;
 const css = name => getComputedStyle(document.documentElement).getPropertyValue(name).trim();
 const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
 
@@ -411,6 +482,7 @@ const view = document.getElementById('view');
 const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, preserveDrawingBuffer: false });
 renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
 renderer.shadowMap.enabled = true;
+renderer.localClippingEnabled = true;
 renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 renderer.toneMapping = THREE.ACESFilmicToneMapping;
 renderer.toneMappingExposure = 1.0;
@@ -478,15 +550,117 @@ function annulus(rIn, rOut, h, holes = [], segs = 72) {
 }
 const ring = (n, r, off = 0) => [...Array(n)].map((_, i) => { const a = (i * 360 / n + off) * Math.PI / 180; return [r * Math.cos(a), -r * Math.sin(a)]; });
 
-function makeBolt({ headR, headH, shankR, shankL }, m) {
+/* ---------- Matériaux supplémentaires ---------- */
+Object.assign(mat, {
+  red: new THREE.MeshStandardMaterial({ color: 0xb8321f, roughness: .48, metalness: .12 }),
+  grey: new THREE.MeshStandardMaterial({ color: 0x8e979d, roughness: .35, metalness: .75 }),
+  machined: new THREE.MeshStandardMaterial({ color: 0xb9c0c5, roughness: .22, metalness: .9 }),
+  rubber: new THREE.MeshStandardMaterial({ color: 0x151617, roughness: .75 }),
+  boltBlack: new THREE.MeshStandardMaterial({ color: 0x2a2c2e, roughness: .4, metalness: .7 }),
+  brass: new THREE.MeshStandardMaterial({ color: 0xc8a24a, roughness: .3, metalness: .9 }),
+  sealRed: new THREE.MeshStandardMaterial({ color: 0x8a1c14, roughness: .6 }),
+});
+mat.spring.color.set(0x2456d0);
+
+/* ---------- Registre des pièces (nomenclature) ---------- */
+const clampG = new THREE.Group();   // tout le clam : pivote et s'éclate en vue éclatée
+scene.add(clampG);
+const PARTS = [];
+function part(def, objs) {
+  const p = { qtyEst: false, ...def, objs: [].concat(objs) };
+  p.objs.forEach(o => {
+    o.traverse(m => { m.userData.part = p; });
+    if (!o.parent) clampG.add(o);
+  });
+  PARTS.push(p);
+  return p;
+}
+const byId = id => PARTS.find(p => p.id === id);
+const polar = (r, deg) => { const a = deg * Math.PI / 180; return [r * Math.cos(a), -r * Math.sin(a)]; };
+const ringAt = (n, r, off = 0) => [...Array(n)].map((_, i) => polar(r, off + i * 360 / n));
+
+/* ---------- Aides géométriques (dimensions en pouces) ---------- */
+function annulusIn(rIn, rOut, h, holes = [], segs = 96) {
+  return annulus(u(rIn), u(rOut), u(h), holes.map(([x, z, r]) => [u(x), u(z), u(r)]), segs);
+}
+function placeIn(o, x, y, z) { o.position.set(u(x), u(y), u(z)); return o; }
+function oring(R, cs, m = mat.rubber) {
+  const o = mesh(new THREE.TorusGeometry(u(R), u(cs), 10, 96), m);
+  o.rotation.x = Math.PI / 2;
+  return o;
+}
+// Anneau à ouverture lobée (couvercle 3506906) : trou central de rayon rIn, encoches à rLobe aux angles donnés
+function lobedAnnulus(rIn, rLobe, rOut, h, holes, lobeDeg = [0, 120, 240], half = 9) {
+  const s = new THREE.Shape();
+  s.absarc(0, 0, u(rOut), 0, Math.PI * 2, false);
+  const hole = new THREE.Path();
+  const N = 240;
+  for (let i = 0; i <= N; i++) {
+    const a = -i / N * Math.PI * 2;
+    const deg = ((-a * 180 / Math.PI) % 360 + 360) % 360;
+    const d = Math.min(...lobeDeg.map(L => { const x = Math.abs(deg - L) % 360; return Math.min(x, 360 - x); }));
+    const r = d < half ? rLobe : d < half + 3 ? lerp(rLobe, rIn, (d - half) / 3) : rIn;
+    const x = u(r) * Math.cos(a), y = u(r) * Math.sin(a);
+    i ? hole.lineTo(x, y) : hole.moveTo(x, y);
+  }
+  s.holes.push(hole);
+  for (const [x, z, r] of holes) { const p = new THREE.Path(); p.absarc(u(x), -u(z), u(r), 0, Math.PI * 2, true); s.holes.push(p); }
+  const g = new THREE.ExtrudeGeometry(s, { depth: u(h), bevelEnabled: false, curveSegments: 64 });
+  g.rotateX(-Math.PI / 2);
+  return g;
+}
+// Segment de mâchoire : secteur annulaire, face extérieure conique (suit le bol du cône)
+function jawGeo(rIn, rOutB, rOutT, h, deg) {
+  const a = deg * Math.PI / 180, s = new THREE.Shape();
+  s.absarc(0, 0, u(rOutB), -a / 2, a / 2, false);
+  s.absarc(0, 0, u(rIn), a / 2, -a / 2, true);
+  s.closePath();
+  const g = new THREE.ExtrudeGeometry(s, { depth: u(h), bevelEnabled: false, curveSegments: 12 });
+  g.rotateX(-Math.PI / 2);
+  const pos = g.attributes.position, mid = u((rIn + rOutB) / 2);
+  for (let i = 0; i < pos.count; i++) {
+    const x = pos.getX(i), z = pos.getZ(i), y = pos.getY(i), r = Math.hypot(x, z);
+    if (r > mid) { const t = y / u(h), rr = u(lerp(rOutB, rOutT, t)); pos.setX(i, x / r * rr); pos.setZ(i, z / r * rr); }
+  }
+  g.computeVertexNormals();
+  return g;
+}
+// Texture de filetage (13 filets/po pour ½-13, 10 pour ¾-10…)
+const threadTexCache = new Map();
+function threadMat(base, lenIn, tpi) {
+  const key = `${base.uuid}|${lenIn}|${tpi}`;
+  if (threadTexCache.has(key)) return threadTexCache.get(key);
+  const c = document.createElement('canvas'); c.width = 4; c.height = 16;
+  const x = c.getContext('2d');
+  x.fillStyle = '#ffffff'; x.fillRect(0, 0, 4, 16);
+  x.fillStyle = '#6d6d6d'; x.fillRect(0, 0, 4, 6);
+  const t = new THREE.CanvasTexture(c);
+  t.wrapS = t.wrapT = THREE.RepeatWrapping; t.repeat.set(1, lenIn * tpi); t.colorSpace = THREE.SRGBColorSpace;
+  const m = base.clone(); m.map = t;
+  threadTexCache.set(key, m);
+  return m;
+}
+// Boulon (origine = face d'appui sous la tête ; tête vers +y, tige vers -y)
+function makeBolt({ af, headH, d, L, tpi = 13, socket = false, headD }, m = mat.bolt) {
   const g = new THREE.Group();
-  const head = mesh(new THREE.CylinderGeometry(headR, headR, headH, 6), m);
-  head.position.y = headH / 2;
-  const washer = mesh(new THREE.CylinderGeometry(headR * 1.08, headR * 1.08, 0.02, 24), m);
-  washer.position.y = 0.01;
-  const shank = mesh(new THREE.CylinderGeometry(shankR, shankR, shankL, 12), m);
-  shank.position.y = -shankL / 2;
-  g.add(head, washer, shank);
+  if (socket) {
+    const head = mesh(new THREE.CylinderGeometry(u(headD / 2), u(headD / 2), u(headH), 32), m);
+    head.position.y = u(headH / 2);
+    const sock = mesh(new THREE.CylinderGeometry(u(headD * .27), u(headD * .27), u(0.02), 6), mat.pocket);
+    sock.position.y = u(headH + 0.005);
+    g.add(head, sock);
+  } else {
+    const head = mesh(new THREE.CylinderGeometry(u(af / Math.sqrt(3)), u(af / Math.sqrt(3)), u(headH), 6), m);
+    head.position.y = u(headH / 2);
+    const cham = mesh(new THREE.CylinderGeometry(u(af * .42), u(af / Math.sqrt(3)), u(headH * .18), 24), m);
+    cham.position.y = u(headH * 1.09);
+    const washer = mesh(new THREE.CylinderGeometry(u(af * .5), u(af * .5), u(0.03), 32), m);
+    washer.position.y = u(0.015);
+    g.add(head, cham, washer);
+  }
+  const shank = mesh(new THREE.CylinderGeometry(u(d / 2), u(d / 2), u(L), 20), threadMat(m, L, tpi));
+  shank.position.y = -u(L) / 2;
+  g.add(shank);
   return g;
 }
 function fadeable(obj) {
@@ -499,8 +673,17 @@ function setOpacity(obj, a) {
   obj.visible = a > 0.01;
   for (const m of obj.userData.mats || []) { m.opacity = a; m.depthWrite = a > 0.99; }
 }
+const BOLT = {
+  B500_2250: { af: .75, headH: .31, d: .5, L: 2.25 },
+  B500_6500: { af: .75, headH: .31, d: .5, L: 6.5 },
+  B500_8000: { af: .75, headH: .31, d: .5, L: 8.0 },
+  B500_2000: { af: .75, headH: .31, d: .5, L: 2.0 },
+  B750_1500: { af: 1.125, headH: .47, d: .75, L: 1.5, tpi: 10 },
+  B312_1000: { af: .5, headH: .21, d: .3125, L: 1.0, tpi: 18 },
+  SHCS500_4000: { socket: true, headD: .75, headH: .5, d: .5, L: 4.0 },
+};
 
-/* ---------- Sol et palette ---------- */
+/* ---------- Sol, palette, support d'atelier ---------- */
 const floor = mesh(new THREE.PlaneGeometry(200, 200), mat.floor, { cast: false });
 floor.rotation.x = -Math.PI / 2; floor.position.y = FLOOR;
 scene.add(floor);
@@ -508,117 +691,276 @@ const pallet = new THREE.Group();
 for (const z of [-2.3, -1.15, 0, 1.15, 2.3]) { const b = mesh(new THREE.BoxGeometry(5.8, 0.2, 0.95), mat.wood); b.position.set(0, -0.1, z); pallet.add(b); }
 for (const x of [-2.4, 0, 2.4]) { const b = mesh(new THREE.BoxGeometry(0.95, 1.2, 5.6), mat.woodDark); b.position.set(x, -0.8, 0); pallet.add(b); }
 scene.add(pallet);
+const stand = mesh(annulusIn(R.standIn, R.stand, Y.stand), mat.console);
+scene.add(stand);
 
-/* ---------- Bâti (rouge) ---------- */
+/* ---------- Arrière : vérin hydraulique ---------- */
+const rearRing = mesh(annulusIn(R.ringIn, R.ringOut, 0.6, ringAt(6, 2.85, 30).map(([x, z]) => [x, z, .17])), mat.red);
+placeIn(rearRing, 0, Y.ringB, 0);
+part({ id: '2920452', ref: '2920452', name: 'Bague de retenue arrière', qty: 1, grp: 'rear', ext: [3.4, 4.0], r: 3.2 }, rearRing);
+part({ id: 'B312-1000', ref: 'B312-1000', name: 'Boulon 5/16 × 1 po', qty: 6, qtyEst: true, grp: 'rear', ext: [3.19, 4.4], r: 3.2, role: 'Fixent la bague 2920452 au couvercle arrière 2920333.' },
+  ringAt(6, 2.85, 30).map(([x, z]) => { const b = makeBolt(BOLT.B312_1000, mat.boltBlack); b.rotation.x = Math.PI; return placeIn(b, x, Y.ringB, z); }));
+const pin321 = new THREE.Group();
+{ const hex = mesh(new THREE.CylinderGeometry(u(.36), u(.36), u(.35), 6), mat.machined); hex.position.y = u(.65);
+  const nip = mesh(new THREE.CylinderGeometry(u(.24), u(.28), u(.55), 20), mat.machined); nip.position.y = u(.25);
+  const thr = mesh(new THREE.CylinderGeometry(u(.2), u(.2), u(.4), 16), threadMat(mat.machined, .4, 18)); thr.position.y = u(1.0);
+  pin321.add(hex, nip, thr); }
+{ const [x, z] = polar(4.95, 150); placeIn(pin321, x, 3.0, z); }
+part({ id: '321620', ref: '321620', name: 'Raccord hydraulique du couvercle arrière', qty: 1, grp: 'rear', ext: [3.0, 4.2], r: 5.0, note: 'Identification probable : orifice d\'huile du vérin.' }, pin321);
+const cap = mesh(annulusIn(R.capIn, R.body, 1.0, ringAt(8, R.capBolt, 22.5).map(([x, z]) => [x, z, .28])), mat.red);
+placeIn(cap, 0, Y.capB, 0);
+part({ id: '2920333', ref: '2920333', name: 'Couvercle arrière du vérin (détail D)', qty: 1, grp: 'rear', ext: [4.0, 5.0], r: 6.0, role: 'Ferme la chambre hydraulique à l\'arrière.' }, cap);
+part({ id: 'B500-2000', ref: 'B500-2000', name: 'Boulon ½ × 2 po', qty: 8, qtyEst: true, grp: 'rear', ext: [3.69, 6.0], r: 6.0, role: 'Fixent le couvercle arrière 2920333 au cylindre 2920332.' },
+  ringAt(8, R.capBolt, 22.5).map(([x, z]) => { const b = makeBolt(BOLT.B500_2000, mat.boltBlack); b.rotation.x = Math.PI; return placeIn(b, x, Y.capB, z); }));
+part({ id: '5030274', ref: '5030274', name: 'Joint torique du couvercle arrière (détail D)', qty: 1, grp: 'rear', ext: [4.95, 5.09], r: 5.4 }, placeIn(oring(5.3, .07), 0, 5.02, 0));
+const piston = new THREE.Group();
+{ const b = mesh(annulusIn(R.nose, R.cylIn - 0.01, 2.0), mat.grey); piston.add(b);
+  for (const y of [.5, 1.5]) { const gr = mesh(new THREE.TorusGeometry(u(R.cylIn - .02), u(.05), 6, 96), mat.pocket); gr.rotation.x = Math.PI / 2; gr.position.y = u(y); piston.add(gr); } }
+placeIn(piston, 0, Y.pistonB, 0);
+part({ id: '2920331', ref: '2920331', name: 'Piston hydraulique', qty: 1, grp: 'rear', ext: [6.5, 8.5], r: 5.0, role: 'La pression hydraulique le pousse vers l\'arrière : par les boulons, il tire le cône et comprime les ressorts, ce qui ouvre les mâchoires.' }, piston);
+part({ id: '5035015', ref: '5035015', name: 'Joint de piston, épais (détail B)', qty: 1, grp: 'rear', ext: [6.9, 7.1], r: 5.1 }, placeIn(oring(5.0, .1), 0, 7.0, 0));
+part({ id: '5035017', ref: '5035017', name: 'Joint de piston, mince (détail B)', qty: 1, grp: 'rear', ext: [7.9, 8.1], r: 5.1 }, placeIn(oring(5.0, .065), 0, 8.0, 0));
+part({ id: '5035016', ref: '5035016', name: 'Joint du cylindre (détail C)', qty: 1, grp: 'rear', ext: [8.36, 8.54], r: 5.3, note: 'Emplacement approximatif, voir détail C.' }, placeIn(oring(5.18, .09), 0, 8.45, 0));
+part({ id: '5035018', ref: '5035018', name: 'Joint du cylindre (détail C)', qty: 1, grp: 'rear', ext: [8.36, 8.54], r: 5.5, note: 'Emplacement approximatif, voir détail C.' }, placeIn(oring(5.38, .09), 0, 8.45, 0));
+const cyl = mesh(annulusIn(R.cylIn, R.body, Y.cylT - Y.capT, ringAt(12, R.shcs, 0).map(([x, z]) => [x, z, .4])), mat.red);
+placeIn(cyl, 0, Y.capT, 0);
+part({ id: '2920332', ref: '2920332', name: 'Cylindre hydraulique', qty: 1, grp: 'rear', ext: [5.0, 8.5], r: 6.0, role: 'Chambre du piston hydraulique.' }, cyl);
+const plug = new THREE.Group();
+{ const h = mesh(new THREE.CylinderGeometry(u(.33), u(.33), u(.25), 6), mat.boltBlack); h.rotation.z = Math.PI / 2; h.position.x = u(.12); plug.add(h); }
+{ const [x, z] = polar(R.body, 175); placeIn(plug, x, 6.8, z); plug.rotation.y = 175 * Math.PI / 180; }
+part({ id: 'SP250', ref: 'SP250', name: 'Bouchon ¼ NPT', qty: 1, grp: 'rear', ext: [6.6, 7.0], r: 6.4, with: '2920332' }, plug);
+part({ id: 'SHCS500-4000', ref: 'SHCS500-4000', name: 'Vis à tête creuse ½ × 4 po', qty: 12, qtyEst: true, grp: 'rear', ext: [5.0, 9.5], r: 6.0, role: 'Fixe le cylindre au bâti.' },
+  ringAt(12, R.shcs, 0).map(([x, z]) => { const b = makeBolt(BOLT.SHCS500_4000, mat.boltBlack); b.rotation.x = Math.PI; return placeIn(b, x, 5.5, z); }));
+part({ id: '5030269', ref: '5030269', name: 'Joint torique cylindre / bâti (détail C)', qty: 1, grp: 'rear', ext: [8.43, 8.57], r: 5.7 }, placeIn(oring(5.62, .07), 0, 8.5, 0));
+const bush126 = mesh(new THREE.CylinderGeometry(u(.25), u(.25), u(.5), 20), mat.machined);
+{ const [x, z] = polar(2.65, 120); placeIn(bush126, x, 5.35, z); }
+part({ id: '5020126', ref: '5020126', name: 'Douille du nez du bâti', qty: 1, grp: 'body', ext: [5.1, 5.6], r: 3.0, note: 'Fonction non précisée sur le dessin.' }, bush126);
+part({ id: '5030250', ref: '5030250', name: 'Joint torique (détail A)', qty: 1, grp: 'body', ext: [4.98, 5.12], r: 2.9 }, placeIn(oring(2.7, .07), 0, 5.05, 0));
+
+/* ---------- Bâti 2920455 ---------- */
 const body = new THREE.Group();
-scene.add(body);
-const flange = mesh(annulus(0.62, 2.05, 0.3), mat.red);
-body.add(flange);
-for (const [x, z] of ring(16, 1.98, 11.25)) { const s = mesh(new THREE.CylinderGeometry(0.06, 0.06, 0.06, 16), mat.dark); s.position.set(x, 0.33, z); body.add(s); }
 let bodyMain = null, pocketGroup = null;
 function buildBody() {
   if (bodyMain) { body.remove(bodyMain); bodyMain.geometry.dispose(); }
   if (pocketGroup) body.remove(pocketGroup);
-  bodyMain = mesh(annulus(0.62, 1.9, BODY_TOP - 0.3, SPRINGS.map(s => [s.x, s.z, 0.155])), mat.red);
-  bodyMain.position.y = 0.3;
+  bodyMain = mesh(annulus(u(R.bore), u(R.body), u(Y.face - Y.bodyRear), SPRINGS.map(s => [s.x, s.z, u(0.58)])), mat.red);
+  bodyMain.position.y = u(Y.bodyRear);
   body.add(bodyMain);
   pocketGroup = new THREE.Group();
-  for (const s of SPRINGS) { const d = mesh(new THREE.CircleGeometry(0.155, 24), mat.pocket, { cast: false }); d.rotation.x = -Math.PI / 2; d.position.set(s.x, POCKET, s.z); pocketGroup.add(d); }
+  for (const s of SPRINGS) { const d = mesh(new THREE.CircleGeometry(u(.58), 24), mat.pocket, { cast: false }); d.rotation.x = -Math.PI / 2; d.position.set(s.x, POCKET, s.z); pocketGroup.add(d); }
   body.add(pocketGroup);
+  bodyMain.userData.part = pocketGroup.userData.part = byId('2920455');
+  pocketGroup.traverse(m => { m.userData.part = byId('2920455'); });
 }
+{
+  const rim = mesh(annulusIn(R.rimIn, R.body, Y.rimT - Y.face, ringAt(9, R.coverBolt, 20).map(([x, z]) => [x, z, .27])), mat.red);
+  placeIn(rim, 0, Y.face, 0);
+  const nose = mesh(annulusIn(R.bore, R.nose, Y.bodyRear - Y.capT), mat.red);
+  placeIn(nose, 0, Y.capT, 0);
+  body.add(rim, nose);
+  // Pied de fixation (base à rainures) et nervures
+  const footG = new THREE.Group();
+  const plate = mesh(new THREE.BoxGeometry(u(.8), u(3.6), u(7)), mat.red); plate.position.set(-u(6.9), u(10.4), 0);
+  const web = mesh(new THREE.BoxGeometry(u(1.2), u(3.6), u(5)), mat.red); web.position.set(-u(6.1), u(10.4), 0);
+  footG.add(plate, web);
+  for (const z of [-2.2, 2.2]) { const sl = mesh(new THREE.BoxGeometry(u(.1), u(2.4), u(.7)), mat.pocket); sl.position.set(-u(7.32), u(10.4), u(z)); footG.add(sl); }
+  footG.rotation.y = -45 * Math.PI / 180;
+  body.add(footG);
+  // Poignée
+  const hp = [[0, 9.2, 5.9], [0, 9.4, 6.9], [0, 11.4, 6.9], [0, 11.6, 5.9]].map(([x, y, z]) => new THREE.Vector3(u(x), u(y), u(z)));
+  const handle = mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(hp, false, 'catmullrom', 0.1), 40, u(.3), 12, false), mat.red);
+  handle.rotation.y = (170 - 90) * Math.PI / 180 + Math.PI;
+  body.add(handle);
+}
+part({ id: '2920455', ref: '2920455', name: 'Bâti du clam', qty: 1, grp: 'body', ext: [5.0, 16.0], r: 6.0, role: 'Pièce principale : loge les ressorts à l\'avant et le vérin à l\'arrière. Porte le pied de fixation et la poignée.' }, body);
 buildBody();
-const handle = mesh(new THREE.TorusGeometry(0.45, 0.07, 12, 24, Math.PI), mat.red);
-handle.rotation.z = Math.PI / 2; handle.position.set(-1.9, 1.3, 0);
-body.add(handle);
-const grease = mesh(new THREE.CylinderGeometry(0.05, 0.07, 0.18, 12), mat.steelLight);
-grease.position.set(0, 1.7, -1.92); grease.rotation.x = Math.PI / 2;
-body.add(grease);
+const grease = new THREE.Group();
+{ const b = mesh(new THREE.CylinderGeometry(u(.3), u(.3), u(.3), 6), mat.brass); b.position.y = u(.15);
+  const n = mesh(new THREE.CylinderGeometry(u(.12), u(.16), u(.35), 12), mat.brass); n.position.y = u(.45);
+  const ball = mesh(new THREE.SphereGeometry(u(.14), 12, 10), mat.brass); ball.position.y = u(.65);
+  grease.add(b, n, ball); }
+{ const [x, z] = polar(R.body, 160); placeIn(grease, x, 10.5, z); grease.rotation.z = Math.PI / 2; grease.rotation.y = 160 * Math.PI / 180 + Math.PI; }
+part({ id: 'ZNPT250', ref: 'ZNPT250', name: 'Graisseur ¼ NPT', qty: 1, grp: 'body', ext: [10.2, 10.8], r: 6.8, with: '2920455' }, grease);
 
-/* ---------- Ressorts ---------- */
+/* ---------- Avant : ressorts et cône ---------- */
+const tube880 = mesh(new THREE.CylinderGeometry(u(.375), u(.375), u(1.6), 24), mat.machined);
+{ const [x, z] = polar(3.2, 160); placeIn(tube880, x, 12.7, z); }
+part({ id: '3506880', ref: '3506880', name: 'Douille de guidage', qty: 1, grp: 'front', ext: [11.9, 13.5], r: 3.6, note: 'Emplacement et fonction à confirmer.' }, tube880);
+{ const o = oring(.45, .06); const [x, z] = polar(3.2, 160); placeIn(o, x, 12.36, z);
+  part({ id: '5040192', ref: '5040192', name: 'Joint torique', qty: 1, grp: 'front', ext: [12.3, 12.42], r: 3.6 }, o); }
+
 class Helix extends THREE.Curve {
   constructor(r, turns) { super(); this.r = r; this.turns = turns; }
-  getPoint(t, target = new THREE.Vector3()) { const a = t * this.turns * Math.PI * 2; return target.set(Math.cos(a) * this.r, t, Math.sin(a) * this.r); }
+  getPoint(t, target = new THREE.Vector3()) {
+    // spires jointives aux extrémités (ressort de matrice à bouts rapprochés)
+    const tt = t < .06 ? t * .45 : t > .94 ? 1 - (1 - t) * .45 : .027 + (t - .06) * (0.946 / 0.88);
+    const a = tt * this.turns * Math.PI * 2;
+    return target.set(Math.cos(a) * this.r, t, Math.sin(a) * this.r);
+  }
 }
-const springGeo = new THREE.TubeGeometry(new Helix(0.118, 6.5), 220, 0.03, 8, false);
+const springGeo = new THREE.TubeGeometry(new Helix(u(.43), 7.5), 320, u(.075), 4, false);
 let springMeshes = [];
 const springGroup = new THREE.Group();
-scene.add(springGroup);
+clampG.add(springGroup);
+const springPart = part({ id: '5200517', ref: '5200517', name: 'Ressort (bleu)', qty: 'n', grp: 'front', ext: [10.8, 13.1], r: 5.4, anim: true, role: 'Pousse le cône vers l\'avant pour serrer les mâchoires. C\'est lui qui emmagasine l\'énergie.' }, []);
 function buildSprings() {
   springMeshes.forEach(s => springGroup.remove(s));
-  springMeshes = SPRINGS.map(s => { const m = mesh(springGeo, mat.spring); m.position.set(s.x, POCKET, s.z); springGroup.add(m); return m; });
+  springMeshes = SPRINGS.map(s => { const m = mesh(springGeo, mat.spring); m.position.set(s.x, POCKET, s.z); m.userData.part = springPart; springGroup.add(m); return m; });
+  springPart.objs = springMeshes;
 }
 buildSprings();
 
-/* ---------- Cône / piston (plaque + moyeu + mâchoires) ---------- */
-const plate = new THREE.Group();     // origine = dessus de la plaque, au centre
-scene.add(plate);
-const plateDisc = mesh(annulus(0.62, 1.62, PLATE_T, BOLTS.map(b => [b.x, b.z, 0.075])), mat.steel);
-plateDisc.position.y = -PLATE_T;
-const hub = mesh(annulus(0.62, 1.0, HUB_H), mat.steel);
-const hubRing = mesh(annulus(0.62, 0.7, 0.02), mat.steelLight);
-hubRing.position.y = HUB_H;
-plate.add(plateDisc, hub, hubRing);
-const jaws = [0, 1, 2, 3].map(k => {
+// Cône 2920390 (« chuck bowl ») : origine = dessus de la bride
+const plate = new THREE.Group();
+clampG.add(plate);
+{
+  const holes = BOLTS.map(b => [b.x / IN, b.z / IN, .28]);
+  const [tx, tz] = polar(3.2, 160);
+  const flange = mesh(annulusIn(R.bowlB, R.plate, Y.plateT - Y.plateB, [...holes, [tx, tz, .42]]), mat.grey);
+  flange.position.y = -PLATE_T;
+  const hub = mesh(annulusIn(R.bowlB, R.hub, Y.hubT - Y.plateT), mat.grey);
+  const bowl = mesh(new THREE.CylinderGeometry(u(R.bowlT), u(R.bowlB), u(Y.hubT - Y.plateB), 96, 1, true), mat.red.clone());
+  bowl.material.side = THREE.BackSide;
+  bowl.position.y = u((Y.hubT - Y.plateB) / 2) - PLATE_T;
+  const lip = mesh(annulusIn(R.bowlT, R.hub, 0.02), mat.machined);
+  lip.position.y = HUB_H;
+  const edge = mesh(new THREE.TorusGeometry(u(R.plate), u(.04), 6, 96), mat.machined);
+  edge.rotation.x = Math.PI / 2; edge.position.y = -u(.02);
+  plate.add(flange, hub, bowl, lip, edge);
+}
+const plateMats = new Set();
+function ownPlateMats() { plate.traverse(o => { if (o.isMesh && !plateMats.has(o.material)) { o.material = o.material.clone(); plateMats.add(o.material); } }); }
+part({ id: '2920390', ref: '2920390', name: 'Cône (chuck bowl)', qty: 1, grp: 'front', ext: [13.1, 16.95], r: 5.3, anim: true, role: 'Poussé par les ressorts, son bol conique serre les mâchoires. Retenu par 9 boulons ½ vissés dans le piston. C\'est la pièce projetée si les ressorts se détendent d\'un coup.' }, [plate]);
+
+// Mâchoires en anneau WH-500, calibre H (8 segments) — logées dans le bol du cône
+const JAW_H = 2.4, JAW_Y0 = 0.3;   // po, depuis le dessus de la bride
+const bowlR = yLocal => R.bowlB - (R.bowlB - R.bowlT) * (yLocal + (Y.plateT - Y.plateB)) / (Y.hubT - Y.plateB);
+const jawGeoH = jawGeo(R.jawIn, bowlR(JAW_Y0) - .02, bowlR(JAW_Y0 + JAW_H) - .02, JAW_H, 38);
+const jaws = [...Array(8)].map((_, k) => {
   const j = new THREE.Group();
-  const block = mesh(new THREE.BoxGeometry(0.2, 0.42, 0.34), mat.steelLight);
-  j.add(block);
-  for (let t = 0; t < 4; t++) { const tooth = mesh(new THREE.BoxGeometry(0.04, 0.03, 0.34), mat.dark); tooth.position.set(-0.11, -0.15 + t * 0.1, 0); j.add(tooth); }
-  j.userData.a = k * Math.PI / 2 + Math.PI / 4;
-  j.rotation.y = -j.userData.a;
+  j.add(mesh(jawGeoH, mat.machined));
+  for (let t = 0; t < 7; t++) { const tooth = mesh(new THREE.BoxGeometry(u(.08), u(.06), u(1.0)), mat.boltBlack); tooth.position.set(u(R.jawIn + .03), u(.35 + t * .3), 0); j.add(tooth); }
+  const bar = mesh(new THREE.CylinderGeometry(u(.11), u(.11), u(JAW_H + .2), 12), mat.steelLight);
+  bar.position.set(u(R.jawIn + .45) * Math.cos(Math.PI / 8), u(JAW_H / 2), -u(R.jawIn + .45) * Math.sin(Math.PI / 8));
+  j.add(bar);
+  j.userData.a = k * Math.PI / 4;
+  j.rotation.y = j.userData.a;
   plate.add(j);
   return j;
 });
+ownPlateMats();
+part({ id: 'UM-021-01-03', ref: 'UM-021-01-03 H', name: 'Mâchoires en anneau WH-500, calibre H', qty: 8, grp: 'front', ext: [14.4, 16.8], r: 2.8, anim: true, rowJaw: 'H', role: 'Serrent la tige. Le jeu de mâchoires change selon le calibre de tige (B, N, H, BW).', note: 'Jeu H installé dans ce modèle.' }, jaws);
 
-/* ---------- Couvert des mâchoires (6 boulons ¾) ---------- */
-const JC_BASE = new THREE.Vector3(0, PLATE_TOP0 + HUB_H, 0);
-const JC_REST = new THREE.Vector3(-2.6, FLOOR, 5.0);
-const jawCover = mesh(annulus(0.5, 1.02, 0.18, ring(6, R_JC_BOLT, 30).map(([x, z]) => [x, z, 0.1])), mat.steel);
-fadeable(jawCover);
-scene.add(jawCover);
-const jcBolts = ring(6, R_JC_BOLT, 30).map(([x, z]) => {
-  const b = fadeable(makeBolt({ headR: 0.165, headH: 0.12, shankR: 0.095, shankL: 0.9 }, mat.bolt));
-  b.userData.base = new THREE.Vector3(x, JC_BASE.y + 0.18, z);
-  scene.add(b); return b;
-});
-
-/* ---------- Couvercle (9 boulons ½) ---------- */
-const CV_BASE = new THREE.Vector3(0, BODY_TOP, 0);
-const CV_REST = new THREE.Vector3(-5.6, FLOOR, 2.2);
-const cover = mesh(annulus(1.66, 1.9, PLATE_TOP0 - BODY_TOP, ring(9, R_COVER_BOLT, 20).map(([x, z]) => [x, z, 0.07])), mat.red);
-fadeable(cover);
-scene.add(cover);
-const cvBolts = ring(9, R_COVER_BOLT, 20).map(([x, z]) => {
-  const b = fadeable(makeBolt({ headR: 0.11, headH: 0.08, shankR: 0.064, shankL: 0.8 }, mat.bolt));
-  b.userData.base = new THREE.Vector3(x, PLATE_TOP0, z);
-  scene.add(b); return b;
-});
-
-/* ---------- Boulons du cône + bushings ---------- */
-const pBolts = BOLTS.map(b => {
-  const o = fadeable(makeBolt({ headR: 0.11, headH: 0.08, shankR: 0.064, shankL: 1.1 }, mat.bolt));
-  scene.add(o); return o;
-});
+// Boulons du cône : 6 × B500-6500 (étape 7) et 3 × B500-8000 avec bushing 3506878 (étapes 6 et 8)
+const pBolts = BOLTS.map(b => fadeable(makeBolt(b.bushing ? BOLT.B500_8000 : BOLT.B500_6500)));
+pBolts.forEach(o => clampG.add(o));
 const bushings = BUSHED.map(i => {
-  const o = fadeable(mesh(annulus(0.07, 0.13, BUSH_H, [], 32), mat.steelLight));
+  const o = fadeable(mesh(annulusIn(.27, .5, 1.5, [], 40), mat.machined));
   o.position.set(BOLTS[i].x, PLATE_TOP0, BOLTS[i].z);
-  scene.add(o); return o;
+  clampG.add(o); return o;
 });
+part({ id: 'B500-6500', ref: 'B500-6500', name: 'Boulon ½ × 6 ½ po', qty: 6, grp: 'front', ext: [7.6, 14.41], r: 4.4, anim: true, role: 'Retiennent le cône contre les ressorts (vissés dans le piston).', step: 'Étape 7 : dévissés 1 tour à la fois, dans l\'ordre 1 à 6.' }, ORDER.map(i => pBolts[i]));
+part({ id: '3506878', ref: '3506878', name: 'Bushing (entretoise 1 ½ po)', qty: 3, grp: 'front', ext: [14.1, 15.6], r: 4.5, anim: true, step: 'Étape 6 : retirés, les boulons B500-8000 sont remis sans eux.' }, bushings);
+part({ id: 'B500-8000', ref: 'B500-8000', name: 'Boulon ½ × 8 po (avec bushing)', qty: 3, grp: 'front', ext: [7.6, 15.91], r: 4.5, anim: true, role: '8 po = 6 ½ po + bushing de 1 ½ po. Remis sans bushing, ils restent vissés dans le piston même si le cône monte : ils le retiennent.', step: 'Étape 6 : remis sans bushing. Étape 8 : dévissés en dernier.' }, BUSHED.map(i => pBolts[i]));
 
-/* ---------- Clé à cliquet sur le boulon actif ---------- */
+/* ---------- Avant : couvercle 3506906 et couvert des mâchoires 3506907 ---------- */
+const CV_BASE = new THREE.Vector3(0, u(Y.rimT), 0);
+const CV_REST = new THREE.Vector3(-5.6, FLOOR, 2.2);
+const cover = fadeable(mesh(lobedAnnulus(R.coverIn, 4.6, R.body, Y.coverT - Y.rimT, [
+  ...ringAt(9, R.coverBolt, 20).map(([x, z]) => [x, z, .27]),
+  ...ringAt(6, R.jcBolt, 30).map(([x, z]) => [x, z, .38]),
+]), mat.red));
+clampG.add(cover);
+part({ id: '3506906', ref: '3506906', name: 'Couvercle', qty: 1, grp: 'front', ext: [16.0, 17.0], r: 6.0, anim: true, step: 'Étape 5 : retiré après ses 9 boulons ½. Étape 10 : nettoyer ses deux faces avant de le remettre.' }, cover);
+const cvBolts = ringAt(9, R.coverBolt, 20).map(([x, z]) => {
+  const b = fadeable(makeBolt(BOLT.B500_2250));
+  b.userData.base = new THREE.Vector3(u(x), u(Y.coverT), u(z));
+  clampG.add(b); return b;
+});
+part({ id: 'B500-2250', ref: 'B500-2250', name: 'Boulon ½ × 2 ¼ po', qty: 9, grp: 'front', ext: [14.75, 17.31], r: 6.1, anim: true, role: 'Fixent le couvercle au bâti.', step: 'Étape 5 : clé ¾. Étapes 12 et 13 : remplacés par des neufs, serrés à 105 lb·pi.' }, cvBolts);
+const JC_BASE = new THREE.Vector3(0, u(Y.coverT), 0);
+const JC_REST = new THREE.Vector3(-2.6, FLOOR, 5.0);
+const jawCover = new THREE.Group();
+{
+  jawCover.add(mesh(annulusIn(R.jcIn, R.jcOut, Y.jcT - Y.coverT, ringAt(6, R.jcBolt, 30).map(([x, z]) => [x, z, .41])), mat.red));
+  for (let k = 0; k < 8; k++) {
+    const t = mesh(new THREE.BoxGeometry(u(.6), u(.6), u(.42)), mat.red);
+    const a = (k + .5) * Math.PI / 4;
+    t.position.set(u(2.2) * Math.cos(a), -u(.3), -u(2.2) * Math.sin(a));
+    t.rotation.y = a;
+    jawCover.add(t);
+  }
+}
+fadeable(jawCover);
+clampG.add(jawCover);
+part({ id: '3506907', ref: '3506907', name: 'Couvert des mâchoires', qty: 1, grp: 'front', ext: [16.4, 17.8], r: 5.0, anim: true, role: 'Retient et guide les mâchoires à l\'avant.', step: 'Étape 4 : retiré après ses 6 boulons ¾.' }, jawCover);
+const jcBolts = ringAt(6, R.jcBolt, 30).map(([x, z]) => {
+  const b = fadeable(makeBolt(BOLT.B750_1500));
+  b.userData.base = new THREE.Vector3(u(x), u(Y.jcT), u(z));
+  clampG.add(b); return b;
+});
+part({ id: 'B750-1500', ref: 'B750-1500', name: 'Boulon ¾ × 1 ½ po', qty: 6, grp: 'front', ext: [16.3, 18.27], r: 5.0, anim: true, role: 'Fixent le couvert des mâchoires au couvercle.', step: 'Étape 4 : clé 1 1/8.' }, jcBolts);
+
+/* ---------- Options de guidage (affichées seulement en vue éclatée) ---------- */
+function optPart(def, obj) {
+  fadeable(obj);
+  return part({ grp: 'opt', opt: true, ...def }, obj);
+}
+{
+  const gb01 = new THREE.Group();
+  const s = new THREE.Shape(); s.absarc(0, 0, u(3.3), 0, Math.PI * 2, false);
+  const hole = new THREE.Path(); hole.absarc(0, 0, u(2.15), 0, Math.PI * 2, true); s.holes.push(hole);
+  for (let k = 0; k < 3; k++) { const [x, z] = polar(2.75, 60 + k * 120); const p = new THREE.Path(); p.absarc(u(x), -u(z), u(.3), 0, Math.PI * 2, true); s.holes.push(p); }
+  const g = new THREE.ExtrudeGeometry(s, { depth: u(.6), bevelEnabled: false, curveSegments: 64 }); g.rotateX(-Math.PI / 2);
+  gb01.add(mesh(g, mat.grey));
+  for (let k = 0; k < 3; k++) { const n = mesh(new THREE.BoxGeometry(u(1.3), u(.62), u(1.0)), mat.pocket); const [x, z] = polar(3.2, k * 120); n.position.set(u(x), u(.3), u(z)); n.rotation.y = k * 120 * Math.PI / 180; gb01.add(n); }
+  optPart({ id: 'GB01', ref: '#UM-021-15-GB01', name: 'Bride porte-bague (option UM-021-15)', qty: 1, r: 3.3, len: .6 }, gb01);
+  const gb02 = new THREE.Group();
+  gb02.add(mesh(annulusIn(1.55, 2.2, .9), mat.machined));
+  const sr = oring(1.9, .07, mat.sealRed); sr.position.y = u(.92); gb02.add(sr);
+  optPart({ id: 'GB02', ref: '#UM-021-15-GB02', name: 'Bague / roulement (option UM-021-15)', qty: 1, r: 2.2, len: .9 }, gb02);
+  const clip = new THREE.Group();
+  clip.add(mesh(new THREE.TorusGeometry(u(1.77), u(.06), 6, 80, Math.PI * 1.85), mat.boltBlack));
+  clip.children[0].rotation.x = Math.PI / 2;
+  optPart({ id: 'R3100-354', ref: 'R3100-354', name: 'Anneau de retenue (option UM-021-15)', qty: 1, r: 1.8, len: .1 }, clip);
+  const bush = (rIn) => { const g = new THREE.Group(); g.add(mesh(annulusIn(rIn, 1.6, 1.8), mat.grey)); const gr = mesh(new THREE.TorusGeometry(u(1.6), u(.07), 6, 64), mat.pocket); gr.rotation.x = Math.PI / 2; gr.position.y = u(.9); g.add(gr); return g; };
+  optPart({ id: 'GB03-N', ref: '#UM-021-15-GB03-N', name: 'Bague de guidage, tige N', qty: 1, r: 1.6, len: 1.8 }, bush(1.40));
+  optPart({ id: 'GB03-N+', ref: '#UM-021-15-GB03-N+', name: 'Bague de guidage, tige N (+)', qty: 1, r: 1.6, len: 1.8 }, bush(1.45));
+  optPart({ id: 'GB04-B', ref: '#UM-021-15-GB04-B', name: 'Bague de guidage, tige B', qty: 1, r: 1.6, len: 1.8 }, bush(1.12));
+  optPart({ id: 'GB04-B+', ref: '#UM-021-15-GB04-B+', name: 'Bague de guidage, tige B (+)', qty: 1, r: 1.6, len: 1.8 }, bush(1.17));
+  const plateOpt = (rIn) => mesh(annulusIn(rIn, 2.6, .6, ringAt(4, 2.2, 45).map(([x, z]) => [x, z, .12])), mat.grey);
+  [['06-06-BW ROD', 'tige BW', 1.08], ['06-02-B ROD', 'tige B', 1.12], ['06-22-B SHELL', 'tubage B', 1.2], ['06-03-N ROD', 'tige N', 1.4], ['06-33-N SHELL', 'tubage N', 1.52], ['06-04-H ROD', 'tige H', 1.78], ['06-44-H SHELL', 'tubage H', 1.93]]
+    .forEach(([ref, lbl, rIn]) => optPart({ id: ref, ref: `UM-021-${ref}`, name: `Plaque de guidage, ${lbl}`, qty: 1, r: 2.6, len: .6 }, plateOpt(rIn)));
+  // Autres jeux de mâchoires WH-500
+  [['01-01 B', 'B', 1.12], ['01-02 N', 'N', 1.4], ['01-04 BW', 'BW', 1.08]].forEach(([ref, cal, rIn]) => {
+    const g = new THREE.Group();
+    const geo = jawGeo(rIn, bowlR(JAW_Y0) - .02, bowlR(JAW_Y0 + JAW_H) - .02, JAW_H, 38);
+    for (let k = 0; k < 8; k++) {
+      const j = mesh(geo, mat.machined); j.rotation.y = k * Math.PI / 4; g.add(j);
+      const bar = mesh(new THREE.CylinderGeometry(u(.11), u(.11), u(JAW_H + .2), 12), mat.steelLight);
+      const a = k * Math.PI / 4 + Math.PI / 8; bar.position.set(u(rIn + .45) * Math.cos(a), u(JAW_H / 2), -u(rIn + .45) * Math.sin(a)); g.add(bar);
+    }
+    optPart({ id: `JAW-${cal}`, ref: `UM-021-${ref}`, name: `Mâchoires en anneau WH-500, calibre ${cal}`, qty: 8, r: 2.8, len: JAW_H, rowJaw: cal }, g);
+  });
+}
+
+/* ---------- Clé à cliquet avec rallonge sur le boulon actif ---------- */
 const wrench = new THREE.Group();
 {
-  const socket = mesh(new THREE.CylinderGeometry(0.15, 0.15, 0.26, 20), mat.steelLight);
-  socket.position.y = 0.13;
-  const head = mesh(new THREE.CylinderGeometry(0.2, 0.2, 0.12, 24), mat.steelLight);
-  head.position.y = 0.32;
-  const arm = mesh(new THREE.BoxGeometry(1.5, 0.07, 0.16), mat.steelLight);
-  arm.position.set(0.75, 0.32, 0);
-  const grip = mesh(new THREE.CylinderGeometry(0.08, 0.08, 0.6, 16), mat.lockRed);
-  grip.rotation.z = Math.PI / 2; grip.position.set(1.3, 0.32, 0);
-  wrench.add(socket, head, arm, grip);
+  const socket = mesh(new THREE.CylinderGeometry(u(.55), u(.55), u(1.0), 24), mat.steelLight);
+  socket.position.y = u(.5);
+  const ext = mesh(new THREE.CylinderGeometry(u(.22), u(.22), u(2.4), 16), mat.steelLight);
+  ext.position.y = u(2.2);
+  const head = mesh(new THREE.CylinderGeometry(u(.75), u(.75), u(.5), 24), mat.steelLight);
+  head.position.y = u(3.5);
+  const arm = mesh(new THREE.BoxGeometry(u(6), u(.28), u(.6)), mat.steelLight);
+  arm.position.set(u(3), u(3.5), 0);
+  const grip = mesh(new THREE.CylinderGeometry(u(.36), u(.36), u(2.6), 16), mat.lockRed);
+  grip.rotation.z = Math.PI / 2; grip.position.set(u(5.3), u(3.5), 0);
+  wrench.add(socket, ext, head, arm, grip);
 }
 scene.add(wrench);
-const activeRing = new THREE.Mesh(new THREE.TorusGeometry(0.22, 0.025, 8, 40), new THREE.MeshBasicMaterial({ color: 0xf2c230, transparent: true, depthTest: false }));
+const activeRing = new THREE.Mesh(new THREE.TorusGeometry(u(.75), 0.022, 8, 40), new THREE.MeshBasicMaterial({ color: 0xf2c230, transparent: true, depthTest: false }));
 activeRing.rotation.x = -Math.PI / 2; activeRing.renderOrder = 5;
 scene.add(activeRing);
 
@@ -630,7 +972,7 @@ scene.add(consoleG);
   const ped = mesh(new THREE.BoxGeometry(1.3, 3.9, 1.1), mat.console); ped.position.y = 1.95;
   const bank = mesh(new THREE.BoxGeometry(1.9, 0.55, 1.2), mat.console); bank.position.y = 4.18;
   consoleG.add(ped, bank);
-  for (const x of [-0.6, 0.6]) for (const z of [-0.61]) { const port = mesh(new THREE.CylinderGeometry(0.09, 0.09, 0.1, 16), mat.steelLight); port.rotation.x = Math.PI / 2; port.position.set(x, 4.18, z); consoleG.add(port); }
+  for (const x of [-0.6, 0.6]) { const port = mesh(new THREE.CylinderGeometry(0.09, 0.09, 0.1, 16), mat.steelLight); port.rotation.x = Math.PI / 2; port.position.set(x, 4.18, -0.61); consoleG.add(port); }
 }
 const levers = [-0.3, 0.3].map(z => {
   const L = new THREE.Group();
@@ -663,17 +1005,18 @@ lockG.position.set(0.3, 4.0, 0.62);
 consoleG.add(lockG);
 
 /* ---------- Zone de projection ---------- */
-const zone = new THREE.Mesh(new THREE.CylinderGeometry(1.75, 1.75, 5, 48, 1, true), new THREE.MeshBasicMaterial({ color: 0xc42b1f, transparent: true, opacity: 0, depthWrite: false, side: THREE.DoubleSide }));
+const zone = new THREE.Mesh(new THREE.CylinderGeometry(u(R.plate) + 0.1, u(R.plate) + 0.1, 5, 48, 1, true), new THREE.MeshBasicMaterial({ color: 0xc42b1f, transparent: true, opacity: 0, depthWrite: false, side: THREE.DoubleSide }));
 zone.position.y = PLATE_TOP0 + 2.5;
 scene.add(zone);
 
 /* ---------- Travailleur agenouillé, penché au-dessus du clam ---------- */
-const KNEE = new THREE.Vector3(5.9, -1.05, 0);
+const KNEE = new THREE.Vector3(6.0, -1.05, 0);
 const worker = new THREE.Group();
 worker.position.copy(KNEE);
 scene.add(worker);
-const HEAD = new THREE.Vector3(2.15, 6.45, 0);   // position du visage (monde)
+const HEAD = new THREE.Vector3(2.1, 7.5, 0);     // centre de la tête (monde)
 const HEAD_R = 0.88;
+const HANDS_Y = 5.2;                             // gants, au-dessus de la clé
 function limb(a, b, r, m) {
   const len = a.distanceTo(b);
   const o = mesh(new THREE.CapsuleGeometry(r, len, 6, 14), m);
@@ -684,14 +1027,13 @@ function limb(a, b, r, m) {
 {
   const V = (x, y, z) => new THREE.Vector3(x, y, z);
   for (const z of [-0.55, 0.55]) {
-    limb(V(5.9, -1.05, z), V(8.2, -1.1, z), 0.45, mat.coverall);
-    limb(V(5.9, -1.0, z), V(6.5, 2.8, z * 0.9), 0.55, mat.coverall);
-    const boot = mesh(new THREE.BoxGeometry(0.9, 0.6, 0.8), mat.boot); boot.position.set(8.6 - KNEE.x, -1.1 - KNEE.y, z); worker.add(boot);
-    const pad = mesh(new THREE.BoxGeometry(0.6, 0.35, 0.8), mat.hivis); pad.position.set(5.85 - KNEE.x, -1.2 - KNEE.y, z); worker.add(pad);
+    limb(V(6.0, -1.05, z), V(8.4, -1.1, z), 0.45, mat.coverall);
+    limb(V(6.0, -1.0, z), V(6.6, 4.0, z * 0.9), 0.58, mat.coverall);
+    const boot = mesh(new THREE.BoxGeometry(0.9, 0.6, 0.8), mat.boot); boot.position.set(8.8 - KNEE.x, -1.1 - KNEE.y, z); worker.add(boot);
+    const pad = mesh(new THREE.BoxGeometry(0.6, 0.35, 0.8), mat.hivis); pad.position.set(5.95 - KNEE.x, -1.2 - KNEE.y, z); worker.add(pad);
   }
-  const hip = V(6.5, 2.9, 0), sh = V(3.35, 5.5, 0);
+  const hip = V(6.6, 4.1, 0), sh = V(3.3, 6.7, 0);
   const torso = limb(hip, sh, 1.0, mat.coverall);
-  const dir = sh.clone().sub(hip).normalize();
   for (const t of [0.35, 0.62]) {
     const band = mesh(new THREE.CylinderGeometry(1.03, 1.03, 0.22, 32, 1, true), t < .5 ? mat.hivis : mat.reflect);
     band.position.copy(hip.clone().lerp(sh, t)).sub(KNEE);
@@ -699,8 +1041,9 @@ function limb(a, b, r, m) {
     worker.add(band);
   }
   for (const z of [-1.05, 1.05]) {
-    const shoulder = V(3.35, 5.5, z), hand = V(1.35, 3.3, z * 0.5);
-    limb(shoulder, hand, 0.3, mat.coverall);
+    const shoulder = V(3.3, 6.7, z), elbow = V(2.9, 4.9, z * 1.15), hand = V(1.5, HANDS_Y, z * 0.48);
+    limb(shoulder, elbow, 0.3, mat.coverall);
+    limb(elbow, hand, 0.27, mat.coverall);
     const glove = mesh(new THREE.SphereGeometry(0.3, 16, 12), mat.glove); glove.position.copy(hand).sub(KNEE); worker.add(glove);
   }
   const headG = new THREE.Group();
@@ -715,7 +1058,7 @@ function limb(a, b, r, m) {
 }
 
 /* ---------- Étiquettes ---------- */
-function makeLabel(text, { bg = '#111518', fg = '#ffffff', h = 0.36, font = '600 44px "IBM Plex Sans", sans-serif', pad = 22, round = 14 } = {}) {
+function makeLabel(text, { bg = '#111518', fg = '#ffffff', h = 0.36, font = '600 44px "IBM Plex Sans", sans-serif', pad = 22, round = 14, parent = scene } = {}) {
   const c = document.createElement('canvas');
   const x = c.getContext('2d');
   x.font = font;
@@ -730,28 +1073,34 @@ function makeLabel(text, { bg = '#111518', fg = '#ffffff', h = 0.36, font = '600
   const s = new THREE.Sprite(new THREE.SpriteMaterial({ map: tex, depthTest: false, transparent: true }));
   s.scale.set(h * c.width / c.height, h, 1);
   s.renderOrder = 10;
-  scene.add(s);
+  parent.add(s);
   return s;
 }
 let labels = null;
 function buildLabels() {
-  if (labels) Object.values(labels).flat().forEach(s => scene.remove(s));
+  if (labels) Object.values(labels).flat().forEach(s => s.parent && s.parent.remove(s));
   labels = {
-    nums: BOLTS.map(b => b.num ? makeLabel(String(b.num), { font: '700 46px "Barlow Condensed", sans-serif', h: 0.42, bg: '#f2c230', fg: '#111518', round: 32 }) : null),
-    ret: BUSHED.map(() => makeLabel('R', { font: '700 46px "Barlow Condensed", sans-serif', h: 0.42, bg: '#2c7a4c', round: 32 })),
-    springsC: [makeLabel('Ressorts comprimés', { bg: '#2a5bd7', h: 0.34 })],
-    springsF: [makeLabel('Ressorts détendus', { bg: '#2c7a4c', h: 0.34 })],
-    stuck: [makeLabel('Cône coincé : ressorts toujours comprimés', { bg: '#c42b1f', h: 0.34 })],
+    nums: BOLTS.map(b => b.num ? makeLabel(String(b.num), { font: '700 46px "Barlow Condensed", sans-serif', h: 0.4, bg: '#f2c230', fg: '#111518', round: 32 }) : null),
+    ret: BUSHED.map(() => makeLabel('R', { font: '700 46px "Barlow Condensed", sans-serif', h: 0.4, bg: '#2c7a4c', round: 32 })),
+    springsC: [makeLabel('Ressorts 5200517 comprimés', { bg: '#2a5bd7', h: 0.32 })],
+    springsF: [makeLabel('Ressorts 5200517 détendus', { bg: '#2c7a4c', h: 0.32 })],
+    stuck: [makeLabel('Cône coincé : ressorts toujours comprimés', { bg: '#c42b1f', h: 0.32 })],
     open: [makeLabel('Manettes ouvertes', { h: 0.32 })],
     closed: [makeLabel('Manettes fermées', { bg: '#2c7a4c', h: 0.32 })],
-    zone: [makeLabel('Zone de projection', { bg: '#c42b1f', h: 0.34 })],
+    zone: [makeLabel('Zone de projection', { bg: '#c42b1f', h: 0.32 })],
   };
-  labels.springsC[0].position.set(-2.3, 2.5, 1.9);
-  labels.springsF[0].position.set(-2.3, 2.5, 1.9);
-  labels.stuck[0].position.set(0, 4.3, 1.8);
+  labels.springsC[0].position.set(-2.4, 3.15, -0.2);
+  labels.springsF[0].position.set(-2.4, 3.15, -0.2);
+  labels.stuck[0].position.set(0, 5.4, 0.6);
   labels.open[0].position.set(-3.4, 4.9, -3.4);
   labels.closed[0].position.set(-3.4, 4.9, -3.4);
-  labels.zone[0].position.set(-1.9, 7.2, 0.4);
+  labels.zone[0].position.set(-1.9, 8.4, 0.4);
+  // Repères de pièces pour la vue éclatée (dans le groupe du clam)
+  PARTS.forEach(p => {
+    if (p.lbl) clampG.remove(p.lbl);
+    p.lbl = makeLabel(p.ref, { parent: clampG, h: 0.21, font: '500 40px "IBM Plex Mono", monospace', bg: 'rgba(17,21,24,.88)', round: 10, pad: 16 });
+    p.lbl.visible = false;
+  });
 }
 const labelOpacity = (s, a) => { if (!s) return; s.visible = a > 0.01; s.material.opacity = a; };
 
@@ -760,6 +1109,123 @@ const trailGeo = new THREE.BufferGeometry();
 const trail = new THREE.Line(trailGeo, new THREE.LineDashedMaterial({ color: 0xc42b1f, dashSize: 0.25, gapSize: 0.15, transparent: true, depthTest: false }));
 trail.renderOrder = 4;
 scene.add(trail);
+
+/* ================= Vue éclatée : disposition le long de l'axe, comme le dessin ================= */
+// Ordre de l'arrière (vérin) vers l'avant (mâchoires), depuis le bâti vers l'extérieur.
+const REAR_SEQ = ['5030250', '5020126', '5035018', '5035016', '5030269', '2920332', 'SHCS500-4000', '5035015', '5035017', '2920331', '5030274', '2920333', 'B500-2000', '321620', '2920452', 'B312-1000'];
+const FRONT_SEQ = ['5040192', '3506880', '5200517', '2920390', '3506878', 'B500-6500', 'B500-8000', '3506906', 'B500-2250', '3506907', 'B750-1500'];
+const EX_GAP = 0.9;   // po entre deux pièces éclatées
+let EX_MIN = 0, EX_MAX = 0;
+function layoutExplode() {
+  const body = byId('2920455');
+  body.ex = 0;
+  let cur = body.ext[0];
+  for (const id of REAR_SEQ) { const p = byId(id); p.ex = (cur - EX_GAP) - p.ext[1]; cur = p.ext[0] + p.ex; }
+  EX_MIN = cur;
+  cur = body.ext[1];
+  const springFree = Y.plateB - Y.pocket + travel() / IN;
+  for (const id of FRONT_SEQ) {
+    const p = byId(id);
+    const top = id === '5200517' ? p.ext[0] + springFree : p.ext[1];
+    p.ex = (cur + EX_GAP) - p.ext[0]; cur = top + p.ex;
+  }
+  EX_MAX = cur;
+  PARTS.filter(p => p.with).forEach(p => { p.ex = byId(p.with).ex; });
+  // Rangées : options de guidage au-dessus de l'axe, jeux de mâchoires en dessous
+  const opts = PARTS.filter(p => p.opt && !p.rowJaw);
+  const mid = (EX_MIN + EX_MAX) / 2, span = Math.min(EX_MAX - EX_MIN - 6, opts.length * 5.2);
+  opts.forEach((p, k) => { p.row = new THREE.Vector3(-u(13), u(mid - span / 2 + span * k / Math.max(1, opts.length - 1)), 0); });
+  const sets = ['B', 'N', 'H', 'BW'];
+  PARTS.filter(p => p.rowJaw).forEach(p => { const k = sets.indexOf(p.rowJaw); p.row = new THREE.Vector3(u(13), u(mid + 8 + k * 7.5), 0); });
+}
+
+let explodeE = 0, explodeTarget = 0;
+const partLblPos = new THREE.Vector3();
+function applyExplode(e) {
+  const k = ease(e);
+  clampG.rotation.z = -Math.PI / 2 * k;
+  clampG.position.set(-u((EX_MIN + EX_MAX) / 2) * k, 5.2 * k, 0);
+  const showRows = k > 0.02;
+  for (const p of PARTS) {
+    if (p.opt) {
+      p.objs.forEach(o => { o.position.copy(p.row); o.position.y -= u(p.len / 2); setOpacity(o, k); });
+      continue;
+    }
+    if (p.id === 'UM-021-01-03') continue;
+    const dy = u(p.ex || 0) * k;
+    p.objs.forEach(o => {
+      if (!p.anim) { if (!o.userData.base) o.userData.base = o.position.clone(); o.position.copy(o.userData.base); }
+      o.position.y += dy;
+    });
+  }
+  // Mâchoires installées : rejoignent la rangée des jeux de mâchoires
+  const jp = byId('UM-021-01-03');
+  if (k > 0) {
+    const target = jp.row.clone().sub(plate.position);
+    jaws.forEach(j => { j.position.lerp(new THREE.Vector3(target.x, target.y - u(JAW_H / 2), target.z), k); });
+  }
+  if (k > 0) springMeshes.forEach(m => { m.scale.y = lerp(m.scale.y, LC + travel(), k); });
+  // Repères
+  for (const p of PARTS) {
+    if (!p.lbl) continue;
+    const show = k > 0.85 || (selected === p && k > 0.02);
+    p.lbl.visible = show;
+    if (!show) continue;
+    p.lbl.material.opacity = k > 0.85 ? (k - 0.85) / 0.15 : 1;
+    const o = p.opt || p.rowJaw ? null : p.objs[0];
+    if (p.row && (p.opt || p.rowJaw)) {
+      const stag = (PARTS.filter(q => q.row && q.row.x === p.row.x).indexOf(p) % 2) * 0.42;
+      partLblPos.copy(p.row); partLblPos.x += (p.row.x < 0 ? -1 : 1) * (u(p.r) + 0.3 + stag);
+    } else if (o) {
+      const side = (PARTS.indexOf(p) % 2) ? 1 : -1;
+      const yc = u((p.ext[0] + p.ext[1]) / 2 + (p.ex || 0));
+      partLblPos.set(side * (u(p.r) + 0.45), yc, 0);
+    }
+    p.lbl.position.copy(partLblPos);
+  }
+  for (const o of [worker, consoleG, pallet, stand, zone, trail, wrench, activeRing]) o.visible = o.visible && k < 0.05;
+  if (labels) for (const arr of Object.values(labels)) for (const s of arr) if (s && k > 0.02) s.visible = false;
+  return showRows;
+}
+
+/* ================= Sélection d'une pièce et vue en coupe ================= */
+const CUT = new THREE.Plane(new THREE.Vector3(0, 0, -1), 0);   // garde la moitié arrière (z ≤ 0)
+let cutOn = true, selected = null;
+const ghostMat = new THREE.MeshStandardMaterial({ color: 0x9aa4ab, transparent: true, opacity: 0.12, depthWrite: false, roughness: 1 });
+const hiCache = new Map();
+function hiMat(m) {
+  if (!hiCache.has(m)) { const h = m.clone(); h.emissive = new THREE.Color(0xf2c230); h.emissiveIntensity = 0.45; h.transparent = false; h.opacity = 1; hiCache.set(m, h); }
+  return hiCache.get(m);
+}
+function clampMaterials() {
+  const set = new Set([ghostMat, ...hiCache.values()]);
+  clampG.traverse(o => { if (o.isMesh) { set.add(o.material); if (o.userData.orig) set.add(o.userData.orig); } });
+  PARTS.forEach(p => p.objs.forEach(o => (o.userData.mats || []).forEach(m => set.add(m))));
+  springMeshes.forEach(m => set.add(m.material));
+  return set;
+}
+let plateFree = false;   // cône projeté : il sort de la coupe
+function applyCut() {
+  for (const m of clampMaterials()) {
+    if (m.isSpriteMaterial) continue;
+    const free = plateFree && (plateMats.has(m) || [...plateMats].some(pm => hiCache.get(pm) === m));
+    m.clippingPlanes = cutOn && !free ? [CUT] : null;
+    if (m !== ghostMat && !(m.side === THREE.BackSide)) m.side = cutOn ? THREE.DoubleSide : THREE.FrontSide;
+    m.needsUpdate = true;
+  }
+}
+function select(p) {
+  selected = p || null;
+  clampG.traverse(m => {
+    if (!m.isMesh) return;
+    if (!m.userData.orig) m.userData.orig = m.material;
+    if (!selected) { m.material = m.userData.orig; return; }
+    m.material = m.userData.part === selected ? hiMat(m.userData.orig) : ghostMat;
+  });
+  applyCut();
+  renderCard();
+  document.querySelectorAll('.bom-row').forEach(r => r.setAttribute('aria-pressed', String(r.dataset.id === (selected && selected.id))));
+}
 
 /* ================= État de l'animation ================= */
 function initState() {
@@ -794,10 +1260,10 @@ const st = {
     text: 'Appliquer la procédure de cadenassage. Le cadenassage coupe l\'énergie hydraulique, mais pas celle des ressorts : elle reste emmagasinée dans le clam.',
     apply(S, p) { S.lock = ease(p); } },
   jawCover: { n: '4', title: 'Couvert des mâchoires', cam: 'overview', dur: 5,
-    text: 'Dévisser les 6 boulons ¾ du couvert des jaws avec une clé 1 1/8, puis retirer le couvert.',
+    text: 'Dévisser les 6 boulons ¾ × 1 ½ (B750-1500) du couvert des mâchoires 3506907 avec une clé 1 1/8, puis retirer le couvert.',
     apply(S, p) { for (let k = 0; k < 6; k++) S.jc.bolts[k] = seg(p, k * .07, k * .07 + .45); S.jc.lift = seg(p, .58, 1); } },
   cover: { n: '5', title: 'Couvercle : 9 boulons ½', cam: 'overview', dur: 6,
-    text: 'Enlever les 9 boulons ½ du couvercle avec une clé ¾. Les ressorts deviennent visibles : ils sont toujours comprimés sous le cône.',
+    text: 'Enlever les 9 boulons ½ × 2 ¼ (B500-2250) du couvercle 3506906 avec une clé ¾. Le cône 2920390 et ses 9 boulons apparaissent. Dessous, les ressorts 5200517 sont toujours comprimés.',
     apply(S, p) { for (let k = 0; k < 9; k++) S.cv.bolts[k] = seg(p, k * .045, k * .045 + .4); S.cv.lift = seg(p, .6, 1); S.springLbl = seg(p, .85, 1); } },
 };
 const first5 = { n: '1–5', title: 'Étapes 1 à 5 respectées', cam: 'overview', dur: 8,
@@ -813,6 +1279,40 @@ const skip6 = { n: '6', title: 'Boulons à bushing retirés, non remis', cam: 'b
     BUSHED.forEach((i, k) => { removeBolt(S, i, seg(p, k * .1, .6 + k * .1)); S.pb[i].bushOut = seg(p, .75, 1); });
     S.zone = seg(p, .7, 1);
   } };
+
+st.retain = { n: '6', title: 'Boulons de retenue remis sans bushing', cam: 'bolts', dur: 8,
+  text: 'Enlever les 3 boulons ½ × 8 (B500-8000) avec leurs bushings 3506878 sur le cône, puis les remettre sans les bushings. Plus longs de 1 ½ po que les autres, ils restent vissés dans le piston : le cône peut monter de la course des ressorts, mais pas être projeté.',
+  apply(S, p) {
+    S.springLbl = 1;
+    BUSHED.forEach(i => {
+      const b = S.pb[i];
+      b.turns = seg(p, .6, .78) > 0 ? lerp(ENG, retainTurns(), ease(seg(p, .7, .95))) : ENG * ease(seg(p, 0, .32));
+      b.lift = 1.4 * ease(seg(p, .32, .45)) * (1 - ease(seg(p, .6, .72)));
+      b.bushOut = seg(p, .42, .6);
+    });
+    S.ret = seg(p, .9, 1);
+  } };
+
+/* Étape 7 non respectée : chaque boulon est sorti au complet, en faisant le tour du cercle.
+   withRet : les 3 boulons de retenue de l'étape 6 sont en place. */
+function oneByOne(withRet) {
+  const base = S => { S.springLbl = 1; S.zone = 1; S.nums = 1; if (withRet) S.ret = 1; };
+  return [
+    { n: '7', title: 'Boulons 4, 1 et 3 retirés au complet', cam: 'bolts', dur: 9, tone: 'warn', flag: 'Non respectée',
+      text: 'Au lieu d\'un tour à la fois, chaque boulon est sorti au complet avant de passer au suivant, en faisant le tour du cercle. Les boulons restants reprennent la charge.'
+        + (withRet ? ' Les 3 boulons de retenue (R) ne portent rien : ils attendent au-dessus du cône.' : ''),
+      apply(S, p) { base(S); [4, 1, 3].forEach((n, k) => { const q = seg(p, k / 3, (k + 1) / 3); removeBolt(S, byNum(n), q); if (q > 0 && q < 1) S.active = byNum(n); }); } },
+    { n: '7', title: 'Boulon 5 retiré : le cône bascule', cam: 'bolts', dur: 5, tone: 'warn', flag: 'Non respectée',
+      text: 'Il ne reste que les boulons 2 et 6, du même côté. Le cône bascule vers le côté libre et se coince dans son logement : ces 2 boulons portent presque toute la force des ressorts.',
+      apply(S, p) { base(S); removeBolt(S, byNum(5), p); S.active = p < 1 ? byNum(5) : -1; } },
+    { n: '7', title: 'Boulon 2 retiré : un seul boulon retient tout', cam: 'bolts', dur: 5, tone: 'warn', flag: 'Non respectée',
+      text: 'Le boulon 6 porte maintenant toute la force des ressorts, soit 9 fois la charge qu\'il partage normalement avec les 8 autres.',
+      apply(S, p) { base(S); removeBolt(S, byNum(2), p); S.active = p < 1 ? byNum(2) : byNum(6); } },
+    { n: '7', title: 'Dévissage du boulon 6 sous pleine charge', cam: 'bolts', dur: 3.5, tone: 'danger', flag: 'Danger',
+      text: 'Le travailleur se penche pour dévisser le dernier boulon. Son filet, surchargé, commence à céder.',
+      apply(S, p) { base(S); S.pb[byNum(6)].turns = 0.25 * ease(p); S.active = byNum(6); } },
+  ];
+}
 
 /* Desserrage en étoile : 1 tour à la fois, ordre 1 → 6, sur `rounds()` tours */
 function starLoosen(S, p) {
@@ -833,20 +1333,9 @@ const SCEN = {
     label: 'Procédure respectée', sub: 'Étapes 1 à 9 de PRO-OP-DD-005', tone: 'ok',
     make: () => [
       st.lever, st.jaws, st.lock, st.jawCover, st.cover,
-      { n: '6', title: 'Boulons de retenue remis sans bushing', cam: 'bolts', dur: 8,
-        text: 'Enlever les 3 boulons ½ avec les bushings sur le cône, puis les remettre sans les bushings. Ils laissent monter le cône de la course des ressorts, mais empêchent sa projection.',
-        apply(S, p) {
-          S.springLbl = 1;
-          BUSHED.forEach(i => {
-            const b = S.pb[i];
-            b.turns = seg(p, .6, .78) > 0 ? lerp(ENG, retainTurns(), ease(seg(p, .7, .95))) : ENG * ease(seg(p, 0, .32));
-            b.lift = 1.0 * ease(seg(p, .32, .45)) * (1 - ease(seg(p, .6, .72)));
-            b.bushOut = seg(p, .42, .6);
-          });
-          S.ret = seg(p, .9, 1);
-        } },
+      st.retain,
       { n: '7', title: 'Dévisser 1 tour à la fois, ordre 1 à 6', cam: 'bolts', dur: rounds() * 6 * 0.62 / 0.84,
-        text: 'Dévisser les 6 autres boulons ½ un seul tour à la fois, dans l\'ordre de la photo. Les ressorts, comprimés de ¼ po, se détendent graduellement et de façon égale. On retire ensuite les 6 boulons.',
+        text: 'Dévisser les 6 boulons ½ × 6 ½ (B500-6500) un seul tour à la fois, dans l\'ordre 1 à 6 de la photo. Les ressorts, comprimés de ¼ po, se détendent graduellement et de façon égale. On retire ensuite les 6 boulons.',
         apply(S, p) {
           S.springLbl = 1; S.ret = 1;
           starLoosen(S, seg(p, 0, .84));
@@ -854,32 +1343,29 @@ const SCEN = {
           S.nums = 1 - seg(p, .9, 1);
         } },
       { n: '8', title: 'Dévisser les 3 derniers boulons', cam: 'bolts', dur: 4,
-        text: 'Les ressorts sont détendus : les 3 boulons de retenue ne portent plus de charge. On peut les enlever.',
+        text: 'Les ressorts sont détendus : les 3 boulons de retenue B500-8000 ne portent plus de charge. On peut les enlever.',
         apply(S, p) { S.springLbl = 1; S.ret = 1 - seg(p, .6, .9); BUSHED.forEach((i, k) => removeBolt(S, i, seg(p, k * .08, .75 + k * .08), retainTurns())); } },
       { n: '9', title: 'Changer les pièces', cam: 'overview', dur: 4.5,
-        text: 'Le cône et les ressorts sont accessibles sans énergie résiduelle : ressorts, chuck bowl, piston peuvent être remplacés.',
+        text: 'Le cône 2920390 (chuck bowl), les mâchoires et les ressorts 5200517 sont accessibles sans énergie résiduelle. Le piston 2920331 se remplace par l\'arrière.',
         apply(S, p) { S.springLbl = 1 - seg(p, .5, 1); S.plateOut = ease(p); } },
     ],
   },
   B: {
     label: 'Erreur : boulons retirés un par un', sub: 'Étapes 6 et 7 non respectées', tone: 'danger',
     make: () => [
-      first5, skip6,
-      { n: '7', title: 'Boulons 4, 1 et 3 retirés au complet', cam: 'bolts', dur: 9, tone: 'warn', flag: 'Non respectée',
-        text: 'Au lieu d\'un tour à la fois, chaque boulon est sorti au complet avant de passer au suivant, en faisant le tour du cercle. Les boulons restants reprennent la charge.',
-        apply(S, p) { S.springLbl = 1; S.zone = 1; S.nums = 1; [4, 1, 3].forEach((n, k) => { const q = seg(p, k / 3, (k + 1) / 3); removeBolt(S, byNum(n), q); if (q > 0 && q < 1) S.active = byNum(n); }); } },
-      { n: '7', title: 'Boulon 5 retiré : le cône bascule', cam: 'bolts', dur: 5, tone: 'warn', flag: 'Non respectée',
-        text: 'Il ne reste que les boulons 2 et 6, du même côté. Le cône bascule vers le côté libre et se coince dans son logement : ces 2 boulons portent presque toute la force des ressorts.',
-        apply(S, p) { S.springLbl = 1; S.zone = 1; S.nums = 1; removeBolt(S, byNum(5), p); S.active = p < 1 ? byNum(5) : -1; } },
-      { n: '7', title: 'Boulon 2 retiré : un seul boulon retient tout', cam: 'bolts', dur: 5, tone: 'warn', flag: 'Non respectée',
-        text: 'Le boulon 6 porte maintenant toute la force des ressorts, soit 9 fois la charge qu\'il partage normalement avec les 8 autres.',
-        apply(S, p) { S.springLbl = 1; S.zone = 1; S.nums = 1; removeBolt(S, byNum(2), p); S.active = p < 1 ? byNum(2) : byNum(6); } },
-      { n: '7', title: 'Dévissage du boulon 6 sous pleine charge', cam: 'bolts', dur: 3.5, tone: 'danger', flag: 'Danger',
-        text: 'Le travailleur se penche pour dévisser le dernier boulon. Son filet, surchargé, commence à céder.',
-        apply(S, p) { S.springLbl = 1; S.zone = 1; S.nums = 1; S.pb[byNum(6)].turns = 0.25 * ease(p); S.active = byNum(6); } },
+      first5, skip6, ...oneByOne(false),
       { n: '!', title: 'Le filet cède : projection du cône', cam: 'wide', flight: true, tone: 'danger', flag: 'Projection', dir: null, ride: byNum(6),
         text: 'Toute l\'énergie restante des ressorts est libérée d\'un coup. Le cône et les mâchoires partent vers le haut, dans l\'axe du clam, là où se trouve le visage du travailleur.' },
       { n: '⚠', title: 'Bilan', cam: 'wide', dur: 6, tone: 'danger', summary: true, text: '' },
+    ],
+  },
+  D: {
+    label: 'Erreur rattrapée par la retenue', sub: 'Étape 7 non respectée, étape 6 respectée', tone: 'warn',
+    make: () => [
+      first5, st.retain, ...oneByOne(true),
+      { n: '!', title: 'Le filet cède : les 3 boulons arrêtent le cône', cam: 'catch', catch: true, tone: 'warn', flag: 'Retenu', ride: byNum(6),
+        text: 'Le filet du boulon 6 cède et les ressorts lancent le cône vers le haut. Après quelques millimètres, il frappe les têtes des 3 boulons remis sans bushing à l\'étape 6 : la projection est stoppée.' },
+      { n: '✓', title: 'Bilan', cam: 'catch', dur: 6, tone: 'warn', summary: true, text: '' },
     ],
   },
   C: {
@@ -896,7 +1382,7 @@ const SCEN = {
         text: 'Un coup ou une vibration suffit : le cône se décoince brusquement. Sans les 3 boulons de retenue de l\'étape 6, rien ne l\'arrête.',
         apply(S, p) { S.springLbl = 1; S.zone = 1; S.stuck = true; S.stuckLbl = 1; S.shake = seg(p, .35, 1); } },
       { n: '!', title: 'Le cône se décoince : projection', cam: 'wide', flight: true, tone: 'danger', flag: 'Projection', dir: [0.22, 1, 0.04], ride: -1,
-        text: 'L\'énergie des ressorts, restée intacte, est libérée d\'un coup. Avec l\'étape 6, les 3 boulons remis sans bushing auraient retenu le cône après quelques millimètres.' },
+        text: 'L\'énergie des ressorts, restée intacte, est libérée d\'un coup. Avec l\'étape 6, les 3 boulons remis sans bushing l\'auraient arrêté après quelques millimètres.' },
       { n: '⚠', title: 'Bilan', cam: 'wide', dur: 6, tone: 'danger', summary: true, text: '' },
     ],
   },
@@ -911,7 +1397,14 @@ function derive(S) {
     D.comp = SPRINGS.map(() => 0);
   } else {
     const cons = [];
-    if (S.stuck) {
+    if (S.catchD) {
+      // Cône lancé par les ressorts puis arrêté à plat par les 3 têtes de boulons de retenue.
+      const c = S.catchD, p = S.catchP, k = seg(p, CATCH_T0, CATCH_HIT) ** 2;
+      let a = lerp(c.pose.a, c.aC, k);
+      if (p > CATCH_HIT) a = c.aC - 0.035 * Math.exp(-(p - CATCH_HIT) * 18) * Math.abs(Math.sin((p - CATCH_HIT) * 70));
+      D.pose = { a, b: lerp(c.pose.b, 0, k), c: lerp(c.pose.c, 0, k) };
+      D.hit = p >= CATCH_HIT;
+    } else if (S.stuck) {
       const w = S.shake;
       D.pose = { a: w * 0.012 * Math.sin(S.time * 90), b: w * 0.004 * Math.sin(S.time * 70), c: 0 };
     } else {
@@ -932,7 +1425,7 @@ function derive(S) {
     });
     D.F = D.comp.reduce((a, x) => a + P.k * x, 0);           // N
     D.E = D.comp.reduce((a, x) => a + 0.5 * P.k * x * x, 0) / 1000;  // J
-    if (!S.stuck) boltLoads(D, cons);
+    if (!S.stuck && !S.catchD) boltLoads(D, cons);
   }
   S.D = D;
   return S;
@@ -957,13 +1450,14 @@ function boltLoads(D, cons) {
 }
 
 /* ================= Projection : trajectoire balistique pré-calculée ================= */
-const HIT_R = 1.62 + HEAD_R - 0.25;
-const HANDS_Y = 3.3;   // gants du travailleur, au-dessus du cône (clé sur le boulon)
+const HIT_R = u(R.plate) + HEAD_R * 0.7;
+const CATCH_T0 = 0.14, CATCH_HIT = 0.3;   // fractions de l'étape d'arrêt : rupture du filet, contact avec la retenue   // gants du travailleur, au-dessus du cône (clé sur le boulon)
 function groundAt(x, z) {
   const r = Math.hypot(x, z);
-  if (r < 2.0) return PLATE_TOP0 - PLATE_T + 0.05;
-  if (r < 2.9 && Math.abs(x) < 2.9 && Math.abs(z) < 2.8) return 0.2;
-  return FLOOR + 0.35;
+  if (r < u(R.rimIn)) return PLATE_TOP0 + travel();          // retombe sur les ressorts détendus
+  if (r < u(R.body) + 0.3) return u(Y.rimT) + PLATE_T;        // sur le rebord du bâti
+  if (Math.abs(x) < 2.9 && Math.abs(z) < 2.8) return PLATE_T; // sur la palette
+  return FLOOR + PLATE_T;
 }
 function computeFlight(S0, step) {
   const D = S0.D;
@@ -989,10 +1483,11 @@ function computeFlight(S0, step) {
     pos.addScaledVector(vel, dt);
     ang += w * dt;
     t += dt;
-    if (!out.hands && pos.y >= HANDS_Y - 0.3) out.hands = { t, speed: vel.length() * U };
+    const top = pos.y + HUB_H;   // dessus du moyeu du cône
+    if (!out.hands && top >= HANDS_Y - 0.3) out.hands = { t, speed: vel.length() * U };
     if (!hitDone) {
-      const dx = Math.hypot(pos.x - HEAD.x, pos.z - HEAD.z), dy = Math.abs(pos.y - HEAD.y);
-      if (dx < HIT_R && dy < HEAD_R + 0.25) {
+      const dx = Math.hypot(pos.x - HEAD.x, pos.z - HEAD.z);
+      if (dx < HIT_R && top >= HEAD.y - HEAD_R * 0.9 && pos.y - PLATE_T <= HEAD.y + HEAD_R) {
         hitDone = true;
         out.impact = { t, speed: vel.length() * U };
         vel.x = -Math.abs(vel.x) * 0.3 - 1.5; vel.z *= 0.3; vel.y = -Math.abs(vel.y) * 0.25;
@@ -1017,7 +1512,7 @@ function computeFlight(S0, step) {
       sm.push(p.x, p.y, p.z, a);
       if (done) break;
       vv.y -= G * dt; p.addScaledVector(vv, dt); a += spin * dt;
-      const gnd = Math.hypot(p.x, p.z) < 2 ? POCKET : groundAt(p.x, p.z) - 0.2;
+      const gnd = Math.hypot(p.x, p.z) < u(R.body) ? POCKET : groundAt(p.x, p.z) - PLATE_T + 0.1;
       if (vv.y < 0 && p.y <= gnd && k > 20) { p.y = gnd; done = true; }
     }
     out.springs.push({ j, sm, E: Es });
@@ -1049,12 +1544,31 @@ function build(keep = false) {
     s.dur = F.tEnd * SLOWMO + 1.2;
     s.apply = (S2, p) => { S2.flight = F; S2.launchT = Math.max(0, (p * s.dur - 0.4) / SLOWMO); S2.ride = s.ride; S2.zone = 1; };
   });
+  // Arrêt par la retenue : départ depuis l'état juste avant la rupture du filet
+  steps.forEach((s, i) => {
+    if (!s.catch) return;
+    const S = initState();
+    for (let k = 0; k < i; k++) steps[k].apply(S, 1);
+    derive(S);
+    const hRet = H(retainTurns());
+    const pose = { ...S.D.pose };
+    const d0 = BUSHED.reduce((m, j) => m + pose.a + pose.b * BOLTS[j].x + pose.c * BOLTS[j].z, 0) / BUSHED.length;
+    const E = S.D.E, v = Math.sqrt(2 * E / P.m);
+    const gapMm = (hRet - d0) / X * U * 1000;
+    s.C = { pose, aC: hRet, E, v, gapMm, ms: 2 * gapMm / Math.max(v, 1e-3) };
+    s.dur = 6;
+    s.apply = (S2, p) => {
+      S2.catchD = s.C; S2.catchP = p; S2.ride = s.ride; S2.ret = 1; S2.springLbl = 1; S2.nums = 1 - seg(p, 0, CATCH_T0);
+      S2.zone = 1 - seg(p, CATCH_HIT, .7); S2.active = p < CATCH_T0 ? s.ride : -1;
+    };
+  });
   steps.forEach(s => {
-    if (s.summary) {
-      const F = steps.find(x => x.flight).F;
-      s.F = F;
-      s.apply = (S2) => { S2.flight = F; S2.launchT = 99; S2.ride = steps.find(x => x.flight).ride; };
-    }
+    if (!s.summary) return;
+    const ev = steps.find(x => x.flight || x.catch);
+    s.ev = ev;
+    s.apply = ev.flight
+      ? (S2) => { S2.flight = ev.F; S2.launchT = 99; S2.ride = ev.ride; }
+      : (S2) => { S2.catchD = ev.C; S2.catchP = 1; S2.ride = ev.ride; S2.ret = 1; S2.springLbl = 1; };
   });
   starts = []; total = 0;
   steps.forEach(s => { starts.push(total); total += s.dur; });
@@ -1113,6 +1627,7 @@ function applyScene(S) {
 
   // Cône
   const fl = D.flightS;
+  if (!!fl !== plateFree) { plateFree = !!fl; applyCut(); }
   if (fl) {
     const [x, y, z, ang] = fl.plate;
     plate.position.set(x, y, z);
@@ -1126,8 +1641,8 @@ function applyScene(S) {
     if (S.plateOut > 0) movePart(plate, PLATE_BASE.set(0, PLATE_TOP0 + a, 0), PLATE_REST, S.plateOut, 2.2);
   }
   jaws.forEach(j => {
-    const r = lerp(0.44, 0.34, S.jaws);
-    j.position.set(r * Math.cos(j.userData.a), 0.25, -r * Math.sin(j.userData.a));
+    const off = u(0.12) * (1 - S.jaws);
+    j.position.set(off * Math.cos(j.userData.a), u(JAW_Y0), -off * Math.sin(j.userData.a));
   });
 
   // Ressorts
@@ -1151,14 +1666,16 @@ function applyScene(S) {
   S.pb.forEach((b, i) => {
     const o = pBolts[i], B = BOLTS[i];
     const bush = B.bushing ? BUSH_H * (1 - b.bushOut) : 0;
-    if (fl && S.ride === i) {
+    if ((fl || S.catchD) && S.ride === i) {
       tmpV.set(B.x, 0.02, B.z);
       o.position.copy(plate.localToWorld(tmpV));
       o.quaternion.copy(plate.quaternion);
       setOpacity(o, 1);
     } else {
       o.quaternion.identity();
-      o.position.set(B.x, PLATE_TOP0 + bush + H(b.turns) + b.lift + 0.9 * b.gone, B.z);
+      const q = S.catchD ? S.catchP - CATCH_HIT : -1;
+      const jolt = B.bushing && q > 0 ? 0.03 * Math.exp(-q * 14) * Math.sin(q * 90) : 0;
+      o.position.set(B.x, PLATE_TOP0 + bush + H(b.turns) + b.lift + 0.9 * b.gone + jolt, B.z);
       o.rotation.y = b.turns * Math.PI * 2;
       setOpacity(o, fl && S.ride === -1 && b.gone < 1 ? 0 : 1 - b.gone);
     }
@@ -1174,7 +1691,8 @@ function applyScene(S) {
     if (B.bushing) {
       const L = labels.ret[BUSHED.indexOf(i)];
       L.position.set(o.position.x, o.position.y + 0.55, o.position.z);
-      labelOpacity(L, S.ret * (1 - b.gone));
+      const hide = S.catchD && steps[S.i] && steps[S.i].catch ? seg(S.catchP, CATCH_T0 - .04, CATCH_T0) * (1 - seg(S.catchP, .6, .7)) : 0;
+      labelOpacity(L, S.ret * (1 - b.gone) * (1 - hide));
     }
   });
 
@@ -1199,8 +1717,10 @@ function applyScene(S) {
   // Travailleur
   let knock = 0;
   if (fl && S.flight.impact) knock = ease(seg(S.launchT, S.flight.impact.t, S.flight.impact.t + 0.25));
+  if (S.catchD) knock = 0.25 * ease(seg(S.catchP, CATCH_HIT, CATCH_HIT + .12));
   worker.rotation.z = -0.38 * knock;
   worker.visible = document.getElementById('optWorker').checked;
+  pallet.visible = stand.visible = consoleG.visible = true;
 
   // Trajectoire
   if (fl) {
@@ -1218,11 +1738,13 @@ function applyScene(S) {
 
 /* ================= Caméra ================= */
 const CAMS = {
-  intro: { p: [-9.5, 9.5, 13], t: [-0.8, 3.2, -1.4] },
-  overview: { p: [-9, 8.8, 11.5], t: [-0.4, 2.8, 0.4] },
-  top: { p: [-1.6, 11.5, 5.4], t: [0, 2.9, 0] },
-  bolts: { p: [-3.6, 9.6, 8.2], t: [0.2, 3.0, 0] },
-  wide: { p: [-12, 10.5, 19], t: [0.8, 4.4, 0] },
+  intro: { p: [-10, 10.5, 14], t: [-0.8, 3.4, -1.4] },
+  overview: { p: [-9.5, 9.8, 12.5], t: [-0.3, 3.1, 0.3] },
+  top: { p: [-1.8, 12.8, 5.8], t: [0, 3.7, 0] },
+  bolts: { p: [-3.4, 8.9, 6.6], t: [0.3, 3.9, 0] },
+  wide: { p: [-12.5, 11.5, 19.5], t: [0.8, 5.0, 0] },
+  catch: { p: [-8.2, 9.4, 11.2], t: [0.6, 4.5, 0] },
+  explode: { p: [-8.5, 12.5, 22], t: [0.2, 4.6, 0] },
 };
 let autoCam = true, camGoal = CAMS.intro;
 controls.addEventListener('start', () => { autoCam = false; document.getElementById('camChip').hidden = false; });
@@ -1231,7 +1753,8 @@ camera.position.set(...CAMS.intro.p); controls.target.set(...CAMS.intro.t);
 const goalP = new THREE.Vector3(), goalT = new THREE.Vector3();
 function updateCamera(dt) {
   if (!autoCam) return;
-  goalP.set(...camGoal.p); goalT.set(...camGoal.t);
+  const g = explodeTarget ? CAMS.explode : camGoal;
+  goalP.set(...g.p); goalT.set(...g.t);
   const aspect = camera.aspect;
   if (aspect < 1.1) goalP.sub(goalT).multiplyScalar(1 + (1.1 - aspect) * 0.9).add(goalT);
   const k = reduceMotion ? 1 : 1 - Math.exp(-dt * 2.2);
@@ -1278,7 +1801,7 @@ function setPlaying(v) {
   $('bPlay').setAttribute('aria-label', v ? 'Pause' : 'Lecture');
   $('playIcon').innerHTML = v ? '<path d="M3 2h4v12H3zM9 2h4v12H9z"/>' : '<path d="M4 2l10 6-10 6z"/>';
 }
-$('bPlay').addEventListener('click', () => { if (!playing && T >= total - 1e-3) T = 0; setPlaying(!playing); });
+$('bPlay').addEventListener('click', () => { if (explodeTarget) setExplode(false); if (!playing && T >= total - 1e-3) T = 0; setPlaying(!playing); });
 $('bRestart').addEventListener('click', () => { T = 0; setPlaying(false); autoCam = true; $('camChip').hidden = true; });
 $('bPrev').addEventListener('click', () => { const { i, p } = locate(T); T = starts[p < 0.05 && i > 0 ? i - 1 : i]; setPlaying(false); });
 $('bNext').addEventListener('click', () => { const { i } = locate(T); T = i < steps.length - 1 ? starts[i + 1] : total - 1e-3; setPlaying(false); });
@@ -1307,15 +1830,15 @@ const tiles = tileOrder.map(i => {
 const pin = { n: $('pN'), k: $('pK'), x0: $('pX'), m: $('pM') };
 function showParams() {
   $('oN').textContent = P.n;
-  $('oK').textContent = `${P.k} N/mm`;
-  $('oX').textContent = `${fr(P.x0, 2)} mm (${fr(P.x0 / 25.4, 2)} po)`;
-  $('oM').textContent = `${P.m} kg`;
+  $('oK').textContent = `${P.k} N/mm (${fr(P.k * 5.71015, 0)} lbf/po)`;
+  $('oX').textContent = `${fr(P.x0, 2)} mm (${fr(P.x0 / 25.4, 3)} po)`;
+  $('oM').textContent = `${P.m} kg (${fr(P.m * 2.20462, 0)} lb)`;
 }
 function onParam() {
   const nChanged = +pin.n.value !== P.n;
   P.n = +pin.n.value; P.k = +pin.k.value; P.x0 = +pin.x0.value; P.m = +pin.m.value;
-  if (nChanged) { layoutSprings(); buildBody(); buildSprings(); }
-  showParams(); build(true);
+  if (nChanged) { layoutSprings(); buildBody(); buildSprings(); select(selected); }
+  showParams(); build(true); layoutExplode(); renderBOM();
 }
 Object.values(pin).forEach(el => el.addEventListener('input', onParam));
 $('pReset').addEventListener('click', () => { pin.n.value = DEFAULTS.n; pin.k.value = DEFAULTS.k; pin.x0.value = DEFAULTS.x0; pin.m.value = DEFAULTS.m; onParam(); });
@@ -1325,14 +1848,22 @@ let lastStep = -1, uiTick = 0;
 function updateUI(S, force) {
   const s = steps[S.i];
   const D = S.D;
-  if (S.i !== lastStep) {
+  if (explodeTarget && lastStep !== 'x') {
+    lastStep = 'x';
+    $('capNum').textContent = '⊕';
+    $('capTitle').textContent = 'Vue éclatée : clam UM-079-100AA 12 HH';
+    $('capTag').hidden = true;
+    $('dock').dataset.tone = 'ok';
+    $('capText').textContent = 'Toutes les pièces du dessin, dans l\'ordre d\'assemblage : vérin hydraulique à gauche, mâchoires à droite. Au-dessus : options de guidage UM-021-15 et UM-021-06. En dessous : les 4 jeux de mâchoires WH-500. Cliquez une pièce pour l\'identifier ; « Lecture » revient à l\'animation.';
+  }
+  if (!explodeTarget && S.i !== lastStep) {
     lastStep = S.i;
     $('capNum').textContent = s.n;
     $('capTitle').textContent = s.title;
     const tag = $('capTag');
     tag.hidden = !s.flag; tag.textContent = s.flag || ''; tag.dataset.tone = s.tone || '';
     $('dock').dataset.tone = s.tone || 'ok';
-    $('capText').textContent = s.summary ? summaryText(s.F) : s.text;
+    $('capText').textContent = s.summary ? summaryText(s.ev) : s.text;
     [...$('stepList').children].forEach((li, k) => { li.className = k < S.i ? 'done' : k === S.i ? 'now' : ''; });
     $('tmeta').textContent = `Étape ${S.i + 1}/${steps.length}`;
     camGoal = CAMS[s.cam] || CAMS.overview;
@@ -1343,23 +1874,24 @@ function updateUI(S, force) {
   // Énergie
   const E0 = 0.5 * P.k * P.x0 * P.x0 * P.n / 1000;
   const F0 = P.k * P.x0 * P.n;
-  const fl = !!S.flight;
-  const released = fl && S.launchT > 0;
-  const E = fl ? S.flight.E : D.E;
-  $('eNum').textContent = fr(E, E < 10 ? 1 : 0);
+  const fl = !!S.flight, cat = S.catchD;
+  const released = (fl && S.launchT > 0) || (cat && S.catchP >= CATCH_T0);
+  const E = fl ? S.flight.E : cat && released ? cat.E : D.E;
+  const [en, eu] = fmtE(E);
+  $('eNum').textContent = en; $('eUnit').textContent = eu; $('eAlt').textContent = `= ${eS(E, OTHER())}`;
   const state = $('eState');
-  if (released) { state.textContent = 'Libérée d\'un coup'; state.dataset.tone = 'danger'; }
+  if (cat && D.hit) { state.textContent = 'Arrêtée par la retenue'; state.dataset.tone = 'ok'; }
+  else if (released) { state.textContent = 'Libérée d\'un coup'; state.dataset.tone = 'danger'; }
   else if (E < 0.02 * E0) { state.textContent = 'Libérée graduellement'; state.dataset.tone = 'ok'; }
   else { state.textContent = S.stuck ? 'Stockée, cône coincé' : 'Stockée'; state.dataset.tone = S.stuck ? 'danger' : ''; }
   $('eFill').style.width = `${Math.min(100, E / E0 * 100)}%`;
-  $('eMeter').dataset.tone = released ? 'danger' : E < 0.02 * E0 ? 'ok' : '';
-  $('kvF').textContent = fl ? '—' : `${fr(D.F / 1000)} kN`;
+  $('eMeter').dataset.tone = cat && D.hit ? 'ok' : released ? 'danger' : E < 0.02 * E0 ? 'ok' : '';
+  $('kvF').textContent = fl || released ? '—' : fS(D.F);
   const mc = D.comp.reduce((a, b) => a + b, 0) / Math.max(1, D.comp.length);
-  $('kvX').textContent = fl ? '0,0 mm' : `${fr(mc, 2)} mm`;
+  $('kvX').textContent = xS(fl ? 0 : mc);
   const maxLoad = Math.max(...D.loads);
-  $('kvB').textContent = fl || S.stuck ? '—' : `${fr(maxLoad / 1000)} kN`;
-  const hEq = E0 / (5 * 9.81);
-  $('equiv').textContent = `Au départ : ${fr(E0, 0)} J et ${fr(F0 / 1000)} kN (≈ ${fr(F0 / 9.81 / 1000, 1)} tonne-force). C'est l'énergie d'une masse de 5 kg qui tombe de ${fr(hEq, 1)} m.`;
+  $('kvB').textContent = fl || released || S.stuck ? '—' : fS(maxLoad);
+  $('equiv').textContent = `Au départ : ${eS(E0, 'SI')} = ${eS(E0, 'IMP')}. Force des ressorts : ${fS(F0, 'SI')} = ${fS(F0, 'IMP')}, le poids d'environ ${fr(F0 / 9.81 / 1000, 1)} tonne. Même énergie qu'une masse de 5 kg (11 lb) lâchée de ${hS(E0 / (5 * 9.81), 'SI')} (${fr(E0 / (5 * 9.81) * 3.28084, 1)} pi), ou que le cône de ${mS(P.m, 'SI')} lâché de ${hS(E0 / (P.m * 9.81), 'SI')} sur un pied.`;
 
   // Boulons
   const normal = F0 / 9;
@@ -1367,21 +1899,26 @@ function updateUI(S, force) {
     const b = S.pb[tl.i];
     const gone = b.gone > 0.5 || b.turns >= ENG - 1e-3;
     const load = D.loads[tl.i];
+    const shock = cat && BOLTS[tl.i].bushing && S.catchP >= CATCH_HIT && S.catchP < .6;
+    const stripped = (cat && S.catchP >= CATCH_T0 || fl) && S.ride === tl.i;
     let st;
-    if (gone) st = 'retiré';
+    if (stripped) st = 'filet arraché';
+    else if (shock) st = 'choc';
+    else if (gone) st = 'retiré';
     else if (BOLTS[tl.i].bushing && b.bushOut > 0.5) st = 'retenue';
     else if (b.turns < 0.05) st = 'serré';
     else st = 'desserré';
     tl.st.textContent = st;
     tl.tr.textContent = gone ? '' : `${fr(b.turns, 1)} tr`;
-    tl.ld.textContent = gone || fl ? '—' : `${fr(load / 1000)} kN`;
-    tl.bar.style.width = `${gone || fl ? 0 : Math.min(100, load / F0 * 100)}%`;
-    tl.el.dataset.load = load > 2.5 * normal ? 'high' : '';
+    tl.ld.textContent = gone || fl || released ? '—' : fS(load);
+    tl.bar.style.width = `${shock ? 100 : gone || fl || released ? 0 : Math.min(100, load / F0 * 100)}%`;
+    tl.el.dataset.load = shock || stripped || load > 2.5 * normal ? 'high' : '';
     tl.el.dataset.active = String(S.active === tl.i);
     tl.el.dataset.gone = String(gone);
   });
 
-  $('note').textContent = fl && steps[S.i].flight ? `Projection au ralenti ×${SLOWMO}` : 'Course des ressorts affichée ×6';
+  $('note').textContent = fl && steps[S.i].flight ? `Projection au ralenti ×${SLOWMO}`
+    : cat && steps[S.i].catch ? `Mouvement ralenti : dans la réalité, ≈ ${fr(cat.ms, 0)} ms` : 'Course des ressorts affichée ×6';
 
   // Bandeau d'impact
   const banner = $('banner'), flash = $('flash');
@@ -1390,17 +1927,104 @@ function updateUI(S, force) {
     const hitHead = imp && lt >= imp.t, hitHands = hands && lt >= hands.t;
     banner.hidden = !(lt > 0);
     $('bannerTitle').textContent = hitHead ? 'IMPACT À LA TÊTE' : hitHands ? 'IMPACT AUX MAINS' : 'PROJECTION';
-    $('bannerSub').textContent = hitHead ? `${fr(imp.speed)} m/s · ${fr(S.flight.E, 0)} J` : `${fr(S.flight.v)} m/s au départ · ${fr(S.flight.E, 0)} J`;
+    $('bannerSub').textContent = hitHead ? `${vS(imp.speed)} · ${eS(S.flight.E)}` : `${vS(S.flight.v)} au départ · ${eS(S.flight.E)}`;
     const since = Math.min(hitHead ? lt - imp.t : 99, hitHands ? lt - hands.t + (imp ? 0.4 : 0) : 99);
     flash.style.opacity = reduceMotion ? (hitHead || hitHands ? 0.35 : 0) : Math.max(0, 0.85 - since * 1.2);
+    banner.dataset.tone = ''; flash.style.setProperty('--flash', 'var(--danger)');
+  } else if (cat && steps[S.i].catch) {
+    const p = S.catchP;
+    banner.hidden = p < CATCH_T0;
+    banner.dataset.tone = D.hit ? 'ok' : '';
+    $('bannerTitle').textContent = D.hit ? 'ARRÊTÉ PAR LA RETENUE' : 'PROJECTION';
+    $('bannerSub').textContent = D.hit ? `${eS(cat.E)} encaissés par 3 boulons B500-8000 · course ${xS(cat.gapMm)}` : `${vS(cat.v)} · ${eS(cat.E)}`;
+    flash.style.setProperty('--flash', 'var(--warn)');
+    flash.style.opacity = !D.hit ? 0 : reduceMotion ? 0.3 : Math.max(0, 0.8 - (p - CATCH_HIT) * 6);
   } else { banner.hidden = true; flash.style.opacity = 0; }
 }
-function summaryText(F) {
+function summaryText(ev) {
+  if (ev.catch) {
+    const c = ev.C;
+    return `Le filet du boulon 6 a cédé : ${eS(c.E)} (${eS(c.E, OTHER())}) libérés d'un coup, le cône 2920390 part à ${vS(c.v)}. Les 3 boulons B500-8000 remis sans bushing à l'étape 6 l'arrêtent après environ ${xS(c.gapMm)} de course, en quelques millisecondes. Les mains et le visage du travailleur sont épargnés. C'est un quasi-accident : même erreur que le scénario « boulons retirés un par un », mais la retenue a fait son travail. Les 3 boulons ont encaissé le choc et sont remplacés par des neufs (étape 12).`;
+  }
+  const F = ev.F;
   const hands = F.hands ? 'Il frappe d\'abord les mains posées sur la clé, juste au-dessus. ' : '';
-  const hit = F.impact ? `Il atteint ensuite la tête du travailleur penché, encore à ${fr(F.impact.speed)} m/s (${fr(F.impact.speed * 3.6, 0)} km/h).` : 'Avec ces paramètres, il n\'atteint pas la tête, mais il retombe sur le clam ou au sol de façon imprévisible.';
-  const spr = F.springs.length ? ` Des ressorts peuvent aussi être éjectés : jusqu'à ${fr(Math.sqrt(2 * F.sprE / SPRING_MASS))} m/s chacun.` : '';
-  return `${fr(F.E, 0)} J libérés en une fraction de seconde. Le cône de ${P.m} kg part à ${fr(F.v)} m/s et peut monter jusqu'à ${fr(F.h, 2)} m. ${hands}${hit}${spr} La procédure (1 tour à la fois, retenue de l'étape 6) évite ce scénario.`;
+  const hit = F.impact ? `Il atteint ensuite la tête du travailleur penché, encore à ${vS(F.impact.speed)}.` : 'Avec ces paramètres, il n\'atteint pas la tête, mais il retombe sur le clam ou au sol de façon imprévisible.';
+  const spr = F.springs.length ? ` Des ressorts 5200517 peuvent aussi être éjectés : jusqu'à ${vS(Math.sqrt(2 * F.sprE / SPRING_MASS))} chacun.` : '';
+  return `${eS(F.E)} (${eS(F.E, OTHER())}) libérés en une fraction de seconde. Le cône 2920390 et ses mâchoires (${mS(P.m)}) partent à ${vS(F.v)} et peuvent monter jusqu'à ${hS(F.h)}. ${hands}${hit}${spr} La procédure (1 tour à la fois, retenue de l'étape 6) évite ce scénario.`;
 }
+
+/* ================= Nomenclature, fiche de pièce, vues ================= */
+const GRP = { rear: 'Arrière : vérin hydraulique', body: 'Bâti', front: 'Avant : ressorts, cône, couvercles, mâchoires', opt: 'Options de guidage et autres mâchoires (selon le calibre de tige)' };
+const qtyOf = p => p.qty === 'n' ? P.n : p.qty;
+function renderBOM() {
+  const el = $('bomList'); el.innerHTML = '';
+  for (const [g, title] of Object.entries(GRP)) {
+    const h = document.createElement('h5'); h.textContent = title; el.appendChild(h);
+    PARTS.filter(p => p.grp === g).forEach(p => {
+      const b = document.createElement('button');
+      b.type = 'button'; b.className = 'bom-row'; b.dataset.id = p.id;
+      b.setAttribute('aria-pressed', String(selected === p));
+      b.innerHTML = `<span class="r"></span><span class="n"></span><span class="q"></span>`;
+      b.querySelector('.r').textContent = p.ref;
+      b.querySelector('.n').textContent = p.name;
+      b.querySelector('.q').textContent = `${p.qtyEst ? '≈' : ''}${qtyOf(p)}`;
+      b.addEventListener('click', () => { select(selected === p ? null : p); if (p.opt && !explodeTarget) setExplode(true); });
+      el.appendChild(b);
+    });
+  }
+}
+function renderCard() {
+  const c = $('partCard');
+  if (!selected) {
+    c.innerHTML = `<p class="meta">${PARTS.length} repères, toutes les pièces numérotées du dessin. Cliquez une pièce dans la vue 3D ou dans la liste pour l'identifier. « Vue éclatée » sépare les pièces le long de l'axe, comme sur le dessin ; « Coupe » montre l'intérieur du clam.</p>`;
+    return;
+  }
+  const p = selected;
+  c.innerHTML = `<span class="ref"></span><h4></h4><p class="role"></p><p class="step"></p><p class="meta"></p><button type="button">Afficher toutes les pièces</button>`;
+  c.querySelector('.ref').textContent = `${p.ref} · quantité ${p.qtyEst ? '≈ ' : ''}${qtyOf(p)}${p.qtyEst ? ' (compte estimé d\'après le dessin)' : ''}`;
+  c.querySelector('h4').textContent = p.name;
+  c.querySelector('.role').textContent = p.role || '';
+  c.querySelector('.step').textContent = p.step || '';
+  c.querySelector('.meta').textContent = p.note || (p.opt ? 'Pièce optionnelle : non montée sur le clam animé.' : '');
+  c.querySelectorAll('p').forEach(e => { e.hidden = !e.textContent; });
+  c.querySelector('button').addEventListener('click', () => select(null));
+}
+let cutBeforeExplode = null;
+function setCut(v) { cutOn = v; $('btnCut').setAttribute('aria-pressed', String(cutOn)); applyCut(); }
+function setExplode(on) {
+  if (on && !explodeTarget) { cutBeforeExplode = cutOn; if (cutOn) setCut(false); }
+  if (!on && explodeTarget && cutBeforeExplode !== null) { setCut(cutBeforeExplode); cutBeforeExplode = null; }
+  explodeTarget = on ? 1 : 0;
+  $('btnExplode').setAttribute('aria-pressed', String(on));
+  if (on) setPlaying(false);
+  autoCam = true; $('camChip').hidden = true;
+  lastStep = -1;
+}
+$('btnExplode').addEventListener('click', () => setExplode(!explodeTarget));
+$('btnCut').addEventListener('click', () => { setCut(!cutOn); if (explodeTarget) cutBeforeExplode = null; });
+document.querySelectorAll('.units button').forEach(b => b.addEventListener('click', () => {
+  UNITS = b.dataset.u;
+  document.querySelectorAll('.units button').forEach(x => x.setAttribute('aria-pressed', String(x === b)));
+  try { localStorage.setItem('clam-units', UNITS); } catch (e) {}
+  lastStep = -1;
+}));
+document.querySelectorAll('.units button').forEach(x => x.setAttribute('aria-pressed', String(x.dataset.u === UNITS)));
+// Clic sur une pièce dans la vue 3D
+const ray = new THREE.Raycaster(), ptr = new THREE.Vector2();
+let downAt = null;
+canvas.addEventListener('pointerdown', e => { downAt = [e.clientX, e.clientY]; });
+canvas.addEventListener('pointerup', e => {
+  if (!downAt || Math.hypot(e.clientX - downAt[0], e.clientY - downAt[1]) > 5) return;
+  const r = canvas.getBoundingClientRect();
+  ptr.set((e.clientX - r.left) / r.width * 2 - 1, -(e.clientY - r.top) / r.height * 2 + 1);
+  ray.setFromCamera(ptr, camera);
+  const hits = ray.intersectObjects(clampG.children, true).filter(h => {
+    if (cutOn && h.point.z > 0.002) return false;
+    let o = h.object; while (o) { if (!o.visible) return false; o = o.parent; }
+    return h.object.isMesh && h.object.userData.part && h.object.material !== ghostMat;
+  });
+  select(hits.length ? hits[0].object.userData.part : null);
+});
 
 /* ================= Thème ================= */
 function applyTheme() {
@@ -1434,8 +2058,10 @@ function frame(now) {
     if ($('optPause').checked && T >= end && i < steps.length - 1) { T = end; setPlaying(false); }
     if (T >= total) { T = total - 1e-3; setPlaying(false); }
   }
-  const S = stateAt(T);
+  explodeE = reduceMotion ? explodeTarget : explodeE + Math.sign(explodeTarget - explodeE) * Math.min(Math.abs(explodeTarget - explodeE), dt / 1.4);
+  const S = explodeE > 0 ? stateAt(0) : stateAt(T);
   applyScene(S);
+  applyExplode(explodeE);
   updateUI(S);
   updateCamera(dt);
   controls.update();
@@ -1446,13 +2072,16 @@ function frame(now) {
 async function start() {
   try { await Promise.race([document.fonts.ready, new Promise(r => setTimeout(r, 1500))]); } catch (e) {}
   buildLabels();
+  layoutExplode();
+  renderBOM(); renderCard();
+  applyCut();
   let saved = 'A';
   try { saved = localStorage.getItem('clam-scen') || 'A'; } catch (e) {}
   selectScen(SCEN[saved] ? saved : 'A');
   resize();
   const S = stateAt(T); applyScene(S); updateUI(S, true);
   requestAnimationFrame(frame);
-  window.__clam = { stateAt, steps: () => steps, starts: () => starts, total: () => total, setT: v => { T = v; }, P };
+  window.__clam = { stateAt, steps: () => steps, starts: () => starts, total: () => total, setT: v => { T = v; }, P, setExplode, setCutUI: setCut, explodeNow: v => { setExplode(v); explodeE = v ? 1 : 0; }, select: id => select(byId(id)), PARTS, setCut: v => { cutOn = v; applyCut(); } };
 }
 start();
 </script>
