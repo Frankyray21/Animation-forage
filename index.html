@@ -1506,20 +1506,52 @@ mat.mast = new THREE.MeshStandardMaterial({ color: 0x7d868c, roughness: .55, met
 }
 rig.add(carriage);
 
-/* ---------- Clé à cliquet avec rallonge sur le boulon actif ---------- */
+/* ---------- Clé à chocs électrique (à fil) sur le boulon actif, d'après la photo du chantier ----------
+   Repère de l'outil : y = axe du boulon (vers le travailleur) ; -z local = bas en pose horizontale.
+   Corps métallique usé, nez conique, douille longue 12 pans, poignée arrière fermée avec gâchette, anneau latéral, cordon noir. */
+// Métal usé et gras (texture procédurale : taches d'huile, rayures, peinture écaillée)
+const grimeTex = (() => {
+  const c = document.createElement('canvas'); c.width = c.height = 256; const x = c.getContext('2d');
+  x.fillStyle = '#a19d94'; x.fillRect(0, 0, 256, 256);
+  let sd = 11; const rnd = () => (sd = (sd * 16807) % 2147483647) / 2147483647;
+  for (let i = 0; i < 90; i++) { x.fillStyle = `rgba(${30 + rnd() * 30},${28 + rnd() * 25},${24 + rnd() * 20},${.15 + rnd() * .45})`; x.beginPath(); x.ellipse(rnd() * 256, rnd() * 256, 4 + rnd() * 26, 3 + rnd() * 14, rnd() * 3, 0, Math.PI * 2); x.fill(); }
+  x.strokeStyle = 'rgba(230,228,220,.35)'; x.lineWidth = 1;
+  for (let i = 0; i < 60; i++) { const px = rnd() * 256, py = rnd() * 256; x.beginPath(); x.moveTo(px, py); x.lineTo(px + (rnd() - .5) * 40, py + (rnd() - .5) * 8); x.stroke(); }
+  for (let i = 0; i < 25; i++) { x.fillStyle = `rgba(215,210,195,${.3 + rnd() * .4})`; x.fillRect(rnd() * 256, rnd() * 256, 2 + rnd() * 10, 2 + rnd() * 6); }
+  const t = new THREE.CanvasTexture(c); t.wrapS = t.wrapT = THREE.RepeatWrapping; t.colorSpace = THREE.SRGBColorSpace; return t;
+})();
+mat.toolMetal = new THREE.MeshStandardMaterial({ map: grimeTex, color: 0xd8d4cc, roughness: .5, metalness: .65 });
+mat.toolGrime = new THREE.MeshStandardMaterial({ map: grimeTex, color: 0x4a4740, roughness: .8, metalness: .35 });
+mat.cord = new THREE.MeshStandardMaterial({ color: 0x151617, roughness: .55 });
 const wrench = new THREE.Group();
+const toolSpin = new THREE.Group();   // douille : tourne avec le boulon
 {
-  const socket = mesh(new THREE.CylinderGeometry(u(.55), u(.55), u(1.0), 24), mat.steelLight);
-  socket.position.y = u(.5);
-  const ext = mesh(new THREE.CylinderGeometry(u(.22), u(.22), u(2.4), 16), mat.steelLight);
-  ext.position.y = u(2.2);
-  const head = mesh(new THREE.CylinderGeometry(u(.75), u(.75), u(.5), 24), mat.steelLight);
-  head.position.y = u(3.5);
-  const arm = mesh(new THREE.BoxGeometry(u(6), u(.28), u(.6)), mat.steelLight);
-  arm.position.set(u(3), u(3.5), 0);
-  const grip = mesh(new THREE.CylinderGeometry(u(.36), u(.36), u(2.6), 16), mat.lockRed);
-  grip.rotation.z = Math.PI / 2; grip.position.set(u(5.3), u(3.5), 0);
-  wrench.add(socket, ext, head, arm, grip);
+  const lathe = (pts, m, seg = 40) => mesh(new THREE.LatheGeometry(pts.map(([r, y]) => new THREE.Vector2(u(r), u(y))), seg), m);
+  // douille longue 12 pans (¾ po, clé de la procédure) : 12 pans à l'entrée, chanfreins
+  const sock = lathe([[.46, 0], [.6, .02], [.64, .12], [.64, 2.1], [.58, 2.25], [.5, 2.3], [.3, 2.3]], mat.steelLight, 24);
+  const mouth = mesh(new THREE.CylinderGeometry(u(.46), u(.46), u(.6), 12, 1, true), mat.pocket); mouth.material = mat.pocket; mouth.position.y = u(.3);
+  const ringG = mesh(new THREE.TorusGeometry(u(.65), u(.035), 6, 24), mat.toolGrime); ringG.rotation.x = Math.PI / 2; ringG.position.y = u(1.9);
+  toolSpin.add(sock, mouth, ringG);
+  wrench.add(toolSpin);
+  // enclume, nez conique, corps du moteur, capot arrière : profil tourné, comme la photo
+  const shell = lathe([[.36, 2.3], [.36, 2.75], [.78, 2.8], [.9, 3.1], [1.35, 4.2], [1.55, 4.75], [1.58, 4.85], [1.66, 4.9], [1.66, 5.05], [1.62, 5.1], [1.62, 8.2], [1.55, 8.6], [1.35, 9.0], [0, 9.05]], mat.toolMetal, 48);
+  shell.rotation.y = .3; wrench.add(shell);
+  const seam = mesh(new THREE.TorusGeometry(u(1.64), u(.035), 6, 48), mat.toolGrime); seam.rotation.x = Math.PI / 2; seam.position.y = u(4.97); wrench.add(seam);
+  for (const [a, y] of [[.5, 5.3], [2.6, 5.3], [4.7, 5.3], [.5, 8.5]]) { const sc = mesh(new THREE.CylinderGeometry(u(.13), u(.13), u(.12), 10), mat.toolGrime); sc.position.set(u(1.6) * Math.cos(a), u(y), u(1.6) * Math.sin(a)); sc.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), new THREE.Vector3(Math.cos(a), 0, Math.sin(a))); wrench.add(sc); }
+  for (let k = 0; k < 8; k++) { const v = mesh(new THREE.BoxGeometry(u(.1), u(1.1), u(.08)), mat.pocket); const a = k / 8 * Math.PI * 2; v.position.set(u(1.61) * Math.cos(a), u(7.4), u(1.61) * Math.sin(a)); v.rotation.y = -a; wrench.add(v); }
+  // anneau latéral (sur le nez)
+  const loop = mesh(new THREE.TorusGeometry(u(.55), u(.09), 10, 24), mat.toolMetal); loop.position.set(u(1.45), u(3.7), -u(.5)); loop.rotation.set(0, Math.PI / 2, .3); wrench.add(loop);
+  // poignée arrière fermée (profil en D arrondi) avec gâchette et prise
+  const loopPts = [[0, 8.4, 1.0], [0, 10.5, .95], [0, 12.6, .6], [0, 13.5, -.4], [0, 13.2, -1.7], [0, 11.2, -2.1], [0, 9.3, -1.9], [0, 8.6, -1.2]].map(([x, y, z]) => new THREE.Vector3(u(x), u(y), u(z)));
+  const handle = mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(loopPts, true, 'catmullrom', .5), 80, u(.5), 16, true), mat.toolMetal); wrench.add(handle);
+  const gripSleeve = mesh(new THREE.CapsuleGeometry(u(.58), u(2.4), 6, 16), mat.toolGrime); gripSleeve.position.set(0, u(11.1), -u(2.05)); gripSleeve.rotation.x = Math.PI / 2 + .1; gripSleeve.rotation.z = Math.PI / 2; wrench.add(gripSleeve);
+  gripSleeve.rotation.set(0, 0, 0); gripSleeve.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), new THREE.Vector3(0, 1, -.1).normalize());
+  const trig = mesh(new THREE.BoxGeometry(u(.45), u(.9), u(.6)), mat.toolGrime); trig.position.set(0, u(9.6), -u(1.15)); trig.rotation.x = -.3; wrench.add(trig);
+  // cordon : serre-câble au bout de la poignée, puis pend jusqu'au plancher en boucle molle
+  const relief = mesh(new THREE.CylinderGeometry(u(.3), u(.22), u(1.4), 12), mat.cord); relief.position.set(0, u(13.9), -u(1.2)); relief.rotation.x = -.5; wrench.add(relief);
+  const ZF = Z_FLOOR / IN;   // plancher, en pouces, dans le repère machine
+  const cordPts = [[0, 14.4, -1.5], [.5, 16, -3], [2, 17.5, -9], [3.5, 18, ZF * .5], [4.5, 18.5, ZF + 2], [6, 20, ZF + .25], [9, 22, ZF + .25], [10, 26, ZF + .25]].map(([x, y, z]) => new THREE.Vector3(u(x), u(y), u(z)));
+  const cord = mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(cordPts), 80, u(.2), 8, false), mat.cord); wrench.add(cord); wrench.userData.cord = cord;
 }
 rig.add(wrench);
 const activeRing = new THREE.Mesh(new THREE.TorusGeometry(u(.75), 0.022, 8, 40), new THREE.MeshBasicMaterial({ color: 0xf2c230, transparent: true, depthTest: false }));
@@ -1577,7 +1609,7 @@ const worker = new THREE.Group();   // membres placés en coordonnées monde, re
 scene.add(worker);
 const HEAD = new THREE.Vector3(4.3, FLOOR + 16.2, 0);   // centre de la tête (monde), ≈ 1,62 m
 const HEAD_R = 0.88;
-const HANDS = new THREE.Vector3(0.9, AXIS_Y + 0.5, 0.45); // gants sur la poignée de la clé à cliquet (monde)
+const HANDS = new THREE.Vector3(0.9, AXIS_Y + 0.5, 0.45); // mains sur la clé à chocs (monde)
 const HANDS_AX = HANDS.x - RIG_X;                         // les mains, le long de l'axe de broche (repère machine)
 // Silhouette pour les impacts (monde) : x de la face avant du corps selon la hauteur
 const BODY = { hip: FLOOR + 9.6, sh: FLOOR + 14.3, neck: FLOOR + 15.2, top: FLOOR + 17.1, half: 1.15 };
@@ -2332,7 +2364,7 @@ function movePart(obj, base, rest, p, up = 1.8) {
   obj.position.set(lerp(base.x, rest.x, eb), p < .3 ? lerp(base.y, yOut, ease(a)) : lerp(yOut, rest.y, eb), p < .75 ? base.z : lerp(base.z, rest.z, ease(c)));
   obj.rotation.set(Math.PI / 2 * eb, 0, 0);
 }
-const GRIP_L = new THREE.Vector3(u(5.3), u(3.5), 0), RATCH_L = new THREE.Vector3(u(.6), u(3.5), 0);
+const GRIP_L = new THREE.Vector3(0, u(11.1), -u(2.05)), SUPPORT_L = new THREE.Vector3(0, u(6.4), u(1.75));   // main droite sur la poignée arrière, main gauche sur le corps
 const REST_HANDS = [new THREE.Vector3(5.0, FLOOR + 8.3, -1.4), new THREE.Vector3(5.0, FLOOR + 8.3, 1.4)];
 function animateWorker(S, fl) {
   const tt = performance.now() / 1000;
@@ -2341,7 +2373,7 @@ function animateWorker(S, fl) {
   let hands;
   if (wrench.visible) {
     wrench.updateMatrixWorld(true);
-    hands = [wrench.localToWorld(RATCH_L.clone()).add(new THREE.Vector3(.15, .05, -.25)), wrench.localToWorld(GRIP_L.clone())];
+    hands = [wrench.localToWorld(SUPPORT_L.clone()).add(new THREE.Vector3(0, .12, -.2)), wrench.localToWorld(GRIP_L.clone()).add(new THREE.Vector3(0, -.15, .2))];
   } else if (S.shake > 0 || S.stuck) {
     // se penche et frappe le cône pour le décoincer
     const k = ease(Math.min(1, (S.shake || 0) * 3)), tap = S.shake > 0 && !fl ? Math.max(0, Math.sin(tt * 9)) * .35 : 0;
@@ -2361,6 +2393,7 @@ function animateWorker(S, fl) {
       const w = seg(lt, tH, tH + .5), fall = Z_FLOOR + .15 - wrench.position.z;
       wrench.position.x += 1.4 * w; wrench.position.y += 3.2 * w; wrench.position.z += 1.2 * Math.sin(Math.PI * w) + fall * w * w;
       wrench.rotation.set(5 * w, 0, 3 * w);
+      wrench.userData.cord.visible = w <= 0;   // cordon masqué pendant la chute de l'outil
     }
     // corps frappé : recul
     const r2 = ease(seg(lt, tB, tB + .25));
@@ -2484,16 +2517,22 @@ function applyScene(S) {
     }
   });
 
+  wrench.userData.cord.visible = true;
   // Outil sur le boulon actif (pendant une projection : sur le boulon qui a cédé, puis arraché des mains)
   if (fl && S.ride >= 0) {
     const B = BOLTS[S.ride];
     wrench.visible = true; activeRing.visible = false;
-    wrench.position.set(B.x, PLATE_TOP0 - 0.02, B.z); wrench.rotation.set(0, 0, 0);
+    wrench.position.set(B.x, PLATE_TOP0 - 0.02, B.z); wrench.rotation.set(0, 0, 0); toolSpin.rotation.y = 0;
   } else if (S.active >= 0 && !fl) {
     const o = pBolts[S.active], B = BOLTS[S.active];
     wrench.visible = true; activeRing.visible = true;
-    wrench.position.set(B.x, o.position.y - 0.02, B.z);
-    wrench.rotation.y = o.rotation.y;
+    // clé à chocs : le corps reste en place (léger tremblement quand le boulon tourne), la douille tourne
+    const turning = Math.abs(o.rotation.y - (wrench.userData.lastRot ?? o.rotation.y)) > 1e-4;
+    wrench.userData.lastRot = o.rotation.y;
+    const jit = turning && !reduceMotion ? .012 : 0, tt = performance.now();
+    wrench.position.set(B.x + jit * Math.sin(tt * .9), o.position.y - 0.02, B.z + jit * Math.cos(tt * 1.3));
+    wrench.rotation.set(0, 0, 0);
+    toolSpin.rotation.y = o.rotation.y;
     activeRing.position.set(B.x, o.position.y + 0.05, B.z);
   } else { wrench.visible = false; activeRing.visible = false; }
 

@@ -57,6 +57,10 @@ Les 9 boulons du cône traversent le voile du boîtier (entretoises inférieures
 | Erreur rattrapée par la retenue | Même erreur, mais l'étape 6 a été faite. Les 3 boulons remis sans bushing arrêtent le cône après quelques millimètres. |
 | Erreur : cône coincé, sans retenue | Étape 6 omise. Le cône reste coincé, puis se décoince d'un coup et est projeté. |
 
+## Outil
+
+Le travailleur dévisse les boulons avec une clé à chocs électrique à fil (d'après la photo du chantier) : corps métallique usé, nez conique, douille longue 12 pans, poignée arrière fermée avec gâchette, anneau latéral et cordon. Seule la douille tourne avec le boulon.
+
 ## Commandes
 
 - Lecture / pause : bouton jaune ou barre d'espace. Étape précédente / suivante : flèches.
