@@ -2854,14 +2854,28 @@ function pickPart(e) {
 }
 canvas.addEventListener('pointerup', e => {
   if (!downAt || Math.hypot(e.clientX - downAt[0], e.clientY - downAt[1]) > 5) return;
-  select(pickPart(e));
+  const p = pickPart(e);
+  select(p);
+  // sur écran tactile (pas de survol) : le nom apparaît à l'endroit touché
+  if (e.pointerType !== 'mouse') { if (p) { showTip(p, e); clearTimeout(tipTimer); tipTimer = setTimeout(hideTip, 3500); } else hideTip(); }
 });
 // Info-bulle au survol : numéro et nom de la pièce
 const tip = $('tip');
-let hoverEv = null, hoverQueued = false;
+let hoverEv = null, hoverQueued = false, tipTimer = 0;
 function hideTip() { tip.hidden = true; canvas.style.cursor = ''; }
+function showTip(p, ev) {
+  $('tipRef').textContent = p.ref + (p.qty && p.qty !== 1 ? ` · ×${qtyOf(p)}` : '');
+  $('tipName').textContent = nb(p.name);
+  tip.hidden = false;
+  const r = canvas.getBoundingClientRect(), w = tip.offsetWidth, h = tip.offsetHeight;
+  let x = ev.clientX - r.left + 14, y = ev.clientY - r.top + 16;
+  if (x + w > r.width - 8) x = ev.clientX - r.left - w - 12;
+  if (y + h > r.height - 8) y = ev.clientY - r.top - h - 12;
+  tip.style.left = `${Math.max(8, Math.min(x, r.width - w - 8))}px`; tip.style.top = `${Math.max(8, y)}px`;
+}
 canvas.addEventListener('pointermove', e => {
-  if (e.pointerType === 'touch' || e.buttons) { hideTip(); return; }
+  if (e.pointerType === 'touch' || e.pointerType === 'pen') return;   // le tactile affiche le nom au toucher
+  if (e.buttons) { hideTip(); return; }
   hoverEv = e;
   if (hoverQueued) return;
   hoverQueued = true;
@@ -2869,17 +2883,10 @@ canvas.addEventListener('pointermove', e => {
     hoverQueued = false;
     const ev = hoverEv, p = pickPart(ev);
     if (!p) { hideTip(); return; }
-    $('tipRef').textContent = p.ref + (p.qty && p.qty !== 1 ? ` · ×${qtyOf(p)}` : '');
-    $('tipName').textContent = nb(p.name);
-    tip.hidden = false; canvas.style.cursor = 'pointer';
-    const r = canvas.getBoundingClientRect(), w = tip.offsetWidth, h = tip.offsetHeight;
-    let x = ev.clientX - r.left + 14, y = ev.clientY - r.top + 16;
-    if (x + w > r.width - 8) x = ev.clientX - r.left - w - 12;
-    if (y + h > r.height - 8) y = ev.clientY - r.top - h - 12;
-    tip.style.left = `${Math.max(8, x)}px`; tip.style.top = `${Math.max(8, y)}px`;
+    showTip(p, ev); canvas.style.cursor = 'pointer';
   });
 });
-canvas.addEventListener('pointerleave', hideTip);
+canvas.addEventListener('pointerleave', e => { if (e.pointerType === 'mouse') hideTip(); });
 
 /* ================= Thème ================= */
 function applyTheme() {
