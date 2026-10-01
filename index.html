@@ -161,32 +161,32 @@ button, input, select { font: inherit; color: inherit; }
 .scen b { font-weight: 600; }
 .scen small { color: var(--muted); font-size: 13px; }
 
-.readout { display: grid; gap: 10px; padding: 14px; border-radius: 8px; background: var(--panel); border: 1px solid var(--line); }
-.big { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; }
-.big .num { font-family: var(--display); font-weight: 700; font-size: 46px; line-height: 1; font-variant-numeric: tabular-nums; }
-.big .unit { font-family: var(--display); font-size: 22px; font-weight: 600; color: var(--muted); }
-.big .state { margin-left: auto; font-size: 12px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; padding: 2px 8px; border-radius: 3px; color: var(--accent-ink); background: var(--accent); }
-.big .state[data-tone="ok"] { background: var(--ok); color: #fff; }
-.big .state[data-tone="danger"] { background: var(--danger); color: #fff; }
-.meter { position: relative; height: 10px; border-radius: 5px; background: var(--bg); border: 1px solid var(--line); overflow: hidden; }
-.meter i { position: absolute; left: 0; top: 0; bottom: 0; width: 0; background: var(--accent); }
-.meter[data-tone="danger"] i { background: var(--danger); }
-.meter[data-tone="ok"] i { background: var(--ok); }
 .kv { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
 .kv div { min-width: 0; }
 .kv dt { font-size: 11.5px; color: var(--muted); }
 .kv dd { margin: 0; font-family: var(--mono); font-size: 14px; font-variant-numeric: tabular-nums; }
-.equiv { margin: 0; font-size: 13px; color: var(--muted); }
 
 .steps ol { list-style: none; margin: 0; padding: 0; display: grid; gap: 2px; }
-.steps li button { width: 100%; text-align: left; display: grid; grid-template-columns: 3.2ch minmax(0, 1fr); gap: 10px; padding: 6px 8px; border: 0; border-radius: 6px; background: none; cursor: pointer; align-items: baseline; }
+.steps li button { width: 100%; text-align: left; display: grid; grid-template-columns: 3.2ch minmax(0, 1fr) auto; gap: 10px; padding: 6px 8px; border: 0; border-radius: 6px; background: none; cursor: pointer; align-items: baseline; }
 .steps li button:hover { background: var(--shade); }
 .steps .n { white-space: nowrap; font-family: var(--display); font-weight: 700; font-size: 18px; color: var(--muted); text-align: right; font-variant-numeric: tabular-nums; }
 .steps .t { font-size: 14px; }
 .steps .flag { display: inline-block; margin-left: 6px; font-size: 10.5px; font-weight: 600; letter-spacing: .05em; text-transform: uppercase; color: #fff; background: var(--warn); border-radius: 3px; padding: 0 5px; vertical-align: 1px; }
 .steps .flag[data-tone="danger"] { background: var(--danger); }
-.steps li.done .t { color: var(--muted); }
-.steps li.now button { background: var(--shade); box-shadow: inset 3px 0 0 var(--accent); }
+.steps li.done .t { color: var(--ink); }
+.steps .mk { font-size: 11px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; white-space: nowrap; align-self: center; }
+.steps li.done[data-kind="ok"] button { background: color-mix(in srgb, var(--ok) 13%, transparent); box-shadow: inset 3px 0 0 var(--ok); }
+.steps li.done[data-kind="ok"] .n { color: var(--ok); }
+.steps li.done[data-kind="ok"] .mk::after { content: '✓ Fait'; color: var(--ok); }
+.steps li.done[data-kind="bad"] button { background: color-mix(in srgb, var(--danger) 11%, transparent); box-shadow: inset 3px 0 0 var(--danger); }
+.steps li.done[data-kind="bad"][data-tone="warn"] button { background: color-mix(in srgb, var(--warn) 14%, transparent); box-shadow: inset 3px 0 0 var(--warn); }
+.steps li.done[data-kind="bad"] .n { color: var(--danger); }
+.steps li.done[data-kind="bad"][data-tone="warn"] .n { color: var(--warn); }
+.steps li.done[data-kind="bad"] .mk::after { content: '✗ Dangereux'; color: var(--danger); }
+.steps li.done[data-kind="bad"][data-tone="warn"] .mk::after { content: '✗ À éviter'; color: var(--warn); }
+.steps li.now:not(.done) button { background: var(--shade); box-shadow: inset 3px 0 0 var(--accent); }
+.steps li.now:not(.done) .mk::after { content: 'En cours'; color: var(--muted); }
+.steps li.now button { outline: 2px solid var(--accent); outline-offset: -2px; }
 .steps li.now .n { color: var(--ink); }
 
 .hint { margin: 6px 0 0; font-size: 12.5px; color: var(--muted); }
@@ -307,11 +307,6 @@ details.params summary { cursor: pointer; padding: 10px 14px; font-weight: 600; 
       <div class="scen" role="tablist" id="scenList"></div>
     </section>
 
-    <section class="readout" aria-label="Énergie des ressorts">
-      <div class="big"><span class="unit">Énergie des ressorts</span><span class="state" id="eState">Stockée</span></div>
-      <div class="meter" id="eMeter" title="Part de la compression initiale encore présente"><i id="eFill"></i></div>
-      <p class="equiv" id="equiv">Jauge indicative, sans valeur chiffrée.</p>
-    </section>
 
     <section class="steps">
       <h3 class="sec-title">Séquence</h3>
@@ -518,6 +513,9 @@ const view = document.getElementById('view');
 THREE.ShaderChunk.opaque_fragment += `
 #if NUM_CLIPPING_PLANES > 0
 if ( ! gl_FrontFacing ) gl_FragColor.rgb = vec3( 0.105, 0.11, 0.118 );   // teinte de coupe uniforme, sans éclairage ni texture : deux faces superposées ne peuvent plus clignoter
+// Deux pièces en contact (voile / manchon, bloc des ressorts / bol…) : la face avant grise de l'une et la face arrière
+// (teinte de coupe) de l'autre sont au même endroit. La face arrière est repoussée d'environ 1 mm : la face avant gagne toujours.
+gl_FragDepth = gl_FrontFacing ? gl_FragCoord.z : min( 1.0, gl_FragCoord.z + 1.5e-6 );
 #endif
 `;
 const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, preserveDrawingBuffer: false, powerPreference: 'high-performance' });
@@ -829,7 +827,7 @@ for (const y of [.08, .76]) { const rail = mesh(annulusIn(3.21, 3.58, .06), mat.
 {
   const n = 50, rm = 3.39, geos = [];
   for (let k = 0; k < n; k++) {
-    const a = k / n * Math.PI * 2, g = new THREE.CylinderGeometry(u(.15), u(.15), u(.62), 14);
+    const a = k / n * Math.PI * 2, g = new THREE.CylinderGeometry(u(.15), u(.15), u(.58), 14);
     g.translate(u(rm) * Math.cos(a), u(.45), -u(rm) * Math.sin(a)); geos.push(g);
   }
   const bars = [];   // barrettes de la cage entre les rouleaux
@@ -883,7 +881,7 @@ function buildBody() {
   bodyMain.userData.part = p; pocketGroup.traverse(m => { m.userData.part = p; });
 }
 {
-  const shell = mesh(annulusIn(R.rimIn, R.body, Y.rimT - Y.housB), mat.blue);
+  const shell = mesh(annulusIn(R.rimIn, R.body, Y.rimT - .02 - Y.housB), mat.blue);   // s'arrête sous la face usinée (pas de faces superposées)
   placeIn(shell, 0, Y.housB, 0);
   const web = mesh(annulusIn(R.web, R.springBlockIn, Y.webT - Y.webB, BOLTS.map(b => [b.x / IN, b.z / IN, .4])), mat.grey);
   placeIn(web, 0, Y.webB, 0);
@@ -900,7 +898,7 @@ buildBody();
 
 /* ---------- Avant : entretoises inférieures, ressorts, bol ---------- */
 part({ id: '3506880', ref: '3506880', name: 'Entretoise inférieure', qty: 9, grp: 'front', ext: [9.1, 10.4], r: 3.9, role: 'Guide chaque boulon du bol à travers le voile du boîtier.' },
-  BOLTS.map(b => placeIn(mesh(annulusIn(.27, .4, 1.3, [], 24), mat.machined), b.x / IN, Y.webB, b.z / IN)));
+  BOLTS.map(b => placeIn(mesh(annulusIn(.27, .4, 1.34, [], 24), mat.machined), b.x / IN, Y.webB - .02, b.z / IN)));   // dépassent de 0,02 po : pas au ras du voile
 part({ id: '5040192', ref: '5040192', name: 'Joint d\'huile', qty: 9, grp: 'front', ext: [10.36, 10.48], r: 3.9, role: 'Étanchéité de chaque boulon dans le voile.' },
   BOLTS.map(b => placeIn(oring(.36, .06), b.x / IN, 10.42, b.z / IN)));
 
@@ -969,7 +967,7 @@ const BOWL_L = Y.plateT - Y.bowlB;
   const bowl = mesh(new THREE.CylinderGeometry(u(R.bowlTop), u(R.bowlBot), BOWL_DEPTH, 96, 1, true), mat.machined.clone());
   bowl.material.side = THREE.BackSide;
   bowl.position.y = -BOWL_DEPTH / 2;
-  const back = mesh(annulusIn(R.bowlBot, R.bowlOut, .02), mat.machined);
+  const back = mesh(annulusIn(R.bowlBot, R.bowlTop, .02), mat.machined);   // fond du cône seulement : le moyeu a sa propre face
   back.position.y = -BOWL_DEPTH;
   const edge = mesh(new THREE.TorusGeometry(u(R.plate), u(.04), 6, 96), mat.machined);
   edge.rotation.x = Math.PI / 2; edge.position.y = -u(.02);
@@ -989,6 +987,7 @@ const bowlR = yLocal => R.bowlTop - (R.bowlTop - R.bowlBot) * (-yLocal) / BOWL_L
 const JAW_A = 38, JAW_HOLES = [.55, 1.55, 2.55];   // angle d'un segment (°), hauteurs des trous de liaison (po)
 const jawSet = (rIn) => jawGeo(rIn, R.bowlBot - .02, R.bowlTop - .02, JAW_H, JAW_A);
 const jawGeoH = jawSet(R.jawIn);
+jawGeoH.scale(1, (JAW_H - .04) / JAW_H, 1); jawGeoH.translate(0, u(.02), 0);   // en retrait de 0,02 po du fond et de la face du bol
 // Détail des segments (photos du jeu Boyles 12HH) : bloc conique, 3 trous de liaison traversants,
 // 3 plaquettes de carbure moletées sur la face de serrage, goupilles entre les segments.
 mat.knurl = (() => {
@@ -1279,7 +1278,7 @@ const EVT = { x: -7.5, z: -4.8 };
 /* ---------- Broche UM-012-101, roulements et joints ---------- */
 {
   const sp = new THREE.Group();
-  sp.add(mesh(annulusIn(1.5, 1.9, 20.6), mat.machined));
+  { const tube = mesh(annulusIn(1.5, 1.9, 20.55), mat.machined); tube.position.y = u(.05); sp.add(tube); }   // 0,05 po en retrait du couvercle UM-012-116
   const thrTop = hcyl(1.92, 4.45, threadMat(mat.machined, 4.45, 4), 48); thrTop.position.y = u(16.1 + 2.225); sp.add(thrTop);   // s'arrête 0,05 po avant le bout du tube : pas de faces superposées
   const thrBot = hcyl(1.92, 3.0, threadMat(mat.machined, 3.0, 6), 48); thrBot.position.y = u(1.35); sp.add(thrBot);   // dépasse de 0,15 po le couvercle UM-012-116 : pas de faces superposées au nez de broche
   placeIn(sp, 0, -12.6, 0);
@@ -1325,7 +1324,7 @@ part({ id: 'W500-M', ref: 'W500', name: 'Rondelle plate ½ po (adaptateur du man
     ['UM-012-117', 'Rondelle d\'appui de l\'écrou de broche', 1.92, 3.1, -9.6, .4, mat.paint, -17],
     ['UM-012-118', 'Écrou de serrage de broche', 1.92, 3.25, -10.6, 1.0, mat.paint, -18.5],
     ['UM-012-115', 'Contre-écrou de broche', 1.92, 3.0, -11.2, .6, mat.paint, -20],
-    ['UM-012-108', 'Manchon de guidage BQ', 1.12, 1.9, -12.0, .8, mat.paint, -21.5],
+    ['UM-012-108', 'Manchon de guidage BQ', 1.12, 1.88, -12.0, .8, mat.paint, -21.5],
     ['UM-012-116', 'Couvercle du manchon d\'usure', 1.5, 2.9, -12.6, .6, mat.paint, -24.5],
   ];
   for (const [id, name, ri, ro, y, h, m, dy] of stack) {
@@ -1747,7 +1746,8 @@ Object.assign(mat, {
   lip: new THREE.MeshStandardMaterial({ color: 0xa8665a, roughness: .55 }),
   eye: new THREE.MeshStandardMaterial({ color: 0x2a2420, roughness: .2 }),
   eyeW: new THREE.MeshStandardMaterial({ color: 0xece8e0, roughness: .3 }),
-  lens: new THREE.MeshPhysicalMaterial({ color: 0xb8c4c8, roughness: .05, metalness: 0, transmission: .6, transparent: true, opacity: .45 }),
+  lens: new THREE.MeshPhysicalMaterial({ color: 0x2f4a5c, roughness: .05, metalness: .3, clearcoat: 1, transparent: true, opacity: .82 }),   // verres teintés, bien visibles
+  frame: new THREE.MeshStandardMaterial({ color: 0x15181b, roughness: .35, metalness: .2 }),
   rubber: new THREE.MeshStandardMaterial({ color: 0x121314, roughness: .7 }),
   bootSole: new THREE.MeshStandardMaterial({ color: 0xc9a227, roughness: .8 }),
   leather: new THREE.MeshStandardMaterial({ color: 0x3a2617, roughness: .7 }),
@@ -1823,10 +1823,19 @@ const W = (() => {
     const muff = mesh(new THREE.CylinderGeometry(.34, .34, .26, 20), mat.muff); muff.rotation.x = Math.PI / 2; muff.position.set(.08, -.05, z * .9); head.add(muff);
   }
   const mouth = mesh(rboxGeo(.04, .05, .3), mat.lip); mouth.position.set(-.78, -.46, 0); head.add(mouth);
-  // lunettes de sécurité enveloppantes
-  const lensG = new THREE.CylinderGeometry(.9, .9, .3, 24, 1, true, Math.PI * .62, Math.PI * .76);
-  const lens = mesh(lensG, mat.lens); lens.position.set(.05, .1, 0); lens.rotation.y = Math.PI / 2; head.add(lens);
-  const frame = mesh(new THREE.TorusGeometry(.9, .03, 6, 30, Math.PI * .76), mat.rubber); frame.rotation.set(Math.PI / 2, 0, Math.PI * .62 + Math.PI / 2); frame.position.set(.05, .25, 0); head.add(frame);
+  // lunettes de sécurité (CSA Z94.3) : monture noire, 2 verres teintés, pont de nez, écrans latéraux, branches jusqu'aux coquilles
+  {
+    const fr = mat.frame;
+    const bar = mesh(rboxGeo(.08, .08, .9), fr); bar.position.set(-.96, .13, 0); head.add(bar);
+    for (const z of [-1, 1]) {
+      const lensK = mesh(rboxGeo(.035, .25, .36), mat.lens); lensK.position.set(-.98, -.01, z * .26); lensK.rotation.y = -z * .2; head.add(lensK);
+      const rim = mesh(rboxGeo(.06, .045, .37), fr); rim.position.set(-.98, -.14, z * .26); rim.rotation.y = -z * .2; head.add(rim);
+      const side = mesh(rboxGeo(.06, .27, .05), fr); side.position.set(-.92, 0, z * .45); head.add(side);
+      const shield = mesh(rboxGeo(.26, .22, .03), mat.lens); shield.position.set(-.78, .0, z * .47); head.add(shield);
+      const arm = mesh(rboxGeo(.86, .05, .045), fr); arm.position.set(-.48, .1, z * .48); arm.rotation.y = z * .05; head.add(arm);
+    }
+    const bridge = mesh(rboxGeo(.06, .08, .14), fr); bridge.position.set(-1.0, .03, 0); head.add(bridge);
+  }
   // casque de mineur : calotte, visière avant, nervure, support et lampe frontale
   const shell = mesh(new THREE.SphereGeometry(R0 * 1.08, 32, 16, 0, Math.PI * 2, 0, Math.PI / 2), mat.helmet); shell.scale.set(1.12, .95, 1.0); shell.position.y = .22; head.add(shell);
   const brimG = new THREE.CylinderGeometry(R0 * 1.18, R0 * 1.18, .05, 32); brimG.scale(1.18, 1, 1.02);
@@ -2083,7 +2092,7 @@ function applyExplode(e) {
     }
     p.lbl.position.copy(partLblPos);
   }
-  for (const o of [worker, consoleG, pallet, stand, zone, trail, wrench, activeRing, headG, carriage]) o.visible = o.visible && k < 0.05;
+  for (const o of [worker, consoleG, pallet, stand, zone, trail, wrench, activeRing, headG, carriage, tableG]) o.visible = o.visible && k < 0.05;
   if (labels) for (const arr of Object.values(labels)) for (const s of arr) if (s && k > 0.02) s.visible = false;
   return showRows;
 }
@@ -2181,7 +2190,7 @@ function applyHeadExplode(h) {
     shown.push(p.lbl);
   }
   deOverlap(PARTS.filter(q => q.lbl && q.lbl.visible).map(q => q.lbl));
-  if (k > 0.05) for (const o of [worker, workerRoot, consoleG, zone, trail, wrench, activeRing, carriage]) o.visible = false;
+  if (k > 0.05) for (const o of [worker, workerRoot, consoleG, zone, trail, wrench, activeRing, carriage, tableG]) o.visible = false;
   if (labels && k > 0.02) for (const arr of Object.values(labels)) for (const sp of arr) if (sp) sp.visible = false;
 }
 
@@ -2225,12 +2234,12 @@ function clampMaterials() {
   return set;
 }
 // Pièces sorties du mandrin (cône projeté ou déposé, couvercles retirés) : elles sortent de la coupe
-const cutFree = { plate: false, cover: false, jc: false };
+const cutFree = { plate: false, cover: false, jc: false, mats: new Set(), key: '' };
 function applyCut() {
   for (const m of clampMaterials()) {
     if (m.isSpriteMaterial) continue;
     const inS = S => S.has(m) || [...S].some(pm => hiCache.get(pm) === m);
-    const free = (cutFree.plate && inS(plateMats)) || (cutFree.cover && inS(coverMats)) || (cutFree.jc && inS(jcMats));
+    const free = (cutFree.plate && inS(plateMats)) || (cutFree.cover && inS(coverMats)) || (cutFree.jc && inS(jcMats)) || inS(cutFree.mats);
     // ressorts dessinés entiers (convention des vues en coupe) ; bloc des logements coupé plus profond pour les montrer
     const spring = inS(new Set([mat.spring]));
     m.clippingPlanes = !cutOn || free || spring ? null : inS(new Set([mat.springBlock])) ? [CUT_DEEP] : [CUT];
@@ -2407,7 +2416,7 @@ const SCEN = {
     ],
   },
   D: {
-    label: 'Erreur rattrapée par la retenue', sub: 'Étape 7 non respectée, étape 6 respectée', tone: 'warn',
+    label: 'Erreur rattrapée : cône retenu', sub: 'Étape 7 non respectée, étape 6 respectée', tone: 'warn',
     make: () => [
       first5, st.retain, ...oneByOne(true),
       { n: '!', title: 'Le filet cède : les 3 boulons arrêtent le cône', cam: 'catch', catch: true, tone: 'warn', flag: 'Retenu', ride: byNum(6),
@@ -2656,13 +2665,38 @@ function stateAt(t) {
 /* ================= Application de l'état à la scène ================= */
 const tmpQ = new THREE.Quaternion(), tmpQ2 = new THREE.Quaternion(), tmpV = new THREE.Vector3();
 const PLATE_BASE = new THREE.Vector3();
-/* Pièces retirées : elles sortent dans l'axe en surbrillance, puis s'effacent (pas de dépôt au sol).
-   La liste « Retiré » dans la vue 3D garde la trace de ce qui a été enlevé. */
-function showPart(obj, base, p, up = 1.8, keep = false) {
-  const a = ease(seg(p, 0, .55));
-  obj.position.set(base.x, base.y + up * a, base.z);
-  obj.rotation.set(0, 0, 0);
-  setOpacity(obj, keep ? 1 : 1 - seg(p, .8, 1));
+/* Pièces retirées : sorties dans l'axe en surbrillance, puis rangées sur une petite table de travail à côté du mandrin
+   (grandes pièces à plat au fond, boulons couchés en rangées devant). Repère machine : x = z monde, y = x monde − RIG_X, z = y monde − AXIS_Y. */
+const TBL = { x: -3.0, z: 5.4, w: 10.4, d: 5.2, top: FLOOR + 7.4 };
+const tableG = new THREE.Group();
+{
+  const tm = new THREE.MeshStandardMaterial({ color: 0x5d6770, roughness: .55, metalness: .45 });
+  const top = mesh(rboxGeo(TBL.w, .22, TBL.d), tm); top.position.set(TBL.x, TBL.top - .11, TBL.z); tableG.add(top);
+  const h = TBL.top - .22 - FLOOR;
+  for (const sx of [-1, 1]) for (const sz of [-1, 1]) { const l = mesh(rboxGeo(.24, h, .24), tm); l.position.set(TBL.x + sx * (TBL.w / 2 - .35), FLOOR + h / 2, TBL.z + sz * (TBL.d / 2 - .35)); tableG.add(l); }
+  const shelf = mesh(rboxGeo(TBL.w - .7, .1, TBL.d - .7), tm); shelf.position.set(TBL.x, FLOOR + 1.6, TBL.z); tableG.add(shelf);
+}
+scene.add(tableG);
+const onTable = (wx, wz, lift = 0) => new THREE.Vector3(wz, wx - RIG_X, TBL.top - AXIS_Y + lift);
+const TABLE = {
+  jc: onTable(-6.6, 4.3, u(.62)), cv: onTable(-3.4, 4.3), plate: onTable(.2, 4.3),
+  jcBolt: k => onTable(-7.4, 6.4 + k * .25, u(.44)),
+  cvBolt: k => onTable(-5.4, 6.1 + k * .21, u(.44)),
+  pBolt: i => BOLTS[i].bushing ? onTable(1.9, 6.2 + BUSHED.indexOf(i) * .26, u(.44)) : onTable(-1.6, 6.1 + ORDER.indexOf(i) * .25, u(.44)),
+  bush: k => onTable(1.75, 7.2 + k * .26, u(.5)),
+};
+// Grande pièce : sortie dans l'axe (y local), puis portée sur la table en arc et posée à plat (rotX : sens de pose)
+function toTable(obj, base, dest, p, up = 1.8, rotX = Math.PI / 2) {
+  const a = ease(seg(p, 0, .3)), b = ease(seg(p, .3, 1));
+  const out = tmpFrom.set(base.x, base.y + up * a, base.z);
+  obj.position.lerpVectors(out, dest, b); obj.position.z += Math.sin(b * Math.PI) * 1.4;
+  obj.rotation.set(rotX * b, 0, 0);
+}
+// Petite pièce (boulon, bushing) : de sa position de sortie à sa place sur la table, couchée (axe horizontal)
+function boltToTable(o, from, dest, q, spin = 0) {
+  const e = ease(q);
+  o.position.lerpVectors(from, dest, e); o.position.z += Math.sin(e * Math.PI) * 1.2;
+  o.rotation.set(0, spin, 0);
 }
 const tmpFrom = new THREE.Vector3();
 // Surbrillance : forte pour ce qui vient d'être retiré à l'étape en cours, légère pour le reste
@@ -2738,26 +2772,34 @@ function applyScene(S) {
   const RC = S.recent || {}, hiK = k => k ? .55 : .14;
   S.jc.bolts.forEach((r, k) => {
     const b = jcBolts[k], base = b.userData.base, s = seg(r, 0, .6);
-    b.position.set(base.x, base.y + 0.3 * s + 0.9 * seg(r, .6, 1), base.z);
-    b.rotation.y = s * 6 * Math.PI * 2;
-    setOpacity(b, 1 - seg(r, .8, 1)); glow(b, r > 0 ? hiK(RC.jc) : 0);
+    const from = new THREE.Vector3(base.x, base.y + 0.3 * s, base.z);
+    boltToTable(b, from, TABLE.jcBolt(k), seg(r, .6, 1), s * 6 * Math.PI * 2);
+    setOpacity(b, 1); glow(b, r > 0 ? hiK(RC.jc) : 0);
   });
-  showPart(jawCover, JC_BASE, S.jc.lift);
+  toTable(jawCover, JC_BASE, TABLE.jc, S.jc.lift);
   glow(jawCover, S.jc.lift > 0 || S.jc.bolts[0] > 0 ? hiK(RC.jc) : 0);
   // Couvercle + boulons ½
   S.cv.bolts.forEach((r, k) => {
     const b = cvBolts[k], base = b.userData.base, s = seg(r, 0, .6);
-    b.position.set(base.x, base.y + 0.25 * s + 0.9 * seg(r, .6, 1), base.z);
-    b.rotation.y = s * 5 * Math.PI * 2;
-    setOpacity(b, 1 - seg(r, .8, 1)); glow(b, r > 0 ? hiK(RC.cv) : 0);
+    const from = new THREE.Vector3(base.x, base.y + 0.25 * s, base.z);
+    boltToTable(b, from, TABLE.cvBolt(k), seg(r, .6, 1), s * 5 * Math.PI * 2);
+    setOpacity(b, 1); glow(b, r > 0 ? hiK(RC.cv) : 0);
   });
-  showPart(cover, CV_BASE, S.cv.lift, 2.2);
+  toTable(cover, CV_BASE, TABLE.cv, S.cv.lift, 2.2);
   glow(cover, S.cv.lift > 0 || S.cv.bolts[0] > 0 ? hiK(RC.cv) : 0);
 
   // Cône
   const fl = D.flightS;
   const fp = !!fl || S.plateOut > 0, fc = S.cv.lift > 0, fj = S.jc.lift > 0;
-  if (fp !== cutFree.plate || fc !== cutFree.cover || fj !== cutFree.jc) { cutFree.plate = fp; cutFree.cover = fc; cutFree.jc = fj; applyCut(); }
+  // boulons et bushings sortis : hors coupe (sinon la table, côté caméra, serait tranchée)
+  const freeObjs = [...jcBolts.filter((o, k) => S.jc.bolts[k] > .6), ...cvBolts.filter((o, k) => S.cv.bolts[k] > .6),
+    ...pBolts.filter((o, i) => S.pb[i].gone > 0), ...bushings.filter((o, k) => S.pb[BUSHED[k]].bushOut > .5)];
+  const fk = freeObjs.map(o => o.id).join();
+  if (fp !== cutFree.plate || fc !== cutFree.cover || fj !== cutFree.jc || fk !== cutFree.key) {
+    cutFree.plate = fp; cutFree.cover = fc; cutFree.jc = fj; cutFree.key = fk;
+    cutFree.mats = new Set(freeObjs.flatMap(o => o.userData.mats || []));
+    applyCut();
+  }
   if (fl) {
     const [x, y, z, ang] = fl.plate;
     plate.position.set(x, y, z);
@@ -2768,7 +2810,7 @@ function applyScene(S) {
     const n = tmpV.set(-b, 1, -c).normalize();
     plate.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), n);
     plate.position.set(0, PLATE_TOP0 + a, 0);
-    if (S.plateOut > 0) showPart(plate, PLATE_BASE.set(0, PLATE_TOP0 + a, 0), S.plateOut, 2.6, true);
+    if (S.plateOut > 0) toTable(plate, PLATE_BASE.set(0, PLATE_TOP0 + a, 0), TABLE.plate, S.plateOut, 2.6, -Math.PI / 2);   // posé face vers le bas, mâchoires en haut
     glow(plate, S.plateOut > 0 ? (RC.plate ? .45 : .12) : 0);
   }
   jaws.forEach(j => {
@@ -2807,15 +2849,16 @@ function applyScene(S) {
       o.quaternion.identity();
       const q = S.catchD ? S.catchP - CATCH_HIT : -1;
       const jolt = B.bushing && q > 0 ? 0.03 * Math.exp(-q * 14) * Math.sin(q * 90) : 0;
-      o.position.set(B.x, PLATE_TOP0 + bush + H(b.turns) + b.lift + 0.9 * b.gone + jolt, B.z);
-      o.rotation.y = b.turns * Math.PI * 2;
-      setOpacity(o, fl && S.ride === -1 && b.gone < 1 ? 0 : 1 - seg(b.gone, .4, 1));
+      const from = new THREE.Vector3(B.x, PLATE_TOP0 + bush + H(b.turns) + b.lift + jolt, B.z);
+      boltToTable(o, from, TABLE.pBolt(i), b.gone, b.turns * Math.PI * 2);
+      setOpacity(o, fl && S.ride === -1 && b.gone < 1 ? 0 : 1);
       glow(o, b.gone > 0 ? hiK(RC.pb && RC.pb[i]) : 0);
     }
     if (B.bushing) {
       const k = BUSHED.indexOf(i), bo = b.bushOut;
-      bushings[k].position.set(B.x + 0.6 * seg(bo, .3, 1), PLATE_TOP0 + 1.4 * ease(seg(bo, 0, .5)), B.z);
-      setOpacity(bushings[k], 1 - seg(bo, .6, 1)); glow(bushings[k], bo > 0 ? hiK(RC.bush) : 0);
+      const from = new THREE.Vector3(B.x, PLATE_TOP0 + 1.4 * ease(seg(bo, 0, .5)), B.z);
+      boltToTable(bushings[k], from, TABLE.bush(k), seg(bo, .5, 1));
+      setOpacity(bushings[k], 1); glow(bushings[k], bo > 0 ? hiK(RC.bush) : 0);
     }
     if (labels.nums[i]) {
       labels.nums[i].position.set(o.position.x, o.position.y + 0.55, o.position.z);
@@ -2879,7 +2922,7 @@ function applyScene(S) {
   const showW = document.getElementById('optWorker').checked;
   worker.visible = showW && !workerModel;
   workerRoot.visible = showW && !!workerModel;
-  pallet.visible = stand.visible = consoleG.visible = headG.visible = carriage.visible = zone.visible = true;
+  pallet.visible = stand.visible = consoleG.visible = headG.visible = carriage.visible = zone.visible = tableG.visible = true;
 
   // Trajectoire
   if (fl) {
@@ -2956,7 +2999,9 @@ function renderStepList() {
     const li = document.createElement('li');
     const b = document.createElement('button');
     b.type = 'button';
-    b.innerHTML = `<span class="n">${s.n}</span><span class="t">${nb(s.title)}${s.flag ? `<span class="flag" data-tone="${s.tone}">${s.flag}</span>` : ''}</span>`;
+    b.innerHTML = `<span class="n">${s.n}</span><span class="t">${nb(s.title)}${s.flag ? `<span class="flag" data-tone="${s.tone}">${s.flag}</span>` : ''}</span><span class="mk" aria-hidden="true"></span>`;
+    li.dataset.kind = s.summary ? 'sum' : s.tone === 'danger' || s.tone === 'warn' ? 'bad' : 'ok';
+    li.dataset.tone = s.tone || 'ok';
     b.addEventListener('click', () => { T = starts[i]; playing = false; autoCam = true; $('camChip').hidden = true; });
     li.appendChild(b); ol.appendChild(li);
   });
@@ -2985,7 +3030,7 @@ addEventListener('keydown', e => {
 
 // Paramètres des ressorts : valeurs internes fixes (DEFAULTS), non affichées
 
-let lastStep = -1, uiTick = 0;
+let lastStep = -1, uiTick = 0, lastStepKey = '';
 function updateUI(S, force) {
   const s = steps[S.i];
   const D = S.D;
@@ -3013,26 +3058,19 @@ function updateUI(S, force) {
     tag.hidden = !s.flag; tag.textContent = s.flag || ''; tag.dataset.tone = s.tone || '';
     $('dock').dataset.tone = s.tone || 'ok';
     $('capText').textContent = nb(s.summary ? summaryText(s.ev) : s.text);
-    [...$('stepList').children].forEach((li, k) => { li.className = k < S.i ? 'done' : k === S.i ? 'now' : ''; });
     $('tmeta').textContent = `Étape ${S.i + 1}/${steps.length}`;
     camGoal = CAMS[s.cam] || CAMS.overview;
+  }
+  // Étapes faites : marquées en permanence (✓ bonne méthode, ✗ méthode dangereuse) ; l'étape en cours l'est dès qu'elle est terminée
+  const doneK = explodeTarget || hexTarget ? -1 : S.i + (S.p > .995 ? 1 : 0), stepKey = doneK + '|' + S.i;
+  if (stepKey !== lastStepKey) {
+    lastStepKey = stepKey;
+    [...$('stepList').children].forEach((li, k) => { li.classList.toggle('done', k < doneK); li.classList.toggle('now', k === S.i && doneK >= 0); });
   }
   $('scrub').value = Math.round(T / total * 1000);
   if (!force && ++uiTick % 3) return;
 
-  // Énergie
-  const E0 = 0.5 * P.k * P.x0 * P.x0 * P.n / 1000;
-  const F0 = P.k * P.x0 * P.n;
   const fl = !!S.flight, cat = S.catchD;
-  const released = (fl && S.launchT > 0) || (cat && S.catchP >= CATCH_T0);
-  const E = fl ? S.flight.E : cat && released ? cat.E : D.E;
-  const state = $('eState');
-  if (cat && D.hit) { state.textContent = 'Arrêtée par la retenue'; state.dataset.tone = 'ok'; }
-  else if (released) { state.textContent = 'Libérée d\'un coup'; state.dataset.tone = 'danger'; }
-  else if (E < 0.02 * E0) { state.textContent = 'Libérée graduellement'; state.dataset.tone = 'ok'; }
-  else { state.textContent = S.stuck ? 'Stockée, cône coincé' : 'Stockée'; state.dataset.tone = S.stuck ? 'danger' : ''; }
-  $('eFill').style.width = `${Math.min(100, E / E0 * 100)}%`;
-  $('eMeter').dataset.tone = cat && D.hit ? 'ok' : released ? 'danger' : E < 0.02 * E0 ? 'ok' : '';
 
   $('note').textContent = fl && steps[S.i].flight ? `Projection au ralenti ×${SLOWMO}`
     : cat && steps[S.i].catch ? 'Mouvement au ralenti' : 'Ressorts : course ×6';
@@ -3053,7 +3091,7 @@ function updateUI(S, force) {
     const p = S.catchP;
     banner.hidden = p < CATCH_T0;
     banner.dataset.tone = D.hit ? 'ok' : '';
-    $('bannerTitle').textContent = D.hit ? 'ARRÊTÉ PAR LA RETENUE' : 'PROJECTION';
+    $('bannerTitle').textContent = D.hit ? 'CÔNE RETENU PAR LES 3 BOULONS' : 'PROJECTION';
     flash.style.setProperty('--flash', 'var(--warn)');
     flash.style.opacity = !D.hit ? 0 : reduceMotion ? 0.3 : Math.max(0, 0.8 - (p - CATCH_HIT) * 6);
   } else { banner.hidden = true; flash.style.opacity = 0; }

@@ -54,10 +54,12 @@ Les 9 boulons du cône traversent le voile du boîtier (entretoises inférieures
 | --- | --- |
 | Procédure respectée | Étapes 1 à 9. L'énergie des ressorts descend graduellement à 0. |
 | Erreur : boulons retirés un par un | Étapes 6 et 7 non respectées. Le dernier boulon porte toute la force, son filet cède et le cône est projeté. |
-| Erreur rattrapée par la retenue | Même erreur, mais l'étape 6 a été faite. Les 3 boulons remis sans bushing arrêtent le cône après quelques millimètres. |
+| Erreur rattrapée : cône retenu | Même erreur, mais l'étape 6 a été faite. Les 3 boulons remis sans bushing arrêtent le cône après quelques millimètres. |
 | Erreur : cône coincé, sans retenue | Étape 6 omise. Le cône reste coincé, puis se décoince d'un coup et est projeté. |
 
 ## Travailleur (modèle 3D)
+
+Travailleur procédural (affiché tant que `worker.glb` est absent) : casque de mineur avec lampe, **lunettes de sécurité** (monture noire, verres teintés, écrans latéraux), coquilles, combinaison à bandes réfléchissantes, gants et bottes.
 
 Le travailleur est chargé depuis une **copie locale** : `public/models/worker.glb` (modèle CC0 1.0, 0,698 × 1,83 × 0,337 m, axe Y vertical, source : https://cdn.3dassets.dev/assets/36355/v1/model.glb). Il n'est jamais chargé depuis le CDN. Si le fichier est absent, le travailleur procédural articulé (avec ses ÉPI) est affiché.
 
@@ -86,7 +88,9 @@ Les 18 ressorts sont modélisés avec un fil rond de section constante : en comp
 - Les surfaces coïncidentes reçoivent un décalage de profondeur par matériau pour éviter le scintillement.
 - **Numéros de pièces** : jamais affichés pendant l'animation. En vue éclatée, le numéro et le nom apparaissent dans une info-bulle au survol (ou au toucher sur mobile). La pièce sélectionnée garde sa couleur d'origine.
 - **Noms des pièces** : en anglais par défaut (désignations des listes de pièces), bouton **EN / FR** au-dessus de la liste des pièces (mémorisé).
-- **Pièces retirées** : elles sortent dans l'axe en surbrillance puis s'effacent ; la liste « Retiré » dans la vue 3D garde la trace de ce qui a été enlevé (l'élément de l'étape en cours est marqué).
+- **Pièces retirées** : elles sortent dans l'axe en surbrillance, puis sont rangées sur une petite table de travail à côté du mandrin (couvert, couvercle et cône à plat, boulons et bushings couchés en rangées). La liste « Retiré » dans la vue 3D garde la trace de ce qui a été enlevé (l'élément de l'étape en cours est marqué).
+- **Séquence** : chaque étape faite reste marquée : « ✓ Fait » en vert pour la bonne méthode, « ✗ À éviter » ou « ✗ Dangereux » pour une erreur de méthode.
+- Coupe sans scintillement : la teinte de coupe (faces arrière) est repoussée d'environ 1 mm derrière les faces avant, et les faces en contact orientées dans le même sens sont décalées de quelques centièmes de pouce.
 - Bout du mandrin d'après la planche 2.1 et une photo : couvercle et couvert peints comme le boîtier, ligne de joint, têtes de boulons zinguées en relief, 3 bushings qui dépassent.
 - Roulement 5000199 à rouleaux cylindriques (rouleaux et cage en laiton visibles) ; mâchoires en acier gris avec 2 × 2 plaquettes dentées, encoche centrale, rainures de guidage et anneau élastique.
 
@@ -104,7 +108,6 @@ Tous les textes à l'écran sont courts et s'adressent aux travailleurs : une co
 - **Plein écran** : la vue 3D et ses commandes occupent tout l'écran (Échap pour sortir).
 - **Pause à chaque étape** : à la fin de chaque étape, une carte « Étape n · fait » (formulation de PRO-OP-DD-005) est ancrée sur l'action dans la 3D ; Lecture pour continuer.
 - **Liste des pièces** : repliée par défaut, s'ouvre au clic.
-- **Énergie des ressorts** : indication qualitative seulement (Stockée / Libérée graduellement / Libérée d'un coup / Arrêtée par la retenue) avec une jauge de la compression restante. Aucune valeur de force ni d'énergie n'est affichée.
 
 ## Physique utilisée (estimations)
 
