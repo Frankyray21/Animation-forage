@@ -225,7 +225,7 @@ details.params summary { cursor: pointer; padding: 10px 14px; font-weight: 600; 
         <button type="button" class="vbtn" id="btnHeadExplode" aria-pressed="false">Éclaté : tête</button>
         <button type="button" class="vbtn" id="btnExplode" aria-pressed="false">Éclaté : mandrin</button>
       </div>
-      <div class="banner" id="banner" hidden><strong id="bannerTitle">PROJECTION</strong><span id="bannerSub"></span></div>
+      <div class="banner" id="banner" hidden><strong id="bannerTitle">PROJECTION</strong></div>
       <div class="note" id="note">Course des ressorts affichée ×6</div>
     </div>
     <div class="dock" id="dock" data-tone="ok">
@@ -2817,7 +2817,6 @@ function updateUI(S, force) {
     const hitHead = imp && lt >= imp.t, hitHands = hands && lt >= hands.t;
     banner.hidden = !(lt > 0);
     $('bannerTitle').textContent = hitHead ? IMPACT_TXT[imp.zone] : hitHands ? 'IMPACT AUX MAINS' : S.flight.feet && lt >= S.flight.tEnd - 0.3 ? 'CHUTE SUR LES PIEDS' : 'PROJECTION';
-    $('bannerSub').textContent = hitHead ? `${vS(imp.speed)} · ${eS(S.flight.E)}` : `${vS(S.flight.v)} au départ · ${eS(S.flight.E)}`;
     const since = Math.min(hitHead ? lt - imp.t : 99, hitHands ? lt - hands.t + (imp ? 0.4 : 0) : 99);
     flash.style.opacity = reduceMotion ? (hitHead || hitHands ? 0.35 : 0) : Math.max(0, 0.85 - since * 1.2);
     banner.dataset.tone = ''; flash.style.setProperty('--flash', 'var(--danger)');
@@ -2826,7 +2825,6 @@ function updateUI(S, force) {
     banner.hidden = p < CATCH_T0;
     banner.dataset.tone = D.hit ? 'ok' : '';
     $('bannerTitle').textContent = D.hit ? 'ARRÊTÉ PAR LA RETENUE' : 'PROJECTION';
-    $('bannerSub').textContent = D.hit ? `${eS(cat.E)} encaissés par 3 boulons B500-8000 · course ${xS(cat.gapMm)}` : `${vS(cat.v)} · ${eS(cat.E)}`;
     flash.style.setProperty('--flash', 'var(--warn)');
     flash.style.opacity = !D.hit ? 0 : reduceMotion ? 0.3 : Math.max(0, 0.8 - (p - CATCH_HIT) * 6);
   } else { banner.hidden = true; flash.style.opacity = 0; }
