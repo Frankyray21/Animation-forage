@@ -22,7 +22,7 @@ Le bouton **Éclaté : tête** écarte les pièces de la tête autour de la boî
 | Lubrification | UM-012-111, pompe UM-012-139 + B250-750 (×6) + W250 (×6), tête de filtre UM-012-177 + cartouche UM-012-178, refroidisseur d'huile (visible sur les planches, hors liste), vanne 3 voies UM-10B-TR#6, régulateur NDV-10-N, reniflard A-1199-R-4048, 13 boyaux UM-012-H08C à H25C-UG et leurs raccords |
 | Montage | Axe de pivot UM-012-105A, UM-012-171 (×4), HP1000 |
 
-La broche est à 152 mm du centre de la boîte ; l'axe d'entraînement (transmission, pignon moteur, pompe) est à 13,6 po de la broche, décalé de 1,8 po vers le couvercle (vue du nez de la planche 2.1). Le tracé des boyaux (gris tressé, comme sur les planches) et l'emplacement des raccords sont approximatifs (longueurs et extrémités de la liste) ; le chariot et le mât derrière la tête sont schématiques. La coupe ne tranche que le mandrin.
+Les proportions transmission / moteur (carter de transmission de 13 po, corps du moteur raccourci) et la disposition générale (couvercle UM sur le dessus en pose horizontale, transmission et moteur du côté du mandrin, colonne blanche verticale au bout d'entraînement, régulateur et boyaux sur le couvercle) ont été vérifiées sur un rendu 3D de la tête Boyles H d'Usinage Marcotte. La broche est à 152 mm du centre de la boîte ; l'axe d'entraînement (transmission, pignon moteur, pompe) est à 13,6 po de la broche, décalé de 1,8 po vers le couvercle (vue du nez de la planche 2.1). Le tracé des boyaux (gris tressé, comme sur les planches) et l'emplacement des raccords sont approximatifs (longueurs et extrémités de la liste) ; le chariot et le mât derrière la tête sont schématiques. La coupe ne tranche que le mandrin.
 
 ### Mandrin Boyles H (pages 2.5 à 2.7)
 

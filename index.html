@@ -1344,7 +1344,7 @@ hpart({ id: 'UM-012-127', ref: 'UM-012-127', name: 'Roulement du pignon d\'entra
 }
 hpart({ id: 'UM-012-125', ref: 'UM-012-125', name: 'Joint de transmission', qty: 1, grp: 'hdrive', hx: [0, 9, 0] }, placeIn(oring(1.45, .14, mat.rubber), DRIVE_X, HB.y1 + .1, DRIVE_Z));
 hpart({ id: 'UM-012-123', ref: 'UM-012-123', name: 'Siège de joint', qty: 1, grp: 'hdrive', hx: [0, 9.5, 0] }, placeIn(mesh(annulusIn(1.1, 2.1, .35), mat.sealBlue), DRIVE_X, HB.y1, DRIVE_Z));
-const TR = { y0: HB.y1 + .35, h: 10.6, w: 8.2, d: 8.2 };
+const TR = { y0: HB.y1 + .35, h: 13.0, w: 8.2, d: 8.2 };   // carter de transmission allongé : proportions du rendu Usinage Marcotte
 {
   const g = new THREE.Group();
   const body = box(TR.w, TR.h, TR.d, mat.paint); body.position.set(0, u(TR.h / 2), 0); g.add(body);
@@ -1365,20 +1365,21 @@ hpart({ id: 'B437-1500', ref: 'B437-1500', name: 'Boulon 7/16-UNC × 1 ½ po', q
   [...[[-4.2, -4.2], [4.2, -4.2], [4.2, 4.2], [-4.2, 4.2], [0, -4.2]].map(([x, z]) => placeIn(makeBolt({ af: .62, headH: .27, d: .4375, L: 1.5, tpi: 14 }, mat.boltBlack), DRIVE_X + x, TR.y0 + .6, DRIVE_Z + z))]);
 hpart({ id: 'W437', ref: 'W437', name: 'Rondelle frein 7/16', qty: 12, grp: 'hdrive', hx: [0, 11, 0] },
   [[-4.2, -4.2], [4.2, -4.2], [4.2, 4.2], [-4.2, 4.2]].map(([x, z]) => placeIn(mesh(annulusIn(.23, .4, .06, [], 18), mat.steelLight), DRIVE_X + x, TR.y0 + .6 - .06, DRIVE_Z + z)));
-const MOT = { y0: TR.y0 + TR.h, fl: 7.6, tilt: .3 };
+const MOT = { y0: TR.y0 + TR.h, fl: 7.6, tilt: .3, body: 4.9 };   // corps du moteur raccourci (rendu Usinage Marcotte)
+MOT.rear = 1.1 + MOT.body;
 hpart({ id: 'UM-012-170', ref: 'UM-012-170', name: 'Accouplement transmission / moteur hydraulique', qty: 1, grp: 'hdrive', hx: [0, 15, 0] }, placeIn(mesh(annulusIn(.7, 1.3, 2.6), mat.white), DRIVE_X, MOT.y0 - 2.0, DRIVE_Z));
 hpart({ id: 'UM-012-192', ref: 'UM-012-192', name: 'Anneau de retenue intérieur 1 ½ po', qty: 1, grp: 'hdrive', hx: [0, 15.5, 0] }, placeIn(oring(.75, .05, mat.boltBlack), DRIVE_X, MOT.y0 + .2, DRIVE_Z));
 const motor = new THREE.Group();
 {
   const fl = box(MOT.fl, 1.1, MOT.fl, mat.black); fl.position.y = u(.55); motor.add(fl);
-  const b1 = hcyl(3.3, 6.5, mat.black, 40); b1.position.y = u(1.1 + 3.25); motor.add(b1);
+  const b1 = hcyl(3.3, MOT.body, mat.black, 40); b1.position.y = u(1.1 + MOT.body / 2); motor.add(b1);
   const rear = new THREE.Group();
   const b2 = hcyl(3.1, 4.2, mat.black, 40); b2.position.y = u(2.1); rear.add(b2);
   const port = box(6.2, 2.2, 5.0, mat.black); port.position.y = u(5.2); rear.add(port);
   const reg = box(3.2, 2.0, 3.0, mat.black); reg.position.set(u(-1.0), u(6.9), u(.6)); rear.add(reg);
-  rear.position.y = u(7.6); rear.rotation.x = MOT.tilt;   // moteur à axe brisé, penché vers le couvercle
+  rear.position.y = u(MOT.rear); rear.rotation.x = MOT.tilt;   // moteur à axe brisé, penché vers le couvercle
   motor.add(rear);
-  const ring = hcyl(3.45, .5, mat.console, 40); ring.position.y = u(7.6); motor.add(ring);
+  const ring = hcyl(3.45, .5, mat.console, 40); ring.position.y = u(MOT.rear); motor.add(ring);
 }
 placeIn(motor, DRIVE_X, MOT.y0, DRIVE_Z);
 hpart({ id: 'AA6VM', ref: 'AA6VM', name: 'Moteur hydraulique AA6VM160HD2-63W-VSD520B', qty: 1, grp: 'hdrive', role: 'Moteur à pistons axiaux (axe brisé) qui entraîne la transmission.', hx: [0, 20, 0] }, motor);
@@ -1393,7 +1394,7 @@ hpart({ id: 'W750', ref: 'W750', name: 'Rondelle plate ¾', qty: 8, grp: 'hdrive
   motor.updateMatrixWorld(true);
   for (const s of [-1, 1]) {
     const ly = 5.2, ca = Math.cos(MOT.tilt), sa = Math.sin(MOT.tilt);
-    const px = DRIVE_X + s * 3.4, py = MOT.y0 + 7.6 + ly * ca, pz = DRIVE_Z + ly * sa;
+    const px = DRIVE_X + s * 3.4, py = MOT.y0 + MOT.rear + ly * ca, pz = DRIVE_Z + ly * sa;
     const e = hoseIn([[px, py, pz], [px + s * 1.4, py, pz], [px + s * 2.0, py + .9 * ca, pz + .9 * sa], [px + s * 2.0, py + 2.4 * ca, pz + 2.4 * sa]], .55);
     e.children[0].material = mat.brass;
     elbows.push(e);
