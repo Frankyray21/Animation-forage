@@ -97,6 +97,8 @@ Les 18 ressorts sont modélisés avec un fil rond de section constante : en comp
 ## Rendu
 
 - Matériaux unis (acier, peinture rouge), sans textures, pour que chaque pièce reste lisible.
+- La foreuse STM-1500 porte le même rouge que la tête (plus d'orangé) ; le brouillard lointain est repoussé pour ne pas le délaver.
+- Sur téléphone (≤ 600 px) : les boutons de vue tiennent sur une seule ligne défilante avec des libellés courts (Coupe, Éclaté tête, Foreuse, Éclaté chuck, ?, ⛶), sous la puce du scénario ; en plein écran, la liste des étapes est repliée en bas à droite.
 - **Aucune ombre portée** : lumière principale + lumière de remplissage opposée + lumière d'ambiance ; reflets neutres d'atelier. Fond uni, pas de décor.
 - Arêtes légèrement arrondies sur les pièces prismatiques.
 - Anticrénelage MSAA + SMAA, toujours en haute qualité.

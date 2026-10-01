@@ -111,7 +111,7 @@ button, input, select { font: inherit; color: inherit; }
 .banner strong { display: block; font-size: clamp(26px, 4vw, 40px); letter-spacing: .06em; line-height: 1.05; }
 .banner span { font-family: var(--mono); font-size: 13px; }
 @media (max-width: 600px) {
-  .banner { top: 46px; padding: 5px 12px 7px; }
+  .banner { top: 74px; padding: 5px 12px 7px; }
   .banner strong { font-size: 20px; letter-spacing: .04em; }
   .banner span { font-size: 11px; }
 }
@@ -207,6 +207,24 @@ details.params summary { cursor: pointer; padding: 10px 14px; font-weight: 600; 
 .remontage b { font-family: var(--mono); font-weight: 500; }
 .vbtn { pointer-events: auto; border: 1px solid var(--line); background: var(--panel); border-radius: 999px; padding: 4px 11px; font-size: 12px; font-weight: 600; cursor: pointer; }
 .vbtn[aria-pressed="true"] { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+.vbar { display: contents; }
+.chip-row .sm { display: none; }
+/* Téléphone : boutons de vue sur une seule ligne défilante, libellés courts → la scène reste visible */
+@media (max-width: 600px) {
+  .chip-row { top: 8px; left: 8px; right: 8px; gap: 6px; }
+  .chip { font-size: 11.5px; padding: 3px 9px; }
+  .chip button { font-size: 11.5px; }
+  .chip-row .lg { display: none; }
+  .chip-row .sm { display: inline; }
+  .vbar { display: flex; flex: 1 1 100%; min-width: 0; gap: 6px; overflow-x: auto; overscroll-behavior-x: contain; scrollbar-width: none; pointer-events: auto; padding: 1px 0;
+    -webkit-mask-image: linear-gradient(90deg, #000 calc(100% - 22px), transparent); mask-image: linear-gradient(90deg, #000 calc(100% - 22px), transparent); }
+  .vbar::-webkit-scrollbar { display: none; }
+  .vbtn { flex: none; font-size: 11.5px; padding: 5px 10px; }
+  .vbtn:last-child { margin-right: 18px; }
+  #btnFs .sm { font-size: 14px; line-height: 1; }
+  .stage.fs .fs-steps { top: auto; bottom: 34px; right: 8px; width: min(300px, calc(100% - 16px)); max-height: 40%; }
+  .actcard { font-size: 12px; max-width: min(240px, 66%); }
+}
 .units { display: inline-flex; border: 1px solid var(--line); border-radius: 6px; overflow: hidden; margin-left: auto; }
 .units button { border: 0; background: none; padding: 2px 9px; font-size: 12px; font-weight: 600; cursor: pointer; color: var(--muted); }
 .units button[aria-pressed="true"] { background: var(--ink); color: var(--bg); }
@@ -245,13 +263,15 @@ details.params summary { cursor: pointer; padding: 10px 14px; font-weight: 600; 
       <div class="chip-row">
         <span class="chip" id="scenChip" data-tone="ok"><span class="dot"></span><span id="scenChipText">Procédure respectée</span></span>
         <span class="spacer"></span>
-        <span class="chip" id="camChip" hidden><button type="button" id="camBtn">Recentrer la caméra</button></span>
-        <button type="button" class="vbtn" id="btnCut" aria-pressed="true">Coupe du mandrin (chuck)</button>
-        <button type="button" class="vbtn" id="btnHeadExplode" aria-pressed="false">Éclaté : tête (drill head)</button>
-        <button type="button" class="vbtn" id="btnDrill" aria-pressed="false">Foreuse (drill)</button>
-        <button type="button" class="vbtn" id="btnExplode" aria-pressed="false">Éclaté : mandrin (chuck)</button>
-        <button type="button" class="vbtn" id="btnHelp" aria-label="Aide : naviguer dans la 3D">?</button>
-        <button type="button" class="vbtn" id="btnFs" aria-pressed="false">Plein écran</button>
+        <span class="chip" id="camChip" hidden><button type="button" id="camBtn"><span class="lg">Recentrer la caméra</span><span class="sm">Recentrer</span></button></span>
+        <div class="vbar" id="vbar">
+          <button type="button" class="vbtn" id="btnCut" aria-pressed="true"><span class="lg">Coupe du mandrin (chuck)</span><span class="sm">Coupe</span></button>
+          <button type="button" class="vbtn" id="btnHeadExplode" aria-pressed="false"><span class="lg">Éclaté : tête (drill head)</span><span class="sm">Éclaté tête</span></button>
+          <button type="button" class="vbtn" id="btnDrill" aria-pressed="false"><span class="lg">Foreuse (drill)</span><span class="sm">Foreuse</span></button>
+          <button type="button" class="vbtn" id="btnExplode" aria-pressed="false"><span class="lg">Éclaté : mandrin (chuck)</span><span class="sm">Éclaté chuck</span></button>
+          <button type="button" class="vbtn" id="btnHelp" aria-label="Aide : naviguer dans la 3D">?</button>
+          <button type="button" class="vbtn" id="btnFs" aria-pressed="false" aria-label="Plein écran"><span class="lg" id="fsLabel">Plein écran</span><span class="sm" aria-hidden="true">⛶</span></button>
+        </div>
       </div>
       <div class="banner" id="banner" hidden><strong id="bannerTitle">PROJECTION</strong></div>
       <div class="note" id="note">Ressorts : course ×6</div>
@@ -532,7 +552,7 @@ renderer.toneMappingExposure = 1.0;
 const scene = new THREE.Scene();
 const pmrem = new THREE.PMREMGenerator(renderer);
 scene.environment = pmrem.fromScene(new RoomEnvironment(renderer), 0.04).texture;   // reflets neutres d'atelier
-scene.fog = new THREE.Fog(0xd7dce0, 55, 160);
+scene.fog = new THREE.Fog(0xd7dce0, 95, 210);
 
 const camera = new THREE.PerspectiveCamera(38, 1, 0.4, 220);   // near à 4 cm : précision de profondeur suffisante pour les surfaces voisines
 camera.position.set(-9, 10, 14);
@@ -1675,8 +1695,8 @@ drillG.position.set(6.0, FLOOR, -24);
 scene.add(drillG);
 const DUP = new THREE.Vector3(0, 1, 0);
 Object.assign(mat, {
-  dPaint: new THREE.MeshStandardMaterial({ color: 0xd64a1f, roughness: .55, metalness: .15 }),
-  dPaint2: new THREE.MeshStandardMaterial({ color: 0xb83c18, roughness: .6, metalness: .15 }),
+  dPaint: new THREE.MeshStandardMaterial({ color: 0xa8140f, roughness: .55, metalness: .15 }),
+  dPaint2: new THREE.MeshStandardMaterial({ color: 0x84100c, roughness: .6, metalness: .15 }),
   dBlack: new THREE.MeshStandardMaterial({ color: 0x1d1f21, roughness: .42, metalness: .4 }),
   dChrome: new THREE.MeshStandardMaterial({ color: 0xdfe4e8, roughness: .16, metalness: .95 }),
   dGrey: new THREE.MeshStandardMaterial({ color: 0x9aa2a8, roughness: .5, metalness: .6 }),
@@ -3869,7 +3889,8 @@ function resize() {
 const stage = document.querySelector('.stage');
 function setFs(on) {
   stage.classList.toggle('fs', on); document.body.style.overflow = on ? 'hidden' : '';
-  const b = $('btnFs'); b.setAttribute('aria-pressed', String(on)); b.textContent = on ? 'Quitter le plein écran' : 'Plein écran';
+  if (on) $('fsSteps').open = !matchMedia('(max-width: 600px)').matches;   // téléphone : liste repliée, la scène reste visible
+  const b = $('btnFs'), lbl = on ? 'Quitter le plein écran' : 'Plein écran'; b.setAttribute('aria-pressed', String(on)); b.setAttribute('aria-label', lbl); $('fsLabel').textContent = lbl;
   requestAnimationFrame(resize);
 }
 $('btnFs').addEventListener('click', async () => {
