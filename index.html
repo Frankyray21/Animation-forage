@@ -65,6 +65,8 @@ button, input, select { font: inherit; color: inherit; }
 .view canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; touch-action: none; }
 .tip { position: absolute; z-index: 6; pointer-events: none; max-width: 280px; padding: 6px 10px 7px; border-radius: 6px; background: var(--panel); color: var(--ink); border: 1px solid var(--line); box-shadow: 0 6px 18px rgba(0,0,0,.18); font-size: 13px; line-height: 1.3; display: grid; gap: 2px; }
 .tip b { font-family: var(--mono); font-weight: 600; font-size: 12px; color: var(--muted); }
+.tip-sst { margin-top: 4px; padding: 5px 0 0 8px; border-top: 1px solid var(--line); border-left: 3px solid var(--accent); font-size: 12px; line-height: 1.35; color: var(--ink); }
+.tip-sst i { display: block; font-style: normal; font-size: 10.5px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
 .chip-row { position: absolute; top: 12px; left: 12px; right: 12px; display: flex; flex-wrap: wrap; gap: 8px; align-items: center; pointer-events: none; }
 .chip { pointer-events: auto; display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; border-radius: 999px; background: var(--panel); border: 1px solid var(--line); font-size: 12px; font-weight: 500; letter-spacing: .02em; }
 .chip .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--ok); }
@@ -259,7 +261,7 @@ details.params summary { cursor: pointer; padding: 10px 14px; font-weight: 600; 
     <div class="view" id="view">
       <canvas id="c" aria-label="Vue 3D de la tête de forage UM-012-100UG, de son mandrin Boyles H et de ses ressorts, du poste de commande et du travailleur"></canvas>
       <div class="flash" id="flash"></div>
-      <div class="tip" id="tip" hidden><b id="tipRef"></b><span id="tipName"></span></div>
+      <div class="tip" id="tip" hidden><b id="tipRef"></b><span id="tipName"></span><small class="tip-sst" id="tipSst" hidden></small></div>
       <div class="chip-row">
         <span class="chip" id="scenChip" data-tone="ok"><span class="dot"></span><span id="scenChipText">Procédure respectée</span></span>
         <span class="spacer"></span>
@@ -1691,12 +1693,12 @@ const benchPart = part({ id: 'BANC', ref: 'Banc', name: 'Banc de travail et supp
    Repère local de la foreuse, en pouces : x = longueur (+x = bout du foot clamp), y = hauteur depuis le plancher, z = largeur.
    Cotes d'ensemble de la planche 1.03 : 147 29/32 × 57 25/32 po ; les autres cotes sont relevées sur les vues (dessins N.T.S.). */
 const drillG = new THREE.Group();
-drillG.position.set(6.0, FLOOR, -24);
+drillG.position.set(6.0, FLOOR, -58);   // éloignée du banc de la tête
 scene.add(drillG);
 const DUP = new THREE.Vector3(0, 1, 0);
 Object.assign(mat, {
-  dPaint: new THREE.MeshStandardMaterial({ color: 0xa8140f, roughness: .55, metalness: .15 }),
-  dPaint2: new THREE.MeshStandardMaterial({ color: 0x84100c, roughness: .6, metalness: .15 }),
+  dPaint: new THREE.MeshStandardMaterial({ color: 0x7e231c, roughness: .7, metalness: .12 }),
+  dPaint2: new THREE.MeshStandardMaterial({ color: 0x5f1b16, roughness: .72, metalness: .12 }),
   dBlack: new THREE.MeshStandardMaterial({ color: 0x1d1f21, roughness: .42, metalness: .4 }),
   dChrome: new THREE.MeshStandardMaterial({ color: 0xdfe4e8, roughness: .16, metalness: .95 }),
   dGrey: new THREE.MeshStandardMaterial({ color: 0x9aa2a8, roughness: .5, metalness: .6 }),
@@ -3526,7 +3528,7 @@ const CAMS = {
   hexplode: { p: [-16.1, 13.1, 32.1], t: [-2.2, 3.6, 2.5] },
   catch: { p: [3.2, 7.4, 12], t: [0.8, 4.7, 0] },
   explode: { p: [-8.1, 12.5, 21.2], t: [-0.6, 4.6, 0] },
-  drill: { p: [14, 36, -84], t: [3, 1, -24] },   // foreuse STM-1500, vue de l'arrière du banc (le travailleur ne la cache pas)
+  drill: { p: [14, 36, -118], t: [3, 1, -58] },   // foreuse STM-1500, vue de l'arrière du banc (le travailleur ne la cache pas)
 };
 let autoCam = true, camGoal = CAMS.intro;
 controls.addEventListener('start', () => { autoCam = false; document.getElementById('camChip').hidden = false; });
@@ -3799,9 +3801,37 @@ canvas.addEventListener('pointerup', e => {
   const p = pickPart(e);
   select(p);
   // clic (ou toucher) : nom et numéro à l'endroit cliqué, dans toutes les vues, quelques secondes
-  if (p) { showTip(p, e); clearTimeout(tipTimer); tipTimer = setTimeout(hideTip, 5000); } else hideTip();
+  if (p) { showTip(p, e); clearTimeout(tipTimer); tipTimer = setTimeout(hideTip, sstOf(p) ? 9000 : 5000); } else hideTip();
 });
 // Info-bulle au survol : numéro et nom de la pièce
+// Bulle santé-sécurité : rôle de la pièce dans la procédure PRO-OP-DD-005 (étapes 1 à 9), en mots de chantier
+const HYD = 'Vérin hydraulique : manettes fermées (étape 1) et cadenassage (étape 3) avant d\'intervenir. Ne jamais ouvrir sous pression.';
+const SST = {
+  '5200517': 'Énergie résiduelle : les 18 ressorts restent comprimés même foreuse cadenassée. Seuls les 3 boulons longs (étape 6) retiennent le cône.',
+  '2920390': 'Poussé par les ressorts. Ne jamais se placer devant ni le frapper pour le décoincer : risque de projection.',
+  'B500-6500': 'Étape 7 : dévisser 1 tour à la fois, ordre 1 à 6, seulement après l\'étape 6. Jamais un boulon retiré au complet sous charge.',
+  'B500-8000': 'Étape 6 : remettre les 3 boulons longs sans bushing AVANT de toucher aux boulons du cône. Les retirer seulement à l\'étape 8.',
+  '3506878': 'Étape 6 : retirer les bushings pour que les boulons longs gardent assez de filets en prise pour retenir le cône.',
+  '3506906': 'Étape 5 : manettes fermées et cadenassage faits avant de l\'enlever (9 boulons ½, clé ¾).',
+  'B500-2250': 'Étape 5 : clé ¾, foreuse cadenassée. Au remontage : boulons neufs.',
+  '3506907': 'Étape 4 : foreuse cadenassée avant de l\'enlever (boulons ¾, clé 1 1/8).',
+  'B750-1500': 'Étape 4 : clé 1 1/8, foreuse cadenassée.',
+  'UM-021-01-01': 'Étape 2 : mâchoires fermées avant de cadenasser. Les changer seulement à l\'étape 9, ressorts détendus.',
+  'RING-WH500': 'Se change avec les mâchoires, à l\'étape 9 seulement, ressorts détendus.',
+  '3506870': 'Contient les 18 ressorts comprimés. Ne rien démonter tant que le cône n\'est pas retenu (étape 6).',
+  '3506928': 'Les boulons du cône s\'y vissent : filets usés = filet qui cède et cône projeté. Vérifier les filets.',
+  '3506880': 'Sous l\'appui des ressorts : ne pas démonter tant que les ressorts ne sont pas détendus (étape 8).',
+  '3506909': HYD, '3506908': HYD, '5035016': HYD, '5035018': HYD, '5035015': HYD, '5035017': HYD, '3506882': HYD, '5054078': HYD,
+  '2501-8-6': 'Raccord hydraulique : manettes fermées (étape 1) et cadenassage (étape 3) avant de débrancher.',
+  'TRAVAILLEUR': 'Casque, lunettes de sécurité, gants et bottes. Se tenir hors de l\'axe du mandrin pendant le dévissage.',
+};
+function sstOf(p) {
+  if (SST[p.id]) return SST[p.id];
+  if (p.drill) return 'Foreuse STM-1500 : cadenasser (étape 3) avant toute intervention, manettes fermées.';
+  if (p.grp === 'front' || p.grp === 'rear') return 'Mandrin sous l\'énergie des ressorts : suivre PRO-OP-DD-005 dans l\'ordre, étapes 1 à 9.';
+  if (!p.scene || p.id === 'BANC') return 'Tête de forage : foreuse cadenassée (étape 3) avant toute intervention.';
+  return '';
+}
 const tip = $('tip');
 const clickTipOn = () => !tip.hidden && !!tipTimer;
 let hoverEv = null, hoverQueued = false, tipTimer = 0;
@@ -3809,6 +3839,8 @@ function hideTip() { tip.hidden = true; clearTimeout(tipTimer); tipTimer = 0; ca
 function showTip(p, ev) {
   $('tipRef').textContent = p.ref + (p.qty && p.qty !== 1 ? ` · ×${qtyOf(p)}` : '');
   $('tipName').textContent = LANG === 'en' ? pname(p) : nb(pname(p));
+  const sst = sstOf(p), box = $('tipSst'); box.hidden = !sst;
+  if (sst) box.innerHTML = '<i>Santé-sécurité · PRO-OP-DD-005</i>' + sst;
   tip.hidden = false;
   const r = canvas.getBoundingClientRect(), w = tip.offsetWidth, h = tip.offsetHeight;
   let x = ev.clientX - r.left + 14, y = ev.clientY - r.top + 16;
