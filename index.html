@@ -72,7 +72,7 @@ button, input, select { font: inherit; color: inherit; }
 .chip[data-tone="danger"] .dot { background: var(--danger); }
 .chip-row .spacer { flex: 1; }
 .chip button { border: 0; background: none; padding: 0; cursor: pointer; font-size: 12px; font-weight: 500; }
-.outlist { position: absolute; left: 12px; top: 52px; max-width: min(300px, 50%); padding: 6px 10px 7px; font-size: 11.5px !important; border-radius: 8px; background: color-mix(in srgb, var(--panel) 88%, transparent); border: 1px solid var(--line); font-size: 12px; pointer-events: none; }
+.outlist { position: absolute; left: 12px; bottom: 40px; max-width: min(300px, 50%); padding: 6px 10px 7px; font-size: 11.5px !important; border-radius: 8px; background: color-mix(in srgb, var(--panel) 88%, transparent); border: 1px solid var(--line); font-size: 12px; pointer-events: none; }
 .outlist b { display: block; font-size: 11px; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); margin-bottom: 3px; }
 .outlist ul { margin: 0; padding: 0; list-style: none; display: grid; gap: 2px; }
 .outlist li::before { content: '✓ '; color: var(--ok); font-weight: 700; }
@@ -100,6 +100,13 @@ button, input, select { font: inherit; color: inherit; }
 .help figcaption { display: grid; gap: 2px; font-size: 11.5px; line-height: 1.3; color: var(--muted); }
 .help figcaption b { font-size: 12.5px; color: var(--ink); }
 @media (max-width: 560px) { .help-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+.fs-steps { display: none; }
+.stage.fs .fs-steps { display: block; position: absolute; right: 12px; top: 52px; width: min(330px, 42%); max-height: calc(100% - 96px); overflow: auto; padding: 4px 6px 6px; border-radius: 10px; background: color-mix(in srgb, var(--panel) 90%, transparent); border: 1px solid var(--line); box-shadow: 0 6px 18px rgba(0,0,0,.18); z-index: 3; }
+.fs-steps summary { cursor: pointer; padding: 6px 6px 7px; font-size: 11.5px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
+.fs-steps ol { margin: 0; }
+.fs-steps li button { padding: 4px 6px; }
+.fs-steps .t { font-size: 13px; }
+.fs-steps .n { font-size: 16px; }
 .stage.fs { position: fixed; inset: 0; z-index: 100; border-radius: 0; border: 0; height: 100%; }
 .stage.fs .view { height: auto; min-height: 0; }
 @media (prefers-reduced-motion: reduce) { .actdot { animation: none; } }
@@ -254,6 +261,7 @@ details.params summary { cursor: pointer; padding: 10px 14px; font-weight: 600; 
       <div class="banner" id="banner" hidden><strong id="bannerTitle">PROJECTION</strong></div>
       <div class="note" id="note">Ressorts : course ×6</div>
       <div class="outlist" id="outList" hidden><b>Retiré</b><ul></ul></div>
+      <details class="steps fs-steps" id="fsSteps" open><summary>Étapes de la procédure</summary><ol id="fsStepList"></ol></details>
       <div class="actdot" id="actDot" hidden></div>
       <div class="actcard" id="actCard" hidden><b id="actStep"></b><span id="actText"></span><small>Lecture pour continuer</small></div>
       <div class="help-veil" id="helpVeil" hidden></div>
@@ -720,26 +728,68 @@ function threadMat(base, lenIn, tpi) {
   return m;
 }
 // Boulon (origine = face d'appui sous la tête ; tête vers +y, tige vers -y)
+// Tête hexagonale réelle : prisme à arêtes vives, chanfrein à 30° sur le dessus (cercle de chanfrein ≈ 0,92 × s/plats),
+// d'où les petits arcs sur chaque pan. Facettes planes (normales par face).
+const hexHeadCache = new Map();
+function hexHeadGeo(af, H) {
+  const key = af + '|' + H;
+  if (hexHeadCache.has(key)) return hexHeadCache.get(key);
+  const N = 48, rIn = u(af / 2), rTop = u(af * .46), h = u(H), t30 = Math.tan(Math.PI / 6);
+  const P = [], C = [];
+  for (let i = 0; i < N; i++) {
+    const th = Math.PI / 6 + i * 2 * Math.PI / N, k = Math.round(th / (Math.PI / 3)), rho = rIn / Math.cos(th - k * Math.PI / 3);
+    const x = Math.cos(th), z = -Math.sin(th);
+    P.push(new THREE.Vector3(rho * x, Math.min(h, h - (rho - rTop) * t30), rho * z));
+    C.push(new THREE.Vector3(rTop * x, h, rTop * z));
+  }
+  const pos = [], e1 = new THREE.Vector3(), e2 = new THREE.Vector3(), nn = new THREE.Vector3();
+  const tri = (a, b, c, ex) => {   // ex : direction attendue de la normale (sens de rotation corrigé au besoin)
+    nn.crossVectors(e1.subVectors(b, a), e2.subVectors(c, a));
+    if (nn.dot(ex) < 0) [b, c] = [c, b];
+    pos.push(a.x, a.y, a.z, b.x, b.y, b.z, c.x, c.y, c.z);
+  };
+  const O = new THREE.Vector3(0, h, 0), O0 = new THREE.Vector3(), UP = new THREE.Vector3(0, 1, 0), DN = new THREE.Vector3(0, -1, 0);
+  for (let i = 0; i < N; i++) {
+    const j = (i + 1) % N, Pi0 = P[i].clone().setY(0), Pj0 = P[j].clone().setY(0);
+    const out = new THREE.Vector3().addVectors(P[i], P[j]).setY(0);
+    tri(O, C[i], C[j], UP);                                   // dessus plat
+    const cone = out.clone().normalize().multiplyScalar(.5).setY(1);
+    tri(C[i], P[i], P[j], cone); tri(C[i], P[j], C[j], cone);  // chanfrein
+    tri(P[i], Pi0, Pj0, out); tri(P[i], Pj0, P[j], out);      // pans
+    tri(O0, Pi0, Pj0, DN);                                    // dessous
+  }
+  const g = new THREE.BufferGeometry();
+  g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
+  g.setAttribute('uv', new THREE.Float32BufferAttribute(new Array(pos.length / 3 * 2).fill(0), 2));
+  g.computeVertexNormals();
+  hexHeadCache.set(key, g);
+  return g;
+}
 function makeBolt({ af, headH, d, L, tpi = 13, socket = false, headD }, m = mat.bolt) {
   const g = new THREE.Group();
+  const seat = .03;   // portée plate sous la tête
   if (socket) {
-    const head = mesh(new THREE.CylinderGeometry(u(headD / 2), u(headD / 2), u(headH), 32), m);
-    head.position.y = u(headH / 2);
-    const sock = mesh(new THREE.CylinderGeometry(u(headD * .27), u(headD * .27), u(0.02), 6), mat.pocket);
-    sock.position.y = u(headH + 0.005);
+    // vis à tête creuse : tête cylindrique à arête chanfreinée, empreinte hexagonale
+    const R = headD / 2, c = headD * .07;
+    const prof = [[.001, 0], [R, 0], [R, headH - c], [R - c, headH], [.001, headH]].map(([r, y]) => new THREE.Vector2(u(r), u(y)));
+    const head = mesh(new THREE.LatheGeometry(prof, 36), m);
+    const sock = mesh(new THREE.CylinderGeometry(u(headD * .29), u(headD * .29), u(.012), 6), mat.pocket);
+    sock.position.y = u(headH + .004);
     g.add(head, sock);
   } else {
-    const head = mesh(new THREE.CylinderGeometry(u(af / Math.sqrt(3)), u(af / Math.sqrt(3)), u(headH), 6), m);
-    head.position.y = u(headH / 2);
-    const cham = mesh(new THREE.CylinderGeometry(u(af * .42), u(af / Math.sqrt(3)), u(headH * .18), 24), m);
-    cham.position.y = u(headH * 1.09);
-    const washer = mesh(new THREE.CylinderGeometry(u(af * .5), u(af * .5), u(0.03), 32), m);
-    washer.position.y = u(0.015);
-    g.add(head, cham, washer);
+    const washer = mesh(new THREE.CylinderGeometry(u(af * .475), u(af * .475), u(seat), 32), m);
+    washer.position.y = u(seat / 2);
+    const head = mesh(hexHeadGeo(af, headH), m);
+    head.position.y = u(seat);
+    g.add(washer, head);
   }
-  const shank = mesh(new THREE.CylinderGeometry(u(d / 2), u(d / 2), u(L), 20), threadMat(m, L, tpi));
-  shank.position.y = -u(L) / 2;
-  g.add(shank);
+  // tige filetée : s'arrête 0,015 po avant la longueur nominale (jamais au ras d'une surface), bout chanfreiné
+  const tip = Math.min(.06, d * .12), Ls = L - .015 - tip;
+  const shank = mesh(new THREE.CylinderGeometry(u(d / 2), u(d / 2), u(Ls), 20, 1, true), threadMat(m, Ls, tpi));
+  shank.position.y = -u(Ls) / 2;
+  const end = mesh(new THREE.CylinderGeometry(u(d / 2), u(d * .4), u(tip), 20), m);
+  end.position.y = -u(Ls + tip / 2);
+  g.add(shank, end);
   return g;
 }
 function fadeable(obj) {
@@ -1329,7 +1379,7 @@ part({ id: 'W500-M', ref: 'W500', name: 'Rondelle plate ½ po (adaptateur du man
     ['UM-012-118', 'Écrou de serrage de broche', 1.92, 3.25, -10.6, 1.0, mat.paint, -18.5],
     ['UM-012-115', 'Contre-écrou de broche', 1.92, 3.0, -11.2, .6, mat.paint, -20],
     ['UM-012-108', 'Manchon de guidage BQ', 1.12, 1.88, -12.0, .8, mat.paint, -21.5],
-    ['UM-012-116', 'Couvercle du manchon d\'usure', 1.5, 2.9, -12.6, .6, mat.paint, -24.5],
+    ['UM-012-116', 'Couvercle du manchon d\'usure', 1.53, 2.9, -12.6, .6, mat.paint, -24.5],   // alésage 0,03 po plus grand que celui de la broche : pas de parois superposées
   ];
   for (const [id, name, ri, ro, y, h, m, dy] of stack) {
     const o = mesh(annulusIn(ri, ro, h), m);
@@ -1672,14 +1722,33 @@ scene.add(consoleG);
   consoleG.add(ped, bank);
   for (const x of [-0.6, 0.6]) { const port = mesh(new THREE.CylinderGeometry(0.09, 0.09, 0.1, 16), mat.steelLight); port.rotation.x = Math.PI / 2; port.position.set(x, 4.18, -0.61); consoleG.add(port); }
 }
-const levers = [-0.3, 0.3].map(z => {
+// Banc de valves hydrauliques : 2 sections côte à côte (clam, chuck), manettes épaisses à poignée rouge, plaques gravées
+const plateTex = (lines, { w = 256, h = 128, bg = '#e9ecee', fg = '#111518', font = 'Barlow Condensed' } = {}) => {
+  const c = document.createElement('canvas'); c.width = w; c.height = h; const x = c.getContext('2d');
+  x.fillStyle = bg; x.fillRect(0, 0, w, h); x.strokeStyle = fg; x.lineWidth = 6; x.strokeRect(3, 3, w - 6, h - 6);
+  x.fillStyle = fg; x.textAlign = 'center'; x.textBaseline = 'middle';
+  lines.forEach(([t, size, y]) => { x.font = `700 ${size}px "${font}", sans-serif`; x.fillText(t, w / 2, y); });
+  const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; return t;
+};
+mat.valve = new THREE.MeshStandardMaterial({ color: 0x1f3d6b, roughness: .45, metalness: .5 });
+mat.leverRod = new THREE.MeshStandardMaterial({ color: 0x2b2f33, roughness: .35, metalness: .7 });
+mat.grip = new THREE.MeshStandardMaterial({ color: 0xc62828, roughness: .5 });
+const levers = [['CLAM', -0.45], ['CHUCK', 0.45]].map(([name, x]) => {
+  const sec = mesh(rboxGeo(0.62, 0.6, 0.9), mat.valve); sec.position.set(x, 4.75, 0); consoleG.add(sec);
+  const tag = new THREE.Mesh(new THREE.PlaneGeometry(0.5, 0.25), new THREE.MeshStandardMaterial({ map: plateTex([[name, 70, 66]]), roughness: .6 }));
+  tag.position.set(x, 4.75, 0.452); consoleG.add(tag);
+  const clev = mesh(rboxGeo(0.22, 0.2, 0.26), mat.leverRod); clev.position.set(x, 5.12, 0); consoleG.add(clev);
   const L = new THREE.Group();
-  L.position.set(0, 4.45, z);
-  const rod = mesh(new THREE.CylinderGeometry(0.045, 0.045, 1.7, 12), mat.steelLight); rod.position.y = 0.85;
-  const knob = mesh(new THREE.SphereGeometry(0.16, 20, 14), mat.knob); knob.position.y = 1.75;
-  L.add(rod, knob);
+  L.position.set(x, 5.15, 0);
+  const rod = mesh(new THREE.CylinderGeometry(0.06, 0.07, 1.35, 14), mat.leverRod); rod.position.y = 0.67;
+  const grip = mesh(new THREE.CapsuleGeometry(0.11, 0.38, 6, 14), mat.grip); grip.position.y = 1.52;
+  L.add(rod, grip);
   consoleG.add(L); return L;
 });
+{   // repère de position : FERMÉ à gauche, OUVERT à droite (sens de la manette)
+  const ind = new THREE.Mesh(new THREE.PlaneGeometry(1.7, 0.3), new THREE.MeshStandardMaterial({ map: plateTex([['◀ FERMÉ          OUVERT ▶', 46, 40]], { w: 512, h: 80, bg: '#f2c230' }), roughness: .6 }));
+  ind.position.set(0, 4.18, 0.605); consoleG.add(ind);
+}
 const lockG = new THREE.Group();
 {
   const lb = mesh(rboxGeo(0.36, 0.42, 0.16), mat.lockRed);
@@ -1699,7 +1768,7 @@ const lockG = new THREE.Group();
   tag.position.set(0, -0.62, 0.02);
   lockG.add(lb, sh, tag);
 }
-lockG.position.set(0.3, 4.0, 0.62);
+lockG.position.set(0.35, 3.45, 0.6);
 consoleG.add(lockG);
 
 /* ---------- Zone de projection ---------- */
@@ -2003,8 +2072,8 @@ function buildLabels() {
   labels.springsC[0].position.set(0.6, 2.6, 2.3);
   labels.springsF[0].position.set(0.6, 2.6, 2.3);
   labels.stuck[0].position.set(0.4, PLATE_TOP0 + 1.4, 2.5);
-  labels.open[0].position.set(-11.5, FLOOR + 1.9 * 6.6, 4.5);
-  labels.closed[0].position.set(-11.5, FLOOR + 1.9 * 6.6, 4.5);
+  labels.open[0].position.set(-11.5, FLOOR + 1.9 * 7.5, 4.5);
+  labels.closed[0].position.set(-11.5, FLOOR + 1.9 * 7.5, 4.5);
   labels.zone[0].position.set(0.4, PLATE_TOP0 + 3.2, 2.2);
   // Repères de pièces pour la vue éclatée (dans le groupe du clam)
   PARTS.forEach(p => {
@@ -2067,7 +2136,7 @@ function applyExplode(e) {
     const dy = u(p.ex || 0) * k;
     p.objs.forEach(o => {
       if (!p.anim) { if (!o.userData.base) o.userData.base = o.position.clone(); o.position.copy(o.userData.base); }
-      o.position.y += dy;
+      o.position.y += dy + (HYD_PARTS.has(p.id) ? -u(STROKE) * hydVis : 0);
     });
   }
   // Mâchoires installées : rejoignent la rangée des jeux de mâchoires
@@ -2290,7 +2359,7 @@ function select(p) {
 /* ================= État de l'animation ================= */
 function initState() {
   return {
-    lever: 0, jaws: 0, lock: 0,
+    lever: 0, jaws: 0, lock: 0, hyd: 1,   // hyd : 1 = vérin sous pression (manettes ouvertes, mâchoires ouvertes)
     jc: { bolts: Array(3).fill(0), lift: 0 },
     cv: { bolts: Array(9).fill(0), lift: 0 },
     pb: BOLTS.map(() => ({ turns: 0, lift: 0, gone: 0, bushOut: 0 })),
@@ -2310,10 +2379,10 @@ function removeBolt(S, i, p, from = null) {
 
 /* ---------- Étapes communes ---------- */
 const st = {
-  lever: { n: '1', title: 'Manettes fermées', cam: 'intro', dur: 3.5, act: 'Manettes du clam et du chuck en position fermée', at: () => levers[0],
-    text: 'Mettre les manettes du clam et du chuck en position fermée. Le vérin ne pousse plus, mais les ressorts restent comprimés.',
-    apply(S, p) { S.lever = ease(p); } },
-  jaws: { n: '2', title: 'Mâchoires fermées', cam: 'top', dur: 3, act: 'Jaws (mâchoires) en position fermée',
+  lever: { n: '1', title: 'Manettes fermées', cam: 'mech', dur: 5, act: 'Manettes fermées : le vérin relâche, le cône avance, les mâchoires se ferment', at: () => levers[0],
+    text: 'Mettre les manettes du clam et du chuck en position fermée. Le vérin relâche : les ressorts avancent le cône et les mâchoires se ferment. Les ressorts restent comprimés.',
+    apply(S, p) { S.lever = ease(seg(p, 0, .35)); S.hyd = 1 - ease(seg(p, .35, .95)); } },
+  jaws: { n: '2', title: 'Mâchoires fermées', cam: 'top', dur: 3, act: 'Jaws (mâchoires) en position fermée', at: () => jaws[0],
     text: 'Vérifier que les mâchoires sont fermées.',
     apply(S, p) { S.jaws = ease(p); } },
   lock: { n: '3', title: 'Cadenasser', cam: 'intro', dur: 3, act: 'Procédure de cadenassage appliquée', at: () => lockG,
@@ -2360,7 +2429,7 @@ function oneByOne(withRet) {
   return [
     { n: '7', title: 'Boulons 4, 1 et 3 retirés au complet', cam: 'bolts', dur: 9, tone: 'warn', flag: 'Non respectée',
       text: 'Chaque boulon est sorti au complet au lieu d\'un tour à la fois. Les autres boulons reprennent la charge.'
-        + (withRet ? ' Les 3 boulons de retenue (R) ne portent rien : ils attendent devant le cône.' : ''),
+        + (withRet ? ' Les 3 boulons longs ne portent rien : ils attendent devant le cône.' : ''),
       apply(S, p) { base(S); [4, 1, 3].forEach((n, k) => { const q = seg(p, k / 3, (k + 1) / 3); removeBolt(S, byNum(n), q); if (q > 0 && q < 1) S.active = byNum(n); }); } },
     { n: '7', title: 'Boulon 5 retiré : le cône bascule', cam: 'bolts', dur: 5, tone: 'warn', flag: 'Non respectée',
       text: 'Il reste les boulons 2 et 6, du même côté. Le cône bascule et se coince : ces 2 boulons portent presque tout.',
@@ -2763,7 +2832,12 @@ function animateWorker(S, fl) {
   }
 }
 let outKey = null;
+const STROKE = .35;   // po : recul du piston, du manchon, des 9 boulons et du cône quand le vérin est sous pression (illustratif)
+const HYD_PARTS = new Set(['3506908', '5035015', '5035017', '5000199', '3506882', '5054078', '3506928']);
+let hydVis = 0;
 function applyScene(S) {
+  hydVis = S.hyd * (1 - ease(Math.max(explodeE, hexE)));
+  const hOff = -u(STROKE) * hydVis;
   const D = S.D;
   levers.forEach(L => { L.rotation.z = lerp(-0.55, 0.55, S.lever); });
   labelOpacity(labels.open[0], S.i <= 2 && scen === 'A' ? 1 - S.lever : 0);
@@ -2813,12 +2887,12 @@ function applyScene(S) {
     const { a, b, c } = D.pose;
     const n = tmpV.set(-b, 1, -c).normalize();
     plate.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), n);
-    plate.position.set(0, PLATE_TOP0 + a, 0);
+    plate.position.set(0, PLATE_TOP0 + a + hOff, 0);
     if (S.plateOut > 0) toTable(plate, PLATE_BASE.set(0, PLATE_TOP0 + a, 0), TABLE.plate, S.plateOut, 2.6, -Math.PI / 2);   // posé face vers le bas, mâchoires en haut
     glow(plate, S.plateOut > 0 ? (RC.plate ? .45 : .12) : 0);
   }
   jaws.forEach(j => {
-    const off = u(0.12) * (1 - S.jaws);
+    const off = u(0.16) * hydVis;   // mâchoires ouvertes quand le cône est reculé
     j.position.set(off * Math.cos(j.userData.a), u(JAW_Y0), -off * Math.sin(j.userData.a));
   });
 
@@ -2837,7 +2911,7 @@ function applyScene(S) {
     m.position.set(s.x, POCKET, s.z); m.rotation.set(0, 0, 0);
     m.visible = !(cutOn && explodeE === 0 && hexE === 0 && s.x > u(.7));   // en coupe : ressorts de la moitié retirée masqués
     const compVis = D.comp[j] / 1000 / U * X;
-    setSpringLen(m, Math.max(u(3.2), LC + t - compVis));   // ne descend jamais sous la longueur à spires jointives
+    setSpringLen(m, Math.max(u(3.2), LC + t - compVis + hOff));   // vérin sous pression : plus comprimés ; jamais sous la longueur à spires jointives
   });
 
   // Boulons du cône
@@ -2853,14 +2927,14 @@ function applyScene(S) {
       o.quaternion.identity();
       const q = S.catchD ? S.catchP - CATCH_HIT : -1;
       const jolt = B.bushing && q > 0 ? 0.03 * Math.exp(-q * 14) * Math.sin(q * 90) : 0;
-      const from = new THREE.Vector3(B.x, PLATE_TOP0 + bush + H(b.turns) + b.lift + jolt, B.z);
+      const from = new THREE.Vector3(B.x, PLATE_TOP0 + bush + H(b.turns) + b.lift + jolt + hOff, B.z);
       boltToTable(o, from, TABLE.pBolt(i), b.gone, b.turns * Math.PI * 2);
       setOpacity(o, fl && S.ride === -1 && b.gone < 1 ? 0 : 1);
       glow(o, b.gone > 0 ? hiK(RC.pb && RC.pb[i]) : 0);
     }
     if (B.bushing) {
       const k = BUSHED.indexOf(i), bo = b.bushOut;
-      const from = new THREE.Vector3(B.x, PLATE_TOP0 + 1.4 * ease(seg(bo, 0, .5)), B.z);
+      const from = new THREE.Vector3(B.x, PLATE_TOP0 + 1.4 * ease(seg(bo, 0, .5)) + hOff, B.z);
       boltToTable(bushings[k], from, TABLE.bush(k), seg(bo, .5, 1));
       setOpacity(bushings[k], 1); glow(bushings[k], bo > 0 ? hiK(RC.bush) : 0);
     }
@@ -2872,7 +2946,7 @@ function applyScene(S) {
       const L = labels.ret[BUSHED.indexOf(i)];
       L.position.set(o.position.x, o.position.y + 0.55, o.position.z);
       const hide = S.catchD && steps[S.i] && steps[S.i].catch ? seg(S.catchP, CATCH_T0 - .04, CATCH_T0) * (1 - seg(S.catchP, .6, .7)) : 0;
-      labelOpacity(L, S.ret * (1 - b.gone) * (1 - hide));
+      labelOpacity(L, 0);   // pastilles « R » retirées
     }
   });
 
@@ -2945,6 +3019,7 @@ function applyScene(S) {
 /* ================= Caméra ================= */
 const CAMS = {
   intro: { p: [-4, 11.5, 27], t: [-1.8, 2.8, -0.8] },
+  mech: { p: [-6.2, 7.8, 21.5], t: [-6.4, 1.6, 1.2] },   // banc de commande et mandrin coupé dans le même cadre
   overview: { p: [0.8, 9.5, 23], t: [0.4, 2.0, 1.2] },
   top: { p: [4.2, 11.0, 11.5], t: [0.2, 4.6, 0] },
   bolts: { p: [2.8, 10.2, 8.2], t: [0.2, 4.8, 0] },
@@ -2997,7 +3072,7 @@ function selectScen(key) {
   $('tmeta').textContent = `Étape 1/${steps.length}`;
 }
 function renderStepList() {
-  const ol = $('stepList');
+  for (const ol of [$('stepList'), $('fsStepList')]) {
   ol.innerHTML = '';
   steps.forEach((s, i) => {
     const li = document.createElement('li');
@@ -3009,6 +3084,7 @@ function renderStepList() {
     b.addEventListener('click', () => { T = starts[i]; playing = false; autoCam = true; $('camChip').hidden = true; });
     li.appendChild(b); ol.appendChild(li);
   });
+  }
 }
 function renderTicks() {
   const el = $('ticks'); el.innerHTML = '';
@@ -3069,7 +3145,7 @@ function updateUI(S, force) {
   const doneK = explodeTarget || hexTarget ? -1 : S.i + (S.p > .995 ? 1 : 0), stepKey = doneK + '|' + S.i;
   if (stepKey !== lastStepKey) {
     lastStepKey = stepKey;
-    [...$('stepList').children].forEach((li, k) => { li.classList.toggle('done', k < doneK); li.classList.toggle('now', k === S.i && doneK >= 0); });
+    for (const ol of [$('stepList'), $('fsStepList')]) [...ol.children].forEach((li, k) => { li.classList.toggle('done', k < doneK); li.classList.toggle('now', k === S.i && doneK >= 0); });
   }
   $('scrub').value = Math.round(T / total * 1000);
   if (!force && ++uiTick % 3) return;
@@ -3192,7 +3268,6 @@ let downAt = null;
 canvas.addEventListener('pointerdown', e => { downAt = [e.clientX, e.clientY]; });
 // Pièce sous le curseur : une étiquette visible d'abord, sinon la pièce elle-même
 function pickPart(e) {
-  if (!(explodeTarget || hexTarget)) return null;   // pendant l'animation : aucun nom ni numéro de pièce
   const r = canvas.getBoundingClientRect();
   ptr.set((e.clientX - r.left) / r.width * 2 - 1, -(e.clientY - r.top) / r.height * 2 + 1);
   ray.setFromCamera(ptr, camera);
@@ -3210,13 +3285,14 @@ canvas.addEventListener('pointerup', e => {
   if (!downAt || Math.hypot(e.clientX - downAt[0], e.clientY - downAt[1]) > 5) return;
   const p = pickPart(e);
   select(p);
-  // sur écran tactile (pas de survol) : le nom apparaît à l'endroit touché
-  if (e.pointerType !== 'mouse') { if (p) { showTip(p, e); clearTimeout(tipTimer); tipTimer = setTimeout(hideTip, 3500); } else hideTip(); }
+  // clic (ou toucher) : nom et numéro à l'endroit cliqué, dans toutes les vues, quelques secondes
+  if (p) { showTip(p, e); clearTimeout(tipTimer); tipTimer = setTimeout(hideTip, 5000); } else hideTip();
 });
 // Info-bulle au survol : numéro et nom de la pièce
 const tip = $('tip');
+const clickTipOn = () => !tip.hidden && !!tipTimer;
 let hoverEv = null, hoverQueued = false, tipTimer = 0;
-function hideTip() { tip.hidden = true; canvas.style.cursor = ''; }
+function hideTip() { tip.hidden = true; clearTimeout(tipTimer); tipTimer = 0; canvas.style.cursor = ''; }
 function showTip(p, ev) {
   $('tipRef').textContent = p.ref + (p.qty && p.qty !== 1 ? ` · ×${qtyOf(p)}` : '');
   $('tipName').textContent = LANG === 'en' ? pname(p) : nb(pname(p));
@@ -3236,8 +3312,10 @@ canvas.addEventListener('pointermove', e => {
   requestAnimationFrame(() => {
     hoverQueued = false;
     const ev = hoverEv, p = pickPart(ev);
-    if (!p) { hideTip(); return; }
-    showTip(p, ev); canvas.style.cursor = 'pointer';
+    const exploded = explodeTarget || hexTarget;
+    if (!p) { if (exploded || !clickTipOn()) hideTip(); canvas.style.cursor = ''; return; }
+    canvas.style.cursor = 'pointer';
+    if (exploded) showTip(p, ev);   // survol : nom et numéro en vue éclatée seulement ; ailleurs, cliquer
   });
 });
 canvas.addEventListener('pointerleave', e => { if (e.pointerType === 'mouse') hideTip(); });

@@ -86,9 +86,13 @@ Les 18 ressorts sont modélisés avec un fil rond de section constante : en comp
 - Arêtes légèrement arrondies sur les pièces prismatiques.
 - Anticrénelage MSAA + SMAA, toujours en haute qualité.
 - Les surfaces coïncidentes reçoivent un décalage de profondeur par matériau pour éviter le scintillement.
-- **Numéros de pièces** : jamais affichés pendant l'animation. En vue éclatée, le numéro et le nom apparaissent dans une info-bulle au survol (ou au toucher sur mobile). La pièce sélectionnée garde sa couleur d'origine.
+- **Pièces interactives partout** : un clic (ou toucher) sur une pièce la sélectionne et affiche son nom et son numéro quelques secondes, dans la vue normale, pendant l'animation et en vue éclatée. En vue éclatée, le simple survol suffit. Aucun numéro permanent. La pièce sélectionnée garde sa couleur d'origine.
 - **Noms des pièces** : en anglais par défaut (désignations des listes de pièces), bouton **EN / FR** au-dessus de la liste des pièces (mémorisé).
 - **Pièces retirées** : elles sortent dans l'axe en surbrillance, puis sont rangées sur une petite table de travail à côté du mandrin (couvert, couvercle et cône à plat, boulons et bushings couchés en rangées). La liste « Retiré » dans la vue 3D garde la trace de ce qui a été enlevé (l'élément de l'étape en cours est marqué).
+- **Manettes et mécanisme** : banc de valves à 2 sections (CLAM, CHUCK), manettes à poignée rouge, repère FERMÉ / OUVERT. Manettes ouvertes, le vérin est sous pression : piston, roulement, manchon d'actionnement, 9 boulons et cône sont reculés (course illustrative de 0,35 po), les ressorts plus comprimés et les mâchoires ouvertes. À l'étape 1, les manettes se ferment, tout avance et les mâchoires se resserrent.
+- Boulons à tête hexagonale réelle (pans à arêtes vives, chanfrein à 30° sur le dessus, portée sous tête, bout de tige chanfreiné) ; vis à tête creuse à arête chanfreinée.
+- Pastilles « R » retirées des boulons longs.
+- **Plein écran** : la liste des étapes de la procédure s'affiche dans la scène (✓ fait, ✗ erreur, en cours), repliable.
 - **Séquence** : chaque étape faite reste marquée : « ✓ Fait » en vert pour la bonne méthode, « ✗ À éviter » ou « ✗ Dangereux » pour une erreur de méthode.
 - Coupe sans scintillement : la teinte de coupe (faces arrière) est repoussée d'environ 1 mm derrière les faces avant, et les faces en contact orientées dans le même sens sont décalées de quelques centièmes de pouce.
 - Bout du mandrin d'après la planche « Complete assembly UM-070-142AA » et une photo : le couvert des mâchoires 3506907 forme un **disque surélevé de 0,9 po** (arête chanfreinée, ligne de joint au pied) au-dessus de la couronne du porte-capuchon et de ses 9 boulons ; couvercle et couvert peints comme le boîtier, boulons zingués.
