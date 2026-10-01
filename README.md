@@ -100,7 +100,7 @@ Tous les textes à l'écran sont courts et s'adressent aux travailleurs : une co
 - **Coupe du mandrin** : montre l'intérieur du mandrin (ressorts, boulons, voile, manchon, piston, roulement). La tête reste entière ; une pièce retirée du mandrin sort de la coupe.
 - **Éclaté : tête** : les pièces de la tête écartées de la boîte, le mandrin soulevé d'un bloc. Survoler une pièce pour voir son numéro et son nom, cliquer pour la sélectionner.
 - **Éclaté : mandrin** : toutes les pièces du mandrin séparées ; même principe (survol, clic).
-- **?** : aide pour naviguer dans la 3D (affichée au premier passage).
+- **?** : aide illustrée pour naviguer dans la 3D (souris, molette, tablette), affichée au premier passage ; se ferme avec ×, Compris, Échap ou un clic à côté.
 - **Plein écran** : la vue 3D et ses commandes occupent tout l'écran (Échap pour sortir).
 - **Pause à chaque étape** : à la fin de chaque étape, une carte « Étape n · fait » (formulation de PRO-OP-DD-005) est ancrée sur l'action dans la 3D ; Lecture pour continuer.
 - **Liste des pièces** : repliée par défaut, s'ouvre au clic.
