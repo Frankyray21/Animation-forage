@@ -77,36 +77,28 @@ Le travailleur dévisse les boulons avec une clé à chocs électrique à fil (d
 
 Les 18 ressorts sont modélisés avec un fil rond de section constante : en compression, seul l'écart entre les spires diminue, comme sur un vrai ressort (course amplifiée ×6 pour être visible). En vue coupée, le bloc des logements est ouvert plus profondément pour montrer deux rangées de ressorts entiers.
 
+## Rendu
+
+- **Matériaux PBR procéduraux** : acier usiné (stries d'outil, micro-rayures), peinture rouge usée (grain, éclats, graisse, vernis léger), roche et sol de galerie ; cartes de couleur, de rugosité et de normales dessinées au chargement (aucune texture externe, aucun CDN d'images).
+- **Arêtes arrondies** sur les pièces prismatiques pour que les reflets accrochent les chanfreins.
+- **Éclairage** : environnement d'atelier (panneaux fluorescents) pour les reflets, soleil directionnel avec ombres, deux luminaires de galerie et lumière d'ambiance ; brume de roche à distance. Pas de source lumineuse de lampe frontale.
+- **Décor** : galerie de mine (voûte de roche, parois, conduit de ventilation, câbles, luminaires, éboulis), masquée dans les vues éclatées.
+- **Post-traitement** : occlusion ambiante (GTAO) et anti-aliasing (MSAA + SMAA) en qualité haute. Le bouton **Qualité : haute / basse** (mémorisé) coupe le post-traitement et réduit la résolution pour les tablettes ; la qualité basse est choisie d'office sur les appareils modestes.
+- Les surfaces coïncidentes reçoivent un décalage de profondeur par matériau pour éviter le scintillement.
+
 ## Commandes
 
 - Lecture / pause : bouton jaune ou barre d'espace. Étape précédente / suivante : flèches.
 - **Coupe du mandrin** : montre l'intérieur du mandrin (ressorts, boulons, voile, manchon, piston, roulement). La tête reste entière ; une pièce retirée du mandrin sort de la coupe.
 - **Éclaté : tête** : les pièces de la tête écartées de la boîte, le mandrin soulevé d'un bloc. Les pièces principales sont étiquetées ; les autres le sont quand on les sélectionne.
 - **Éclaté : mandrin** : toutes les pièces du mandrin séparées, avec leur numéro.
-- **SI / Impérial** : énergie en J ou en pi·lb, force en kN ou en lbf, compression en mm ou en po, vitesse en m/s ou en pi/s. Les équivalences (masse lâchée d'une hauteur, tonnes) sont données dans les deux systèmes.
-
-## Validation de l'énergie des ressorts
-
-| Élément | Valeur | Source |
-| --- | --- | --- |
-| Cotes du ressort 5200517 | Ø 1 ½ po × Ø int. ¾ po × 6 po | Geo Mines (« Wire Spring Boyles 1.5'' x 6'' », remplacement du 5200517) ; Mirow Regent 18100155 (« Spring for 12HH & P Chuck… 1-1/2″ OD x 3/4″ ID x 6″ LG ») |
-| Raideur | k = G d⁴ / (8 D³ n) = 350 N/mm (n = 10, non publié ; 8 à 12 → 440 à 290 N/mm) | Acxess Spring ; SMI *Handbook of Spring Design* ; Shigley ch. 10 ; G = 11,5 Mpsi (Optimum Spring, Cr-Si) |
-| Énergie à libérer | 18 × ½ k x², x = ¼ po → **127 J** (plage 106 à 159 J) | Loi de Hooke ; x : procédure PRO-OP-DD-005 |
-| Force totale | 40 kN (9 000 lbf) | idem |
-| Contrôle de contrainte | 43 ksi (Wahl K = 1,58) < ≈ 105 ksi admissible | Newcomb Spring (Wahl) ; Optimum Spring (45 % de la résistance min.) |
-| Cohérence mandrin | serrage publié 26 000 lb (mâchoires 12,5°) | JKS Boyles, fiche 12HH |
-| Énergie résiduelle (règle) | contrôler toute énergie résiduelle ou emmagasinée | RSST art. 188.7 ; OSHA 1910.147(d)(5)(i) ; CCHST |
-
-Limites : les pages des distributeurs et de JKS Boyles ont été consultées par résumé de moteur de recherche (accès direct bloqué depuis l'environnement de travail). Pour une valeur certaine, compter les spires d'un ressort 5200517 et mesurer sa charge à une longueur connue.
+- **Qualité : haute / basse** : active ou coupe l'occlusion ambiante, l'anti-aliasing et la pleine résolution.
+- **Énergie des ressorts** : indication qualitative seulement (Stockée / Libérée graduellement / Libérée d'un coup / Arrêtée par la retenue) avec une jauge de la compression restante. Aucune valeur de force ni d'énergie n'est affichée.
 
 ## Physique utilisée (estimations)
 
-- Énergie des ressorts : `E = n × ½ k x²` ; force : `F = n × k x`.
-- Nombre de ressorts : 18, selon la liste de pièces. Compression : 6,35 mm (¼ po), selon la procédure.
-- **Raideur du ressort 5200517 : 350 N/mm (2 000 lbf/po), calculée.** Les distributeurs donnent ses cotes : Ø 1 ½ po, Ø int. ¾ po, longueur 6 po (Geo Mines ; équivalent Mirow Regent 18100155, « Spring for 12HH & P Chuck »). Fil de ⅜ po, diamètre moyen 1 ⅛ po, acier G = 79,3 GPa, environ 10 spires actives (non publié : 8 à 12 spires donnent 440 à 290 N/mm) : `k = G d⁴ / (8 D³ n)`.
-- Résultat à ¼ po : environ 127 J (94 pi·lb) et 40 kN (9 000 lbf), soit 4,4 kN par boulon du cône quand les 9 sont serrés. Il faudrait environ 20 bar (290 psi) sur le piston 3506908 (≈ 198 cm², 31 po²) pour retenir cette force.
-- Contrôle : JKS Boyles annonce 26 000 lb de serrage pour le mandrin 12HH (mâchoires 12,5°). Avec un coin de 12,5° et des frottements estimés (0,1 bol/mâchoires, 0,3 plaquettes/tige), cela demande environ 120 kN de poussée axiale, soit environ 0,8 po de compression des ressorts en service : cohérent avec un ressort de 6 po. Aucune fiche ne donne la raideur elle-même : mesurez un ressort ou demandez sa fiche pour un calcul exact (réglable dans « Paramètres des ressorts »).
-- Masse projetée : 22 kg (49 lb), celle du cône et des mâchoires du modèle en acier. Vitesse de départ à 127 J : environ 3,4 m/s (12 km/h).
-- Position du cône : plan retenu par les boulons encore engagés (pas ½-13 UNC, 1 tour = 1,95 mm), qui minimise l'énergie des ressorts. Le basculement est limité, parce que le cône est guidé dans le boîtier.
-- Projection : vitesse de départ `v = √(2E/m)` dans l'axe du mandrin, donc à l'horizontale ; trajectoire balistique (le cône de 22 kg retombe pendant son vol), ralentie ×6 à l'écran. Il frappe d'abord les mains sur la clé, puis le corps du travailleur à la hauteur qu'il a encore (hanches, jambes…), et se pose à plat au sol.
+- **Les calculs de force et d'énergie des ressorts ont été retirés de l'affichage** : la raideur du ressort 5200517 n'est pas publiée et n'a pas été validée (aucune fiche technique, aucune mesure). La page ne montre donc ni joules, ni kN, ni vitesse. Pour une valeur certaine : compter les spires d'un ressort 5200517 et mesurer sa charge à une longueur connue.
+- L'animation garde une physique interne (ressorts de raideur égale, loi de Hooke) uniquement pour que les mouvements soient cohérents : position du cône retenue par les boulons encore engagés (pas ½-13 UNC, 1 tour = 1,95 mm), détente graduelle quand on dévisse 1 tour à la fois, projection dans l'axe du mandrin quand le dernier filet cède. Ces valeurs internes ne sont pas affichées.
+- Nombre de ressorts : 18, selon la liste de pièces. Compression libérée : ¼ po, selon la procédure.
+- Projection : trajectoire balistique à l'horizontale dans l'axe du mandrin, ralentie ×6 à l'écran. Le cône frappe d'abord les mains sur la clé, puis le corps du travailleur à la hauteur qu'il a encore (tronc, hanches, jambes…), et se pose au sol.
 - La course des ressorts est amplifiée ×6 à l'écran pour être visible.

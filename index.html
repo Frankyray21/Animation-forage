@@ -224,6 +224,7 @@ details.params summary { cursor: pointer; padding: 10px 14px; font-weight: 600; 
         <button type="button" class="vbtn" id="btnCut" aria-pressed="true">Coupe du mandrin</button>
         <button type="button" class="vbtn" id="btnHeadExplode" aria-pressed="false">Éclaté : tête</button>
         <button type="button" class="vbtn" id="btnExplode" aria-pressed="false">Éclaté : mandrin</button>
+        <button type="button" class="vbtn" id="btnQuality" aria-pressed="true" title="Haute : occlusion ambiante, anticrénelage, ombres fines. Basse : pour tablette ou ordinateur lent.">Qualité : haute</button>
       </div>
       <div class="banner" id="banner" hidden><strong id="bannerTitle">PROJECTION</strong></div>
       <div class="note" id="note">Course des ressorts affichée ×6</div>
@@ -265,17 +266,9 @@ details.params summary { cursor: pointer; padding: 10px 14px; font-weight: 600; 
     </section>
 
     <section class="readout" aria-label="Énergie des ressorts">
-      <div class="big"><span class="num" id="eNum">48</span><span class="unit" id="eUnit">J</span><span class="alt" id="eAlt">= 36 pi·lb</span>
-        <div class="units" role="group" aria-label="Unités"><button type="button" data-u="SI" aria-pressed="true">SI</button><button type="button" data-u="IMP" aria-pressed="false">Impérial</button></div>
-      </div>
-      <div class="big" style="margin-top:-6px"><span class="state" id="eState" style="margin-left:0">Stockée</span></div>
-      <div class="meter" id="eMeter"><i id="eFill"></i></div>
-      <dl class="kv">
-        <div><dt>Force des ressorts</dt><dd id="kvF">15,2 kN</dd></div>
-        <div><dt>Compression moy.</dt><dd id="kvX">6,35 mm</dd></div>
-        <div><dt>Charge max / boulon</dt><dd id="kvB">1,7 kN</dd></div>
-      </dl>
-      <p class="equiv" id="equiv"></p>
+      <div class="big"><span class="unit">Énergie des ressorts</span><span class="state" id="eState">Stockée</span></div>
+      <div class="meter" id="eMeter" title="Part de la compression initiale encore présente"><i id="eFill"></i></div>
+      <p class="equiv" id="equiv">Indication qualitative seulement : la raideur du ressort 5200517 n'est pas validée par une fiche technique, aucune valeur de force ou d'énergie n'est affichée.</p>
     </section>
 
     <section class="steps">
@@ -295,32 +288,6 @@ details.params summary { cursor: pointer; padding: 10px 14px; font-weight: 600; 
       <div id="bomList" style="margin-top:10px"></div>
     </section>
 
-    <details class="params">
-      <summary>Paramètres des ressorts</summary>
-      <div class="pgrid">
-        <p class="fine"><b>Raideur calculée : 350 N/mm (2 000 lbf/po).</b> Le ressort 5200517 (équivalent Mirow 18100155) mesure Ø 1 ½ po × Ø int. ¾ po × 6 po : fil de ⅜ po, diamètre moyen 1 ⅛ po. Avec l'acier à ressort (G = 79,3 GPa) et environ 10 spires actives (nombre non publié ; 8 à 12 donnent 440 à 290 N/mm), k = G d⁴ / (8 D³ n) ≈ 350 N/mm. Contrôle : la fiche du mandrin 12HH (JKS Boyles) annonce 26 000 lb de serrage avec des mâchoires à 12,5° ; avec cette raideur, cela demande environ 0,8 po de compression des ressorts en service, dans leur course. La compression de ¼ po vient de la procédure ; la masse (22 kg) est celle du bol et des mâchoires du modèle en acier. Mesurez un ressort ou demandez sa fiche pour un calcul exact.</p>
-        <label for="pN">Nombre de ressorts <output id="oN">18</output><input type="range" id="pN" min="6" max="18" step="1" value="18"></label>
-        <label for="pK">Raideur par ressort <output id="oK">350 N/mm</output><input type="range" id="pK" min="50" max="600" step="10" value="350"></label>
-        <label for="pX">Compression à libérer <output id="oX">6,35 mm (¼ po)</output><input type="range" id="pX" min="2" max="15" step="0.05" value="6.35"></label>
-        <label for="pM">Masse du cône projeté <output id="oM">22 kg</output><input type="range" id="pM" min="3" max="40" step="1" value="22"></label>
-        <button type="button" class="reset" id="pReset">Valeurs par défaut</button>
-      </div>
-    </details>
-    <details class="params">
-      <summary>Validation de l'énergie des ressorts</summary>
-      <div class="pgrid">
-        <p class="fine"><b>Énergie résiduelle : 127 J (94 pi·lb), plage plausible 106 à 159 J.</b></p>
-        <ol class="fine vsrc">
-          <li><b>Cotes du ressort 5200517</b> : Ø ext. 1 ½ po, Ø int. ¾ po, longueur 6 po ; fil ⅜ po, diamètre moyen 1 ⅛ po. Fiches des distributeurs : Geo Mines, « Wire Spring Boyles 1.5'' x 6'' », remplacement du 5200517 (geo-mines.com) ; Mirow Regent 18100155, « Spring for 12HH & P Chuck… 1-1/2″ OD x 3/4″ ID x 6″ LG » (mirowregent.ca).</li>
-          <li><b>Raideur</b> : k = G d⁴ / (8 D³ n) (Acxess Spring, « Compression spring rate » ; SMI, <i>Handbook of Spring Design</i> ; Shigley, ch. 10). G = 79,3 GPa (11,5 Mpsi), acier chrome-silicium (Optimum Spring). Le nombre de spires actives n'est pas publié : 10 retenues → 350 N/mm ; 8 à 12 → 440 à 290 N/mm.</li>
-          <li><b>Énergie</b> : E = ½ k x² par ressort (loi de Hooke), × 18 ressorts, avec x = ¼ po (6,35 mm) à libérer selon PRO-OP-DD-005 → 127 J ; force totale 40 kN (9 000 lbf).</li>
-          <li><b>Contrôle de résistance</b> : à ¼ po, 2,2 kN (500 lbf) par ressort ; facteur de Wahl 1,58 (C = 3) ; contrainte de cisaillement ≈ 43 ksi, bien sous l'admissible du fil Cr-Si (≈ 45 % de 235 ksi ≈ 105 ksi). Les valeurs sont donc physiquement possibles.</li>
-          <li><b>Ordre de grandeur du mandrin</b> : JKS Boyles annonce 11 800 kg (26 000 lb) de serrage pour le mandrin 12HH à mâchoires 12,5° (jksboyles.nl). Les 40 kN des ressorts, multipliés par l'effet de coin des mâchoires, sont cohérents avec cette valeur.</li>
-          <li><b>Réglementation</b> : RSST, art. 188.7 (Québec) : contrôler toute énergie résiduelle ou emmagasinée ; OSHA 29 CFR 1910.147(d)(5)(i) ; CCHST : un ressort comprimé est une énergie résiduelle.</li>
-        </ol>
-        <p class="fine">Limites : les pages des distributeurs et de JKS Boyles ont été consultées par résumé de moteur de recherche (accès direct bloqué depuis l'environnement de travail) ; à confirmer en ouvrant les liens. Pour une valeur certaine : compter les spires d'un ressort 5200517 et mesurer sa charge à une longueur connue.</p>
-      </div>
-    </details>
 
     <section class="remontage">
       <h3 class="sec-title">Au remontage (étapes 10 à 13)</h3>
@@ -348,6 +315,12 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { TransformControls } from 'three/addons/controls/TransformControls.js';
+import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
+import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
+import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
+import { GTAOPass } from 'three/addons/postprocessing/GTAOPass.js';
+import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
+import { SMAAPass } from 'three/addons/postprocessing/SMAAPass.js';
 
 /* ================= Constantes physiques et géométriques ================= */
 const U = 0.1;                 // 1 unité de scène = 0,1 m
@@ -438,17 +411,6 @@ const seg = (p, a, b) => clamp01((p - a) / (b - a));
 const ease = t => t < .5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
 const lerp = (a, b, t) => a + (b - a) * t;
 const fr = (v, d = 1) => v.toLocaleString('fr-CA', { minimumFractionDigits: d, maximumFractionDigits: d });
-/* Unités : SI (J, kN, mm, m/s) ou impériales (pi·lb, lbf, po, pi/s) */
-let UNITS = 'SI';
-try { UNITS = localStorage.getItem('clam-units') === 'IMP' ? 'IMP' : 'SI'; } catch (e) {}
-const OTHER = () => UNITS === 'SI' ? 'IMP' : 'SI';
-const fmtE = (J, un = UNITS) => { const v = un === 'SI' ? J : J * 0.737562; return [fr(v, v < 10 ? 1 : 0), un === 'SI' ? 'J' : 'pi·lb']; };
-const eS = (J, un = UNITS) => fmtE(J, un).join('\u00a0');
-const fS = (N, un = UNITS) => un === 'SI' ? `${fr(N / 1000)}\u00a0kN` : `${fr(N * 0.224809, 0)}\u00a0lbf`;
-const xS = (mm, un = UNITS) => un === 'SI' ? `${fr(mm, 2)}\u00a0mm` : `${fr(mm / 25.4, 3)}\u00a0po`;
-const vS = (ms, un = UNITS) => un === 'SI' ? `${fr(ms)}\u00a0m/s (${fr(ms * 3.6, 0)}\u00a0km/h)` : `${fr(ms * 3.28084)}\u00a0pi/s (${fr(ms * 2.23694, 0)}\u00a0mi/h)`;
-const hS = (m, un = UNITS) => un === 'SI' ? `${fr(m, 2)}\u00a0m` : `${fr(m * 39.3701, 1)}\u00a0po`;
-const mS = (kg, un = UNITS) => un === 'SI' ? `${fr(kg, 0)}\u00a0kg` : `${fr(kg * 2.20462, 0)}\u00a0lb`;
 const css = name => getComputedStyle(document.documentElement).getPropertyValue(name).trim();
 const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
 
@@ -515,42 +477,41 @@ const canvas = document.getElementById('c');
 const view = document.getElementById('view');
 // Faces intérieures révélées par la coupe : une seule teinte sombre et mate, comme une surface coupée
 // Face intérieure qui coïncide avec la face extérieure d'une autre pièce : toujours derrière (pas de z-fighting)
-// Surfaces exactement confondues de deux pièces (ex. coque du boîtier et bloc des ressorts) : priorité de profondeur
-// fixe et minuscule par matériau, pour que la même surface gagne toujours (pas de z-fighting qui clignote)
-THREE.ShaderChunk.logdepthbuf_pars_fragment += `
-#if defined( USE_LOGDEPTHBUF ) && defined( USE_LOGDEPTHBUF_EXT )
-uniform float uDepthBias;
-#endif
-`;
-THREE.ShaderChunk.logdepthbuf_fragment += `
-#if defined( USE_LOGDEPTHBUF ) && defined( USE_LOGDEPTHBUF_EXT )
-gl_FragDepthEXT += uDepthBias;
-#endif
-`;
-THREE.ShaderChunk.logdepthbuf_fragment += `
-#if defined( USE_LOGDEPTHBUF ) && defined( USE_LOGDEPTHBUF_EXT ) && NUM_CLIPPING_PLANES > 0
-if ( ! gl_FrontFacing ) gl_FragDepthEXT = min( 1.0, gl_FragDepthEXT + 0.0001 );
-#endif
-`;
+// Surfaces exactement confondues de deux pièces (ex. coque du boîtier et bloc des ressorts) : chaque matériau reçoit
+// une priorité de profondeur fixe (polygonOffset), pour que la même surface gagne toujours (voir le bloc « priorité » au démarrage).
 THREE.ShaderChunk.opaque_fragment += `
 #if NUM_CLIPPING_PLANES > 0
 if ( ! gl_FrontFacing ) gl_FragColor.rgb = vec3( 0.105, 0.11, 0.118 );   // teinte de coupe uniforme, sans éclairage ni texture : deux faces superposées ne peuvent plus clignoter
 #endif
 `;
-const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, preserveDrawingBuffer: false, logarithmicDepthBuffer: true });   // profondeur précise : pas de scintillement entre surfaces proches
+const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, preserveDrawingBuffer: false, powerPreference: 'high-performance' });
 renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
 renderer.shadowMap.enabled = true;
 renderer.localClippingEnabled = true;
 renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 renderer.toneMapping = THREE.ACESFilmicToneMapping;
-renderer.toneMappingExposure = 1.0;
+renderer.toneMappingExposure = 1.08;
 
 const scene = new THREE.Scene();
 const pmrem = new THREE.PMREMGenerator(renderer);
-scene.environment = pmrem.fromScene(new RoomEnvironment(renderer), 0.04).texture;
-scene.fog = new THREE.Fog(0xd7dce0, 30, 70);
+// Environnement d'atelier souterrain pour les reflets : parois sombres, tubes fluorescents au plafond, projecteur chaud.
+// (Les images HDRI externes sont bloquées ici : la pièce est construite en géométrie, comme RoomEnvironment.)
+function workshopEnvironment() {
+  const env = new THREE.Scene();
+  const wallM = new THREE.MeshStandardMaterial({ color: 0x3a3732, roughness: 1, side: THREE.BackSide });
+  env.add(new THREE.Mesh(new THREE.BoxGeometry(60, 24, 60), wallM));
+  const lamp = (w, d, x, z, c, i) => { const m = new THREE.Mesh(new THREE.BoxGeometry(w, .3, d), new THREE.MeshBasicMaterial({ color: c })); m.material.color.multiplyScalar(i); m.position.set(x, 11.8, z); env.add(m); };
+  lamp(10, 1.2, -12, 0, 0xdbe7f5, 9); lamp(10, 1.2, 12, 0, 0xdbe7f5, 9); lamp(1.2, 10, 0, -14, 0xdbe7f5, 7);
+  lamp(3, 3, 6, 16, 0xffd9a0, 14);   // projecteur de chantier, chaud
+  const floorM = new THREE.MeshStandardMaterial({ color: 0x5a564f, roughness: 1 });
+  const f = new THREE.Mesh(new THREE.PlaneGeometry(60, 60), floorM); f.rotation.x = -Math.PI / 2; f.position.y = -11.9; env.add(f);
+  return env;
+}
+scene.environment = pmrem.fromScene(workshopEnvironment(), 0.04).texture;
+const FOG_ROCK = new THREE.Color(0x2c2925);
+scene.fog = new THREE.Fog(FOG_ROCK, 55, 150);
 
-const camera = new THREE.PerspectiveCamera(38, 1, 0.1, 200);
+const camera = new THREE.PerspectiveCamera(38, 1, 0.4, 220);   // near à 4 cm : précision de profondeur suffisante pour les surfaces voisines
 camera.position.set(-9, 10, 14);
 const controls = new OrbitControls(camera, canvas);
 controls.enableDamping = true;
@@ -559,9 +520,11 @@ controls.maxPolarAngle = Math.PI * 0.49;
 controls.minDistance = 4;
 controls.maxDistance = 45;
 
-scene.add(new THREE.HemisphereLight(0xeef3ff, 0x5a4e44, 0.9));
-const sun = new THREE.DirectionalLight(0xffffff, 2.1);
+scene.add(new THREE.HemisphereLight(0xd8e2ee, 0x5e564c, 1.05));
+// projecteur de chantier (lumière principale, avec ombres) + deux luminaires de galerie
+const sun = new THREE.DirectionalLight(0xfff1dc, 2.3);
 sun.position.set(7, 16, 9);
+for (const [x, z] of [[-14, 6], [16, -4]]) { const pl = new THREE.PointLight(0xdfe9f7, 180, 60, 2); pl.position.set(x, FLOOR + 36, z); scene.add(pl); }
 sun.castShadow = true;
 sun.shadow.mapSize.set(2048, 2048);
 Object.assign(sun.shadow.camera, { left: -14, right: 14, top: 14, bottom: -14, near: 1, far: 50 });
@@ -569,16 +532,94 @@ sun.shadow.bias = -0.0002;
 sun.shadow.normalBias = 0.035;   // pas d'« acné » d'ombre qui scintille sur les pièces en mouvement
 scene.add(sun);
 
+/* ---------- Textures procédurales (PBR : couleur, rugosité, relief) ----------
+   Les banques de textures externes sont inaccessibles d'ici ; ces textures sont dessinées au chargement. */
+const texRnd = seed => () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+function makeTex(c, { repeat = 1, srgb = true, aniso = true } = {}) {
+  const t = new THREE.CanvasTexture(c); t.wrapS = t.wrapT = THREE.RepeatWrapping; t.repeat.set(repeat, repeat);
+  if (srgb) t.colorSpace = THREE.SRGBColorSpace; if (aniso) t.anisotropy = renderer.capabilities.getMaxAnisotropy();
+  return t;
+}
+// carte de relief (gris) → carte de normales (Sobel), tuilable
+function normalFromHeight(hc, strength = 2) {
+  const w = hc.width, h = hc.height, src = hc.getContext('2d').getImageData(0, 0, w, h).data;
+  const c = document.createElement('canvas'); c.width = w; c.height = h; const x = c.getContext('2d'), out = x.createImageData(w, h);
+  const H = (i, j) => src[(((j + h) % h) * w + ((i + w) % w)) * 4] / 255;
+  for (let j = 0; j < h; j++) for (let i = 0; i < w; i++) {
+    const dx = (H(i + 1, j - 1) + 2 * H(i + 1, j) + H(i + 1, j + 1)) - (H(i - 1, j - 1) + 2 * H(i - 1, j) + H(i - 1, j + 1));
+    const dy = (H(i - 1, j + 1) + 2 * H(i, j + 1) + H(i + 1, j + 1)) - (H(i - 1, j - 1) + 2 * H(i, j - 1) + H(i + 1, j - 1));
+    const nx = -dx * strength, ny = -dy * strength, l = Math.hypot(nx, ny, 1), k = (j * w + i) * 4;
+    out.data[k] = (nx / l * .5 + .5) * 255; out.data[k + 1] = (ny / l * .5 + .5) * 255; out.data[k + 2] = (1 / l * .5 + .5) * 255; out.data[k + 3] = 255;
+  }
+  x.putImageData(out, 0, 0); return c;
+}
+const cnv = (n = 512) => { const c = document.createElement('canvas'); c.width = c.height = n; return c; };
+// bruit tuilable : somme de taches floues répétées aux bords
+function noiseCanvas(n, seed, { blobs = 160, rmin = 6, rmax = 40, base = 128, amp = 60 } = {}) {
+  const c = cnv(n), x = c.getContext('2d'), r = texRnd(seed);
+  x.fillStyle = `rgb(${base},${base},${base})`; x.fillRect(0, 0, n, n);
+  for (let i = 0; i < blobs; i++) {
+    const cx = r() * n, cy = r() * n, rad = rmin + r() * (rmax - rmin), v = base + (r() - .5) * 2 * amp;
+    const g = x.createRadialGradient(0, 0, 0, 0, 0, rad); g.addColorStop(0, `rgba(${v},${v},${v},.55)`); g.addColorStop(1, `rgba(${v},${v},${v},0)`);
+    for (const ox of [-n, 0, n]) for (const oy of [-n, 0, n]) { x.save(); x.translate(cx + ox, cy + oy); x.fillStyle = g; x.fillRect(-rad, -rad, 2 * rad, 2 * rad); x.restore(); }
+  }
+  return c;
+}
+const TEX = {};
+{
+  // acier usiné : fines stries d'outil, légères taches, micro-rayures
+  const n = 512, c = cnv(n), x = c.getContext('2d'), r = texRnd(5);
+  x.drawImage(noiseCanvas(n, 7, { blobs: 90, rmin: 20, rmax: 90, base: 205, amp: 18 }), 0, 0);
+  for (let j = 0; j < n; j += 2) { x.fillStyle = `rgba(0,0,0,${.03 + r() * .08})`; x.fillRect(0, j, n, 1); }
+  for (let i = 0; i < 70; i++) { x.strokeStyle = `rgba(255,255,255,${.15 + r() * .3})`; x.lineWidth = 1; const y0 = r() * n; x.beginPath(); x.moveTo(0, y0); x.lineTo(n, y0 + (r() - .5) * 3); x.stroke(); }
+  TEX.steelMap = makeTex(c, { repeat: 2 });
+  const hc = cnv(n), hx = hc.getContext('2d'); hx.fillStyle = '#808080'; hx.fillRect(0, 0, n, n);
+  for (let j = 0; j < n; j += 3) { hx.fillStyle = `rgba(0,0,0,${.1 + r() * .2})`; hx.fillRect(0, j, n, 1); }
+  for (let i = 0; i < 40; i++) { hx.fillStyle = `rgba(255,255,255,${.2 + r() * .3})`; hx.fillRect(r() * n, r() * n, 2 + r() * 40, 1); }
+  TEX.steelNormal = makeTex(normalFromHeight(hc, 1.2), { repeat: 2, srgb: false });
+  const rc = cnv(n), rx = rc.getContext('2d'); rx.drawImage(noiseCanvas(n, 9, { blobs: 120, rmin: 10, rmax: 70, base: 95, amp: 55 }), 0, 0);
+  TEX.steelRough = makeTex(rc, { repeat: 2, srgb: false });
+}
+{
+  // peinture industrielle : grain, poussière, éclats sur les arêtes et coulures de graisse
+  const n = 512, c = cnv(n), x = c.getContext('2d'), r = texRnd(21);
+  x.drawImage(noiseCanvas(n, 3, { blobs: 140, rmin: 15, rmax: 80, base: 228, amp: 22 }), 0, 0);
+  for (let i = 0; i < 30; i++) { x.fillStyle = `rgba(60,55,50,${.12 + r() * .25})`; x.beginPath(); x.ellipse(r() * n, r() * n, 6 + r() * 30, 3 + r() * 14, r() * 3, 0, Math.PI * 2); x.fill(); }   // graisse, salissures
+  for (let i = 0; i < 22; i++) { x.fillStyle = `rgba(120,122,125,${.7 + r() * .3})`; x.beginPath(); const px = r() * n, py = r() * n; x.moveTo(px, py); for (let k = 0; k < 6; k++) x.lineTo(px + (r() - .5) * 14, py + (r() - .5) * 14); x.closePath(); x.fill(); }   // éclats : métal nu
+  for (let i = 0; i < 2500; i++) { x.fillStyle = `rgba(0,0,0,${r() * .12})`; x.fillRect(r() * n, r() * n, 1, 1); }
+  TEX.paintMap = makeTex(c, { repeat: .6 });
+  const hc = cnv(n), hx = hc.getContext('2d'); hx.drawImage(noiseCanvas(n, 13, { blobs: 400, rmin: 2, rmax: 10, base: 128, amp: 50 }), 0, 0);
+  TEX.paintNormal = makeTex(normalFromHeight(hc, .9), { repeat: .6, srgb: false });
+  const rc = cnv(n), rx = rc.getContext('2d'); rx.drawImage(noiseCanvas(n, 17, { blobs: 100, rmin: 20, rmax: 90, base: 120, amp: 60 }), 0, 0);
+  TEX.paintRough = makeTex(rc, { repeat: .6, srgb: false });
+}
+{
+  // roche de galerie (grain grossier, veines) et sol de mine (roche concassée, boue)
+  const n = 512, r = texRnd(31);
+  const c = cnv(n), x = c.getContext('2d');
+  x.drawImage(noiseCanvas(n, 33, { blobs: 220, rmin: 8, rmax: 60, base: 96, amp: 55 }), 0, 0);
+  for (let i = 0; i < 16; i++) { x.strokeStyle = `rgba(200,190,170,${.08 + r() * .15})`; x.lineWidth = 1 + r() * 2; x.beginPath(); let px = r() * n, py = r() * n; x.moveTo(px, py); for (let k = 0; k < 8; k++) { px += (r() - .5) * 90; py += (r() - .5) * 90; x.lineTo(px, py); } x.stroke(); }
+  TEX.rockMap = makeTex(c, { repeat: 3 });
+  TEX.rockNormal = makeTex(normalFromHeight(noiseCanvas(n, 37, { blobs: 500, rmin: 3, rmax: 30, base: 128, amp: 70 }), 2.2), { repeat: 3, srgb: false });
+  const f = cnv(n), fx = f.getContext('2d');
+  fx.drawImage(noiseCanvas(n, 41, { blobs: 260, rmin: 6, rmax: 50, base: 88, amp: 40 }), 0, 0);
+  for (let i = 0; i < 900; i++) { const v = 60 + r() * 80; fx.fillStyle = `rgba(${v},${v - 4},${v - 10},${.5 + r() * .5})`; fx.beginPath(); fx.ellipse(r() * n, r() * n, 1 + r() * 5, 1 + r() * 3, r() * 3, 0, Math.PI * 2); fx.fill(); }
+  for (let i = 0; i < 6; i++) { fx.fillStyle = `rgba(30,32,36,${.25 + r() * .3})`; fx.beginPath(); fx.ellipse(r() * n, r() * n, 40 + r() * 90, 20 + r() * 50, r() * 3, 0, Math.PI * 2); fx.fill(); }   // flaques
+  TEX.floorMap = makeTex(f, { repeat: 40 });
+  TEX.floorNormal = makeTex(normalFromHeight(noiseCanvas(n, 43, { blobs: 600, rmin: 2, rmax: 14, base: 128, amp: 80 }), 2.5), { repeat: 40, srgb: false });
+  const rc = cnv(n), rx = rc.getContext('2d'); rx.drawImage(noiseCanvas(n, 47, { blobs: 80, rmin: 30, rmax: 120, base: 200, amp: 50 }), 0, 0);
+  TEX.floorRough = makeTex(rc, { repeat: 40, srgb: false });
+}
 const mat = {
   red: new THREE.MeshStandardMaterial({ color: 0xb3301e, roughness: .5, metalness: .15 }),
   steel: new THREE.MeshStandardMaterial({ color: 0x2c3135, roughness: .42, metalness: .65 }),
-  steelLight: new THREE.MeshStandardMaterial({ color: 0x9aa3a9, roughness: .3, metalness: .85 }),
+  steelLight: new THREE.MeshStandardMaterial({ color: 0xa7afb5, roughness: .45, metalness: .85, map: TEX.steelMap, roughnessMap: TEX.steelRough, normalMap: TEX.steelNormal, normalScale: new THREE.Vector2(.3, .3) }),
   bolt: new THREE.MeshStandardMaterial({ color: 0xc9a54a, roughness: .35, metalness: .8 }),
   spring: new THREE.MeshStandardMaterial({ color: 0x2a5bd7, roughness: .35, metalness: .35 }),
   pocket: new THREE.MeshStandardMaterial({ color: 0x0d0f10, roughness: 1 }),
   wood: new THREE.MeshStandardMaterial({ color: 0xa98357, roughness: .9 }),
   woodDark: new THREE.MeshStandardMaterial({ color: 0x8a6a45, roughness: .95 }),
-  floor: new THREE.MeshStandardMaterial({ color: 0xb7bec3, roughness: .95 }),
+  floor: new THREE.MeshStandardMaterial({ color: 0x6b6a66, map: TEX.floorMap, normalMap: TEX.floorNormal, normalScale: new THREE.Vector2(.8, .8), roughnessMap: TEX.floorRough, roughness: 1 }),
   console: new THREE.MeshStandardMaterial({ color: 0x3b4247, roughness: .6, metalness: .3 }),
   knob: new THREE.MeshStandardMaterial({ color: 0x1b1b1b, roughness: .4 }),
   lockRed: new THREE.MeshStandardMaterial({ color: 0xc62828, roughness: .45 }),
@@ -592,6 +633,8 @@ const mat = {
   boot: new THREE.MeshStandardMaterial({ color: 0x3a2a1c, roughness: .8 }),
 };
 
+// boîte aux arêtes légèrement arrondies (reflets réalistes sur les chanfreins)
+const rboxGeo = (w, h, d) => new RoundedBoxGeometry(w, h, d, 2, Math.min(w, h, d) * .16);
 function mesh(geo, m, { cast = true, receive = true } = {}) {
   const o = new THREE.Mesh(geo, m);
   o.castShadow = cast; o.receiveShadow = receive;
@@ -612,8 +655,8 @@ const ring = (n, r, off = 0) => [...Array(n)].map((_, i) => { const a = (i * 360
 /* ---------- Matériaux supplémentaires ---------- */
 Object.assign(mat, {
   red: new THREE.MeshStandardMaterial({ color: 0xb8321f, roughness: .48, metalness: .12 }),
-  grey: new THREE.MeshStandardMaterial({ color: 0x8e979d, roughness: .35, metalness: .75 }),
-  machined: new THREE.MeshStandardMaterial({ color: 0xb9c0c5, roughness: .22, metalness: .9 }),
+  grey: new THREE.MeshStandardMaterial({ color: 0x9aa2a8, roughness: .5, metalness: .8, map: TEX.steelMap, roughnessMap: TEX.steelRough, normalMap: TEX.steelNormal, normalScale: new THREE.Vector2(.35, .35) }),
+  machined: new THREE.MeshStandardMaterial({ color: 0xc4cacf, roughness: .38, metalness: .92, map: TEX.steelMap, roughnessMap: TEX.steelRough, normalMap: TEX.steelNormal, normalScale: new THREE.Vector2(.45, .45) }),
   rubber: new THREE.MeshStandardMaterial({ color: 0x151617, roughness: .75 }),
   boltBlack: new THREE.MeshStandardMaterial({ color: 0x2a2c2e, roughness: .4, metalness: .7 }),
   brass: new THREE.MeshStandardMaterial({ color: 0xc8a24a, roughness: .3, metalness: .9 }),
@@ -764,7 +807,7 @@ const BOLT = {
 };
 
 /* ---------- Sol, palette, support d'atelier ---------- */
-const PAINT = new THREE.MeshStandardMaterial({ color: 0xc92b20, roughness: .45, metalness: .12 });   // rouge de la tête UM-012 (planches 2.1 à 2.4)
+const PAINT = new THREE.MeshPhysicalMaterial({ color: 0xcf2d20, roughness: .55, metalness: .08, map: TEX.paintMap, roughnessMap: TEX.paintRough, normalMap: TEX.paintNormal, normalScale: new THREE.Vector2(.5, .5), clearcoat: .25, clearcoatRoughness: .5 });   // peinture rouge de la tête UM-012, usée et grasse
 Object.assign(mat, {
   blue: PAINT, paint: PAINT,
   green: new THREE.MeshStandardMaterial({ color: 0x3fa65a, roughness: .38, metalness: .3 }),
@@ -774,15 +817,15 @@ const floor = mesh(new THREE.PlaneGeometry(200, 200), mat.floor, { cast: false }
 floor.rotation.x = -Math.PI / 2; floor.position.y = FLOOR;
 scene.add(floor);
 const pallet = new THREE.Group();
-for (const z of [-2.3, -1.15, 0, 1.15, 2.3]) { const b = mesh(new THREE.BoxGeometry(5.8, 0.2, 0.95), mat.wood); b.position.set(0, -0.1, z); pallet.add(b); }
-for (const x of [-2.4, 0, 2.4]) { const b = mesh(new THREE.BoxGeometry(0.95, 1.2, 5.6), mat.woodDark); b.position.set(x, -0.8, 0); pallet.add(b); }
+for (const z of [-2.3, -1.15, 0, 1.15, 2.3]) { const b = mesh(rboxGeo(5.8, 0.2, 0.95), mat.wood); b.position.set(0, -0.1, z); pallet.add(b); }
+for (const x of [-2.4, 0, 2.4]) { const b = mesh(rboxGeo(0.95, 1.2, 5.6), mat.woodDark); b.position.set(x, -0.8, 0); pallet.add(b); }
 const stand = new THREE.Group();   // le mandrin est monté sur la tête : plus de palette ni de support d'atelier
 const band = (r, y0, y1, m) => { const o = mesh(new THREE.CylinderGeometry(u(r + .005), u(r + .005), u(y1 - y0), 96, 1, true), m); o.position.y = u((y0 + y1) / 2); return o; };
 const boltAt = (i) => (BOLT_A0 + i * 40);
 
 /* ---------- Arrière : clés, roulement, piston, cylindre, adaptateur ---------- */
 const keys = [90, 210, 330].map(deg => {
-  const k = mesh(new THREE.BoxGeometry(u(.45), u(5.2), u(.45)), mat.steelLight);
+  const k = mesh(rboxGeo(u(.45), u(5.2), u(.45)), mat.steelLight);
   const [x, z] = polar(R.key, deg); placeIn(k, x, 2.7 + 2.6, z); k.rotation.y = deg * Math.PI / 180;
   return k;
 });
@@ -1058,7 +1101,7 @@ const jawCover = new THREE.Group();
     ...ringAt(6, 2.35, 30).map(([x, z]) => [x, z, .12]),
   ]), mat.grey));
   for (let k = 0; k < 8; k++) {
-    const t = mesh(new THREE.BoxGeometry(u(.55), u(.6), u(.24)), mat.grey);
+    const t = mesh(rboxGeo(u(.55), u(.6), u(.24)), mat.grey);
     const a = (k + .5) * Math.PI / 4;
     t.position.set(u(2.25) * Math.cos(a), -u(.3), -u(2.25) * Math.sin(a));
     t.rotation.y = a;
@@ -1111,7 +1154,8 @@ const hpart = (def, objs) => {
   [].concat(objs).forEach(o => { if (!o.parent) headG.add(o); });
   return part({ head: true, ...def }, objs);
 };
-const box = (w, h, d, m) => mesh(new THREE.BoxGeometry(u(w), u(h), u(d)), m);
+// Boîtes à arêtes arrondies (pièces usinées / moulées) ; boîte simple quand un matériau par face est demandé
+const box = (w, h, d, m) => mesh(Array.isArray(m) ? new THREE.BoxGeometry(u(w), u(h), u(d)) : rboxGeo(u(w), u(h), u(d)), m);
 const hcyl = (r, h, m, seg = 32) => mesh(new THREE.CylinderGeometry(u(r), u(r), u(h), seg), m);
 // Plaque rectangulaire (X × Z) percée, extrudée vers le haut
 function plateXZ(x0, x1, z0, z1, h, holes = []) {
@@ -1352,7 +1396,7 @@ hpart({ id: 'UM-012-127', ref: 'UM-012-127', name: 'Roulement du pignon d\'entra
   const N = Math.round(L), step = L / N;
   const at = s => { for (const [a, b, l] of segs) { if (s <= l) return [a[0] + (b[0] - a[0]) * s / l, a[1] + (b[1] - a[1]) * s / l]; s -= l; } return segs[0][0]; };
   const chain = new THREE.Group();
-  const plates = new THREE.InstancedMesh(new THREE.BoxGeometry(u(1.25), u(.08), u(.5)), mat.steelLight, N * SPR_Y.length * 2);
+  const plates = new THREE.InstancedMesh(rboxGeo(u(1.25), u(.08), u(.5)), mat.steelLight, N * SPR_Y.length * 2);
   const rollers = new THREE.InstancedMesh(new THREE.CylinderGeometry(u(.2), u(.2), u(.62), 10), mat.black, N * SPR_Y.length);
   const m4 = new THREE.Matrix4(), q = new THREE.Quaternion(), e = new THREE.Euler(), one = new THREE.Vector3(1, 1, 1), pos = new THREE.Vector3();
   let ip = 0, ir = 0;
@@ -1581,6 +1625,48 @@ mat.mast = new THREE.MeshStandardMaterial({ color: 0x7d868c, roughness: .55, met
 }
 rig.add(carriage);
 
+/* ---------- Décor : galerie de mine (arche rocheuse, conduit de ventilation, câbles, luminaires) ----------
+   Hors nomenclature. Masqué dans les vues éclatées. Aucune lampe frontale : l'éclairage vient des luminaires. */
+const drift = new THREE.Group();
+mat.rock = new THREE.MeshStandardMaterial({ color: 0x7d766c, roughness: 1, map: TEX.rockMap, normalMap: TEX.rockNormal, normalScale: new THREE.Vector2(1.3, 1.3), side: THREE.BackSide });
+{
+  // arche : demi-cylindre (voûte) + murs, axe le long de la broche (x), relief par bruit sur les sommets
+  const R = 27, L = 190, r = texRnd(53);
+  const g = new THREE.CylinderGeometry(R, R, L, 56, 24, true, 0, Math.PI);   // demi-tube ouvert vers le bas
+  const pos = g.attributes.position;
+  for (let i = 0; i < pos.count; i++) { const x = pos.getX(i), y = pos.getY(i), z = pos.getZ(i); const rr = Math.hypot(x, z); if (rr > 1) { const k = 1 + (r() - .5) * .07 + .03 * Math.sin(y * .7) * Math.cos(Math.atan2(z, x) * 5); pos.setXYZ(i, x * k, y, z * k); } }
+  g.computeVertexNormals();
+  const vault = new THREE.Mesh(g, mat.rock); vault.receiveShadow = true;
+  vault.rotation.z = Math.PI / 2; vault.rotation.y = Math.PI;   // ouvert vers le bas, axe x
+  vault.position.set(0, FLOOR + 2, 0);
+  drift.add(vault);
+  for (const sgn of [-1, 1]) {   // parois basses, légèrement inclinées, sous l'arche
+    const w = new THREE.Mesh(new THREE.PlaneGeometry(L, 4), new THREE.MeshStandardMaterial({ color: 0x6e675e, roughness: 1, map: TEX.rockMap, normalMap: TEX.rockNormal, side: THREE.DoubleSide }));
+    w.position.set(0, FLOOR + 1.9, sgn * (R - 1.2)); w.rotation.y = sgn * Math.PI / 2; w.receiveShadow = true; drift.add(w);
+  }
+  for (const xEnd of [-L / 2, L / 2]) { const cap = new THREE.Mesh(new THREE.CircleGeometry(R + 2, 48), new THREE.MeshStandardMaterial({ color: 0x3a3733, roughness: 1 })); cap.position.set(xEnd, FLOOR + 2, 0); cap.rotation.y = xEnd < 0 ? Math.PI / 2 : -Math.PI / 2; drift.add(cap); }
+  // conduit de ventilation jaune le long de la voûte, suspendu par des câbles
+  const duct = new THREE.Mesh(new THREE.CylinderGeometry(4.2, 4.2, L - 10, 32, 1, true), new THREE.MeshStandardMaterial({ color: 0xd9b23a, roughness: .7, side: THREE.DoubleSide }));
+  duct.rotation.z = Math.PI / 2; duct.position.set(0, FLOOR + 2 + R - 6.9, -13); duct.castShadow = true; drift.add(duct);
+  for (let x = -80; x <= 80; x += 20) { const ring = new THREE.Mesh(new THREE.TorusGeometry(4.3, .18, 6, 32), mat.dark); ring.rotation.y = Math.PI / 2; ring.position.set(x, duct.position.y, duct.position.z); drift.add(ring); }
+  // câbles électriques et tuyau d'air comprimé sur l'autre paroi
+  const cableM = new THREE.MeshStandardMaterial({ color: 0x151617, roughness: .6 });
+  for (const [y, z, rad, m] of [[14, -23.5, .22, cableM], [15.2, -23.2, .22, cableM], [11, -24.2, .55, new THREE.MeshStandardMaterial({ color: 0x3b4a5a, roughness: .5, metalness: .4 })]]) {
+    const pts = []; for (let x = -95; x <= 95; x += 10) pts.push(new THREE.Vector3(x, FLOOR + y - .6 * Math.abs(Math.sin(x * .31)), z));
+    const c = new THREE.Mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts), 120, rad, 8, false), m); drift.add(c);
+  }
+  // luminaires de galerie (boîtiers blancs, diffuseurs émissifs) aux positions des lampes
+  for (const [x, z] of [[-14, 6], [16, -4], [-50, 2], [52, 2]]) {
+    const body = new THREE.Mesh(rboxGeo(4.6, 1.1, 1.6), new THREE.MeshStandardMaterial({ color: 0xe8e8e4, roughness: .5 })); body.position.set(x, FLOOR + 37.2, z); drift.add(body);
+    const glow = new THREE.Mesh(new THREE.BoxGeometry(4.2, .12, 1.2), new THREE.MeshBasicMaterial({ color: 0xf6f8ff })); glow.position.set(x, FLOOR + 36.6, z); drift.add(glow);
+    const hang = new THREE.Mesh(new THREE.CylinderGeometry(.06, .06, 6, 6), cableM); hang.position.set(x, FLOOR + 40.5, z); drift.add(hang);
+  }
+  // quelques éboulis au pied des parois
+  const rubble = new THREE.MeshStandardMaterial({ color: 0x66605a, roughness: 1, map: TEX.rockMap, normalMap: TEX.rockNormal });
+  for (let i = 0; i < 26; i++) { const sz = .6 + r() * 1.8; const m = new THREE.Mesh(new THREE.DodecahedronGeometry(sz, 0), rubble); m.position.set((r() - .5) * 150, FLOOR + sz * .4, (r() < .5 ? -1 : 1) * (R - 3 - r() * 4)); m.rotation.set(r() * 3, r() * 3, r() * 3); m.castShadow = true; m.receiveShadow = true; drift.add(m); }
+}
+scene.add(drift);
+
 /* ---------- Clé à chocs électrique (à fil) sur le boulon actif, d'après la photo du chantier ----------
    Repère de l'outil : y = axe du boulon (vers le travailleur) ; -z local = bas en pose horizontale.
    Corps métallique usé, nez conique, douille longue 12 pans, poignée arrière fermée avec gâchette, anneau latéral, cordon noir. */
@@ -1613,7 +1699,7 @@ const toolSpin = new THREE.Group();   // douille : tourne avec le boulon
   shell.rotation.y = .3; wrench.add(shell);
   const seam = mesh(new THREE.TorusGeometry(u(1.64), u(.035), 6, 48), mat.toolGrime); seam.rotation.x = Math.PI / 2; seam.position.y = u(4.97); wrench.add(seam);
   for (const [a, y] of [[.5, 5.3], [2.6, 5.3], [4.7, 5.3], [.5, 8.5]]) { const sc = mesh(new THREE.CylinderGeometry(u(.13), u(.13), u(.12), 10), mat.toolGrime); sc.position.set(u(1.6) * Math.cos(a), u(y), u(1.6) * Math.sin(a)); sc.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), new THREE.Vector3(Math.cos(a), 0, Math.sin(a))); wrench.add(sc); }
-  for (let k = 0; k < 8; k++) { const v = mesh(new THREE.BoxGeometry(u(.1), u(1.1), u(.08)), mat.pocket); const a = k / 8 * Math.PI * 2; v.position.set(u(1.61) * Math.cos(a), u(7.4), u(1.61) * Math.sin(a)); v.rotation.y = -a; wrench.add(v); }
+  for (let k = 0; k < 8; k++) { const v = mesh(rboxGeo(u(.1), u(1.1), u(.08)), mat.pocket); const a = k / 8 * Math.PI * 2; v.position.set(u(1.61) * Math.cos(a), u(7.4), u(1.61) * Math.sin(a)); v.rotation.y = -a; wrench.add(v); }
   // anneau latéral (sur le nez)
   const loop = mesh(new THREE.TorusGeometry(u(.55), u(.09), 10, 24), mat.toolMetal); loop.position.set(u(1.45), u(3.7), -u(.5)); loop.rotation.set(0, Math.PI / 2, .3); wrench.add(loop);
   // poignée arrière fermée (profil en D arrondi) avec gâchette et prise
@@ -1621,7 +1707,7 @@ const toolSpin = new THREE.Group();   // douille : tourne avec le boulon
   const handle = mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(loopPts, true, 'catmullrom', .5), 80, u(.5), 16, true), mat.toolMetal); wrench.add(handle);
   const gripSleeve = mesh(new THREE.CapsuleGeometry(u(.58), u(2.4), 6, 16), mat.toolGrime); gripSleeve.position.set(0, u(11.1), -u(2.05)); gripSleeve.rotation.x = Math.PI / 2 + .1; gripSleeve.rotation.z = Math.PI / 2; wrench.add(gripSleeve);
   gripSleeve.rotation.set(0, 0, 0); gripSleeve.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), new THREE.Vector3(0, 1, -.1).normalize());
-  const trig = mesh(new THREE.BoxGeometry(u(.45), u(.9), u(.6)), mat.toolGrime); trig.position.set(0, u(9.6), -u(1.15)); trig.rotation.x = -.3; wrench.add(trig);
+  const trig = mesh(rboxGeo(u(.45), u(.9), u(.6)), mat.toolGrime); trig.position.set(0, u(9.6), -u(1.15)); trig.rotation.x = -.3; wrench.add(trig);
   // cordon : serre-câble au bout de la poignée, puis pend jusqu'au plancher en boucle molle
   const relief = mesh(new THREE.CylinderGeometry(u(.3), u(.22), u(1.4), 12), mat.cord); relief.position.set(0, u(13.9), -u(1.2)); relief.rotation.x = -.5; wrench.add(relief);
   const ZF = Z_FLOOR / IN;   // plancher, en pouces, dans le repère machine
@@ -1639,8 +1725,8 @@ consoleG.position.set(-11.5, FLOOR, 3.2);
 consoleG.scale.setScalar(1.9);
 scene.add(consoleG);
 {
-  const ped = mesh(new THREE.BoxGeometry(1.3, 3.9, 1.1), mat.console); ped.position.y = 1.95;
-  const bank = mesh(new THREE.BoxGeometry(1.9, 0.55, 1.2), mat.console); bank.position.y = 4.18;
+  const ped = mesh(rboxGeo(1.3, 3.9, 1.1), mat.console); ped.position.y = 1.95;
+  const bank = mesh(rboxGeo(1.9, 0.55, 1.2), mat.console); bank.position.y = 4.18;
   consoleG.add(ped, bank);
   for (const x of [-0.6, 0.6]) { const port = mesh(new THREE.CylinderGeometry(0.09, 0.09, 0.1, 16), mat.steelLight); port.rotation.x = Math.PI / 2; port.position.set(x, 4.18, -0.61); consoleG.add(port); }
 }
@@ -1654,7 +1740,7 @@ const levers = [-0.3, 0.3].map(z => {
 });
 const lockG = new THREE.Group();
 {
-  const lb = mesh(new THREE.BoxGeometry(0.36, 0.42, 0.16), mat.lockRed);
+  const lb = mesh(rboxGeo(0.36, 0.42, 0.16), mat.lockRed);
   const sh = mesh(new THREE.TorusGeometry(0.12, 0.032, 8, 20, Math.PI), mat.steelLight); sh.position.y = 0.21;
   const tagTex = (() => {
     const c = document.createElement('canvas'); c.width = 256; c.height = 400;
@@ -1742,9 +1828,9 @@ const W = (() => {
   const legs = [-1, 1].map(s => {
     // botte de caoutchouc : pied, embout, semelle jaune, tige jusqu'à mi-mollet
     const boot = new THREE.Group();
-    const foot = mesh(new THREE.BoxGeometry(2.5, .75, 1.05), mat.rubber); foot.position.set(-.55, .45, 0); boot.add(foot);
+    const foot = mesh(rboxGeo(2.5, .75, 1.05), mat.rubber); foot.position.set(-.55, .45, 0); boot.add(foot);
     const toe = mesh(new THREE.SphereGeometry(.56, 18, 12), mat.rubber); toe.scale.set(1.05, .72, .95); toe.position.set(-1.72, .42, 0); boot.add(toe);
-    const sole = mesh(new THREE.BoxGeometry(3.15, .14, 1.12), mat.bootSole); sole.position.set(-.75, .07, 0); boot.add(sole);
+    const sole = mesh(rboxGeo(3.15, .14, 1.12), mat.bootSole); sole.position.set(-.75, .07, 0); boot.add(sole);
     const shaft = mesh(new THREE.CylinderGeometry(.62, .66, 3.6, 22), mat.rubber); shaft.position.set(.15, 2.2, 0); boot.add(shaft);
     const ref = mesh(new THREE.CylinderGeometry(.635, .635, .18, 22, 1, true), mat.reflect); ref.position.set(.15, 3.6, 0); boot.add(ref);
     boot.position.set(5.3, FLOOR, s * .62); worker.add(boot);
@@ -1761,7 +1847,7 @@ const W = (() => {
   const belt = mesh(new THREE.CylinderGeometry(1.1, 1.1, .3 / WL.torso, 36, 1, true), mat.leather); belt.position.y = .2; torso.add(belt);
   // équipement porté : batterie de lampe et auto-sauveteur à la ceinture (dos), cordon de lampe
   const kit = new THREE.Group(); worker.add(kit);
-  const batt = mesh(new THREE.BoxGeometry(.55, 1.05, 1.15), mat.rubber); batt.position.set(.95 * .72 + .2, .2 * WL.torso, -.55); kit.add(batt);
+  const batt = mesh(rboxGeo(.55, 1.05, 1.15), mat.rubber); batt.position.set(.95 * .72 + .2, .2 * WL.torso, -.55); kit.add(batt);
   const sr = mesh(new THREE.CylinderGeometry(.42, .42, 1.2, 20), mat.hivis); sr.position.set(.9 * .72 + .2, .2 * WL.torso, .7); kit.add(sr);
   const cordPts = [[1.0, .2 * WL.torso + .4, -.55], [1.05, .55 * WL.torso, -.6], [.95, .9 * WL.torso, -.5], [.7, WL.torso + .7, -.35]].map(p => new THREE.Vector3(...p));
   kit.add(mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(cordPts), 30, .06, 6, false), mat.rubber));
@@ -1774,7 +1860,7 @@ const W = (() => {
     // gant : manchette, paume, quatre doigts repliés sur la prise, pouce
     const hand = new THREE.Group(); worker.add(hand);
     const cuff = mesh(new THREE.CylinderGeometry(.33, .31, .55, 16), mat.glove); cuff.position.y = .1; hand.add(cuff);
-    const palm = mesh(new THREE.BoxGeometry(.32, .82, .78), mat.glove); palm.position.y = .7; hand.add(palm);
+    const palm = mesh(rboxGeo(.32, .82, .78), mat.glove); palm.position.y = .7; hand.add(palm);
     for (let f = 0; f < 4; f++) {
       const fg = new THREE.Group(); fg.position.set(-.05, 1.1, (f - 1.5) * .19); fg.rotation.z = .9;
       const p1 = mesh(new THREE.CapsuleGeometry(.085, .32, 4, 8), mat.glove); p1.position.y = .2; fg.add(p1);
@@ -1794,10 +1880,10 @@ const W = (() => {
     const ear = mesh(new THREE.SphereGeometry(.2, 12, 10), mat.skin); ear.scale.set(.75, 1.1, .35); ear.position.set(.05, -.05, z * .76); head.add(ear);
     const ew = mesh(new THREE.SphereGeometry(.1, 12, 8), mat.eyeW); ew.position.set(-.72, .1, z * .28); head.add(ew);
     const ir = mesh(new THREE.SphereGeometry(.055, 10, 8), mat.eye); ir.position.set(-.8, .1, z * .28); head.add(ir);
-    const brow = mesh(new THREE.BoxGeometry(.06, .05, .26), mat.leather); brow.position.set(-.8, .26, z * .29); brow.rotation.x = -z * .15; head.add(brow);
+    const brow = mesh(rboxGeo(.06, .05, .26), mat.leather); brow.position.set(-.8, .26, z * .29); brow.rotation.x = -z * .15; head.add(brow);
     const muff = mesh(new THREE.CylinderGeometry(.34, .34, .26, 20), mat.muff); muff.rotation.x = Math.PI / 2; muff.position.set(.08, -.05, z * .9); head.add(muff);
   }
-  const mouth = mesh(new THREE.BoxGeometry(.04, .05, .3), mat.lip); mouth.position.set(-.78, -.46, 0); head.add(mouth);
+  const mouth = mesh(rboxGeo(.04, .05, .3), mat.lip); mouth.position.set(-.78, -.46, 0); head.add(mouth);
   // lunettes de sécurité enveloppantes
   const lensG = new THREE.CylinderGeometry(.9, .9, .3, 24, 1, true, Math.PI * .62, Math.PI * .76);
   const lens = mesh(lensG, mat.lens); lens.position.set(.05, .1, 0); lens.rotation.y = Math.PI / 2; head.add(lens);
@@ -1807,7 +1893,7 @@ const W = (() => {
   const brimG = new THREE.CylinderGeometry(R0 * 1.18, R0 * 1.18, .05, 32); brimG.scale(1.18, 1, 1.02);
   const brim = mesh(brimG, mat.helmet); brim.position.set(-.08, .24, 0); head.add(brim);
   const rib = mesh(new THREE.TorusGeometry(R0 * 1.0, .05, 6, 24, Math.PI), mat.helmet); rib.position.y = .24; rib.scale.set(1.12, .95, 1); head.add(rib);
-  const bracket = mesh(new THREE.BoxGeometry(.12, .3, .3), mat.rubber); bracket.position.set(-1.02, .48, 0); head.add(bracket);
+  const bracket = mesh(rboxGeo(.12, .3, .3), mat.rubber); bracket.position.set(-1.02, .48, 0); head.add(bracket);
   const lamp = mesh(new THREE.CylinderGeometry(.18, .2, .32, 18), mat.rubber); lamp.rotation.z = Math.PI / 2; lamp.position.set(-1.18, .5, 0); head.add(lamp);
   const glass = mesh(new THREE.CircleGeometry(.16, 18), mat.lampLens); glass.rotation.y = -Math.PI / 2; glass.position.set(-1.345, .5, 0); head.add(glass);
   worker.add(head);
@@ -2157,7 +2243,7 @@ function applyHeadExplode(h) {
     shown.push(p.lbl);
   }
   deOverlap(PARTS.filter(q => q.lbl && q.lbl.visible).map(q => q.lbl));
-  if (k > 0.05) for (const o of [worker, workerRoot, consoleG, zone, trail, wrench, activeRing, carriage]) o.visible = false;
+  if (k > 0.05) for (const o of [worker, workerRoot, consoleG, zone, trail, wrench, activeRing, carriage, drift]) o.visible = false;
   if (labels && k > 0.02) for (const arr of Object.values(labels)) for (const sp of arr) if (sp) sp.visible = false;
 }
 
@@ -2819,7 +2905,7 @@ function applyScene(S) {
   const showW = document.getElementById('optWorker').checked;
   worker.visible = showW && !workerModel;
   workerRoot.visible = showW && !!workerModel;
-  pallet.visible = stand.visible = consoleG.visible = headG.visible = carriage.visible = zone.visible = true;
+  pallet.visible = stand.visible = consoleG.visible = headG.visible = carriage.visible = zone.visible = drift.visible = true;
 
   // Trajectoire
   if (fl) {
@@ -2930,29 +3016,12 @@ const tiles = tileOrder.map(i => {
   const B = BOLTS[i];
   const d = document.createElement('div');
   d.className = 'bolt';
-  d.innerHTML = `<div class="top"><span class="id">${B.num ?? 'R' + B.rIdx}</span><span class="st"></span></div><div class="bar"><i></i></div><div class="vals"><span class="tr"></span><b class="ld"></b></div>`;
+  d.innerHTML = `<div class="top"><span class="id">${B.num ?? 'R' + B.rIdx}</span><span class="st"></span></div><div class="bar"><i></i></div><div class="vals"><span class="tr"></span></div>`;
   grid.appendChild(d);
-  return { i, el: d, st: d.querySelector('.st'), bar: d.querySelector('.bar i'), tr: d.querySelector('.tr'), ld: d.querySelector('.ld') };
+  return { i, el: d, st: d.querySelector('.st'), bar: d.querySelector('.bar i'), tr: d.querySelector('.tr') };
 });
 
-// Paramètres
-const pin = { n: $('pN'), k: $('pK'), x0: $('pX'), m: $('pM') };
-function showParams() {
-  $('oN').textContent = P.n;
-  $('oK').textContent = `${P.k} N/mm (${fr(P.k * 5.71015, 0)} lbf/po)`;
-  $('oX').textContent = `${fr(P.x0, 2)} mm (${fr(P.x0 / 25.4, 3)} po)`;
-  $('oM').textContent = `${P.m} kg (${fr(P.m * 2.20462, 0)} lb)`;
-}
-function onParam() {
-  const nChanged = +pin.n.value !== P.n;
-  P.n = +pin.n.value; P.k = +pin.k.value; P.x0 = +pin.x0.value; P.m = +pin.m.value;
-  if (nChanged) { layoutSprings(); buildBody(); buildSprings(); select(selected); }
-  showParams(); build(true); layoutExplode(); renderBOM();
-}
-Object.values(pin).forEach(el => el.addEventListener('input', onParam));
-$('pReset').addEventListener('click', () => { pin.n.value = DEFAULTS.n; pin.k.value = DEFAULTS.k; pin.x0.value = DEFAULTS.x0; pin.m.value = DEFAULTS.m; onParam(); });
-pin.n.value = P.n; pin.k.value = P.k; pin.x0.value = P.x0; pin.m.value = P.m;   // le navigateur peut restaurer d'anciennes valeurs
-showParams();
+// Paramètres des ressorts : valeurs internes fixes (DEFAULTS), non affichées
 
 let lastStep = -1, uiTick = 0;
 function updateUI(S, force) {
@@ -2995,8 +3064,6 @@ function updateUI(S, force) {
   const fl = !!S.flight, cat = S.catchD;
   const released = (fl && S.launchT > 0) || (cat && S.catchP >= CATCH_T0);
   const E = fl ? S.flight.E : cat && released ? cat.E : D.E;
-  const [en, eu] = fmtE(E);
-  $('eNum').textContent = en; $('eUnit').textContent = eu; $('eAlt').textContent = `= ${eS(E, OTHER())}`;
   const state = $('eState');
   if (cat && D.hit) { state.textContent = 'Arrêtée par la retenue'; state.dataset.tone = 'ok'; }
   else if (released) { state.textContent = 'Libérée d\'un coup'; state.dataset.tone = 'danger'; }
@@ -3004,12 +3071,6 @@ function updateUI(S, force) {
   else { state.textContent = S.stuck ? 'Stockée, cône coincé' : 'Stockée'; state.dataset.tone = S.stuck ? 'danger' : ''; }
   $('eFill').style.width = `${Math.min(100, E / E0 * 100)}%`;
   $('eMeter').dataset.tone = cat && D.hit ? 'ok' : released ? 'danger' : E < 0.02 * E0 ? 'ok' : '';
-  $('kvF').textContent = fl || released ? '—' : fS(D.F);
-  const mc = D.comp.reduce((a, b) => a + b, 0) / Math.max(1, D.comp.length);
-  $('kvX').textContent = xS(fl ? 0 : mc);
-  const maxLoad = Math.max(...D.loads);
-  $('kvB').textContent = fl || released || S.stuck ? '—' : fS(maxLoad);
-  $('equiv').textContent = `Au départ : ${eS(E0, 'SI')} = ${eS(E0, 'IMP')}. Force des ressorts : ${fS(F0, 'SI')} = ${fS(F0, 'IMP')}, le poids d'environ ${fr(F0 / 9.81 / 1000, 1)} tonne ; il faudrait ${fr(F0 / PISTON_A * 10, 0)}\u00a0bar (${fr(F0 / PISTON_A * 145.038, 0)}\u00a0psi) sur le piston 3506908 pour les retenir. Même énergie qu'une masse de 5 kg (11 lb) lâchée de ${hS(E0 / (5 * 9.81), 'SI')} (${fr(E0 / (5 * 9.81) * 3.28084, 1)} pi), ou que le cône de ${mS(P.m, 'SI')} lâché de ${hS(E0 / (P.m * 9.81), 'SI')} sur un pied.`;
 
   // Boulons
   const normal = F0 / 9;
@@ -3028,7 +3089,6 @@ function updateUI(S, force) {
     else st = 'desserré';
     tl.st.textContent = st;
     tl.tr.textContent = gone ? '' : `${fr(b.turns, 1)} tr`;
-    tl.ld.textContent = gone || fl || released ? '—' : fS(load);
     tl.bar.style.width = `${shock ? 100 : gone || fl || released ? 0 : Math.min(100, load / F0 * 100)}%`;
     tl.el.dataset.load = shock || stripped || load > 2.5 * normal ? 'high' : '';
     tl.el.dataset.active = String(S.active === tl.i);
@@ -3063,14 +3123,13 @@ const IMPACT_TXT = { visage: 'IMPACT AU VISAGE', tronc: 'IMPACT AU TRONC', hanch
 const ZONE_TXT = { visage: 'le visage', tronc: 'le tronc', hanches: 'les hanches', jambes: 'les jambes' };
 function summaryText(ev) {
   if (ev.catch) {
-    const c = ev.C;
-    return `Le filet du boulon 6 a cédé : ${eS(c.E)} (${eS(c.E, OTHER())}) libérés d'un coup, le cône 2920390 part à ${vS(c.v)}. Les 3 boulons B500-8000 remis sans bushing à l'étape 6 l'arrêtent après environ ${xS(c.gapMm)} de course, en quelques millisecondes. Les mains et le visage du travailleur sont épargnés. C'est un quasi-accident : même erreur que le scénario « boulons retirés un par un », mais la retenue a fait son travail. Les 3 boulons ont encaissé le choc : il faut les remplacer par des neufs avant de remonter le mandrin.`;
+    return `Le filet du boulon 6 a cédé : l'énergie restante des ressorts est libérée d'un coup et le cône 2920390 part dans l'axe du mandrin. Les 3 boulons B500-8000 remis sans bushing à l'étape 6 l'arrêtent après quelques millimètres de course, en quelques millisecondes. Les mains et le visage du travailleur sont épargnés. C'est un quasi-accident : même erreur que le scénario « boulons retirés un par un », mais la retenue a fait son travail. Les 3 boulons ont encaissé le choc : il faut les remplacer par des neufs avant de remonter le mandrin.`;
   }
   const F = ev.F;
-  const hands = F.hands ? `Il frappe d'abord les mains posées sur la clé, ${fr(F.hands.t * 1000, 0)}\u00a0ms après la rupture, à ${vS(F.hands.speed)} : impossible de les retirer à temps. ` : '';
-  const hit = F.impact ? `Il atteint ensuite ${ZONE_TXT[F.impact.zone]} du travailleur, encore à ${vS(F.impact.speed)}, puis tombe au sol.` : F.feet ? `Avec ces paramètres, il n'atteint pas le corps du travailleur, mais ce bloc de ${mS(P.m)} retombe à ses pieds.` : 'Avec ces paramètres, il n\'atteint pas le corps du travailleur, mais il tombe au sol de façon imprévisible.';
-  const spr = F.springs.length ? ` Des ressorts 5200517 peuvent aussi être éjectés : jusqu'à ${vS(Math.sqrt(2 * F.sprE / SPRING_MASS))} chacun.` : '';
-  return `${eS(F.E)} (${eS(F.E, OTHER())}) libérés en une fraction de seconde. Le cône 2920390 et ses mâchoires (${mS(P.m)}) partent à ${vS(F.v)} dans l'axe du mandrin, à l'horizontale. ${hands}${hit}${spr} La procédure (1 tour à la fois, retenue de l'étape 6) évite ce scénario.`;
+  const hands = F.hands ? `Il frappe d'abord les mains posées sur la clé, quelques millisecondes après la rupture : impossible de les retirer à temps. ` : '';
+  const hit = F.impact ? `Il atteint ensuite ${ZONE_TXT[F.impact.zone]} du travailleur, puis tombe au sol.` : F.feet ? `Il n'atteint pas le corps du travailleur, mais ce bloc d'acier retombe à ses pieds.` : 'Il n\'atteint pas le corps du travailleur, mais il tombe au sol de façon imprévisible.';
+  const spr = F.springs.length ? ` Des ressorts 5200517 peuvent aussi être éjectés.` : '';
+  return `L'énergie restante des ressorts est libérée en une fraction de seconde. Le cône 2920390 et ses mâchoires partent dans l'axe du mandrin, à l'horizontale. ${hands}${hit}${spr} La procédure (1 tour à la fois, retenue de l'étape 6) évite ce scénario.`;
 }
 
 /* ================= Nomenclature, fiche de pièce, vues ================= */
@@ -3134,13 +3193,6 @@ function setExplode(on) {
 }
 $('btnExplode').addEventListener('click', () => setExplode(!explodeTarget));
 $('btnCut').addEventListener('click', () => { setCut(!cutOn); if (explodeTarget) cutBeforeExplode = null; });
-document.querySelectorAll('.units button').forEach(b => b.addEventListener('click', () => {
-  UNITS = b.dataset.u;
-  document.querySelectorAll('.units button').forEach(x => x.setAttribute('aria-pressed', String(x === b)));
-  try { localStorage.setItem('clam-units', UNITS); } catch (e) {}
-  lastStep = -1;
-}));
-document.querySelectorAll('.units button').forEach(x => x.setAttribute('aria-pressed', String(x.dataset.u === UNITS)));
 // Clic sur une pièce dans la vue 3D
 const ray = new THREE.Raycaster(), ptr = new THREE.Vector2();
 let downAt = null;
@@ -3200,21 +3252,56 @@ canvas.addEventListener('pointerleave', e => { if (e.pointerType === 'mouse') hi
 function applyTheme() {
   const bg = new THREE.Color(css('--scene') || '#d7dce0');
   scene.background = bg;
-  scene.fog.color.copy(bg);
-  mat.floor.color.set(css('--floor') || '#b7bec3');
 }
 matchMedia('(prefers-color-scheme: dark)').addEventListener('change', applyTheme);
 new MutationObserver(applyTheme).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme', 'class'] });
 applyTheme();
 
 /* ================= Boucle ================= */
+/* ---------- Post-traitement (qualité haute) : occlusion ambiante (GTAO), tonalité ACES, anticrénelage SMAA ----------
+   Qualité basse (tablettes, mobiles) : rendu direct, résolution limitée. Réglable par le bouton « Qualité ». */
+const QUALITY_KEY = 'clam-quality';
+const autoLow = /Android|iPhone|iPad|Mobi/i.test(navigator.userAgent) || (navigator.hardwareConcurrency || 8) <= 4 || Math.min(screen.width, screen.height) < 700;
+let quality = 'high';
+try { quality = localStorage.getItem(QUALITY_KEY) || (autoLow ? 'low' : 'high'); } catch (e) { quality = autoLow ? 'low' : 'high'; }
+let composer = null, gtao = null, smaa = null;
+function buildComposer() {
+  const w = Math.max(2, view.clientWidth), h = Math.max(2, view.clientHeight);
+  const rt = new THREE.WebGLRenderTarget(w, h, { type: THREE.HalfFloatType, samples: renderer.capabilities.isWebGL2 ? 4 : 0 });
+  composer = new EffectComposer(renderer, rt);
+  composer.addPass(new RenderPass(scene, camera));
+  gtao = new GTAOPass(scene, camera, w, h, {}, { radius: .9, distanceExponent: 1, thickness: 1, scale: 1.1, samples: 12, distanceFallOff: 1, screenSpaceRadius: false }, { lumaPhi: 10, depthPhi: 2, normalPhi: 3, radius: 4, radiusExponent: 1, rings: 2, samples: 12 });
+  gtao.output = GTAOPass.OUTPUT.Default;
+  gtao.blendIntensity = .9;
+  gtao.normalMaterial.clippingPlanes = [CUT];   // la moitié coupée ne doit pas assombrir l'intérieur du mandrin
+  composer.addPass(gtao);
+  composer.addPass(new OutputPass());
+  smaa = new SMAAPass(w * renderer.getPixelRatio(), h * renderer.getPixelRatio());
+  composer.addPass(smaa);
+}
+function setQuality(q) {
+  quality = q;
+  try { localStorage.setItem(QUALITY_KEY, q); } catch (e) {}
+  renderer.setPixelRatio(Math.min(devicePixelRatio, q === 'high' ? 2 : 1.25));
+  sun.shadow.mapSize.set(q === 'high' ? 2048 : 1024, q === 'high' ? 2048 : 1024);
+  if (sun.shadow.map) { sun.shadow.map.dispose(); sun.shadow.map = null; }
+  const b = document.getElementById('btnQuality');
+  if (b) { b.textContent = q === 'high' ? 'Qualité : haute' : 'Qualité : basse'; b.setAttribute('aria-pressed', String(q === 'high')); }
+  resize();
+}
 function resize() {
   const w = view.clientWidth, h = view.clientHeight;
   if (!w || !h) return;
   renderer.setSize(w, h, false);
   camera.aspect = w / h;
   camera.updateProjectionMatrix();
+  if (quality === 'high') {
+    if (!composer) buildComposer();
+    composer.setSize(w, h); gtao.setSize(w, h); smaa.setSize(w * renderer.getPixelRatio(), h * renderer.getPixelRatio());
+  }
 }
+document.getElementById('btnQuality').addEventListener('click', () => setQuality(quality === 'high' ? 'low' : 'high'));
+setQuality(quality);
 new ResizeObserver(resize).observe(view);
 
 let last = performance.now();
@@ -3238,7 +3325,9 @@ function frame(now) {
   updateUI(S);
   updateCamera(dt);
   controls.update();
-  renderer.render(scene, camera);
+  gizmo.visible = !!gizmo.object;
+  if (scene.background && scene.background.isColor) scene.fog.color.copy(drift.visible ? FOG_ROCK : scene.background);   // brume de roche dans la galerie, fond uni dans les vues éclatées
+  if (quality === 'high' && composer) { gtao.normalMaterial.clippingPlanes = cutOn ? [CUT] : null; composer.render(); } else renderer.render(scene, camera);
   requestAnimationFrame(frame);
 }
 
@@ -3253,10 +3342,10 @@ async function start() {
     for (const gr of g.groups.slice(1)) for (let i = gr.start; i < gr.start + gr.count; i++) { const k = idx ? idx.getX(i) : i; uv.setXY(k, 0, v); }
     uv.needsUpdate = true;
   });
-  // priorité de profondeur par matériau (voir uDepthBias)
+  // priorité de profondeur par matériau : surfaces confondues toujours départagées de la même façon
   {
-    const seen = new Map();
-    const tag = m => { if (!m || seen.has(m)) return; const b = (seen.size % 97) * 1.2e-6; seen.set(m, b); m.onBeforeCompile = sh => { sh.uniforms.uDepthBias = { value: b }; }; m.needsUpdate = true; };
+    const seen = new Set();
+    const tag = m => { if (!m || seen.has(m) || m.isSpriteMaterial) return; seen.add(m); m.polygonOffset = true; m.polygonOffsetFactor = 0; m.polygonOffsetUnits = (seen.size % 61) - 30; m.needsUpdate = true; };
     scene.traverse(o => { if (o.isMesh) [].concat(o.material).forEach(tag); });
   }
   buildLabels();
@@ -3270,7 +3359,7 @@ async function start() {
   resize();
   const S = stateAt(T); applyScene(S); updateUI(S, true);
   requestAnimationFrame(frame);
-  window.__clam = { stateAt, steps: () => steps, starts: () => starts, total: () => total, setT: v => { T = v; }, P, setExplode, setHeadExplode, headExplodeNow: v => { setHeadExplode(v); hexE = v ? 1 : 0; }, setCutUI: setCut, explodeNow: v => { setExplode(v); explodeE = v ? 1 : 0; }, select: id => select(byId(id)), PARTS, camera, worker: { set: setWorker, get: () => ({ x: WORKER_GLB.position.x, y: WORKER_GLB.position.y, z: WORKER_GLB.position.z, rotYdeg: WORKER_GLB.rotY * 180 / Math.PI, scale: WORKER_GLB.scale, loaded: !!workerModel }), root: workerRoot }, setCut: v => { cutOn = v; applyCut(); } };
+  window.__clam = { stateAt, steps: () => steps, starts: () => starts, total: () => total, setT: v => { T = v; }, P, setExplode, setHeadExplode, headExplodeNow: v => { setHeadExplode(v); hexE = v ? 1 : 0; }, setCutUI: setCut, explodeNow: v => { setExplode(v); explodeE = v ? 1 : 0; }, select: id => select(byId(id)), PARTS, camera, setQuality, worker: { set: setWorker, get: () => ({ x: WORKER_GLB.position.x, y: WORKER_GLB.position.y, z: WORKER_GLB.position.z, rotYdeg: WORKER_GLB.rotY * 180 / Math.PI, scale: WORKER_GLB.scale, loaded: !!workerModel }), root: workerRoot }, setCut: v => { cutOn = v; applyCut(); } };
 }
 start();
 </script>
