@@ -72,12 +72,6 @@ button, input, select { font: inherit; color: inherit; }
 .chip[data-tone="danger"] .dot { background: var(--danger); }
 .chip-row .spacer { flex: 1; }
 .chip button { border: 0; background: none; padding: 0; cursor: pointer; font-size: 12px; font-weight: 500; }
-.outlist { position: absolute; left: 12px; bottom: 40px; max-width: min(300px, 50%); padding: 6px 10px 7px; font-size: 11.5px !important; border-radius: 8px; background: color-mix(in srgb, var(--panel) 88%, transparent); border: 1px solid var(--line); font-size: 12px; pointer-events: none; }
-.outlist b { display: block; font-size: 11px; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); margin-bottom: 3px; }
-.outlist ul { margin: 0; padding: 0; list-style: none; display: grid; gap: 2px; }
-.outlist li::before { content: '✓ '; color: var(--ok); font-weight: 700; }
-.outlist li.new { font-weight: 600; }
-.outlist li.new::before { content: '● '; color: var(--accent); }
 .actdot { position: absolute; width: 14px; height: 14px; margin: -7px 0 0 -7px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 35%, transparent); pointer-events: none; animation: actpulse 1.4s ease-out infinite; }
 @keyframes actpulse { 0% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--accent) 70%, transparent); } 100% { box-shadow: 0 0 0 16px transparent; } }
 .actcard { position: absolute; max-width: min(270px, 60%); display: grid; gap: 2px; padding: 7px 10px 8px; border-radius: 8px; background: color-mix(in srgb, var(--panel) 92%, transparent); border: 1px solid var(--line); border-left: 4px solid var(--accent); font-size: 12.5px; pointer-events: none; box-shadow: 0 4px 14px rgba(0,0,0,.12); }
@@ -252,15 +246,14 @@ details.params summary { cursor: pointer; padding: 10px 14px; font-weight: 600; 
         <span class="chip" id="scenChip" data-tone="ok"><span class="dot"></span><span id="scenChipText">Procédure respectée</span></span>
         <span class="spacer"></span>
         <span class="chip" id="camChip" hidden><button type="button" id="camBtn">Recentrer la caméra</button></span>
-        <button type="button" class="vbtn" id="btnCut" aria-pressed="true">Coupe du mandrin</button>
-        <button type="button" class="vbtn" id="btnHeadExplode" aria-pressed="false">Éclaté : tête</button>
-        <button type="button" class="vbtn" id="btnExplode" aria-pressed="false">Éclaté : mandrin</button>
+        <button type="button" class="vbtn" id="btnCut" aria-pressed="true">Coupe du mandrin (chuck)</button>
+        <button type="button" class="vbtn" id="btnHeadExplode" aria-pressed="false">Éclaté : tête (drill head)</button>
+        <button type="button" class="vbtn" id="btnExplode" aria-pressed="false">Éclaté : mandrin (chuck)</button>
         <button type="button" class="vbtn" id="btnHelp" aria-label="Aide : naviguer dans la 3D">?</button>
         <button type="button" class="vbtn" id="btnFs" aria-pressed="false">Plein écran</button>
       </div>
       <div class="banner" id="banner" hidden><strong id="bannerTitle">PROJECTION</strong></div>
       <div class="note" id="note">Ressorts : course ×6</div>
-      <div class="outlist" id="outList" hidden><b>Retiré</b><ul></ul></div>
       <details class="steps fs-steps" id="fsSteps" open><summary>Étapes de la procédure</summary><ol id="fsStepList"></ol></details>
       <div class="actdot" id="actDot" hidden></div>
       <div class="actcard" id="actCard" hidden><b id="actStep"></b><span id="actText"></span><small>Lecture pour continuer</small></div>
@@ -307,7 +300,7 @@ details.params summary { cursor: pointer; padding: 10px 14px; font-weight: 600; 
     <header class="brand">
       <p class="eyebrow">PRO-OP-DD-005 · Tête UM-012-100UG · Mandrin Boyles H</p>
       <h1>Clam sous tension</h1>
-      <p class="lede">Les 18 ressorts du clam (mandrin Boyles H) restent comprimés tant que le cône est boulonné. Démonter dans l'ordre : l'énergie se libère lentement. Sauter une étape : le cône est projeté.</p>
+      <p class="lede">Les 18 ressorts (springs) du clam (mandrin Boyles H, chuck) restent comprimés tant que le cône (bowl) est boulonné. Démonter dans l'ordre : l'énergie se libère lentement. Sauter une étape : le cône est projeté.</p>
     </header>
 
     <section>
@@ -359,6 +352,7 @@ import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.j
 import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
 import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
 import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
+import { OutlinePass } from 'three/addons/postprocessing/OutlinePass.js';
 import { SMAAPass } from 'three/addons/postprocessing/SMAAPass.js';
 
 /* ================= Constantes physiques et géométriques ================= */
@@ -2055,6 +2049,26 @@ function makePartLabel(p, { h, parent }) {
   s.userData.part = p;
   return s;
 }
+// Étiquette « retiré » posée dans la scène (texte redessiné quand il change) : jaune = retiré à l'étape en cours, sombre = déjà retiré
+function tblLabel() {
+  const c = document.createElement('canvas'); c.width = 64; c.height = 64;
+  const tex = new THREE.CanvasTexture(c); tex.colorSpace = THREE.SRGBColorSpace;
+  const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: tex, depthTest: false, transparent: true }));
+  sp.renderOrder = 10; sp.userData.c = c; sp.userData.key = ''; sp.visible = false;
+  clampG.add(sp); return sp;
+}
+function setTblLabel(sp, text, recent) {
+  const key = text + (recent ? '*' : '');
+  if (sp.userData.key === key) return;
+  sp.userData.key = key;
+  const c = sp.userData.c, x = c.getContext('2d'), font = '600 40px "IBM Plex Sans", sans-serif', t = (recent ? '● ' : '✓ ') + text;
+  x.font = font; c.width = Math.ceil(x.measureText(t).width) + 40; c.height = 64;
+  x.font = font; x.fillStyle = recent ? '#f2c230' : 'rgba(17,21,24,.88)';
+  x.beginPath(); x.roundRect(0, 0, c.width, c.height, 12); x.fill();
+  x.fillStyle = recent ? '#111518' : '#ffffff'; x.textBaseline = 'middle'; x.fillText(t, 20, 34);
+  sp.material.map.dispose(); sp.material.map = new THREE.CanvasTexture(c); sp.material.map.colorSpace = THREE.SRGBColorSpace; sp.material.needsUpdate = true;
+  const h = .36; sp.scale.set(h * c.width / c.height, h, 1);
+}
 let labels = null;
 function buildLabels() {
   if (labels) Object.values(labels).flat().forEach(s => s.parent && s.parent.remove(s));
@@ -2067,6 +2081,7 @@ function buildLabels() {
     open: [makeLabel('Manettes ouvertes', { h: 0.32 })],
     closed: [makeLabel('Manettes fermées', { bg: '#2c7a4c', h: 0.32 })],
     zone: [makeLabel('Zone de projection', { bg: '#c42b1f', h: 0.32, parent: rig })],
+    ...Object.fromEntries(['outJc', 'outCv', 'outBush', 'outPb', 'outPlate'].map(k => [k, [tblLabel()]])),
   };
   // positions dans le repère machine (z local = hauteur en pose horizontale)
   labels.springsC[0].position.set(0.6, 2.6, 2.3);
@@ -2354,6 +2369,7 @@ function select(p) {
   renderCard();
   document.querySelectorAll('.bom-row').forEach(r => r.setAttribute('aria-pressed', String(r.dataset.id === (selected && selected.id))));
   if (selected === workerPart && workerModel) gizmo.attach(workerRoot); else gizmo.detach();
+  if (outline) outline.selectedObjects = selected ? selected.objs.filter(Boolean) : [];
 }
 
 /* ================= État de l'animation ================= */
@@ -2382,16 +2398,16 @@ const st = {
   lever: { n: '1', title: 'Manettes fermées', cam: 'mech', dur: 5, act: 'Manettes fermées : le vérin relâche, le cône avance, les mâchoires se ferment', at: () => levers[0],
     text: 'Mettre les manettes du clam et du chuck en position fermée. Le vérin relâche : les ressorts avancent le cône et les mâchoires se ferment. Les ressorts restent comprimés.',
     apply(S, p) { S.lever = ease(seg(p, 0, .35)); S.hyd = 1 - ease(seg(p, .35, .95)); } },
-  jaws: { n: '2', title: 'Mâchoires fermées', cam: 'top', dur: 3, act: 'Jaws (mâchoires) en position fermée', at: () => jaws[0],
+  jaws: { n: '2', title: 'Mâchoires (jaws) fermées', cam: 'top', dur: 3, act: 'Jaws (mâchoires) en position fermée', at: () => jaws[0],
     text: 'Vérifier que les mâchoires sont fermées.',
     apply(S, p) { S.jaws = ease(p); } },
   lock: { n: '3', title: 'Cadenasser', cam: 'intro', dur: 3, act: 'Procédure de cadenassage appliquée', at: () => lockG,
     text: 'Cadenasser la foreuse. Le cadenassage coupe l\'hydraulique, pas l\'énergie des ressorts.',
     apply(S, p) { S.lock = ease(p); } },
-  jawCover: { n: '4', title: 'Retirer le couvert des mâchoires', cam: 'overview', dur: 5, act: 'Boulons ¾ dévissés (clé 1 1/8), couvert des mâchoires retiré',
+  jawCover: { n: '4', title: 'Retirer le couvert des mâchoires (jaw cover)', cam: 'overview', dur: 5, act: 'Boulons ¾ dévissés (clé 1 1/8), couvert des mâchoires retiré',
     text: 'Dévisser ses boulons ¾ (clé 1 1/8) et retirer le couvert.',
     apply(S, p) { for (let k = 0; k < 3; k++) S.jc.bolts[k] = seg(p, k * .1, k * .1 + .45); S.jc.lift = seg(p, .58, 1); } },
-  cover: { n: '5', title: 'Retirer le couvercle (9 boulons ½)', cam: 'overview', dur: 6, act: '9 boulons ½ enlevés (clé ¾), couvercle retiré',
+  cover: { n: '5', title: 'Retirer le couvercle (cap holder, 9 boulons ½)', cam: 'overview', dur: 6, act: '9 boulons ½ enlevés (clé ¾), couvercle retiré',
     text: 'Enlever les 9 boulons ½ (clé ¾) et le couvercle. Le cône et ses 9 boulons apparaissent. Les ressorts sont toujours comprimés.',
     apply(S, p) { for (let k = 0; k < 9; k++) S.cv.bolts[k] = seg(p, k * .045, k * .045 + .4); S.cv.lift = seg(p, .6, 1); S.springLbl = seg(p, .85, 1); } },
 };
@@ -2409,7 +2425,7 @@ const skip6 = { n: '6', title: 'Boulons de retenue non remis', cam: 'bolts', dur
     S.zone = seg(p, .7, 1);
   } };
 
-st.retain = { n: '6', title: 'Remettre les 3 boulons longs sans bushing', cam: 'bolts', dur: 8, act: '3 boulons ½ × 8 remis sans bushing : retenue en place', at: () => pBolts[BUSHED[0]],
+st.retain = { n: '6', title: 'Remettre les 3 boulons longs (bolts) sans bushing', cam: 'bolts', dur: 8, act: '3 boulons ½ × 8 remis sans bushing : retenue en place', at: () => pBolts[BUSHED[0]],
   text: 'Enlever les 3 boulons longs (½ × 8) et leurs bushings. Les revisser sans bushing : ils retiennent le cône s\'il part.',
   apply(S, p) {
     S.springLbl = 1;
@@ -2831,7 +2847,6 @@ function animateWorker(S, fl) {
     workerBody.position.z = -(hip.x - 5.3) * .9;
   }
 }
-let outKey = null;
 const STROKE = .35;   // po : recul du piston, du manchon, des 9 boulons et du cône quand le vérin est sous pression (illustratif)
 const HYD_PARTS = new Set(['3506908', '5035015', '5035017', '5000199', '3506882', '5054078', '3506928']);
 let hydVis = 0;
@@ -2977,22 +2992,23 @@ function applyScene(S) {
   labelOpacity(labels.stuck[0], fl ? 0 : S.stuckLbl);
   zone.material.opacity = 0.09 * S.zone * (fl ? 0.5 : 1);
   labelOpacity(labels.zone[0], fl ? 0 : S.zone);
-  // Liste « Retiré » dans la vue 3D
+  // Étiquettes « retiré » dans la scène, au-dessus de chaque groupe posé sur la table
   const nGone = i => BOLTS.filter((B, k) => !!B.bushing === i && S.pb[k].gone > .99).length;
-  const out = [];
-  if (S.jc.lift > .99) out.push(['jc', 'Couvert des mâchoires + 3 boulons ¾']);
-  if (S.cv.lift > .99) out.push(['cv', 'Couvercle + 9 boulons ½']);
-  if (S.pb.some(b => b.bushOut > .99)) out.push(['bush', '3 bushings']);
-  if (nGone(false)) out.push(['pb', `${nGone(false)} boulon${nGone(false) > 1 ? 's' : ''} ½ × 6 ½`]);
-  if (nGone(true)) out.push(['pbr', `${nGone(true)} boulon${nGone(true) > 1 ? 's' : ''} longs ½ × 8`]);
-  if (S.plateOut > .99) out.push(['plate', 'Cône et mâchoires']);
-  const recentK = { jc: RC.jc, cv: RC.cv, bush: RC.bush, pb: RC.pb && RC.pb.some((v, k) => v && !BOLTS[k].bushing), pbr: RC.pb && RC.pb.some((v, k) => v && BOLTS[k].bushing), plate: RC.plate };
-  const key = fl || explodeE > 0 || hexE > 0 ? '' : out.map(([k]) => k + (recentK[k] ? '*' : '')).join() + out.map(o => o[1]).join();
-  if (key !== outKey) {
-    outKey = key;
-    const box = $('outList');
-    box.hidden = !key;
-    box.querySelector('ul').innerHTML = out.map(([k, t]) => `<li${recentK[k] ? ' class="new"' : ''}>${t}</li>`).join('');
+  const n6 = nGone(false), n8 = nGone(true);
+  const recentK = { jc: RC.jc, cv: RC.cv, bush: RC.bush || (RC.pb && RC.pb.some((v, k) => v && BOLTS[k].bushing)), pb: RC.pb && RC.pb.some((v, k) => v && !BOLTS[k].bushing), pbr: RC.pb && RC.pb.some((v, k) => v && BOLTS[k].bushing), plate: RC.plate };
+  const outOn = !fl && explodeE === 0 && hexE === 0;
+  const OUT = [
+    ['outJc', 'jc', S.jc.lift > .99, 'Couvert des mâchoires + 3 boulons ¾', onTable(-6.6, 4.3, 2.3)],
+    ['outCv', 'cv', S.cv.lift > .99, 'Couvercle + 9 boulons ½', onTable(-3.4, 4.3, 1.2)],
+    ['outBush', 'bush', S.pb.some(b => b.bushOut > .99) || n8 > 0, [S.pb.some(b => b.bushOut > .99) ? '3 bushings' : '', n8 ? `${n8} boulon${n8 > 1 ? 's' : ''} long${n8 > 1 ? 's' : ''} ½ × 8` : ''].filter(Boolean).join(' + '), onTable(1.8, 7.0, 1.1)],
+    ['outPb', 'pb', n6 > 0, `${n6} boulon${n6 > 1 ? 's' : ''} ½ × 6 ½`, onTable(-1.8, 6.8, 1.1)],
+    ['outPlate', 'plate', S.plateOut > .99, 'Cône et mâchoires', onTable(.2, 4.3, 2.3)],
+  ];
+  for (const [lk, k, on, text, pos] of OUT) {
+    const L = labels[lk][0];
+    setTblLabel(L, text, !!recentK[k]);
+    L.position.copy(pos);
+    labelOpacity(L, outOn && on ? 1 : 0);
   }
 
   // Travailleur : mains sur la clé, se penche, réagit à l'impact
@@ -3117,7 +3133,7 @@ function updateUI(S, force) {
   if (explodeTarget && lastStep !== 'x') {
     lastStep = 'x';
     $('capNum').textContent = '⊕';
-    $('capTitle').textContent = nb('Vue éclatée : mandrin Boyles H (UM-070-142AA)');
+    $('capTitle').textContent = nb('Vue éclatée : mandrin (chuck) Boyles H, UM-070-142AA');
     $('capTag').hidden = true;
     $('dock').dataset.tone = 'ok';
     $('capText').textContent = nb('Toutes les pièces du mandrin. Survolez une pièce pour son numéro, cliquez pour sa fiche. Lecture ramène à l\'animation.');
@@ -3125,7 +3141,7 @@ function updateUI(S, force) {
   if (hexTarget && lastStep !== 'h') {
     lastStep = 'h';
     $('capNum').textContent = '⊕';
-    $('capTitle').textContent = nb('Vue éclatée : tête de forage');
+    $('capTitle').textContent = nb('Vue éclatée : tête de forage (drill head)');
     $('capTag').hidden = true;
     $('dock').dataset.tone = 'ok';
     $('capText').textContent = nb('Pièces de la tête écartées, mandrin soulevé. Survolez une pièce pour son numéro, cliquez pour sa fiche. Lecture ramène à l\'animation.');
@@ -3335,12 +3351,23 @@ applyTheme();
 /* ---------- Post-traitement (qualité haute) : tonalité ACES, anticrénelage SMAA ----------
    Toujours actif ; le rendu direct (« low ») ne sert qu'au banc d'essai. */
 let quality = 'high';   // toujours en haute qualité (le mode bas reste accessible au banc d'essai)
-let composer = null, smaa = null;
+let composer = null, smaa = null, outline = null;
 function buildComposer() {
   const w = Math.max(2, view.clientWidth), h = Math.max(2, view.clientHeight);
   const rt = new THREE.WebGLRenderTarget(w, h, { type: THREE.HalfFloatType, samples: renderer.capabilities.isWebGL2 ? 4 : 0 });
   composer = new EffectComposer(renderer, rt);
   composer.addPass(new RenderPass(scene, camera));
+  // Contour de la pièce sélectionnée : trait jaune, la pièce garde sa couleur d'origine
+  outline = new OutlinePass(new THREE.Vector2(w, h), scene, camera);
+  Object.assign(outline, { edgeStrength: 4, edgeGlow: 0, edgeThickness: 1.2, pulsePeriod: 0 });
+  outline.visibleEdgeColor.set(0xffc400); outline.hiddenEdgeColor.set(0x8a6a00);
+  // le masque respecte la coupe du mandrin (sinon la moitié retirée serait détourée)
+  const pm = outline.prepareMaskMaterial;
+  pm.vertexShader = '#include <clipping_planes_pars_vertex>\n' + pm.vertexShader.replace('#include <project_vertex>', '#include <project_vertex>\n#include <clipping_planes_vertex>');
+  pm.fragmentShader = pm.fragmentShader.replace('#include <packing>', '#include <packing>\n#include <clipping_planes_pars_fragment>').replace('void main() {', 'void main() {\n#include <clipping_planes_fragment>');
+  pm.clipping = true;
+  outline.selectedObjects = selected ? selected.objs.filter(Boolean) : [];
+  composer.addPass(outline);
   composer.addPass(new OutputPass());
   smaa = new SMAAPass(w * renderer.getPixelRatio(), h * renderer.getPixelRatio());
   composer.addPass(smaa);
@@ -3434,6 +3461,10 @@ function frame(now) {
   controls.update();
   gizmo.visible = !!gizmo.object;
   updateActCard();
+  if (outline && outline.selectedObjects.length) {
+    let cp = null; outline.selectedObjects[0].traverse(o => { if (!cp && o.isMesh) cp = [].concat(o.material)[0].clippingPlanes || []; });
+    outline.prepareMaskMaterial.clippingPlanes = outline.depthMaterial.clippingPlanes = cp && cp.length ? cp : null;
+  }
   if (quality === 'high' && composer) composer.render(); else renderer.render(scene, camera);
   requestAnimationFrame(frame);
 }
