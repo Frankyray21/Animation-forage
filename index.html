@@ -514,6 +514,12 @@ function solvePlate(cons, t) {
 const canvas = document.getElementById('c');
 const view = document.getElementById('view');
 // Faces intérieures révélées par la coupe : sombres et mates, comme une surface coupée (évite les reflets qui « flashent »)
+// Face intérieure qui coïncide avec la face extérieure d'une autre pièce : toujours derrière (pas de z-fighting)
+THREE.ShaderChunk.logdepthbuf_fragment += `
+#if defined( USE_LOGDEPTHBUF ) && defined( USE_LOGDEPTHBUF_EXT ) && NUM_CLIPPING_PLANES > 0
+if ( ! gl_FrontFacing ) gl_FragDepthEXT = min( 1.0, gl_FragDepthEXT + 0.0001 );
+#endif
+`;
 THREE.ShaderChunk.opaque_fragment += `
 #if NUM_CLIPPING_PLANES > 0
 if ( ! gl_FrontFacing ) gl_FragColor.rgb = gl_FragColor.rgb * 0.28 + vec3( 0.045 );
@@ -697,6 +703,7 @@ function threadMat(base, lenIn, tpi) {
   const t = new THREE.CanvasTexture(c);
   t.wrapS = t.wrapT = THREE.RepeatWrapping; t.repeat.set(1, lenIn * tpi); t.colorSpace = THREE.SRGBColorSpace;
   t.anisotropy = renderer.capabilities.getMaxAnisotropy();
+  t.userData.thread = true;
   const m = base.clone(); m.map = t;
   threadTexCache.set(key, m);
   return m;
@@ -2192,6 +2199,8 @@ function applyCut() {
     const spring = inS(new Set([mat.spring]));
     m.clippingPlanes = !cutOn || free || spring ? null : inS(new Set([mat.springBlock])) ? [CUT_DEEP] : [CUT];
     if (m !== ghostMat && !(m.side === THREE.BackSide)) m.side = cutOn ? THREE.DoubleSide : THREE.FrontSide;
+    m.clipShadows = true;                              // la moitié retirée ne projette plus d'ombre
+    m.shadowSide = cutOn ? THREE.BackSide : null;      // pas d'acné d'ombre sur les faces révélées par la coupe
     m.needsUpdate = true;
   }
 }
@@ -3223,6 +3232,15 @@ function frame(now) {
 
 async function start() {
   try { await Promise.race([document.fonts.ready, new Promise(r => setTimeout(r, 1500))]); } catch (e) {}
+  // bouts plats des cylindres filetés : métal uni (le filet ne s'étire pas en rayures sur la face)
+  scene.traverse(o => {
+    const m = o.material, g = o.geometry;
+    if (!o.isMesh || !m || Array.isArray(m) || !m.map || !m.map.userData.thread || !g || g.groups.length !== 3 || g.userData.capsFlat) return;
+    g.userData.capsFlat = true;
+    const uv = g.attributes.uv, idx = g.index, v = .25 / m.map.repeat.y;   // teinte moyenne du filet, uniforme
+    for (const gr of g.groups.slice(1)) for (let i = gr.start; i < gr.start + gr.count; i++) { const k = idx ? idx.getX(i) : i; uv.setXY(k, 0, v); }
+    uv.needsUpdate = true;
+  });
   buildLabels();
   headCenters();
   layoutExplode();
