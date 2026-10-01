@@ -346,6 +346,8 @@ details.params summary { cursor: pointer; padding: 10px 14px; font-weight: 600; 
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
+import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+import { TransformControls } from 'three/addons/controls/TransformControls.js';
 
 /* ================= Constantes physiques et géométriques ================= */
 const U = 0.1;                 // 1 unité de scène = 0,1 m
@@ -1667,36 +1669,134 @@ const HANDS = new THREE.Vector3(0.9, AXIS_Y + 0.5, 0.45); // mains sur la clé �
 const HANDS_AX = HANDS.x - RIG_X;                         // les mains, le long de l'axe de broche (repère machine)
 // Silhouette pour les impacts (monde) : x de la face avant du corps selon la hauteur
 const BODY = { hip: FLOOR + 9.6, sh: FLOOR + 14.3, neck: FLOOR + 15.2, top: FLOOR + 17.1, half: 1.15 };
+const WOFF = new THREE.Vector3();   // déplacement du travailleur par rapport à sa place par défaut (modèle GLB déplaçable)
 function bodyFront(y) {
+  y -= WOFF.y;
   if (y < FLOOR || y > BODY.top) return Infinity;
+  return bodyFront0(y) + WOFF.x;
+}
+function bodyFront0(y) {
   if (y <= BODY.hip) return 5.25 - 0.6;                                        // jambes
   if (y <= BODY.sh) return lerp(5.3, 4.7, (y - BODY.hip) / (BODY.sh - BODY.hip)) - 1.0;   // tronc
   if (y <= BODY.neck) return 4.6 - 0.5;                                        // cou
   return HEAD.x - HEAD_R;                                                      // tête
 }
 const bodyZone = y => y > BODY.neck ? 'visage' : y > BODY.hip + 2.2 ? 'tronc' : y > BODY.hip - 1.6 ? 'hanches' : 'jambes';
-const WL = { shin: 4.1, thigh: 4.62, torso: 4.74, neck: 1.94, upper: 3.0, fore: 2.95 };
+const WL = { shin: 4.1, thigh: 4.62, torso: 4.74, neck: 1.62, upper: 3.0, fore: 2.75 };
 const ANKLE = [-1, 1].map(s => new THREE.Vector3(5.3, FLOOR + .9, s * .6));
 const Y_UP = new THREE.Vector3(0, 1, 0);
+// Travailleur détaillé : proportions anatomiques, visage, ÉPI de foreur souterrain
+// (casque avec lampe frontale et cordon, lunettes, coquilles, combinaison à bandes réfléchissantes,
+//  ceinture avec batterie de lampe et auto-sauveteur, gants, bottes de caoutchouc à embout).
+const fabricTex = (() => {
+  const c = document.createElement('canvas'); c.width = c.height = 128; const x = c.getContext('2d');
+  x.fillStyle = '#ffffff'; x.fillRect(0, 0, 128, 128);
+  for (let i = 0; i < 128; i += 2) { x.fillStyle = `rgba(0,0,0,${.05 + (i % 4 ? .03 : 0)})`; x.fillRect(0, i, 128, 1); }
+  let sd = 3; const r = () => (sd = (sd * 16807) % 2147483647) / 2147483647;
+  for (let i = 0; i < 900; i++) { x.fillStyle = `rgba(0,0,0,${r() * .08})`; x.fillRect(r() * 128, r() * 128, 2, 1); }
+  for (let i = 0; i < 40; i++) { x.fillStyle = `rgba(90,70,40,${.04 + r() * .08})`; x.beginPath(); x.ellipse(r() * 128, r() * 128, 4 + r() * 12, 2 + r() * 6, r() * 3, 0, Math.PI * 2); x.fill(); }   // salissures
+  const t = new THREE.CanvasTexture(c); t.wrapS = t.wrapT = THREE.RepeatWrapping; t.repeat.set(3, 3); t.colorSpace = THREE.SRGBColorSpace; return t;
+})();
+Object.assign(mat, {
+  coverall: new THREE.MeshStandardMaterial({ color: 0x24344a, map: fabricTex, roughness: .92 }),
+  skin: new THREE.MeshStandardMaterial({ color: 0xd2a183, roughness: .62 }),
+  lip: new THREE.MeshStandardMaterial({ color: 0xa8665a, roughness: .55 }),
+  eye: new THREE.MeshStandardMaterial({ color: 0x2a2420, roughness: .2 }),
+  eyeW: new THREE.MeshStandardMaterial({ color: 0xece8e0, roughness: .3 }),
+  lens: new THREE.MeshPhysicalMaterial({ color: 0xb8c4c8, roughness: .05, metalness: 0, transmission: .6, transparent: true, opacity: .45 }),
+  rubber: new THREE.MeshStandardMaterial({ color: 0x121314, roughness: .7 }),
+  bootSole: new THREE.MeshStandardMaterial({ color: 0xc9a227, roughness: .8 }),
+  leather: new THREE.MeshStandardMaterial({ color: 0x3a2617, roughness: .7 }),
+  glove: new THREE.MeshStandardMaterial({ color: 0x9a8f72, map: fabricTex, roughness: .9 }),
+  muff: new THREE.MeshStandardMaterial({ color: 0x2d7d3c, roughness: .5 }),
+  lampLens: new THREE.MeshStandardMaterial({ color: 0xfff6d8, emissive: 0xfff1c0, emissiveIntensity: 1.2 }),
+});
 const W = (() => {
-  const cap = (r, len, m) => { const o = mesh(new THREE.CapsuleGeometry(r, len, 6, 14), m); worker.add(o); return o; };
+  // segment conique de longueur 1 (mis à l'échelle à la longueur du membre)
+  const limbGeo = (r0, r1) => { const g = new THREE.CylinderGeometry(r1, r0, 1, 20, 1, true); g.translate(0, .5, 0); return g; };
+  const seg = (r0, r1, m, bands = []) => {
+    const o = mesh(limbGeo(r0, r1), m); worker.add(o);
+    bands.forEach(([t, h, bm]) => { const rr = lerp(r0, r1, t) + .025; const b = mesh(new THREE.CylinderGeometry(rr, rr, h, 20, 1, true), bm); b.position.y = t; o.add(b); });
+    return o;
+  };
+  const ball = (r, m) => { const o = mesh(new THREE.SphereGeometry(r, 20, 14), m); worker.add(o); return o; };
   const legs = [-1, 1].map(s => {
-    const boot = mesh(new THREE.BoxGeometry(1.2, 0.9, 0.9), mat.boot); boot.position.set(5.05, FLOOR + .45, s * .6); worker.add(boot);
-    return { s, thigh: cap(.6, WL.thigh, mat.coverall), shin: cap(.5, WL.shin, mat.coverall) };
+    // botte de caoutchouc : pied, embout, semelle jaune, tige jusqu'à mi-mollet
+    const boot = new THREE.Group();
+    const foot = mesh(new THREE.BoxGeometry(2.5, .75, 1.05), mat.rubber); foot.position.set(-.55, .45, 0); boot.add(foot);
+    const toe = mesh(new THREE.SphereGeometry(.56, 18, 12), mat.rubber); toe.scale.set(1.05, .72, .95); toe.position.set(-1.72, .42, 0); boot.add(toe);
+    const sole = mesh(new THREE.BoxGeometry(3.15, .14, 1.12), mat.bootSole); sole.position.set(-.75, .07, 0); boot.add(sole);
+    const shaft = mesh(new THREE.CylinderGeometry(.62, .66, 3.6, 22), mat.rubber); shaft.position.set(.15, 2.2, 0); boot.add(shaft);
+    const ref = mesh(new THREE.CylinderGeometry(.635, .635, .18, 22, 1, true), mat.reflect); ref.position.set(.15, 3.6, 0); boot.add(ref);
+    boot.position.set(5.3, FLOOR, s * .62); worker.add(boot);
+    return { s,
+      thigh: seg(.52, .66, mat.coverall, [[.5, .2 / WL.thigh, mat.reflect]]),
+      shin: seg(.44, .5, mat.coverall, [[.62, .2 / WL.shin, mat.reflect]]),
+      knee: ball(.52, mat.coverall), hipJ: ball(.64, mat.coverall) };
   });
-  const torso = cap(1.0, WL.torso, mat.coverall);
-  const bands = [0.35, 0.62].map(t => { const b = mesh(new THREE.CylinderGeometry(1.03, 1.03, 0.22, 32, 1, true), t < .5 ? mat.hivis : mat.reflect); b.userData.t = t; worker.add(b); return b; });
-  const arms = [-1, 1].map(s => ({ s, up: cap(.3, WL.upper, mat.coverall), fore: cap(.27, WL.fore, mat.coverall), glove: (() => { const g = mesh(new THREE.SphereGeometry(0.3, 16, 12), mat.glove); worker.add(g); return g; })() }));
+  // tronc : profil tourné (bassin, taille, poitrine, épaules), aplati d'avant en arrière
+  const torsoGeo = new THREE.LatheGeometry([[0, 0], [.9, .01], [1.06, .1], [1.08, .2], [.98, .36], [.96, .46], [1.04, .6], [1.13, .74], [1.12, .84], [1.0, .92], [.72, .98], [.4, 1.0]].map(([r, y]) => new THREE.Vector2(r, y)), 36);
+  const torso = mesh(torsoGeo, mat.coverall); worker.add(torso);
+  // bandes réfléchissantes de la combinaison (poitrine et taille) et ceinture
+  const bands = [[.66, .2, mat.reflect], [.5, .07, mat.hivis]].map(([t, h, m]) => { const rr = 1.06; const b = mesh(new THREE.CylinderGeometry(rr, rr, h / WL.torso, 36, 1, true), m); b.position.y = t; torso.add(b); return b; });
+  const belt = mesh(new THREE.CylinderGeometry(1.1, 1.1, .3 / WL.torso, 36, 1, true), mat.leather); belt.position.y = .2; torso.add(belt);
+  // équipement porté : batterie de lampe et auto-sauveteur à la ceinture (dos), cordon de lampe
+  const kit = new THREE.Group(); worker.add(kit);
+  const batt = mesh(new THREE.BoxGeometry(.55, 1.05, 1.15), mat.rubber); batt.position.set(.95 * .72 + .2, .2 * WL.torso, -.55); kit.add(batt);
+  const sr = mesh(new THREE.CylinderGeometry(.42, .42, 1.2, 20), mat.hivis); sr.position.set(.9 * .72 + .2, .2 * WL.torso, .7); kit.add(sr);
+  const cordPts = [[1.0, .2 * WL.torso + .4, -.55], [1.05, .55 * WL.torso, -.6], [.95, .9 * WL.torso, -.5], [.7, WL.torso + .7, -.35]].map(p => new THREE.Vector3(...p));
+  kit.add(mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(cordPts), 30, .06, 6, false), mat.rubber));
+  const neck = seg(.5, .46, mat.skin);
+  const collar = mesh(new THREE.TorusGeometry(.56, .16, 8, 24), mat.coverall); collar.rotation.x = Math.PI / 2; worker.add(collar);
+  const arms = [-1, 1].map(s => {
+    const up = seg(.38, .3, mat.coverall, [[.55, .18 / WL.upper, mat.reflect]]);
+    const fore = seg(.3, .25, mat.coverall, [[.5, .16 / WL.fore, mat.reflect]]);
+    const sho = ball(.46, mat.coverall), elb = ball(.32, mat.coverall);
+    // gant : manchette, paume, quatre doigts repliés sur la prise, pouce
+    const hand = new THREE.Group(); worker.add(hand);
+    const cuff = mesh(new THREE.CylinderGeometry(.33, .31, .55, 16), mat.glove); cuff.position.y = .1; hand.add(cuff);
+    const palm = mesh(new THREE.BoxGeometry(.32, .82, .78), mat.glove); palm.position.y = .7; hand.add(palm);
+    for (let f = 0; f < 4; f++) {
+      const fg = new THREE.Group(); fg.position.set(-.05, 1.1, (f - 1.5) * .19); fg.rotation.z = .9;
+      const p1 = mesh(new THREE.CapsuleGeometry(.085, .32, 4, 8), mat.glove); p1.position.y = .2; fg.add(p1);
+      const p2 = mesh(new THREE.CapsuleGeometry(.08, .24, 4, 8), mat.glove); p2.position.set(-.12, .5, 0); p2.rotation.z = .9; fg.add(p2);
+      hand.add(fg);
+    }
+    const th = mesh(new THREE.CapsuleGeometry(.1, .38, 4, 8), mat.glove); th.position.set(-.18, .65, s * .42); th.rotation.set(s * .7, 0, .6); hand.add(th);
+    return { s, up, fore, sho, elb, hand, glove: hand };
+  });
+  // tête : crâne, mâchoire, nez, oreilles, yeux, bouche ; casque avec lampe frontale ; lunettes ; coquilles
   const head = new THREE.Group();
-  const skull = mesh(new THREE.SphereGeometry(HEAD_R * 0.95, 28, 20), mat.skin);
-  const hat = mesh(new THREE.SphereGeometry(HEAD_R * 1.08, 28, 14, 0, Math.PI * 2, 0, Math.PI / 2), mat.helmet); hat.position.y = 0.12;
-  const brim = mesh(new THREE.CylinderGeometry(HEAD_R * 1.32, HEAD_R * 1.32, 0.06, 32), mat.helmet); brim.position.y = 0.14;
-  const glasses = mesh(new THREE.BoxGeometry(0.16, 0.26, 1.05), mat.dark); glasses.position.set(-0.8, -0.1, 0);
-  head.add(skull, hat, brim, glasses); worker.add(head);
-  return { legs, torso, bands, arms, head };
+  const R0 = HEAD_R;
+  const skull = mesh(new THREE.SphereGeometry(R0 * .9, 32, 24), mat.skin); skull.scale.set(1.0, 1.1, .86); head.add(skull);
+  const jaw = mesh(new THREE.SphereGeometry(R0 * .62, 24, 16), mat.skin); jaw.scale.set(1.0, .8, .92); jaw.position.set(-.18, -.48, 0); head.add(jaw);
+  const nose = mesh(new THREE.ConeGeometry(.12, .34, 12), mat.skin); nose.rotation.z = Math.PI / 2 + .25; nose.position.set(-.86, -.12, 0); head.add(nose);
+  for (const z of [-1, 1]) {
+    const ear = mesh(new THREE.SphereGeometry(.2, 12, 10), mat.skin); ear.scale.set(.75, 1.1, .35); ear.position.set(.05, -.05, z * .76); head.add(ear);
+    const ew = mesh(new THREE.SphereGeometry(.1, 12, 8), mat.eyeW); ew.position.set(-.72, .1, z * .28); head.add(ew);
+    const ir = mesh(new THREE.SphereGeometry(.055, 10, 8), mat.eye); ir.position.set(-.8, .1, z * .28); head.add(ir);
+    const brow = mesh(new THREE.BoxGeometry(.06, .05, .26), mat.leather); brow.position.set(-.8, .26, z * .29); brow.rotation.x = -z * .15; head.add(brow);
+    const muff = mesh(new THREE.CylinderGeometry(.34, .34, .26, 20), mat.muff); muff.rotation.x = Math.PI / 2; muff.position.set(.08, -.05, z * .9); head.add(muff);
+  }
+  const mouth = mesh(new THREE.BoxGeometry(.04, .05, .3), mat.lip); mouth.position.set(-.78, -.46, 0); head.add(mouth);
+  // lunettes de sécurité enveloppantes
+  const lensG = new THREE.CylinderGeometry(.9, .9, .3, 24, 1, true, Math.PI * .62, Math.PI * .76);
+  const lens = mesh(lensG, mat.lens); lens.position.set(.05, .1, 0); lens.rotation.y = Math.PI / 2; head.add(lens);
+  const frame = mesh(new THREE.TorusGeometry(.9, .03, 6, 30, Math.PI * .76), mat.rubber); frame.rotation.set(Math.PI / 2, 0, Math.PI * .62 + Math.PI / 2); frame.position.set(.05, .25, 0); head.add(frame);
+  // casque de mineur : calotte, visière avant, nervure, support et lampe frontale
+  const shell = mesh(new THREE.SphereGeometry(R0 * 1.08, 32, 16, 0, Math.PI * 2, 0, Math.PI / 2), mat.helmet); shell.scale.set(1.12, .95, 1.0); shell.position.y = .22; head.add(shell);
+  const brimG = new THREE.CylinderGeometry(R0 * 1.18, R0 * 1.18, .05, 32); brimG.scale(1.18, 1, 1.02);
+  const brim = mesh(brimG, mat.helmet); brim.position.set(-.08, .24, 0); head.add(brim);
+  const rib = mesh(new THREE.TorusGeometry(R0 * 1.0, .05, 6, 24, Math.PI), mat.helmet); rib.position.y = .24; rib.scale.set(1.12, .95, 1); head.add(rib);
+  const bracket = mesh(new THREE.BoxGeometry(.12, .3, .3), mat.rubber); bracket.position.set(-1.02, .48, 0); head.add(bracket);
+  const lamp = mesh(new THREE.CylinderGeometry(.18, .2, .32, 18), mat.rubber); lamp.rotation.z = Math.PI / 2; lamp.position.set(-1.18, .5, 0); head.add(lamp);
+  const glass = mesh(new THREE.CircleGeometry(.16, 18), mat.lampLens); glass.rotation.y = -Math.PI / 2; glass.position.set(-1.345, .5, 0); head.add(glass);
+  worker.add(head);
+  return { legs, torso, bands, arms, head, neck, collar, kit };
 })();
 const wTmp = new THREE.Vector3(), wTmp2 = new THREE.Vector3();
 function placeSeg(o, a, b) { o.position.copy(a).add(b).multiplyScalar(.5); o.quaternion.setFromUnitVectors(Y_UP, wTmp.subVectors(b, a).normalize()); }
+function placeLimb(o, a, b) { o.position.copy(a); const d = wTmp.subVectors(b, a); o.scale.set(1, d.length(), 1); o.quaternion.setFromUnitVectors(Y_UP, d.normalize()); }
 // Cinématique inverse à 2 segments : articulation intermédiaire du côté du vecteur « pole »
 function ik2(A, T, l1, l2, pole) {
   const d = Math.min(wTmp.subVectors(T, A).length(), (l1 + l2) * .999), dir = wTmp.clone().normalize();
@@ -1708,19 +1808,30 @@ function ik2(A, T, l1, l2, pole) {
 // Pose : hanches (monde), inclinaison du tronc vers la tête de forage, inclinaison de la tête, cibles des mains
 function poseWorker(hip, lean, tilt, hands) {
   W.legs.forEach((L, k) => {
-    const H = hip.clone().add(wTmp2.set(0, -.2, L.s * .52));
+    const H = hip.clone().add(wTmp2.set(0, -.2, L.s * .55));
     const { J } = ik2(ANKLE[k], H, WL.shin, WL.thigh, new THREE.Vector3(-1, 0, 0));   // genou vers l'avant
-    placeSeg(L.shin, ANKLE[k], J); placeSeg(L.thigh, J, H);
+    placeLimb(L.shin, ANKLE[k], J); placeLimb(L.thigh, J, H);
+    L.knee.position.copy(J); L.hipJ.position.copy(H);
   });
-  const sh = hip.clone().add(new THREE.Vector3(-Math.sin(lean), Math.cos(lean), 0).multiplyScalar(WL.torso));
-  placeSeg(W.torso, hip, sh);
-  W.bands.forEach(b => { b.position.copy(hip).lerp(sh, b.userData.t); b.quaternion.copy(W.torso.quaternion); });
+  const up = new THREE.Vector3(-Math.sin(lean), Math.cos(lean), 0);
+  const sh = hip.clone().addScaledVector(up, WL.torso);
+  W.torso.position.copy(hip).addScaledVector(up, -.35);
+  W.torso.quaternion.setFromUnitVectors(Y_UP, up); W.torso.scale.set(.74, WL.torso + .35, 1);
+  W.kit.position.copy(hip); W.kit.quaternion.copy(W.torso.quaternion);
+  const neckTop = sh.clone().add(new THREE.Vector3(-Math.sin(lean + tilt), Math.cos(lean + tilt), 0).multiplyScalar(.75));
+  placeLimb(W.neck, sh.clone().addScaledVector(up, -.3), neckTop);
+  W.collar.position.copy(sh).addScaledVector(up, -.12); W.collar.quaternion.copy(W.torso.quaternion); W.collar.rotateX(Math.PI / 2);
   const hd = sh.clone().add(new THREE.Vector3(-Math.sin(lean + tilt), Math.cos(lean + tilt), 0).multiplyScalar(WL.neck));
   W.head.position.copy(hd); W.head.rotation.set(0, 0, 0.3 + (lean - .127) + tilt - .08);
   W.arms.forEach((A, k) => {
-    const S0 = sh.clone().add(new THREE.Vector3(Math.sin(lean) * .25, -.25, A.s * 1.05));
+    const S0 = sh.clone().add(new THREE.Vector3(Math.sin(lean) * .25, -.3, A.s * 1.12));
     const { J, E } = ik2(S0, hands[k], WL.upper, WL.fore, new THREE.Vector3(.3, -1, A.s * .7));
-    placeSeg(A.up, S0, J); placeSeg(A.fore, J, E); A.glove.position.copy(E);
+    placeLimb(A.up, S0, J); placeLimb(A.fore, J, E);
+    A.sho.position.copy(S0); A.elb.position.copy(J);
+    // main dans l'axe de l'avant-bras, paume vers l'intérieur
+    A.hand.position.copy(E).addScaledVector(wTmp.subVectors(E, J).normalize(), -.05);
+    A.hand.quaternion.setFromUnitVectors(Y_UP, wTmp.subVectors(E, J).normalize());
+    A.hand.rotateY(A.s * Math.PI / 2);
   });
   return { sh, hd };
 }
@@ -1735,6 +1846,62 @@ const burstTex = (() => {
 })();
 const bursts = [0, 1].map(() => { const b = new THREE.Sprite(new THREE.SpriteMaterial({ map: burstTex, transparent: true, depthTest: false })); b.renderOrder = 9; b.visible = false; scene.add(b); return b; });
 function showBurst(b, pos, a) { b.visible = a > 0 && a < 1; if (!b.visible) return; b.position.copy(pos); b.scale.setScalar(0.8 + 2.6 * a); b.material.opacity = 1 - a; }
+
+/* ---------- Travailleur : modèle 3D GLB (CC0 1.0, 0,698 × 1,83 × 0,337 m, axe Y vertical) ----------
+   Copie locale : public/models/worker.glb (jamais chargé depuis le CDN). Si le fichier est absent,
+   le travailleur procédural articulé reste affiché. Position, orientation et échelle : WORKER_GLB,
+   ou window.__clam.worker.set({ x, y, z, rotY, scale }) ; sélectionné, il se déplace avec la poignée
+   (T : déplacer, R : tourner, E : échelle). */
+const WORKER_GLB = {
+  url: 'public/models/worker.glb',
+  position: new THREE.Vector3(5.3, FLOOR, 0),   // pieds au plancher, devant la face du mandrin
+  rotY: -Math.PI / 2,                             // glTF regarde vers +z : on le tourne vers la tête de forage (-x)
+  height: 18.3,                                   // 1,83 m en unités de scène (1 u = 10 cm)
+  scale: 1,                                       // multiplicateur appliqué après la mise à la hauteur réelle
+};
+const workerRoot = new THREE.Group();   // pivot aux pieds : c'est lui qu'on déplace, tourne et met à l'échelle
+const workerBody = new THREE.Group();   // animation (recul, chute) appliquée sous le pivot
+workerRoot.add(workerBody); workerRoot.visible = false; scene.add(workerRoot);
+let workerModel = null, workerFit = 1;
+const workerPart = { id: 'TRAVAILLEUR', ref: 'Travailleur', name: 'Travailleur (modèle 3D)', qty: 1, grp: 'scene', scene: true, objs: [workerRoot],
+  role: 'Modèle 3D CC0 1.0 (1,83 m). Sélectionné, il peut être déplacé (T), tourné (R) ou mis à l\'échelle (E) avec la poignée.' };
+PARTS.push(workerPart);
+function applyWorkerTransform() {
+  workerRoot.position.copy(WORKER_GLB.position);
+  workerRoot.rotation.set(0, WORKER_GLB.rotY, 0);
+  workerRoot.scale.setScalar(WORKER_GLB.scale);
+  WOFF.copy(WORKER_GLB.position).sub(new THREE.Vector3(5.3, FLOOR, 0));
+}
+let workerRebuild = 0;
+function setWorker({ x, y, z, rotY, rotYdeg, scale } = {}) {
+  const P0 = WORKER_GLB.position;
+  if (x !== undefined) P0.x = x; if (y !== undefined) P0.y = y; if (z !== undefined) P0.z = z;
+  if (rotY !== undefined) WORKER_GLB.rotY = rotY; if (rotYdeg !== undefined) WORKER_GLB.rotY = rotYdeg * Math.PI / 180;
+  if (scale !== undefined) WORKER_GLB.scale = scale;
+  applyWorkerTransform();
+  clearTimeout(workerRebuild); workerRebuild = setTimeout(() => build(true), 150);   // trajectoires et impacts recalculés
+}
+applyWorkerTransform();
+function loadWorkerModel() {
+  let url;
+  try { url = new URL(WORKER_GLB.url, document.baseURI).href; if (!/^https?:|^file:/.test(url)) throw 0; }
+  catch (e) { console.info('Travailleur : adresse de la page sans base, travailleur procédural affiché.'); return; }
+  try { new GLTFLoader().load(url, gltf => {
+  const m = gltf.scene;
+  // mise à la hauteur réelle, pieds à l'origine, centré sur l'axe vertical ; matériaux d'origine conservés
+  const bb = new THREE.Box3().setFromObject(m), size = bb.getSize(new THREE.Vector3()), c = bb.getCenter(new THREE.Vector3());
+  workerFit = WORKER_GLB.height / Math.max(1e-6, size.y);
+  m.scale.setScalar(workerFit);
+  m.position.set(-c.x * workerFit, -bb.min.y * workerFit, -c.z * workerFit);
+  m.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; o.userData.part = workerPart; } });
+  workerBody.add(m);
+  workerModel = m;
+  workerRoot.visible = true;
+  console.info('Travailleur : modèle GLB chargé (' + WORKER_GLB.url + ')');
+}, undefined, () => console.info('Travailleur : ' + WORKER_GLB.url + ' introuvable, travailleur procédural affiché.')); }
+  catch (e) { console.info('Travailleur : chargement impossible, travailleur procédural affiché.'); }
+}
+loadWorkerModel();
 poseWorker(new THREE.Vector3(5.3, BODY.hip, 0), .127, .08, [new THREE.Vector3(HANDS.x, HANDS.y, -HANDS.z), new THREE.Vector3(HANDS.x, HANDS.y, HANDS.z)]);
 
 /* ---------- Étiquettes ---------- */
@@ -1784,6 +1951,7 @@ function buildLabels() {
   labels.zone[0].position.set(0.4, PLATE_TOP0 + 3.2, 2.2);
   // Repères de pièces pour la vue éclatée (dans le groupe du clam)
   PARTS.forEach(p => {
+    if (p.scene) return;
     if (p.lbl && p.lbl.parent) p.lbl.parent.remove(p.lbl);
     p.lbl = makePartLabel(p, { parent: p.head ? headG : clampG, h: p.head ? 0.62 : 0.24 });
     p.lbl.visible = false;
@@ -1833,7 +2001,7 @@ function applyExplode(e) {
   clampG.rotation.z = -Math.PI / 2 * k;   // position : applyHeadExplode (tient compte des deux vues)
   const showRows = k > 0.02;
   for (const p of PARTS) {
-    if (p.head) continue;
+    if (p.head || p.scene) continue;
     if (p.opt) {
       p.objs.forEach(o => { o.position.copy(p.row); o.position.y -= u(p.len / 2); setOpacity(o, k); });
       continue;
@@ -1970,7 +2138,7 @@ function applyHeadExplode(h) {
     shown.push(p.lbl);
   }
   deOverlap(PARTS.filter(q => q.lbl && q.lbl.visible).map(q => q.lbl));
-  if (k > 0.05) for (const o of [worker, consoleG, zone, trail, wrench, activeRing, carriage]) o.visible = false;
+  if (k > 0.05) for (const o of [worker, workerRoot, consoleG, zone, trail, wrench, activeRing, carriage]) o.visible = false;
   if (labels && k > 0.02) for (const arr of Object.values(labels)) for (const sp of arr) if (sp) sp.visible = false;
 }
 
@@ -2027,9 +2195,29 @@ function applyCut() {
     m.needsUpdate = true;
   }
 }
+// Poignée de déplacement du travailleur (visible quand il est sélectionné) : T déplacer, R tourner, E échelle
+const gizmo = new TransformControls(camera, canvas);
+gizmo.setSize(.8);
+gizmo.addEventListener('dragging-changed', e => { controls.enabled = !e.value; if (!e.value) setWorker({}); });
+gizmo.addEventListener('objectChange', () => {
+  const sc = gizmo.mode === 'scale' ? (workerRoot.scale.x + workerRoot.scale.y + workerRoot.scale.z) / 3 : workerRoot.scale.x;
+  workerRoot.scale.setScalar(sc);                                  // échelle uniforme
+  workerRoot.rotation.set(0, workerRoot.rotation.y, 0);            // reste debout
+  WORKER_GLB.position.copy(workerRoot.position); WORKER_GLB.rotY = workerRoot.rotation.y; WORKER_GLB.scale = sc;
+  WOFF.copy(WORKER_GLB.position).sub(new THREE.Vector3(5.3, FLOOR, 0));
+});
+scene.add(gizmo);
+addEventListener('keydown', e => {
+  if (!gizmo.object || /INPUT|SELECT|TEXTAREA/.test(document.activeElement?.tagName || '')) return;
+  const mode = { t: 'translate', r: 'rotate', e: 'scale' }[e.key.toLowerCase()];
+  if (!mode) return;
+  gizmo.setMode(mode);
+  gizmo.showX = gizmo.showZ = mode !== 'rotate'; gizmo.showY = mode !== 'translate' || true;
+});
+
 function select(p) {
   selected = p || null;
-  for (const [g, ghost] of [[clampG, ghostMat], [headG, ghostHead]]) g.traverse(m => {
+  for (const [g, ghost] of [[clampG, ghostMat], [headG, ghostHead], [workerRoot, ghostHead]]) g.traverse(m => {
     if (!m.isMesh || m.userData.xray) return;
     if (!m.userData.orig) m.userData.orig = m.material;
     if (!selected) { m.material = m.userData.orig; return; }
@@ -2038,6 +2226,7 @@ function select(p) {
   applyCut();
   renderCard();
   document.querySelectorAll('.bom-row').forEach(r => r.setAttribute('aria-pressed', String(r.dataset.id === (selected && selected.id))));
+  if (selected === workerPart && workerModel) gizmo.attach(workerRoot); else gizmo.detach();
 }
 
 /* ================= État de l'animation ================= */
@@ -2290,7 +2479,7 @@ function computeFlight(S0, step) {
     ang += w * dt;
     t += dt;
     if (!out.hands && pos.y >= HANDS_AX - 0.3) out.hands = { t, speed: vel.length() * U, h: AXIS_Y + pos.z };
-    if (!hitDone && Math.abs(pos.x) < BODY.half + Rp * .5) {
+    if (!hitDone && Math.abs(pos.x - WOFF.z) < BODY.half + Rp * .5) {
       // contact avec le corps : la face avant du cône atteint la silhouette sur la hauteur du disque
       const wx = RIG_X + pos.y, wy = AXIS_Y + pos.z, span = Rp * Math.abs(Math.cos(ang)) + BOWL_DEPTH * Math.abs(Math.sin(ang)) * .5;
       let best = null;
@@ -2469,6 +2658,13 @@ function animateWorker(S, fl) {
     lean -= .14 * r; hip.x += .4 * r;
   }
   poseWorker(hip, lean, tilt, hands);
+  // modèle GLB : recul et chute du corps entier, pivot aux pieds (le modèle n'a pas de squelette animé ici)
+  if (workerModel) {
+    const dLean = lean - .127 - .012 * Math.sin(tt * 1.4);
+    workerBody.position.set(0, Math.min(0, hip.y - BODY.hip) * .45, 0);
+    workerBody.rotation.set(dLean * .8, 0, 0);   // repère du modèle : +z = devant, pivot aux pieds
+    workerBody.position.z = -(hip.x - 5.3) * .9;
+  }
 }
 function applyScene(S) {
   const D = S.D;
@@ -2599,7 +2795,9 @@ function applyScene(S) {
 
   // Travailleur : mains sur la clé, se penche, réagit à l'impact
   animateWorker(S, fl);
-  worker.visible = document.getElementById('optWorker').checked;
+  const showW = document.getElementById('optWorker').checked;
+  worker.visible = showW && !workerModel;
+  workerRoot.visible = showW && !!workerModel;
   pallet.visible = stand.visible = consoleG.visible = headG.visible = carriage.visible = zone.visible = true;
 
   // Trajectoire
@@ -2934,8 +3132,8 @@ function pickPart(e) {
   const lbls = PARTS.filter(p => p.lbl && p.lbl.visible).map(p => p.lbl);
   const lh = lbls.length ? ray.intersectObjects(lbls, false) : [];
   if (lh.length) return lh[0].object.userData.part;
-  const hits = ray.intersectObjects([...clampG.children, ...headG.children], true).filter(h => {
-    if (cutOn && h.point.z > 0.002 && (!inHead(h.object) || h.object.userData.cutWithChuck)) return false;
+  const hits = ray.intersectObjects([...clampG.children, ...headG.children, workerRoot], true).filter(h => {
+    if (cutOn && h.point.z > 0.002 && h.object.userData.part !== workerPart && (!inHead(h.object) || h.object.userData.cutWithChuck)) return false;
     let o = h.object; while (o) { if (!o.visible) return false; o = o.parent; }
     return h.object.isMesh && h.object.userData.part && h.object.material !== ghostMat && h.object.material !== ghostHead;
   });
@@ -3036,7 +3234,7 @@ async function start() {
   resize();
   const S = stateAt(T); applyScene(S); updateUI(S, true);
   requestAnimationFrame(frame);
-  window.__clam = { stateAt, steps: () => steps, starts: () => starts, total: () => total, setT: v => { T = v; }, P, setExplode, setHeadExplode, headExplodeNow: v => { setHeadExplode(v); hexE = v ? 1 : 0; }, setCutUI: setCut, explodeNow: v => { setExplode(v); explodeE = v ? 1 : 0; }, select: id => select(byId(id)), PARTS, setCut: v => { cutOn = v; applyCut(); } };
+  window.__clam = { stateAt, steps: () => steps, starts: () => starts, total: () => total, setT: v => { T = v; }, P, setExplode, setHeadExplode, headExplodeNow: v => { setHeadExplode(v); hexE = v ? 1 : 0; }, setCutUI: setCut, explodeNow: v => { setExplode(v); explodeE = v ? 1 : 0; }, select: id => select(byId(id)), PARTS, camera, worker: { set: setWorker, get: () => ({ x: WORKER_GLB.position.x, y: WORKER_GLB.position.y, z: WORKER_GLB.position.z, rotYdeg: WORKER_GLB.rotY * 180 / Math.PI, scale: WORKER_GLB.scale, loaded: !!workerModel }), root: workerRoot }, setCut: v => { cutOn = v; applyCut(); } };
 }
 start();
 </script>

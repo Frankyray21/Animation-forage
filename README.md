@@ -57,6 +57,18 @@ Les 9 boulons du cône traversent le voile du boîtier (entretoises inférieures
 | Erreur rattrapée par la retenue | Même erreur, mais l'étape 6 a été faite. Les 3 boulons remis sans bushing arrêtent le cône après quelques millimètres. |
 | Erreur : cône coincé, sans retenue | Étape 6 omise. Le cône reste coincé, puis se décoince d'un coup et est projeté. |
 
+## Travailleur (modèle 3D)
+
+Le travailleur est chargé depuis une **copie locale** : `public/models/worker.glb` (modèle CC0 1.0, 0,698 × 1,83 × 0,337 m, axe Y vertical, source : https://cdn.3dassets.dev/assets/36355/v1/model.glb). Il n'est jamais chargé depuis le CDN. Si le fichier est absent, le travailleur procédural articulé (avec ses ÉPI) est affiché.
+
+- Chargement : `GLTFLoader`, matériaux d'origine conservés, ombres projetées et reçues, mise à la hauteur réelle (1,83 m) et pieds au plancher.
+- Réglages par défaut dans `WORKER_GLB` (index.html) : `position`, `rotY` (orientation), `scale`.
+- En direct : `__clam.worker.set({ x, y, z, rotYdeg, scale })` et `__clam.worker.get()`.
+- Sélection : clic sur le travailleur dans la vue 3D (raycaster). Sélectionné, une poignée apparaît : **T** déplacer, **R** tourner, **E** échelle. Les trajectoires et les zones d'impact suivent sa nouvelle position.
+- Animation : recul et chute du corps entier lors d'une projection (le modèle n'est pas animé membre par membre).
+
+Pour ajouter le fichier : `curl -L -o public/models/worker.glb https://cdn.3dassets.dev/assets/36355/v1/model.glb`, puis commit.
+
 ## Outil
 
 Le travailleur dévisse les boulons avec une clé à chocs électrique à fil (d'après la photo du chantier) : corps métallique usé, nez conique, douille longue 12 pans, poignée arrière fermée avec gâchette, anneau latéral et cordon. Seule la douille tourne avec le boulon.
