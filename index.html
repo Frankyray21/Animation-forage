@@ -511,7 +511,13 @@ function solvePlate(cons, t) {
 /* ================= Scène ================= */
 const canvas = document.getElementById('c');
 const view = document.getElementById('view');
-const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, preserveDrawingBuffer: false });
+// Faces intérieures révélées par la coupe : sombres et mates, comme une surface coupée (évite les reflets qui « flashent »)
+THREE.ShaderChunk.opaque_fragment += `
+#if NUM_CLIPPING_PLANES > 0
+if ( ! gl_FrontFacing ) gl_FragColor.rgb = gl_FragColor.rgb * 0.28 + vec3( 0.045 );
+#endif
+`;
+const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, preserveDrawingBuffer: false, logarithmicDepthBuffer: true });   // profondeur précise : pas de scintillement entre surfaces proches
 renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
 renderer.shadowMap.enabled = true;
 renderer.localClippingEnabled = true;
@@ -539,7 +545,8 @@ sun.position.set(7, 16, 9);
 sun.castShadow = true;
 sun.shadow.mapSize.set(2048, 2048);
 Object.assign(sun.shadow.camera, { left: -14, right: 14, top: 14, bottom: -14, near: 1, far: 50 });
-sun.shadow.bias = -0.0004;
+sun.shadow.bias = -0.0002;
+sun.shadow.normalBias = 0.035;   // pas d'« acné » d'ombre qui scintille sur les pièces en mouvement
 scene.add(sun);
 
 const mat = {
@@ -679,12 +686,15 @@ const threadTexCache = new Map();
 function threadMat(base, lenIn, tpi) {
   const key = `${base.uuid}|${lenIn}|${tpi}`;
   if (threadTexCache.has(key)) return threadTexCache.get(key);
-  const c = document.createElement('canvas'); c.width = 4; c.height = 16;
+  // profil de filet adouci (dégradé) + filtrage anisotrope : pas de moiré qui scintille quand la caméra bouge
+  const c = document.createElement('canvas'); c.width = 4; c.height = 32;
   const x = c.getContext('2d');
-  x.fillStyle = '#ffffff'; x.fillRect(0, 0, 4, 16);
-  x.fillStyle = '#6d6d6d'; x.fillRect(0, 0, 4, 6);
+  const g = x.createLinearGradient(0, 0, 0, 32);
+  g.addColorStop(0, '#8a8a8a'); g.addColorStop(.5, '#f2f2f2'); g.addColorStop(1, '#8a8a8a');
+  x.fillStyle = g; x.fillRect(0, 0, 4, 32);
   const t = new THREE.CanvasTexture(c);
   t.wrapS = t.wrapT = THREE.RepeatWrapping; t.repeat.set(1, lenIn * tpi); t.colorSpace = THREE.SRGBColorSpace;
+  t.anisotropy = renderer.capabilities.getMaxAnisotropy();
   const m = base.clone(); m.map = t;
   threadTexCache.set(key, m);
   return m;
