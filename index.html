@@ -503,9 +503,9 @@ controls.maxPolarAngle = Math.PI * 0.49;
 controls.minDistance = 4;
 controls.maxDistance = 45;
 
-scene.add(new THREE.HemisphereLight(0xeef3ff, 0x8a8f94, 1.0));
+scene.add(new THREE.HemisphereLight(0xeef3ff, 0x8a8f94, 0.9));
 // éclairage uniforme, sans ombres portées : lumière principale + lumière de remplissage opposée
-const sun = new THREE.DirectionalLight(0xffffff, 1.7);
+const sun = new THREE.DirectionalLight(0xffffff, 1.45);
 sun.position.set(7, 16, 9);
 scene.add(sun);
 const fill = new THREE.DirectionalLight(0xe8eef8, 0.8);
@@ -709,7 +709,7 @@ const BOLT = {
 };
 
 /* ---------- Sol, palette, support d'atelier ---------- */
-const PAINT = new THREE.MeshPhysicalMaterial({ color: 0xc42a1c, roughness: .5, metalness: .08, clearcoat: .2, clearcoatRoughness: .5 });   // peinture rouge de la tête UM-012, usée et grasse
+const PAINT = new THREE.MeshPhysicalMaterial({ color: 0xa8120f, roughness: .55, metalness: .05, clearcoat: .15, clearcoatRoughness: .5 });   // rouge franc (le mappage ACES tire vers l'orange : couleur de base plus profonde)   // peinture rouge de la tête UM-012, usée et grasse
 Object.assign(mat, {
   blue: PAINT, paint: PAINT,
   green: new THREE.MeshStandardMaterial({ color: 0x3fa65a, roughness: .38, metalness: .3 }),
@@ -1205,7 +1205,7 @@ const EVT = { x: -7.5, z: -4.8 };
   const sp = new THREE.Group();
   sp.add(mesh(annulusIn(1.5, 1.9, 20.6), mat.machined));
   const thrTop = hcyl(1.92, 4.5, threadMat(mat.machined, 4.5, 4), 48); thrTop.position.y = u(16.1 + 2.25); sp.add(thrTop);
-  const thrBot = hcyl(1.92, 3.0, threadMat(mat.machined, 3.0, 6), 48); thrBot.position.y = u(1.5); sp.add(thrBot);
+  const thrBot = hcyl(1.92, 3.0, threadMat(mat.machined, 3.0, 6), 48); thrBot.position.y = u(1.35); sp.add(thrBot);   // dépasse de 0,15 po le couvercle UM-012-116 : pas de faces superposées au nez de broche
   placeIn(sp, 0, -12.6, 0);
   hpart({ id: 'UM-012-101', ref: 'UM-012-101', name: 'Broche Boyles', qty: 1, grp: 'hspindle', role: 'Arbre creux entraîné par la chaîne ; le mandrin est fixé à son bout, côté transmission. Vitesse max. 1 200 tr/min.', hx: [0, -26, 0] }, sp);
 }
