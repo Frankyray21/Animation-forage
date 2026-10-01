@@ -48,6 +48,15 @@ Correspondance avec la procédure :
 
 Les 9 boulons du cône traversent le voile du boîtier (entretoises inférieures 3506880 et joints 5040192) et se vissent dans le manchon d'actionnement 3506928. Ce sont eux qui retiennent le cône contre les 18 ressorts.
 
+## Foreuse STM-1500 (livre de pièces FBRA-002-100AS, section 1)
+
+La tête de forage a été **retirée de la foreuse et posée sur un banc de travail** (support de pivot boulonné sur le plateau). La foreuse complète est modélisée derrière le banc, mât couché à l'horizontale (position de transport, planche 1.04), sans la tête. Bouton **Foreuse (drill)** : la caméra va sur la foreuse ; un second clic revient à l'étape.
+
+- **Planches utilisées** : 1.00 (liste des ensembles), 1.03 (cotes d'ensemble 147 29/32 × 57 25/32 po), 1.04, 1.1 (bâti), 1.2 (support de mât), 1.3 (mât, rallonge, boîtier du foot clamp), 1.4 (base du foot clamp), 1.5 (pivot de poulie), 1.6 (guide de tiges), 1.7 (poulie), 1.8 (table de tête), 1.9 (vérins d'inclinaison et de basculement), 1.10 (pattes et attelage), 1.11 (vérin d'avance), 1.12 (vérin d'avance supérieur « bazooka »).
+- **Toutes les pièces des listes** sont représentées et cliquables (nom et numéro, EN / FR), regroupées dans la liste des pièces par ensemble ; la quincaillerie d'un même article est réunie en une seule entrée.
+- **Foot clamp** (clam UM-079-100A-12 HH) au bout du mât, dans son boîtier FTD-148-300TF, sur la base UM-064-800B, devant la plaque d'appui FBRA-002-305BB.
+- Limites : dessins N.T.S. ; les cotes de détail sont relevées sur les vues et approximatives. Non représentés : carters (planche 1.13), swivel optionnel UM-064-800AA (planche 1.15) et détail du treuil (section 2), absents du livre fourni. La planche 1.00 nomme UM-064-800B « SWIVEL » alors que la planche 1.4 le nomme « FOOT CLAMP BASE ».
+
 ## Clam et chuck
 
 - **Chuck (mandrin)** : sur la tête de forage, tourne avec la broche ; serre la tige pour la faire tourner et la pousser ou la tirer. C'est la pièce modélisée ici (Boyles H, UM-070-142AA, sur la tête UM-012-100UG).

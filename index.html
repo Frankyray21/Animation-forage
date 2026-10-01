@@ -248,6 +248,7 @@ details.params summary { cursor: pointer; padding: 10px 14px; font-weight: 600; 
         <span class="chip" id="camChip" hidden><button type="button" id="camBtn">Recentrer la caméra</button></span>
         <button type="button" class="vbtn" id="btnCut" aria-pressed="true">Coupe du mandrin (chuck)</button>
         <button type="button" class="vbtn" id="btnHeadExplode" aria-pressed="false">Éclaté : tête (drill head)</button>
+        <button type="button" class="vbtn" id="btnDrill" aria-pressed="false">Foreuse (drill)</button>
         <button type="button" class="vbtn" id="btnExplode" aria-pressed="false">Éclaté : mandrin (chuck)</button>
         <button type="button" class="vbtn" id="btnHelp" aria-label="Aide : naviguer dans la 3D">?</button>
         <button type="button" class="vbtn" id="btnFs" aria-pressed="false">Plein écran</button>
@@ -531,7 +532,7 @@ renderer.toneMappingExposure = 1.0;
 const scene = new THREE.Scene();
 const pmrem = new THREE.PMREMGenerator(renderer);
 scene.environment = pmrem.fromScene(new RoomEnvironment(renderer), 0.04).texture;   // reflets neutres d'atelier
-scene.fog = new THREE.Fog(0xd7dce0, 30, 70);
+scene.fog = new THREE.Fog(0xd7dce0, 55, 160);
 
 const camera = new THREE.PerspectiveCamera(38, 1, 0.4, 220);   // near à 4 cm : précision de profondeur suffisante pour les surfaces voisines
 camera.position.set(-9, 10, 14);
@@ -540,7 +541,7 @@ controls.enableDamping = true;
 controls.target.set(0, 2.6, 0);
 controls.maxPolarAngle = Math.PI * 0.49;
 controls.minDistance = 4;
-controls.maxDistance = 45;
+controls.maxDistance = 90;
 
 scene.add(new THREE.HemisphereLight(0xeef3ff, 0x8a8f94, 0.9));
 // éclairage uniforme, sans ombres portées : lumière principale + lumière de remplissage opposée
@@ -1635,20 +1636,482 @@ hpart({ id: 'W750', ref: 'W750', name: 'Rondelle plate ¾', qty: 8, grp: 'hdrive
   placeIn(hp, PIN_X, (HB.y0 + HB.y1) / 2 - 6.0, HB.z0 - 1.0 + .6); hp.rotation.y = Math.PI / 2;
   hpart({ id: 'HP1000', ref: 'HP1000', name: 'Goupille bêta (goupille en R) 1 po', qty: 1, grp: 'hmount', hx: [0, 0, -6] }, hp);
 }
-// Chariot de la foreuse (schématique, hors nomenclature)
+// Banc de travail : la tête est retirée de la foreuse et posée sur ce banc (repère machine, pouces ; z = hauteur)
 const carriage = new THREE.Group();
 mat.mast = new THREE.MeshStandardMaterial({ color: 0x7d868c, roughness: .55, metalness: .45 });
+mat.bench = new THREE.MeshStandardMaterial({ color: 0x3f6f8f, roughness: .6, metalness: .35 });
+mat.benchTop = new THREE.MeshStandardMaterial({ color: 0x8b9399, roughness: .45, metalness: .6 });
+const BENCH = { x0: -26, x1: 8, y0: -18, y1: 18, top: HB.z0 - 4.7 };
+const benchParts = [];
 {
-  const plate = box(24, 13, 1.0, mat.console); placeIn(plate, -8.5, -3.9, HB.z0 - 4.2); carriage.add(plate);
-  for (const y of [HB.y0 - 1.0, HB.y1 + .3]) { const ear = box(3.2, 1.0, 4.4, mat.console); placeIn(ear, PIN_XS[0], y, HB.z0 - 2.6); carriage.add(ear); }
-  // mât (glissière) le long de l'axe de broche, sous la tête ; pieds jusqu'au plancher
-  const zf = Z_FLOOR / IN, zr = HB.z0 - 6.6;
-  for (const x of [-22, 5]) {
-    const r = box(3.5, 48, 3.5, mat.mast); placeIn(r, x, -14, zr); carriage.add(r);
-    for (const y of [-34, 6]) { const leg = box(3, 3, zr - 1.75 - zf, mat.mast); placeIn(leg, x, y, (zr - 1.75 + zf) / 2); carriage.add(leg); }
+  const B = BENCH, zf = Z_FLOOR / IN, t = 1.0;
+  const g = new THREE.Group();
+  const top = box(B.x1 - B.x0, B.y1 - B.y0, t, mat.benchTop); placeIn(top, (B.x0 + B.x1) / 2, 0, B.top - t / 2); g.add(top);
+  for (const x of [B.x0 + 1.5, B.x1 - 1.5]) for (const y of [B.y0 + 1.5, B.y1 - 1.5]) {
+    const leg = box(2.5, 2.5, B.top - t - zf - .6, mat.bench); placeIn(leg, x, y, (B.top - t + zf + .6) / 2); g.add(leg);
+    const foot = mesh(new THREE.CylinderGeometry(u(1.3), u(1.3), u(.6), 20), mat.boltBlack); foot.rotation.x = Math.PI / 2; placeIn(foot, x, y, zf + .3); g.add(foot);
   }
+  for (const z of [B.top - t - 1.5, zf + 7]) {   // ceintures sous le plateau et près du sol
+    for (const y of [B.y0 + 1.5, B.y1 - 1.5]) { const r = box(B.x1 - B.x0 - 3, 2, 2, mat.bench); placeIn(r, (B.x0 + B.x1) / 2, y, z); g.add(r); }
+    for (const x of [B.x0 + 1.5, B.x1 - 1.5]) { const r = box(2, B.y1 - B.y0 - 5, 2, mat.bench); placeIn(r, x, 0, z); g.add(r); }
+  }
+  const shelf = box(B.x1 - B.x0 - 5, B.y1 - B.y0 - 5, .4, mat.benchTop); placeIn(shelf, (B.x0 + B.x1) / 2, 0, zf + 8.2); g.add(shelf);
+  carriage.add(g); benchParts.push(g);
+  // support de pivot de la tête, boulonné sur le plateau (reçoit l'axe de pivot UM-012-105A)
+  const s = new THREE.Group();
+  const plate = box(24, 13, 1.0, mat.console); placeIn(plate, -8.5, -3.9, HB.z0 - 4.2); s.add(plate);
+  for (const y of [HB.y0 - 1.0, HB.y1 + .3]) { const ear = box(3.2, 1.0, 4.4, mat.console); placeIn(ear, PIN_XS[0], y, HB.z0 - 2.6); s.add(ear); }
+  carriage.add(s); benchParts.push(s);
 }
 rig.add(carriage);
+const benchPart = part({ id: 'BANC', ref: 'Banc', name: 'Banc de travail et support de pivot (hors nomenclature)', en: 'Workbench and pivot support (not in parts list)', qty: 1, grp: 'scene', scene: true,
+  role: 'La tête a été retirée de la foreuse pour le démontage du mandrin ; elle repose sur ce banc par son axe de pivot.' }, benchParts);
+/* =================== Foreuse STM-1500 (FBRA-002-100AS, Usinage Marcotte, livre de pièces section 1) ===================
+   Tête retirée (elle est sur le banc) ; mât couché à l'horizontale sur le bâti (position de transport, planche 1.04).
+   Repère local de la foreuse, en pouces : x = longueur (+x = bout du foot clamp), y = hauteur depuis le plancher, z = largeur.
+   Cotes d'ensemble de la planche 1.03 : 147 29/32 × 57 25/32 po ; les autres cotes sont relevées sur les vues (dessins N.T.S.). */
+const drillG = new THREE.Group();
+drillG.position.set(6.0, FLOOR, -24);
+scene.add(drillG);
+const DUP = new THREE.Vector3(0, 1, 0);
+Object.assign(mat, {
+  dPaint: new THREE.MeshStandardMaterial({ color: 0xd64a1f, roughness: .55, metalness: .15 }),
+  dPaint2: new THREE.MeshStandardMaterial({ color: 0xb83c18, roughness: .6, metalness: .15 }),
+  dBlack: new THREE.MeshStandardMaterial({ color: 0x1d1f21, roughness: .42, metalness: .4 }),
+  dChrome: new THREE.MeshStandardMaterial({ color: 0xdfe4e8, roughness: .16, metalness: .95 }),
+  dGrey: new THREE.MeshStandardMaterial({ color: 0x9aa2a8, roughness: .5, metalness: .6 }),
+  dBlue: new THREE.MeshStandardMaterial({ color: 0x2c56b0, roughness: .5, metalness: .3 }),
+  dZinc: new THREE.MeshStandardMaterial({ color: 0xb9bec3, roughness: .35, metalness: .85 }),
+  dBrass: new THREE.MeshStandardMaterial({ color: 0xc8a24a, roughness: .3, metalness: .9 }),
+  dRubber: new THREE.MeshStandardMaterial({ color: 0x141516, roughness: .8 }),
+  dUhmw: new THREE.MeshStandardMaterial({ color: 0x26282a, roughness: .7 }),
+  dHole: new THREE.MeshStandardMaterial({ color: 0x0d0f10, roughness: 1 }),
+});
+// boîte par ses bornes (pouces)
+const dbox = (x0, x1, y0, y1, z0, z1, m) => placeIn(box(Math.abs(x1 - x0), Math.abs(y1 - y0), Math.abs(z1 - z0), m), (x0 + x1) / 2, (y0 + y1) / 2, (z0 + z1) / 2);
+// cylindre plein entre deux points (pouces)
+function dcyl(a, b, r, m, seg = 24, r2 = r) {
+  const A = new THREE.Vector3(...a).multiplyScalar(IN), Bv = new THREE.Vector3(...b).multiplyScalar(IN);
+  const o = mesh(new THREE.CylinderGeometry(u(r2), u(r), A.distanceTo(Bv), seg), m);
+  o.position.copy(A).add(Bv).multiplyScalar(.5); o.quaternion.setFromUnitVectors(DUP, Bv.clone().sub(A).normalize());
+  return o;
+}
+// tube (anneau) entre deux points
+function dtube(a, b, rIn, rOut, m, seg = 40) {
+  const A = new THREE.Vector3(...a).multiplyScalar(IN), Bv = new THREE.Vector3(...b).multiplyScalar(IN);
+  const o = mesh(annulus(u(rIn), u(rOut), A.distanceTo(Bv), [], seg), m);
+  o.position.copy(A); o.quaternion.setFromUnitVectors(DUP, Bv.clone().sub(A).normalize());
+  return o;
+}
+// oreille : plaque arrondie percée, dans le plan XY, épaisseur selon z
+function dlug(x, y, z, w, h, r, t, m, rotY = 0) {
+  const s = new THREE.Shape();
+  s.moveTo(u(-w / 2), 0); s.lineTo(u(w / 2), 0); s.lineTo(u(w / 2), u(h - w / 2)); s.absarc(0, u(h - w / 2), u(w / 2), 0, Math.PI, false); s.closePath();
+  const hp = new THREE.Path(); hp.absarc(0, u(h - w / 2), u(r), 0, Math.PI * 2, true); s.holes.push(hp);
+  const g = new THREE.ExtrudeGeometry(s, { depth: u(t), bevelEnabled: false, curveSegments: 24 }); g.translate(0, 0, -u(t) / 2);
+  const o = mesh(g, m); placeIn(o, x, y, z); o.rotation.y = rotY; return o;
+}
+// Quincaillerie : toutes les occurrences d'un même article fusionnées en une seule pièce (une seule entrée cliquable)
+const _hq = new THREE.Quaternion(), _hm = new THREE.Matrix4(), _hs = new THREE.Vector3(1, 1, 1);
+function hwGeos(kind, s) {
+  const C = (r, h, seg, y = 0, r2 = r) => new THREE.CylinderGeometry(u(r2), u(r), u(h), seg).translate(0, u(y), 0);
+  switch (kind) {
+    case 'bolt': return [C(s.af / Math.sqrt(3), s.hh, 6, s.hh / 2), C(s.af * .48, .03, 20, .015), C(s.d / 2, s.L, 12, -s.L / 2)];
+    case 'socket': return [C(s.d * .75, s.d, 20, s.d / 2), C(s.d / 2, s.L, 12, -s.L / 2)];
+    case 'csk': return [C(s.d / 2, s.d * .55, 16, -s.d * .275, s.d), C(s.d / 2, s.L, 12, -s.L / 2)];
+    case 'nut': return [C(s.af / Math.sqrt(3), s.h, 6, s.h / 2)];
+    case 'washer': return [C(s.od / 2, s.t || .1, 24, (s.t || .1) / 2)];
+    case 'pin': return [C(s.d / 2, s.L, 16, -s.L / 2), C(s.d * .85, .25, 16, .125)];
+    case 'rod': return [C(s.d / 2, s.L, 16, 0)];
+    case 'fit': return [C(.32, .32, 6, .16), C(.2, .55, 12, .6)];
+    case 'elbow': return [C(.32, .32, 6, .16), C(.2, .5, 12, .55), C(.2, .55, 12, .8).rotateZ(Math.PI / 2).translate(u(.27), 0, 0)];
+    case 'zerk': return [C(.16, .22, 6, .11), C(.07, .25, 8, .35), new THREE.SphereGeometry(u(.09), 10, 8).translate(0, u(.5), 0)];
+    case 'hairpin': return [new THREE.TorusGeometry(u(s.r || .5), u(.06), 6, 20, Math.PI * 1.5)];
+    case 'link': return [new THREE.TorusGeometry(u(.3), u(.08), 6, 14).scale(1, 1.6, 1)];
+    case 'ring': return [new THREE.TorusGeometry(u(s.r), u(s.cs || .08), 8, 48).rotateX(Math.PI / 2)];
+    case 'eyebolt': return [C(.31, s.L, 12, s.L / 2), new THREE.TorusGeometry(u(.6), u(.16), 10, 20).translate(0, u(s.L + .55), 0)];
+  }
+}
+function hw(kind, s, places, m) {
+  const geos = [];
+  for (const pl of places) {
+    const [x, y, z, d = [0, 1, 0], rot = 0] = pl;
+    _hq.setFromUnitVectors(DUP, new THREE.Vector3(...d).normalize());
+    if (rot) _hq.multiply(new THREE.Quaternion().setFromAxisAngle(DUP, rot));
+    _hm.compose(new THREE.Vector3(u(x), u(y), u(z)), _hq, _hs);
+    for (const g of hwGeos(kind, s)) geos.push(g.applyMatrix4(_hm));
+  }
+  return mesh(mergeGeos(geos), m);
+}
+const grid = (xs, ys, zs, d) => xs.flatMap(x => ys.flatMap(y => zs.map(z => [x, y, z, d])));
+// Enregistrement : groupe, référence réelle, nom français, nom anglais (liste), quantité
+const drillParts = [];
+function dpart(grp, ref, fr, en, qty, objs, extra = {}) {
+  const list = [].concat(objs).filter(Boolean);
+  list.forEach(o => { if (!o.parent) drillG.add(o); });
+  const p = part({ scene: true, drill: true, grp, id: 'D:' + ref + '#' + grp + (extra.key || ''), ref, name: fr, en, qty, ...extra }, list);
+  drillParts.push(p); return p;
+}
+const DX = { y: [0, 1, 0], ny: [0, -1, 0], x: [1, 0, 0], nx: [-1, 0, 0], z: [0, 0, 1], nz: [0, 0, -1] };
+
+/* ---------- Bâti FBRA-002-150BM (planche 1.1) ---------- */
+const RAIL_Z = 16, MAST = { x0: -60, x1: 60, y0: 31, y1: 44, zw: 10.75 }, ROD_Y = 58;
+{
+  const g = new THREE.Group(), m = mat.dPaint;
+  for (const s of [-1, 1]) {
+    g.add(dbox(-66, 66, 0, 6, s * RAIL_Z - 2, s * RAIL_Z + 2, m));                 // longerons HSS 6 × 4
+    for (const x of [-68.5, 68.5]) g.add(dlug(x, 1, s * RAIL_Z, 6, 8, 1.1, 1, m)); // oreilles de levage et de remorquage
+    for (const x of [-54, -12, 30]) { g.add(dtube([x, 3, s * 13], [x, 3, s * 19.5], 1.25, 1.75, m)); }   // fourreaux des goupilles (pattes, attelage)
+    for (const x of [-30, 8, 40]) g.add(dbox(x - 1.5, x + 1.5, 1, 2.55, s * 18, s * 23.5, m));  // berceaux des pattes
+  }
+  for (const x of [-64, -40, 20, 64]) g.add(dbox(x - 2, x + 2, 0, 4, -14, 14, m));   // traverses
+  for (const [x, s] of [[-24, -1], [-24, 1], [20, -1], [20, 1]]) {
+    g.add(dbox(x - 2, x + 2, 6, 22, s * 14 - 2, s * 14 + 2, m));                     // poteaux
+    g.add(dbox(x - 2.5, x + 2.5, 22, 25.5, s * 14 - 2.5, s * 14 + 2.5, m));          // demi-paliers inférieurs
+  }
+  for (const x of [-24, 20]) g.add(dbox(x - 1.5, x + 1.5, 16.5, 19.5, -12, 12, m));  // entretoises des poteaux
+  g.add(dbox(-33, -25, 4.5, 6, -22.5, -18, m));                                          // console des distributeurs
+  for (const s of [-1, 1]) {
+    g.add(dcyl([-26, 20, s * 14], [-46, 6, s * 14], 1.3, m, 12));                     // contreventements
+    g.add(dcyl([22, 20, s * 14], [42, 6, s * 14], 1.3, m, 12));
+    g.add(dlug(-40, 6, s * 17.5, 3, 4, .55, .75, m, 0));                              // chapes des vérins d'inclinaison
+  }
+  g.add(dlug(-40, 4, -.9, 3, 4, .55, .6, m)); g.add(dlug(-40, 4, .9, 3, 4, .55, .6, m));   // chape du vérin de basculement
+  dpart('dframe', 'FBRA-002-150BM', 'Bâti de la foreuse (soudé)', 'Drill frame', 1, g, { role: 'Longerons, traverses, poteaux et paliers qui portent le support du mât. Repose sur le plancher par ses longerons.' });
+}
+dpart('dframe', 'UM-064-108B', 'Chapeau de palier (bride supérieure)', 'Top flange', 4, [-24, 20].flatMap(x => [-1, 1].map(s => dbox(x - 2.5, x + 2.5, 25.5, 28.5, s * 14 - 2.5, s * 14 + 2.5, mat.dPaint))),
+  { role: 'Bride les tubes du support de mât dans les paliers du bâti.' });
+dpart('dframe', 'B750-3000', 'Boulon ¾-UNC × 3 po', 'Bolt 3/4"-UNC x 3"', 8, hw('bolt', { af: 1.125, hh: .47, d: .75, L: 3 }, grid([-25.6, -22.4, 18.4, 21.6], [28.5], [-14, 14]), mat.dZinc));
+dpart('dframe', 'LC750', 'Rondelle frein ¾', 'Lock washer 3/4"', 8, hw('washer', { od: 1.3, t: .15 }, grid([-25.6, -22.4, 18.4, 21.6], [28.5], [-14, 14]).map(([x, y, z]) => [x, y - .15, z]), mat.dZinc));
+dpart('dframe', 'Z250NF', 'Graisseur ¼-UNF', 'Grease fitting 1/4-UNF', 4, hw('zerk', {}, grid([-24, 20], [28.5], [-15.5, 15.5]), mat.dBrass));
+dpart('dframe', 'FMC-014-303D', 'Crapaud (bride de serrage)', 'Crapeau / clamp', 4, grid([-61, 61], [6], [-16, 16]).map(([x, y, z]) => dbox(x - 1.5, x + 1.5, y, y + 1.5, z - 1.2, z + 1.2, mat.dPaint2)));
+dpart('dframe', 'B625-2750', 'Boulon ⅝-UNC × 2 ¾ po', 'Bolt 5/8-UNC x 2 3/4"', 4, hw('bolt', { af: .94, hh: .4, d: .625, L: 2.75 }, grid([-61, 61], [7.6], [-16, 16]), mat.dZinc));
+dpart('dframe', 'W625', 'Rondelle plate ⅝', 'Flat washer 5/8"', 4, hw('washer', { od: 1.6 }, grid([-61, 61], [7.5], [-16, 16]), mat.dZinc), { key: 'f' });
+{
+  const vx = [-31, -27], vz = -21;   // distributeurs mât / câble (détail A), sur le flanc arrière gauche
+  const valves = vx.map(x => { const g = new THREE.Group(); g.add(dbox(x - 1.4, x + 1.4, 6, 9, vz - 1.1, vz + 1.1, mat.dGrey)); g.add(dcyl([x, 9, vz], [x - .6, 13, vz], .15, mat.dBlack, 8)); g.add(placeIn(mesh(new THREE.SphereGeometry(u(.4), 12, 10), mat.dBlack), x - .6, 13.2, vz)); return g; });
+  dpart('dframe', 'DF10-6B-12L', 'Distributeur mât / câble (wire line)', 'Switch valve mast to wire line', 2, valves);
+  const balls = vx.map(x => { const g = new THREE.Group(); g.add(dbox(x - .6, x + .6, 9.3, 10.6, vz - .6, vz + .6, mat.dGrey)); g.add(dbox(x - .1, x + .1, 10.6, 11, vz - .1, vz + 2.2, mat.dRubber)); return g; });
+  dpart('dframe', 'BKH-12NPT', 'Robinet à bille ½ NPT', 'Ball valve 1/2 NPT', 2, balls);
+  dpart('dframe', '6505-8-8', 'Raccord 6505-8-8', '6505-8-8 adapter', 2, hw('fit', {}, vx.map(x => [x, 9, vz + .5, DX.y]), mat.dBrass));
+  dpart('dframe', '6400-8-8', 'Raccord MJIC × MORB', 'MJIC x MORB', 12, hw('fit', {}, vx.flatMap(x => [[x - 1.4, 7.5, vz, DX.nx], [x + 1.4, 7.5, vz, DX.x], [x, 7, vz + 1.1, DX.z], [x, 8, vz + 1.1, DX.z], [x - .7, 6, vz, DX.ny], [x + .7, 6, vz, DX.ny]]), mat.dBrass), { key: 'f' });
+}
+
+/* ---------- Support de mât FBRA-002-600BB (= FBRA-001-200B, planche « Parts list ») ---------- */
+{
+  const m = mat.dPaint;
+  dpart('dsup', 'UM-064-200B', 'Tube de pivot (tuyau 3 po SCH 80, 33 ⅜ po)', 'Pipe B.P. SCH 80 3 in', 2, [-24, 20].map(x => dcyl([x, 25.5, -16.7], [x, 25.5, 16.7], 1.75, mat.dGrey, 32)),
+    { role: 'Tourillons du support : ils pivotent dans les paliers du bâti quand les vérins d\'inclinaison orientent le mât.' });
+  dpart('dsup', 'UM-064-210B', 'Longeron HSS 5 × 3 × ¼ (47 po)', 'HSS 5 in x 3 in x 1/4 in', 2, [-1, 1].map(s => dbox(-25.5, 21.5, 27.25, 30.25, s * 13 - 2.5, s * 13 + 2.5, m)));
+  dpart('dsup', 'UM-064-218B', 'Bande d\'usure FB 1 ½ × ⅝ (47 po)', 'FB 1 1/2 in x 5/8 in', 2, [-1, 1].map(s => dbox(-14.5, 10.5, 30.25, 30.875, s * 13 - .75, s * 13 + .75, mat.dGrey)));
+  { const s = new THREE.Shape(); s.moveTo(u(-6.5), u(-11.5)); s.lineTo(u(6.5), u(-11.5)); s.lineTo(u(6.5), u(11.5)); s.lineTo(u(-6.5), u(11.5)); s.closePath();
+    const h = new THREE.Path(); h.moveTo(u(-3), u(-5)); h.lineTo(u(3), u(-5)); h.lineTo(u(3), u(5)); h.lineTo(u(-3), u(5)); h.closePath(); s.holes.push(h);
+    const g = new THREE.ExtrudeGeometry(s, { depth: u(.75), bevelEnabled: false }); g.rotateX(-Math.PI / 2);
+    dpart('dsup', 'FBRA-001-201B', 'Plaque centrale PL ¾ (23 × 13)', 'Plate 3/4 in, 44W', 1, placeIn(mesh(g, m), -2, 26.5, 0)); }
+  const ang = x => { const g = new THREE.Group(); g.add(dbox(x - 1.25, x + 1.25, 26.75, 27.25, -13.75, 13.75, m)); g.add(dbox(x - 1.25, x - .75, 24.75, 27.25, -13.75, 13.75, m)); return g; };
+  dpart('dsup', 'UM-064-207B', 'Cornière 2 ½ × 2 ½ × ½ (27 ½ po)', 'Angle 2 1/2 x 2 1/2 x 1/2 in', 4, [-18, -12, 8, 14].map(ang));
+  dpart('dsup', 'UM-064-204B', 'Cale FB 3 × 1 (9 ½ po)', 'FB 3 in x 1 in', 4, grid([-19.5, 15.5], [0], [-1, 1]).map(([x, , s]) => dbox(x - 4.75, x + 4.75, 30.25, 31.25, s * 13.5 - 1.5, s * 13.5 + 1.5, m)));
+  const blk = (x, s) => { const g = new THREE.Group(); g.add(dbox(x - 4.75, x + 4.75, 31.25, 32.75, s * 12.5 - 2.25, s * 12.5 + 2.25, mat.dPaint2));
+    g.add(hw('bolt', { af: .94, hh: .4, d: .625, L: 2.5 }, [-3.6, -1.8, 0, 1.8, 3.6].map(d => [x + d, 32.75, s * 13.6]), mat.dBlack)); return g; };
+  dpart('dsup', 'UM-064-211B', 'Bride du mât (acier à clé 4 ½ × 1 ½, 9 ½ po)', 'Key steel 4 1/2 x 1 1/2', 4, grid([-19.5, 15.5], [0], [-1, 1]).map(([x, , s]) => blk(x, s)),
+    { role: 'Brident les ailes inférieures du mât sur le support (5 boulons chacune).' });
+  dpart('dsup', 'UM-064-220B', 'Plaque de chape du vérin de basculement (PL ½, 8 ¾ × 8 ½)', 'Plate 1/2 in, 44W', 1, dbox(-6.4, 2.4, 26, 26.5, -4.25, 4.25, m));
+  dpart('dsup', 'UM-064-213B', 'Oreille de chape (PL ¾, 2 × 2 ⅛)', 'Plate 3/4 in, 44W', 2, [-1, 1].map(s => dlug(-2, 22.5, s * 1.3, 2.1, 3.5, .5, .75, m)).map(o => { o.rotation.z = Math.PI; o.position.y = u(26); return o; }));
+  const ears = [], gus = [], pads = [], straps = [], tiles = [];
+  for (const s of [-1, 1]) {   // chapes des vérins d'inclinaison (détail B) sous le support, à l'extérieur
+    const x = -18;
+    straps.push(dbox(x - 5.4, x + 5.4, 27.25, 27.75, s * 15.5, s * 19.7, m));
+    for (const dx of [-.9, .9]) ears.push(dlug(x + dx * 0 , 22.6, s * 19.2 + dx, 2.5, 4.6, .55, .5, m));
+    for (const dx of [-2.6, 2.6]) for (const dz of [0, 1]) gus.push(dbox(x + dx - .25, x + dx + .25, 24.5, 27.25, s * (16 + dz * 1.6), s * (16 + dz * 1.6) + s * 1.4, m));
+    tiles.push(dbox(x - 3, x + 3, 27.75, 28, s * 15.6, s * 18.6, m));
+  }
+  dpart('dsup', 'FBRA-001-202B', 'Bande FB ½ × 2 ½ (10 ¾ po)', 'F.B. 1/2 in x 2 1/2', 4, ears);
+  dpart('dsup', 'FBRA-001-203B', 'Gousset PL ½ (5 ½ × 3)', 'Plate 1/2 in, 44W', 8, gus);
+  dpart('dsup', 'FBRA-001-204B', 'Plaque PL ¼ (6 × 3)', 'Plate 1/4 in, 44W', 4, tiles.concat(straps));
+  dpart('dsup', 'FBRA-001-101B', 'Plaquette PL ½ (2 ½ × 2 ½)', 'P.L. 1/2" 44W', 8, grid([-22, -17, 13, 18], [0], [-1, 1]).map(([x, , s]) => dbox(x - 1.25, x + 1.25, 31.4, 32.6, s * 14.75, s * 15.25, m)));
+  dpart('dsup', '3-16 link', 'Chaîne 3/16 (5 mailles par bride)', 'Chain 3/16 link', 24, hw('link', {}, grid([-19.5, 15.5], [31.5, 31, 30.5, 30, 29.5, 29], [-1, 1]).map(([x, y, s]) => [x - 4.9, y, s * 14.9, DX.z]), mat.dZinc),
+    { note: 'Révision 1 (2012-05-17) : chaîne ajoutée, 5 mailles par bride.' });
+}
+
+/* ---------- Mât (feed frame) FBRA-002-300BB, planche 1.3 ---------- */
+{
+  const g = new THREE.Group(), m = mat.dPaint, { x0, x1, y0, y1, zw } = MAST;
+  for (const s of [-1, 1]) {
+    g.add(dbox(x0, x1, y0 + .6, y1 - .6, s * zw - .25, s * zw + .25, m));           // âmes des profilés en C
+    g.add(dbox(x0, x1, y1 - .6, y1, s * 8.5, s * (zw + .25), m));                    // ailes supérieures (glissières de la table)
+    g.add(dbox(x0, x1, y0, y0 + .6, s * 8.5, s * 12.5, m));                          // ailes inférieures (bridées sur le support)
+  }
+  for (let x = x0 + 4; x <= x1 - 4; x += 14.5) g.add(dbox(x - 1, x + 1, y0, y0 + .5, -8.5, 8.5, m));      // traverses
+  for (let x = x0 + 4, k = 0; x < x1 - 18; x += 14.5, k++) g.add(dcyl([x + 1, y0 + .6, (k % 2 ? 1 : -1) * 8], [x + 13.5, y0 + .6, (k % 2 ? -1 : 1) * 8], .35, m, 8));   // treillis
+  g.add(dbox(x1, x1 + 1, y0, y1, -zw - .25, zw + .25, m));                            // plaque d'extrémité avant
+  dpart('dmast', 'FBRA-002-300BB', 'Mât (feed frame)', 'Feed frame', 1, g, { role: 'Glissière de la table de tête. Couché à l\'horizontale ici (position de transport) ; se lève à la verticale ou à l\'angle de forage.', note: 'Carters (planche 1.13) non représentés : page absente du livre fourni.' });
+  // plaque d'extrémité arrière
+  dpart('dmast', 'UM-064-120C', 'Plaque d\'extrémité du mât', 'Mast end plate', 1, dbox(x0 - 1, x0, y0 - .5, y1 + .5, -12, 12, m));
+  dpart('dmast', 'B625-1750', 'Boulon ⅝-UNC × 1 ¾ po', 'Bolt 5/8-UNC x 1 3/4', 6, hw('bolt', { af: .94, hh: .4, d: .625, L: 1.75 }, grid([x0 - 1], [33, 42], [-9, 0, 9]).map(p => [...p.slice(0, 3), DX.nx]), mat.dZinc));
+  dpart('dmast', 'W625', 'Rondelle plate ⅝', 'Flat washer 5/8"', 12, hw('washer', { od: 1.6 }, grid([x0 - 1], [33, 42], [-9, 0, 9]).map(p => [...p.slice(0, 3), DX.nx]), mat.dZinc), { key: 'm' });
+  dpart('dmast', 'B625-4000', 'Boulon ⅝-UNC × 4 po', 'Bolt 5/8-UNC x 4"', 2, hw('bolt', { af: .94, hh: .4, d: .625, L: 4 }, [[x0 - 1, 37.5, -11, DX.nx], [x0 - 1, 37.5, 11, DX.nx]], mat.dZinc));
+}
+
+/* ---------- Rallonge, raccord de mât, guide de tiges et poulie (planches 1.3, 1.5, 1.6, 1.7) ---------- */
+{
+  const m = mat.dPaint, cy = 37.5;
+  const mc = new THREE.Group(); mc.add(dbox(-62, -61, cy - 6, cy + 6, -6, 6, m)); mc.add(dbox(-84, -62, cy - 2.5, cy + 2.5, -2.5, 2.5, m));
+  dpart('dext', 'UM-064-160C', 'Raccord de mât', 'Mast connection', 1, mc);
+  const cn = new THREE.Group(); cn.add(dbox(-91, -84, cy - 3.5, cy + 3.5, -3.5, 3.5, m)); cn.add(dlug(-87.5, cy + 3.5, -3, 3, 3.5, .5, .75, m)); cn.add(dlug(-87.5, cy + 3.5, 3, 3, 3.5, .5, .75, m));
+  dpart('dext', 'UM-064-150C_R1', 'Raccord (connector)', 'Connector', 1, cn);
+  const ext = new THREE.Group(); ext.add(dbox(-114, -91, cy - 2, cy + 2, -2, 2, m));
+  for (let x = -110; x <= -95; x += 5) ext.add(placeIn(mesh(new THREE.CylinderGeometry(u(.42), u(.42), u(.05), 14), mat.dHole), x, cy + 2.03, 0));
+  dpart('dext', 'UM-064-116C', 'Rallonge ajustable', 'Adjustable extension', 1, ext, { role: 'Rallonge télescopique au bout du mât : porte la poulie du câble (wire line) et le guide de tiges.' });
+  dpart('dext', 'UM-064-125C', 'Goupille de la rallonge', 'Pin', 1, hw('pin', { d: 1, L: 9 }, [[-88, cy, 4.6, DX.z]], mat.dZinc));
+  dpart('dext', 'HP1000', 'Goupille bêta 1 po', 'Hair pin 1"', 1, hw('hairpin', { r: .7 }, [[-88, cy, -4.6, DX.z]], mat.dZinc), { key: 'x' });
+  dpart('dext', 'UM-064-195C', 'Guide', 'Guide', 2, [-1, 1].map(s => dbox(-91, -84, cy - 3.5, cy + 6.5, s * 3.5, s * 4.1, m)));
+  dpart('dext', 'B750-2000', 'Boulon ¾-UNC × 2 po', 'Bolt 3/4-UNC X 2', 20, hw('bolt', { af: 1.125, hh: .47, d: .75, L: 2 }, [
+    ...grid([-62], [cy - 4.5, cy + 4.5], [-4.5, -1.5, 1.5, 4.5]).map(p => [...p.slice(0, 3), DX.nx]),
+    ...grid([-89.8, -85.2], [cy - 2, cy + 1, cy + 4.5], [4.1]).map(p => [...p.slice(0, 3), DX.z]),
+    ...grid([-89.8, -85.2], [cy - 2, cy + 4.5], [-4.1]).map(p => [...p.slice(0, 3), DX.nz])], mat.dZinc));
+  dpart('dext', 'LC750', 'Rondelle frein ¾', 'Lock washer 3/4"', 20, hw('washer', { od: 1.3, t: .15 }, [
+    ...grid([-62.15], [cy - 4.5, cy + 4.5], [-4.5, -1.5, 1.5, 4.5]).map(p => [...p.slice(0, 3), DX.nx]),
+    ...grid([-89.8, -85.2], [cy - 2, cy + 1, cy + 4.5], [4.25]).map(p => [...p.slice(0, 3), DX.z]),
+    ...grid([-89.8, -85.2], [cy - 2, cy + 4.5], [-4.25]).map(p => [...p.slice(0, 3), DX.nz])], mat.dZinc), { key: 'x' });
+  dpart('dext', 'UM-064-317B', 'Bague de guidage GSM', 'GSM guide bushing', 2, [dtube([-61.5, cy, 0], [-60, cy, 0], 1.05, 1.6, mat.dBrass), dtube([60.5, cy, 0], [61.5, cy, 0], 1.05, 1.6, mat.dBrass)],
+    { key: 'm', note: 'Une dans la liste du raccord de mât, une dans celle de la plaque d\'extrémité.' });
+  // guide de tiges UM-064-155C (planche 1.6) sur le raccord
+  const rg = new THREE.Group(); for (const s of [-1, 1]) rg.add(dbox(-88.5, -86.5, cy + 3.5, ROD_Y - .5, s * 3.6, s * 4.4, m)); rg.add(dbox(-88.5, -86.5, cy + 3.5, cy + 4.5, -4.4, 4.4, m));
+  dpart('dext', 'UM-064-100C', 'Cadre du guide de tiges', 'Rod guide frame', 1, rg, { role: 'Le rouleau soutient le train de tiges à la sortie du mât.', note: 'La planche 1.3 appelle cet ensemble UM-064-200C ; la planche 1.6 le détaille sous UM-064-155C.' });
+  const roller = new THREE.Group(); roller.add(mesh(new THREE.LatheGeometry([[1.2, -3.2], [1.9, -3.2], [1.9, -2.9], [1.25, -.2], [1.25, .2], [1.9, 2.9], [1.9, 3.2], [1.2, 3.2]].map(([r, y]) => new THREE.Vector2(u(r), u(y))), 36), mat.dUhmw));
+  roller.rotation.x = Math.PI / 2; placeIn(roller, -87.5, ROD_Y - 2.5, 0);
+  dpart('dext', 'UM-066-500GR', 'Rouleau (diabolo)', 'Roller', 1, roller);
+  dpart('dext', 'UM-064-130C', 'Axe du rouleau', 'Rod', 1, dcyl([-87.5, ROD_Y - 2.5, -4.8], [-87.5, ROD_Y - 2.5, 4.8], .5, mat.dZinc, 14));
+  dpart('dext', 'UM-064-102C', 'Goupille bêta', 'Hair pin', 1, hw('hairpin', { r: .45 }, [[-87.5, ROD_Y - 2.5, 5, DX.z]], mat.dZinc));
+  dpart('dext', 'UM-064-140C', 'Graisseur ⅛ NPT', 'Grease fitting 1/8 NPT', 1, hw('zerk', {}, [[-87.5, ROD_Y - 2.5, -4.9, DX.nz]], mat.dBrass));
+  // pivot de poulie UM-064-1000DD (planche 1.5)
+  const px = -114, py = cy;
+  dpart('dext', 'UM-064-1002DD', 'Plaque de base du pivot', 'Base plate', 1, dbox(px - 1, px, py - 4, py + 4, -4, 4, m));
+  const mob = new THREE.Group(); mob.add(dbox(px - 7, px - 1, py - 1, py + 1, -3.5, 3.5, m)); mob.add(dbox(px - 7, px - 6, py, py + 9, -3.5, 3.5, m));
+  dpart('dext', 'UM-064-1001DD', 'Plaque mobile du pivot', 'Mobile plate', 1, mob);
+  dpart('dext', 'UM-064-1003DD', 'Tige de réglage', 'Adjusting rod', 1, dcyl([px - 1, py + 2.5, 0], [px - 6, py + 7, 0], .45, mat.dZinc, 12));
+  dpart('dext', 'UM-064-1009D', 'Ressort du pivot', 'Spring', 1, mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3([...Array(41)].map((_, i) => new THREE.Vector3(u(.8 * Math.cos(i * .8)), u(i * .08), u(.8 * Math.sin(i * .8))))), 120, u(.12), 6), mat.dRubber));
+  drillParts.at(-1).objs[0].position.set(u(px - 2.2), u(py + 1.6), 0); drillParts.at(-1).objs[0].rotation.z = Math.PI / 4;
+  dpart('dext', 'UM-064-1004DD', 'Axe du pivot', 'Pin', 1, dcyl([px - 4, py, -4.6], [px - 4, py, 4.6], .55, mat.dZinc, 14));
+  dpart('dext', 'CS750-1500', 'Vis à tête fraisée ¾-UNC × 1 ½', 'Countersunk 3/4-UNC x 1 1/2"', 4, hw('csk', { d: .75, L: 1.5 }, grid([px - 1], [py - 2.8, py + 2.8], [-2.8, 2.8]).map(p => [...p.slice(0, 3), DX.x]), mat.dZinc));
+  dpart('dext', 'UM-064-1014D', 'Graisseur ¼-UNF', 'Grease fitting 1/4-UNF', 1, hw('zerk', {}, [[px - 4, py, 4.7, DX.z]], mat.dBrass));
+  dpart('dext', 'UM-064-1017D', 'Goupille bêta', 'Hairpin', 1, hw('hairpin', { r: .45 }, [[px - 4, py, -4.8, DX.nz]], mat.dZinc));
+  dpart('dext', 'UM-064-1015D', 'Goupille élastique 3/16 × 1', 'Spring pin 3/16 x 1', 1, hw('rod', { d: .19, L: 1 }, [[px - 6.5, py + 8.5, 0, DX.z]], mat.dZinc));
+  // poulie pivotante UM-064-180C_R1 (planche 1.7) : 2 réas
+  const sh = [[px - 10, py + 12], [px - 19, py + 17]];
+  dpart('dext', 'UM-064-124C', 'Flasque de poulie', 'Frame pulley', 2, [-1, 1].map(s => { const sp = new THREE.Shape(); const pts = [[px - 6, py + 8], [px - 9, py + 17], [px - 21, py + 22], [px - 23, py + 13], [px - 13, py + 7]]; sp.moveTo(u(pts[0][0]), u(pts[0][1])); pts.slice(1).forEach(([a, b]) => sp.lineTo(u(a), u(b))); sp.closePath();
+    const g = new THREE.ExtrudeGeometry(sp, { depth: u(.5), bevelEnabled: false }); g.translate(0, 0, s > 0 ? u(1.6) : -u(2.1)); return mesh(g, m); }));
+  dpart('dext', 'UM-064-119C', 'Réa (poulie)', 'Pulley', 2, sh.map(([x, y]) => { const o = mesh(new THREE.LatheGeometry([[1.4, -1.5], [5, -1.5], [5, -1.2], [4.2, 0], [5, 1.2], [5, 1.5], [1.4, 1.5]].map(([r, h]) => new THREE.Vector2(u(r), u(h))), 48), mat.dGrey); o.rotation.x = Math.PI / 2; placeIn(o, x, y, 0); return o; }));
+  dpart('dext', 'UM-064-127C', 'Axe de réa', 'Pin', 2, sh.map(([x, y]) => dcyl([x, y, -2.4], [x, y, 2.4], .75, mat.dZinc, 16)));
+  dpart('dext', 'UM-064-118C', 'Roulement 6209 2RS', 'Bearing 6209 2RS', 4, sh.flatMap(([x, y]) => [-1, 1].map(s => dtube([x, y, s * .4], [x, y, s * 1.3], .8, 1.4, mat.dBlack))));
+  dpart('dext', 'UM-064-131C', 'Entretoise', 'Spacer', 4, sh.flatMap(([x, y]) => [-1, 1].map(s => dtube([x, y, s * 1.5], [x, y, s * 1.6], .8, 1.2, mat.dZinc))));
+  dpart('dext', 'UM-064-128C', 'Rondelle spéciale', 'Special washer', 2, hw('washer', { od: 2.6, t: .2 }, sh.map(([x, y]) => [x, y, 2.15, DX.z]), mat.dZinc));
+  dpart('dext', 'B750-2250', 'Boulon ¾-UNC × 2 ¼', 'Bolt 3/4-UNC X 2 1/4', 2, hw('bolt', { af: 1.125, hh: .47, d: .75, L: 2.25 }, sh.map(([x, y]) => [x, y, 2.35, DX.z]), mat.dZinc));
+  dpart('dext', 'B500-4000', 'Boulon ½-UNC × 4', 'Bolt 1/2"-UNC x 4"', 4, hw('bolt', { af: .75, hh: .31, d: .5, L: 4 }, [[px - 8, py + 9], [px - 14, py + 7.5], [px - 20, py + 15], [px - 12, py + 18]].map(([x, y]) => [x, y, 2.1, DX.z]), mat.dZinc));
+  dpart('dext', 'LC500', 'Rondelle frein ½', 'Lock washer 1/2"', 4, hw('washer', { od: .9, t: .12 }, [[px - 8, py + 9], [px - 14, py + 7.5], [px - 20, py + 15], [px - 12, py + 18]].map(([x, y]) => [x, y, -2.1, DX.nz]), mat.dZinc));
+  dpart('dext', 'NC500', 'Écrou ½-UNC', 'Nut 1/2-UNC', 4, hw('nut', { af: .75, h: .44 }, [[px - 8, py + 9], [px - 14, py + 7.5], [px - 20, py + 15], [px - 12, py + 18]].map(([x, y]) => [x, y, -2.22, DX.nz]), mat.dZinc));
+}
+
+/* ---------- Bout avant : base du foot clamp, foot clamp, boîtier, plaque d'appui (planches 1.3 et 1.4) ---------- */
+{
+  const m = mat.dPaint, fx0 = 59, fx1 = 72.5, R0 = 6.6;
+  // base UM-064-800B (planche 1.4)
+  const tbl = new THREE.Group(); tbl.add(dbox(46, 72.5, 44, 45.5, -11, 18, m)); for (const s of [-1, 1]) tbl.add(dlug(49, 45.5, s * 7, 3, 4, .55, 1, m));
+  dpart('dfoot', 'UM-064-807B', 'Table du foot clamp', 'Foot clamp table', 1, tbl, { role: 'Plateau fixé au bout du mât ; porte les bases et le boîtier du foot clamp.', note: 'La liste de la planche 1.00 nomme cet ensemble (UM-064-800B) « SWIVEL » ; la planche 1.4 le nomme « FOOT CLAMP BASE ».' });
+  dpart('dfoot', 'UM-064-850B', 'Axe du foot clamp', 'Pin foot clamp', 1, dcyl([49, 47.5, -8.2], [49, 47.5, 8.2], .5, mat.dZinc, 14));
+  dpart('dfoot', 'UM-020-806B', 'Bague trempée', 'Bushing tremper', 2, [-1, 1].map(s => dtube([49, 47.5, s * 6.4], [49, 47.5, s * 7.6], .5, .8, mat.dBrass)));
+  dpart('dfoot', 'UM-020-656B', 'Boulon à œil ⅝-NC', 'Eye bolt 5/8" - NC', 2, hw('eyebolt', { L: 3 }, [[57.5, 45.5, -9], [57.5, 45.5, 9]], mat.dZinc), { key: 'f' });
+  dpart('dfoot', 'UM-020-657B', 'Écrou à embase ⅝-UNC', 'Flange nut 5/8-UNC', 2, hw('nut', { af: .94, h: .6 }, [[57.5, 45.5, -9], [57.5, 45.5, 9]], mat.dZinc), { key: 'f' });
+  dpart('dfoot', 'B625-7000GR8', 'Boulon ⅝-UNC × 7 gr. 8', 'Bolt 5/8-UNC x 7" GR8', 1, hw('bolt', { af: .94, hh: .4, d: .625, L: 7 }, [[47, 49.5, 0]], mat.dZinc));
+  dpart('dfoot', 'NC625', 'Écrou ⅝-UNC', 'Nut 5/8"-UNC', 1, hw('nut', { af: .94, h: .55 }, [[47, 42.4, 0, DX.ny]], mat.dZinc));
+  dpart('dfoot', 'HP1000', 'Goupille bêta 1 po', 'Hair pin 1"', 1, hw('hairpin', { r: .7 }, [[49, 47.5, 8.4, DX.z]], mat.dZinc), { key: 'f' });
+  dpart('dfoot', 'UM-064-800BB', 'Base du foot clamp', 'Foot clamp base', 2, [-1, 1].map(s => dbox(fx0 + 1, fx1 - 1, 45.5, ROD_Y - 4.1, s * 6.4, s * 9.8, m)));
+  // foot clamp Boyles UM-079-100A-12 HH (rod clamp 12 HH)
+  const fc = new THREE.Group();
+  fc.add(placeIn(mesh(new THREE.CylinderGeometry(u(R0), u(R0), u(fx1 - fx0 - .5), 64), mat.dPaint2), (fx0 + fx1) / 2 - .2, ROD_Y, 0)); fc.children[0].rotation.z = Math.PI / 2;
+  for (const s of [-1, 1]) fc.add(dbox(fx0 + 1.2, fx1 - 1.2, ROD_Y - 4.6, ROD_Y - 3.1, s * 6, s * 9.6, mat.dPaint2));   // pattes
+  const face = mesh(annulus(u(2.3), u(R0 - .3), u(.4), [], 64), mat.dPaint2); face.rotation.z = -Math.PI / 2; placeIn(face, fx1 - .45, ROD_Y, 0); fc.add(face);
+  const bore = mesh(new THREE.CylinderGeometry(u(2.3), u(2.3), u(fx1 - fx0 + .2), 32, 1, true), mat.dHole); bore.material = mat.dHole; bore.rotation.z = Math.PI / 2; placeIn(bore, (fx0 + fx1) / 2, ROD_Y, 0); fc.add(bore);
+  dpart('dfoot', 'UM-079-100A-12 HH', 'Foot clamp Boyles (clam, rod clamp 12 HH)', 'Foot clamp Boyles', 1, fc,
+    { role: 'Le clam : retient le train de tiges quand le mandrin de la tête s\'ouvre. Fermé par 18 ressorts, ouvert par le vérin : même danger d\'énergie résiduelle que le mandrin.', note: 'Détail : planches « Exploded rod clamp 12 HH » et « List pièce rod clamp 12 HH » (UM-079-100AA).' });
+  // boîtier FTD-148-300TF
+  dpart('dfoot', 'FTD-148-302TF', 'Plaque avant du boîtier', 'Front plate', 1, (() => { const o = mesh(annulus(u(3.2), u(8.6), u(1), ringAt(9, 7.4, 20).map(([a, b]) => [u(a), u(b), u(.3)]), 72), m); o.rotation.z = -Math.PI / 2; placeIn(o, fx1, ROD_Y, 0); return o; })());
+  dpart('dfoot', 'FTD-148-303TF', 'Plaque arrière du boîtier', 'Back plate', 1, dbox(fx0 - 1, fx0, 45.5, ROD_Y + 8, -10.5, 10.5, mat.dGrey));
+  dpart('dfoot', 'FTD-148-301TF', 'Plaque supérieure du boîtier', 'Top plate', 1, dbox(fx0 - 1, fx1 + 1, ROD_Y + 8, ROD_Y + 8.75, -10.5, 10.5, mat.dGrey));
+  dpart('dfoot', 'B375-1500', 'Boulon ⅜-16 NC × 1 ½', 'Bolt 3/8 -16 NC X 1 1/2', 8, hw('bolt', { af: .56, hh: .23, d: .375, L: 1.5 }, grid([fx0 - .3, fx1 + .3], [ROD_Y + 8.75], [-9, -3, 3, 9]), mat.dZinc));
+  dpart('dfoot', 'B500-3000', 'Boulon ½-13 NC × 3', 'Bolt 1/2 - 13 NC X 3', 9, hw('bolt', { af: .75, hh: .31, d: .5, L: 3 }, ringAt(9, 7.4, 20).map(([a, b]) => [fx1 + 1, ROD_Y - a, b, DX.x]), mat.dZinc));
+  dpart('dfoot', 'W500', 'Rondelle plate ½', 'Flat washer 1/2"', 18, hw('washer', { od: 1.1 }, [...ringAt(9, 7.4, 20).map(([a, b]) => [fx1 + .95, ROD_Y - a, b, DX.x]), ...ringAt(9, 7.4, 20).map(([a, b]) => [fx0 - .95, ROD_Y - a, b, DX.nx])], mat.dZinc), { key: 'f' });
+  dpart('dfoot', 'B500-2750', 'Boulon ½-UNC × 2 ¾', 'Bolt 1/2-UNC x 2 3/4"', 9, hw('bolt', { af: .75, hh: .31, d: .5, L: 2.75 }, ringAt(9, 7.4, 20).map(([a, b]) => [fx0 - 1, ROD_Y - a, b, DX.nx]).filter(p => p[1] < ROD_Y + 7.5), mat.dZinc));
+  // plaque d'appui FBRA-002-305BB (bout du mât, contre le collet du trou)
+  const fpS = new THREE.Shape(); [[-12, 22], [12, 22], [12, 60], [8, 66], [-8, 66], [-12, 60]].forEach(([z, y], i) => i ? fpS.lineTo(u(z), u(y)) : fpS.moveTo(u(z), u(y))); fpS.closePath();
+  { const h = new THREE.Path(); h.absarc(0, u(ROD_Y), u(2.8), 0, Math.PI * 2, true); fpS.holes.push(h); const k = new THREE.Path(); k.moveTo(u(-.9), u(ROD_Y - 9)); k.lineTo(u(.9), u(ROD_Y - 9)); k.lineTo(u(.9), u(ROD_Y - 3)); k.lineTo(u(-.9), u(ROD_Y - 3)); k.closePath(); fpS.holes.push(k); }
+  const fpg = new THREE.ExtrudeGeometry(fpS, { depth: u(1.25), bevelEnabled: false }); fpg.rotateY(-Math.PI / 2);
+  dpart('dfoot', 'FBRA-002-305BB', 'Plaque d\'appui (foot plate)', 'Foot plate', 1, placeIn(mesh(fpg, m), 75.25, 0, 0), { role: 'Appuie le bout du mât contre le collet du trou ; les tiges passent par son trou central.' });
+  dpart('dfoot', 'FBRA-002-310BB', 'Entretoise de la plaque d\'appui', 'Brace', 2, [-1, 1].map(s => dcyl([74, 60, s * 11.5], [46, 44.6, s * 11.5], .6, m, 12)));
+  dpart('dfoot', 'B750-5000', 'Boulon ¾-UNC × 5', 'Bolt 3/4-UNC x 5"', 4, hw('bolt', { af: 1.125, hh: .47, d: .75, L: 5 }, grid([75.25], [33, 42], [-8, 8]).map(p => [...p.slice(0, 3), DX.x]), mat.dZinc));
+  dpart('dfoot', 'NC750', 'Écrou ¾-UNC', 'Nut 3/4-UNC', 4, hw('nut', { af: 1.125, h: .64 }, grid([59.6], [33, 42], [-8, 8]).map(p => [...p.slice(0, 3), DX.nx]), mat.dZinc), { key: 'f' });
+  dpart('dfoot', 'B750-2500', 'Boulon ¾-UNC × 2 ½', 'Bolt 3/4-UNC x 2 1/2', 6, hw('bolt', { af: 1.125, hh: .47, d: .75, L: 2.5 }, [[75.25, 26, -9], [75.25, 26, 9], [75.25, 51, -10.5], [75.25, 51, 10.5], [75.25, 63, -6], [75.25, 63, 6]].map(p => [...p, DX.x]), mat.dZinc));
+  dpart('dfoot', 'W625', 'Rondelle plate ⅝', 'Flat washer 5/8', 6, hw('washer', { od: 1.6 }, [[75.2, 26, -9], [75.2, 26, 9], [75.2, 51, -10.5], [75.2, 51, 10.5], [75.2, 63, -6], [75.2, 63, 6]].map(p => [...p, DX.x]), mat.dZinc), { key: 'p' });
+}
+
+/* ---------- Table de tête UM-064-200DS (planche 1.8) et vérin d'avance supérieur (bazooka) ---------- */
+const TB = { x0: -22, x1: 4, y0: 45, y1: 46.5 };
+{
+  const m = mat.dPaint, { x0, x1, y0, y1 } = TB;
+  const t = new THREE.Group(); t.add(dbox(x0, x1, y0, y1, -12.5, 12.5, m));
+  for (const s of [-1, 1]) t.add(dlug(-6, y1, s * 10.5, 3.6, 4.2, .55, 1, m));      // chapes de pivot de la tête
+  t.add(dbox(-15, -9, y1 - .02, y1 + .02, -4, 4, mat.dHole));                          // lumière
+  dpart('dtable', 'UM-064-200DS', 'Table de tête (soudée)', 'Head table with cylinder sliding block', 1, t, { role: 'Glisse sur le mât et porte la tête de forage (ici retirée et posée sur le banc).' });
+  dpart('dtable', 'UM-064-219D', 'Patin de glissement (guide table)', 'Guide table', 2, [-1, 1].map(s => dbox(x0, x1, 44, 45, s * 8.5, s * 10.9, mat.dUhmw)));
+  dpart('dtable', 'UM-064-224D', 'Guide de retenue inférieur', 'Bottom plate retainer guide', 2, [-1, 1].map(s => dbox(x0 + 1, x1 - 1, 42.6, 43.35, s * 9, s * 12.6, mat.dGrey)));
+  dpart('dtable', 'UM-064-205DS', 'Bride inférieure de table', 'Table bottom clamp', 2, [-1, 1].map(s => dbox(-12, -6, 42.6, 45, s * 12.6, s * 13.4, m)));
+  dpart('dtable', 'UM-064-225D', 'Plaque de poussée', 'Push plate', 2, [x0 - .5, x1].map(x => dbox(x, x + .5, y1, y1 + 2.5, -8, 8, m)));
+  dpart('dtable', 'UM-064-204DS', 'Bloc', 'Block', 2, [x0 + 2, x1 - 4].map(x => dbox(x, x + 2, 40.5, 44, -1.5, 1.5, mat.dGrey)));
+  dpart('dtable', 'UM-020-613BA', 'Guide de retenue d\'extrémité', 'End plate retainer guide', 4, grid([x0 + .5, x1 - .5], [0], [-1, 1]).map(([x, , s]) => dbox(x - .5, x + .5, 42.6, y1, s * 13.4, s * 14, mat.dGrey)));
+  dpart('dtable', 'UM-020-616BA', 'Bague trempée', 'Hardened bushing', 2, [-1, 1].map(s => dtube([-6, y1 + 2.4, s * 10], [-6, y1 + 2.4, s * 11], .5, .8, mat.dBrass)));
+  dpart('dtable', 'UM-064-250D', 'Axe de basculement (swing pin)', 'Swing pin', 1, (() => { const g = new THREE.Group(); g.add(dcyl([-6, y1 + 2.4, -13.5], [-6, y1 + 2.4, 12.2], .5, mat.dZinc, 14)); g.add(dbox(-6.4, -5.6, y1 + 2.4, y1 + 5, 12.2, 12.8, mat.dPaint2)); return g; })());
+  dpart('dtable', 'HP1000', 'Goupille bêta 1 po', 'Hair pin 1"', 1, hw('hairpin', { r: .7 }, [[-6, y1 + 2.4, -13.8, DX.nz]], mat.dZinc), { key: 't' });
+  dpart('dtable', 'UM-064-210DS', 'Boyau de graissage', 'Grease hose', 2, [-1, 1].map(s => mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3([[x1 - 2, y1, s * 12], [x1 - 6, y1 + 1.5, s * 12.6], [-6, y1 + 1, s * 12.4]].map(p => new THREE.Vector3(...p).multiplyScalar(IN))), 20, u(.2), 6), mat.dRubber)));
+  dpart('dtable', '2501L-4-2', 'Coude 90° JIC #4 × ⅛ NPT', '90° JIC#4 (1/4) x 1/8 NPT', 4, hw('elbow', {}, [[x1 - 2, y1, -12], [x1 - 2, y1, 12], [-6, y1 + 1, -11.8], [-6, y1 + 1, 11.8]], mat.dBrass));
+  dpart('dtable', 'Z125', 'Graisseur ⅛ NPT', '1/8 NPT ST Zerk', 2, hw('zerk', {}, [[-6, y1 + 4.3, -10.5], [-6, y1 + 4.3, 10.5]], mat.dBrass));
+  dpart('dtable', 'B750-6000', 'Boulon ¾-UNC × 6', 'Bolt 3/4-UNC x 6"', 8, hw('bolt', { af: 1.125, hh: .47, d: .75, L: 6 }, grid([x0 + 1.5, -14, -1, x1 - 1.5], [y1], [-11.8, 11.8]), mat.dZinc));
+  dpart('dtable', 'LN750NC', 'Écrou de blocage ¾-UNC', 'Lock nut 3/4-UNC', 8, hw('nut', { af: 1.125, h: .7 }, grid([x0 + 1.5, -14, -1, x1 - 1.5], [42.6], [-11.8, 11.8]).map(p => [...p.slice(0, 3), DX.ny]), mat.dZinc));
+  dpart('dtable', 'NC750', 'Écrou ¾-10 NC', 'Nut 3/4 - 10 NC', 6, hw('nut', { af: 1.125, h: .64 }, grid([-11, -9, -7], [43.4], [-13.4, 13.4]).map(([x, y, z]) => [x, y, z, z < 0 ? DX.nz : DX.z]), mat.dZinc), { key: 't' });
+  dpart('dtable', 'SS750-2500', 'Vis de pression ¾-UNC × 2 ½', 'Set screw 3/4-UNC x 2 1/2"', 6, hw('rod', { d: .75, L: 2.5 }, grid([-11, -9, -7], [43.4], [-14.6, 14.6]).map(([x, y, z]) => [x, y, z, DX.z]), mat.dBlack));
+  dpart('dtable', 'B625-2250', 'Boulon ⅝-11 NC × 2 ¼', 'Bolt 5/8 - 11 NC X 2 1/4', 4, hw('bolt', { af: .94, hh: .4, d: .625, L: 2.25 }, grid([x0 + 3, x1 - 3], [40.5], [-1, 1]).map(p => [...p.slice(0, 3), DX.ny]), mat.dZinc));
+  dpart('dtable', 'B625-2500', 'Boulon ⅝-UNC × 2 ½', 'Bolt 5/8-UNC x 2 1/2"', 16, hw('bolt', { af: .94, hh: .4, d: .625, L: 2.5 }, grid([x0 + 2, x0 + 7, x1 - 7, x1 - 2], [y1], [-10.9, -9.2, 9.2, 10.9]), mat.dZinc));
+  dpart('dtable', 'LC625', 'Rondelle frein ⅝', 'Lock washer 5/8"', 20, hw('washer', { od: 1.1, t: .14 }, [...grid([x0 + 2, x0 + 7, x1 - 7, x1 - 2], [y1 - .1], [-10.9, -9.2, 9.2, 10.9]), ...grid([x0 + 3, x1 - 3], [40.6], [-1, 1]).map(p => [...p.slice(0, 3), DX.ny])], mat.dZinc));
+  dpart('dtable', 'B625-2750', 'Boulon ⅝-UNC × 2 ¾', 'Bolt 5/8-UNC x 2 3/4"', 2, hw('bolt', { af: .94, hh: .4, d: .625, L: 2.75 }, [[-16, 55, 10.5, DX.y], [-16, 55, 17.5, DX.y]], mat.dZinc), { key: 't' });
+  dpart('dtable', 'LN625NC', 'Écrou de blocage ⅝-NC', 'Lock nut 5/8"-NC', 2, hw('nut', { af: .94, h: .6 }, [[-16, 46.4, 10.5, DX.ny], [-16, 46.4, 17.5, DX.ny]], mat.dZinc));
+  dpart('dtable', 'UM-020-656B', 'Boulon à œil ⅝-NC', 'Eye bolt 5/8" - NC', 2, hw('eyebolt', { L: 2 }, [[-18.5, 55, 12], [-18.5, 55, 16]], mat.dZinc), { key: 't' });
+  dpart('dtable', 'UM-020-657B', 'Écrou à embase ⅝-UNC', 'Flange nut 5/8-UNC', 2, hw('nut', { af: .94, h: .6 }, [[-18.5, 55, 12], [-18.5, 55, 16]], mat.dZinc), { key: 't' });
+}
+// bloc coulissant du vérin (sur le bord de la table) et vérin d'avance supérieur FTD-030-100ZZ (planche 1.12)
+const BZ = { y: 51.6, z: 14 };
+{
+  const m = mat.dPaint, blk = new THREE.Group();
+  blk.add(dbox(-20, -14, TB.y1, BZ.y + 3.4, 9.5, 18.5, m)); blk.add(dbox(-20.02, -13.98, BZ.y - 1.3, BZ.y + 1.3, BZ.z - 1.3, BZ.z + 1.3, mat.dHole));
+  dpart('dtable', 'UM-064-200DS-BLK', 'Bloc coulissant du vérin (sur la table)', 'Cylinder sliding block', 1, blk, { note: 'Fait partie de l\'ensemble UM-064-200DS « Head table with cylinder sliding block ».' });
+  const bx0 = -13, bx1 = bx0 + 72.2;
+  dpart('dfeed', 'FTD-030-102Z', 'Corps du vérin (bazooka)', 'Cylinder bore', 1, dtube([bx0, BZ.y, BZ.z], [bx1, BZ.y, BZ.z], 1.25, 1.6, mat.dBlack, 40),
+    { role: 'Vérin d\'avance supérieur (« bazooka ») : pousse et tire la table de tête le long du mât.', note: 'Course : 72 3/16 po rétracté ; 150 3/4 po déployé (planche 1.12).' });
+  dpart('dfeed', 'FTD-030-101Z', 'Tête du vérin', 'Cylinder head', 1, dcyl([bx1, BZ.y, BZ.z], [bx1 + 3, BZ.y, BZ.z], 1.85, mat.dBlack, 32));
+  dpart('dfeed', 'FTD-030-105Z', 'Tige du vérin', 'Cylinder rod', 1, dcyl([bx0 - 6.5, BZ.y, BZ.z], [bx0 + 10, BZ.y, BZ.z], .875, mat.dChrome, 24));
+  dpart('dfeed', 'FTD-030-106Z', 'Piston', 'Piston', 1, dcyl([bx0 + 8, BZ.y, BZ.z], [bx0 + 10, BZ.y, BZ.z], 1.24, mat.dGrey, 24));
+  dpart('dfeed', 'JN1', 'Contre-écrou 1-14 UNF', 'Jam nut 1-14 UNF', 1, hw('nut', { af: 1.5, h: .55 }, [[bx0 - 6.5, BZ.y, BZ.z, DX.nx]], mat.dZinc));
+  dpart('dfeed', 'PREMM-16-1', 'Embout à rotule 1 po', 'Rod end 1"', 1, (() => { const g = new THREE.Group(); g.add(dcyl([bx0 - 9.5, BZ.y, BZ.z], [bx0 - 7, BZ.y, BZ.z], .6, mat.dZinc, 16)); const e = mesh(new THREE.TorusGeometry(u(1), u(.38), 10, 24), mat.dZinc); e.rotation.x = Math.PI / 2; placeIn(e, bx0 - 10.5, BZ.y, BZ.z); g.add(e); return g; })());
+  dpart('dfeed', '6400-8-8', 'Raccord MJIC × MORB', 'MJIC x MORB', 2, hw('fit', {}, [[bx0 + 3, BZ.y + 1.6, BZ.z], [bx1 - 3, BZ.y + 1.6, BZ.z]], mat.dBrass), { key: 'b' });
+  const seal = (x, r, cs, ref, fr, en) => dpart('dfeed', ref, fr, en, 1, hw('ring', { r, cs }, [[x, BZ.y, BZ.z, DX.x]], mat.dRubber));
+  seal(bx1 + 1, 1.62, .07, '568-230-90D', 'Joint torique #568-230-90D', 'O-ring (#568-230-90D)');
+  seal(bx0 + 9, .5, .05, 'SK-01', 'Joint torique #568-214', 'O-ring (#568-214)');
+  seal(bx1 + .5, 1.3, .06, 'SK-03', 'Joint torique #568-232', 'O-ring (#568-232)');
+  seal(bx1 + 2, .96, .05, 'SK-04', 'Bague d\'usure #612-200-050', 'Wear ring (#612-200-050)');
+  seal(bx0 + 8.5, 1.2, .06, 'SK-05', 'Bague d\'usure #612-250-100', 'Wear ring (#612-250-100)');
+  seal(bx1 + 1.5, .95, .06, 'SK-06', 'Joint de tige #P250-01.750-375B', 'Seal (#P250-01.750-375B)');
+  seal(bx0 + 9.5, 1.2, .07, 'SK-07', 'Joint de piston #PS914-2500-312', 'Piston seal (#PS914-2500-312)');
+  seal(bx1 + 2.8, .95, .06, 'SK-08', 'Racleur #ST175', 'Wiper seal (#ST175)');
+  // support avant du bazooka FTD-148-800K, sur le flanc du boîtier du foot clamp
+  const br = new THREE.Group(); br.add(dbox(62, 69, 45.5, BZ.y - 1.9, 10.5, 17.5, m)); br.add(dbox(62, 69, BZ.y - 1.9, BZ.y + 2.4, 10.5, 11.2, m)); br.add(dbox(62, 69, BZ.y - 1.9, BZ.y + 2.4, 16.8, 17.5, m));
+  dpart('dfeed', 'FTD-148-800K', 'Support du vérin d\'avance supérieur', 'Top feed cylinder braket', 1, br);
+}
+
+/* ---------- Vérin d'avance UM-064-100Z, dans le mât (planche 1.11) ---------- */
+{
+  const cy = 37.5, cx0 = -28, cx1 = 28;
+  dpart('dfeedc', 'UM-064-150Z', 'Tube principal du vérin', 'Main cylinder tube', 1, dtube([cx0, cy, 0], [cx1, cy, 0], 2.4, 2.75, mat.dBlack, 40),
+    { role: 'Vérin à double tige logé dans le mât : déplace la table de tête (forage et retrait des tiges).' });
+  dpart('dfeedc', 'UM-064-122Z', 'Tube central', 'Center tube', 1, dtube([cx0 + 1, cy, 0], [cx1 - 1, cy, 0], 1.35, 1.55, mat.dGrey, 32));
+  dpart('dfeedc', 'UM-064-116Z', 'Presse-étoupe (gland)', 'Gland', 2, [[cx0 - 2.5, cx0], [cx1, cx1 + 2.5]].map(([a, b]) => dtube([a, cy, 0], [b, cy, 0], 1.05, 2.9, mat.dGrey, 40)));
+  dpart('dfeedc', 'UM-064-121Z', 'Presse-étoupe du tube central', 'Center tube gland', 2, [cx0 + 1, cx1 - 2].map(x => dtube([x, cy, 0], [x + 1, cy, 0], 1.05, 2.38, mat.dGrey)));
+  dpart('dfeedc', 'UM-064-120Z', 'Piston de la tige centrale', 'Rod center piston', 1, dtube([-1, cy, 0], [1, cy, 0], 1.56, 2.38, mat.dGrey));
+  dpart('dfeedc', 'UM-064-119Z', 'Tige du vérin', 'Rod cylinder', 2, [[-58.5, cx0 - 2.5], [cx1 + 2.5, 58.5]].map(([a, b]) => dcyl([a, cy, 0], [b, cy, 0], 1, mat.dChrome, 24)));
+  dpart('dfeedc', 'UM-064-127Z', 'Contre-écrou', 'Jam nut', 2, hw('nut', { af: 1.75, h: .7 }, [[-57.8, cy, 0, DX.x], [57.8, cy, 0, DX.nx]], mat.dZinc));
+  dpart('dfeedc', 'UM-064-128Z', 'Écrou principal', 'Primary nut', 2, hw('nut', { af: 1.75, h: 1 }, [[-57, cy, 0, DX.x], [57, cy, 0, DX.nx]], mat.dZinc));
+  dpart('dfeedc', 'UM-064-317B', 'Bague de guidage GSM', 'GSM guide bushing', 2, [dtube([-55, cy, 0], [-54, cy, 0], 1.05, 1.5, mat.dBrass), dtube([54, cy, 0], [55, cy, 0], 1.05, 1.5, mat.dBrass)], { key: 'c' });
+  dpart('dfeedc', 'RBL-GEZ34ES', 'Rotule 1 ⅜ po', 'Ball bushing 1 3/8"', 2, hw('ring', { r: .9, cs: .3 }, [[-59, cy, 0, DX.x], [59, cy, 0, DX.x]], mat.dZinc));
+  dpart('dfeedc', '6801-12-12', 'Coude 90° MJIC ¾ × MORB ¾', '90° MJIC 3/4" x MORB 3/4"', 4, hw('elbow', {}, [[cx0 + 1.5, cy + 2.75, -1], [cx0 + 1.5, cy + 2.75, 1], [cx1 - 1.5, cy + 2.75, -1], [cx1 - 1.5, cy + 2.75, 1]], mat.dBrass));
+  dpart('dfeedc', '12HP5ON-S', 'Bouchon 6408HHP-12', '6408HHP-12 (socket plug #12)', 4, hw('nut', { af: .75, h: .2 }, [[cx0 + 4, cy - 2.75, -1, DX.ny], [cx0 + 4, cy - 2.75, 1, DX.ny], [cx1 - 4, cy - 2.75, -1, DX.ny], [cx1 - 4, cy - 2.75, 1, DX.ny]], mat.dZinc));
+  dpart('dfeedc', 'B500-1500', 'Boulon ½-UNC × 1 ½', 'Bolt 1/2-UNC x 1 1/2', 2, hw('socket', { d: .5, L: 1.5 }, [[cx0 - 2.5, cy + 2.2, 0, DX.nx], [cx1 + 2.5, cy + 2.2, 0, DX.x]], mat.dBlack));
+  dpart('dfeedc', 'B375-1000', 'Boulon ⅜-UNC × 1', 'Bolt 3/8-UNC X 1"', 4, hw('socket', { d: .375, L: 1 }, [[cx0 - 2.5, cy - 2.2, -1.2, DX.nx], [cx0 - 2.5, cy - 2.2, 1.2, DX.nx], [cx1 + 2.5, cy - 2.2, -1.2, DX.x], [cx1 + 2.5, cy - 2.2, 1.2, DX.x]], mat.dBlack));
+  const sealsC = [['612-225-100', 'Bague d\'usure', 'Wear ring', 1.12, -1, 2], ['612-350-025', 'Bague d\'usure', 'Wear ring', 1.75, 0, 2], ['612-425-150P', 'Bague d\'usure', 'Wear ring', 2.12, -1, 2], ['612-500-050', 'Bague d\'usure', 'Wear ring', 2.4, 0, 2],
+    ['DPU25-3.00-37', 'Joint en U', 'U-seal', 1.5, 1, 2], ['DPU25-5.00-37', 'Joint en U', 'U-seal', 2.45, 1, 2], ['DRU25-2.00-37', 'Joint en U', 'U-seal', 1.02, -1, 2], ['DRU25-4.00-37', 'Joint en U', 'U-seal', 2, -1, 2],
+    ['PS914-3500-282', 'Joint de piston', 'Piston seal', 1.75, 0, 1], ['PS914-5000-282', 'Joint de piston', 'Piston seal', 2.38, 0, 1], ['ST-200-X', 'Racleur', 'Wiper seal', 1.03, -2, 2], ['ST-400-XL', 'Racleur', 'Wiper seal', 2.02, -2, 2]];
+  sealsC.forEach(([ref, fr, en, r, where, q], k) => {
+    const xs = where === 0 ? [k % 2 ? .6 : -.6] : where === 1 ? [cx0 + 1.6, cx1 - 1.6] : where === -1 ? [cx0 - 1 - k * .05, cx1 + 1 + k * .05] : [cx0 - 2.4, cx1 + 2.4];
+    dpart('dfeedc', ref, `${fr} ${ref}`, en, q, hw('ring', { r, cs: .07 }, xs.slice(0, q).map(x => [x, cy, 0, DX.x]), mat.dRubber), { note: 'Pièce interne (trousse UC-114-FOR-009-KPZ).' });
+  });
+}
+
+/* ---------- Vérins d'inclinaison FBRA-002-515ZZ (×2) et de basculement UM-064-300Z (planche 1.9) ---------- */
+{
+  // vérin : corps noir, tige chrome, entre deux points (pouces)
+  const cyl = (A, B, rB, rR, frac) => { const M = A.map((a, i) => a + (B[i] - a) * frac); return [dcyl(A, M, rB, mat.dBlack, 28), dcyl(M, B, rR, mat.dChrome, 18)]; };
+  const T = [-1, 1].map(s => [[-40, 7.5, s * 17.5], [-18, 25.95, s * 19.2]]);
+  dpart('dtilt', 'FBRA-002-530ZZ', 'Vérin HBU-3010 (inclinaison)', 'Cylinder HBU-3010', 2, T.flatMap(([A, B]) => cyl(A, B, 1.7, .75, .72)),
+    { role: 'Inclinent le support du mât (angle de forage).', note: 'Trousse de joints K-CHV-30MEC/WLD.' });
+  dpart('dtilt', 'FBRA-002-505Z', 'Support du vérin', 'Cylinder bracket', 2, T.map(([A], k) => dbox(A[0] + 3, A[0] + 7, 6, 10.5, A[2] - (k ? -1.9 : 1.9) * 0 - .25, A[2] + .25, mat.dPaint)));
+  dpart('dtilt', 'YEJ', 'Bloc de valves (YEJ)', 'Bloc', 2, T.map(([A]) => dbox(A[0] + 3.5, A[0] + 6.5, 10.5, 13, A[2] - 1, A[2] + 1, mat.dGrey)), { key: 't' });
+  dpart('dtilt', 'CBCA-LHN', 'Valve d\'équilibrage', 'Counterbalance valve', 4, hw('fit', {}, T.flatMap(([A]) => [[A[0] + 4.2, 13, A[2]], [A[0] + 5.8, 13, A[2]]]), mat.dGrey), { key: 't' });
+  dpart('dtilt', 'FBRA-002-507Z', 'Tube hydraulique', 'Hydraulic tube', 2, T.map(([A, B]) => mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3([[A[0] + 6, 11, A[2]], [A[0] + 9, 13.5, A[2] + .3], [A[0] + 14, 14.8, A[2] + .3]].map(p => new THREE.Vector3(...p).multiplyScalar(IN))), 16, u(.25), 6), mat.dZinc)));
+  dpart('dtilt', 'J000228-1', 'Collier', 'Clamp', 2, hw('ring', { r: .4, cs: .08 }, T.map(([A]) => [A[0] + 11, 14.2, A[2] + .3, DX.x]), mat.dZinc));
+  dpart('dtilt', 'J000228-2', 'Collier d\'échappement 3 ½', 'Muffler clamp 3 1/2"', 2, hw('ring', { r: 1.8, cs: .12 }, T.map(([A, B]) => [A[0] + (B[0] - A[0]) * .3, A[1] + (B[1] - A[1]) * .3, A[2], [B[0] - A[0], B[1] - A[1], 0]]), mat.dZinc));
+  dpart('dtilt', 'UM-064-553D', 'Axe du vérin', 'Pin', 2, T.map(([A]) => dcyl([A[0], A[1], A[2] - 1.5], [A[0], A[1], A[2] + 1.5], .5, mat.dZinc, 14)));
+  dpart('dtilt', 'HP1000', 'Goupille bêta 1 po', 'Hair pin 1"', 2, hw('hairpin', { r: .6 }, T.map(([A]) => [A[0], A[1], A[2] + 1.7, DX.z]), mat.dZinc), { key: 't' });
+  dpart('dtilt', 'B312-2500', 'Boulon 5/16-UNC × 2 ½', 'Bolt 5/16-UNC x 2 1/2', 4, hw('bolt', { af: .5, hh: .21, d: .3125, L: 2.5 }, T.flatMap(([A]) => [[A[0] + 4, 10.5, A[2]], [A[0] + 6, 10.5, A[2]]]), mat.dZinc));
+  dpart('dtilt', 'NFC375', 'Écrou à embase ⅜', 'Flange nut 3/8"', 4, hw('nut', { af: .56, h: .35 }, T.flatMap(([A]) => [[A[0] + 4, 6.3, A[2] + .3, DX.ny], [A[0] + 6, 6.3, A[2] + .3, DX.ny]]), mat.dZinc));
+  dpart('dtilt', 'W312', 'Rondelle plate 5/16', 'Flat washer 5/16', 4, hw('washer', { od: .8 }, T.flatMap(([A]) => [[A[0] + 4, 10.5, A[2] - .2], [A[0] + 6, 10.5, A[2] - .2]]), mat.dZinc));
+  dpart('dtilt', 'LN312NC', 'Écrou de blocage 5/16-NC', 'Lock nut 5/16"-NC', 4, hw('nut', { af: .5, h: .3 }, T.flatMap(([A]) => [[A[0] + 4, 7.6, A[2], DX.ny], [A[0] + 6, 7.6, A[2], DX.ny]]), mat.dZinc));
+  dpart('dtilt', '2404-8-8', 'Raccord MJIC × MP', 'MJIC x MP', 2, hw('fit', {}, T.map(([A]) => [A[0] + 3.5, 11.7, A[2], DX.nx]), mat.dBrass), { key: 't' });
+  dpart('dtilt', '6801F-8-8', 'Coude 90° MJIC × MORB', 'MJIC X MORB 90 DEG.', 6, hw('elbow', {}, T.flatMap(([A]) => [[A[0] + 6.5, 11.7, A[2], DX.x], [A[0] + 5, 10.5, A[2] + 1, DX.z], [A[0] + 2, 9, A[2] + 1.7, DX.y]]), mat.dBrass), { key: 't' });
+  dpart('dtilt', '6402-8-8', 'Raccord ORB × FJIC tournant', 'ORB x FJIC swivel', 2, hw('fit', {}, T.map(([A]) => [A[0] + 1, 9.2, A[2] - 1.7, DX.y]), mat.dBrass), { key: 't' });
+  dpart('dtilt', '2501F-08-08', 'Coude MJIC × MP', 'MJIC x MP', 2, hw('elbow', {}, T.map(([A]) => [A[0] + 5, 12.4, A[2] - .9, DX.y]), mat.dBrass), { key: 't' });
+  dpart('dtilt', 'Z125-S', 'Graisseur ⅛ NPT (modifié)', '1/8 NPT ST Zerk (modified)', 2, hw('zerk', {}, T.map(([A]) => [A[0] + .6, A[1] + 1.6, A[2]]), mat.dBrass));
+  // vérin de basculement du mât (dump cylinder) UM-064-300Z, sous le support
+  const DA = [-40, 6.5, 0], DB = [-2, 23, 0];
+  dpart('dtilt', 'UM-064-300Z', 'Vérin de basculement du mât HBU 2536 (dump cylinder)', 'Feed frame cylinder (HBU 2536)', 1, cyl(DA, DB, 1.55, .7, .78),
+    { role: 'Lève le mât de l\'horizontale (transport) à la verticale.', note: 'Trousse de joints HERSK-HBU-CL251500.' });
+  dpart('dtilt', 'UM-064-575D', 'Axe 1 po × 4 ¾', 'Pin 1" x 4 3/4" Lg.', 1, dcyl([DA[0], DA[1], -2.4], [DA[0], DA[1], 2.4], .5, mat.dZinc, 14));
+  dpart('dtilt', 'UM-064-550D', 'Axe', 'Pin', 1, dcyl([DB[0], DB[1], -2.2], [DB[0], DB[1], 2.2], .5, mat.dZinc, 14));
+  dpart('dtilt', 'HP1000', 'Goupille bêta 1 po', 'Hair pin 1"', 2, hw('hairpin', { r: .6 }, [[DA[0], DA[1], 2.6, DX.z], [DB[0], DB[1], 2.4, DX.z]], mat.dZinc), { key: 'd' });
+  dpart('dtilt', 'YEJ', 'Bloc de valves (YEJ)', 'Bloc', 1, dbox(-31, -28, 12.5, 15, -2.6, -1.4, mat.dGrey), { key: 'd' });
+  dpart('dtilt', 'CBCA-LHN', 'Valve d\'équilibrage', 'Counterbalance valve', 2, hw('fit', {}, [[-30.4, 15, -2], [-28.6, 15, -2]], mat.dGrey), { key: 'd' });
+  dpart('dtilt', '2404-8-8', 'Raccord MJIC × MP', 'MJIC x MP', 1, hw('fit', {}, [[-31, 13.7, -2, DX.nx]], mat.dBrass), { key: 'd' });
+  dpart('dtilt', '6402-8-8', 'Raccord MORB × FJ', 'MORB x FJ', 1, hw('fit', {}, [[-28, 13.7, -2, DX.x]], mat.dBrass), { key: 'd' });
+  dpart('dtilt', '6801F-8-8', 'Raccord MJIC × MORB', 'MJIC x MORB', 3, hw('elbow', {}, [[-29.5, 12.5, -2, DX.ny], [-30.5, 14, -1.4, DX.z], [-28.5, 14, -1.4, DX.z]], mat.dBrass), { key: 'd' });
+  dpart('dtilt', '2501F-08-08', 'Coude MJIC × MP', 'MJIC x MP', 1, hw('elbow', {}, [[-20, 15.6, 1.5, DX.z]], mat.dBrass), { key: 'd' });
+}
+
+/* ---------- Pattes UM-064-400D (×2, rangées le long des longerons) et attelage UM-064-351D (planche 1.10) ---------- */
+{
+  const legs = [-1, 1].map(s => s * 21.6), y = 4.2;
+  dpart('dlegs', 'UM-064-415D', 'Section centrale de patte', 'Central section', 2, legs.map(z => dtube([-30, y, z], [6, y, z], 1.35, 1.65, mat.dBlack)),
+    { role: 'Pattes télescopiques (vérins à vis) qui calent le mât entre le plancher et le toit en forage ; rangées sur le bâti pour le transport.' });
+  dpart('dlegs', 'UM-064-420D', 'Section inférieure de patte', 'Buttom section', 2, legs.map(z => { const g = new THREE.Group(); g.add(dcyl([4, y, z], [36, y, z], 1.3, mat.dBlack, 24)); g.add(dlug(37.5, y - 1.3, z, 2.6, 3.6, .45, 1, mat.dBlack)); g.children[1].rotation.z = -Math.PI / 2; g.children[1].position.set(u(36), u(y), u(z)); return g; }));
+  dpart('dlegs', 'UM-064-425D', 'Section ajustable (vis)', 'Ajustable section', 2, legs.map(z => { const g = new THREE.Group(); g.add(dcyl([-44, y, z], [-30, y, z], .9, mat.dGrey, 18)); g.add(hw('nut', { af: 2.2, h: 1.2 }, [[-33, y, z, DX.x]], mat.dGrey)); g.add(dlug(-45.5, y - 1.2, z, 2.4, 3.4, .45, 1, mat.dGrey)); g.children[2].rotation.z = Math.PI / 2; g.children[2].position.set(u(-44), u(y), u(z)); return g; }));
+  dpart('dlegs', '01503', 'Goupille ¾ × 4 ½', 'Pin 3/4 x 4 1/2" Lg.', 6, hw('pin', { d: .75, L: 4.5 }, legs.flatMap(z => [[-45.5, y, z + 2.2, DX.nz], [0, y, z + 2.2, DX.nz], [37.5, y, z + 2.2, DX.nz]]), mat.dPaint2));
+  dpart('dlegs', 'HP750', 'Goupille bêta ¾', 'Hair pin 3/4"', 6, hw('hairpin', { r: .45 }, legs.flatMap(z => [[-45.5, y, z - 2.4, DX.nz], [0, y, z - 2.4, DX.nz], [37.5, y, z - 2.4, DX.nz]]), mat.dZinc));
+  dpart('dlegs', 'UM-064-555D', 'Goupille bêta', 'Hairpin', 4, hw('hairpin', { r: .4 }, legs.flatMap(z => [[-12, y + 1.6, z, DX.y], [20, y + 1.6, z, DX.y]]), mat.dZinc));
+  const hx = -71.5;
+  dpart('dlegs', 'UM-064-352D', 'Cadre d\'attelage amovible', 'Hitch frame', 1, (() => { const g = new THREE.Group(); g.add(dbox(hx - 1.5, hx + 1.5, 1, 4, -22, 22, mat.dPaint)); for (const s of [-1, 1]) g.add(dlug(hx + 1.5, 0, s * 9, 2.5, 3.5, .5, .75, mat.dPaint)); g.add(hw('link', {}, [-24, -23.2, -22.4, 22.4, 23.2, 24].map((z, i) => [hx, 2.5, z, DX.z, i * .9]), mat.dZinc)); return g; })(),
+    { role: 'Attelage pour tirer la foreuse (sur patins) ; se fixe aux bouts des longerons.' });
+  dpart('dlegs', 'UM-064-354D', 'Bride d\'attelage', 'Clamp', 2, [-1, 1].map(s => dbox(hx - 1.6, hx + 1.6, 4, 5.4, s * 16 - 1.6, s * 16 + 1.6, mat.dPaint2)));
+  dpart('dlegs', 'B750-3000', 'Boulon ¾-UNC × 3', 'Bolt 3/4"-UNC x 3"', 2, hw('bolt', { af: 1.125, hh: .47, d: .75, L: 3 }, [[hx, 5.4, -16], [hx, 5.4, 16]], mat.dZinc), { key: 'h' });
+}
+
+/* ---------- Treuil du câble (wire line) FBRA-002-400HH / UM-032-100A, à l'arrière du bâti ---------- */
+{
+  const g = new THREE.Group(), m = mat.dBlue, wx = -55, wy = 15;
+  for (const s of [-1, 1]) g.add(dbox(-64, -46, 4, 24, s * 11.5, s * 12.2, m));
+  g.add(dbox(-64, -46, 4, 5, -12.2, 12.2, m)); g.add(dbox(-64, -62.5, 5, 22, -12.2, 12.2, m));
+  const drum = dcyl([wx, wy, -10], [wx, wy, 10], 5, mat.dGrey, 40); g.add(drum);
+  for (const z of [-10.4, 10.4]) g.add(dcyl([wx, wy, z - .4], [wx, wy, z + .4], 8.5, m, 48));
+  g.add(dcyl([wx, wy, -9.7], [wx, wy, 9.7], 6.2, mat.dBlack, 40));            // câble enroulé
+  g.add(dcyl([wx, wy, 12.2], [wx, wy, 18], 3, mat.dBlack, 28));               // moteur hydraulique
+  dpart('dlegs', 'FBRA-002-400HH', 'Treuil du câble (wire line)', 'Wire line', 1, g, { role: 'Treuil du câble de carottage (wire line) : remonte le tube carottier par l\'intérieur des tiges.', note: 'Détail : section 2 du livre de pièces (UM-032-100A), non fourni.' });
+}
+// Matériaux de la foreuse : jamais tranchés par la coupe du mandrin
+const drillMats = new Set();
+for (const g of [drillG, carriage]) g.traverse(o => { if (o.isMesh) [].concat(o.material).forEach(mm => drillMats.add(mm)); });
 
 /* ---------- Décor : galerie de mine (arche rocheuse, conduit de ventilation, câbles, luminaires) ----------
    Hors nomenclature. Masqué dans les vues éclatées. Aucune lampe frontale : l'éclairage vient des luminaires. */
@@ -2180,7 +2643,7 @@ function applyExplode(e) {
     }
     p.lbl.position.copy(partLblPos);
   }
-  for (const o of [worker, consoleG, pallet, stand, zone, trail, wrench, activeRing, headG, carriage, tableG]) o.visible = o.visible && k < 0.05;
+  for (const o of [worker, consoleG, pallet, stand, zone, trail, wrench, activeRing, headG, carriage, tableG, drillG]) o.visible = o.visible && k < 0.05;
   if (labels) for (const arr of Object.values(labels)) for (const s of arr) if (s && k > 0.02) s.visible = false;
   return showRows;
 }
@@ -2278,7 +2741,7 @@ function applyHeadExplode(h) {
     shown.push(p.lbl);
   }
   deOverlap(PARTS.filter(q => q.lbl && q.lbl.visible).map(q => q.lbl));
-  if (k > 0.05) for (const o of [worker, workerRoot, consoleG, zone, trail, wrench, activeRing, carriage, tableG]) o.visible = false;
+  if (k > 0.05) for (const o of [worker, workerRoot, consoleG, zone, trail, wrench, activeRing, carriage, tableG, drillG]) o.visible = false;
   if (labels && k > 0.02) for (const arr of Object.values(labels)) for (const sp of arr) if (sp) sp.visible = false;
 }
 
@@ -2313,7 +2776,7 @@ function hiMat(m) {
   return hiCache.get(m);
 }
 function clampMaterials() {
-  const set = new Set([ghostMat, ...[...hiCache].filter(([k]) => !headMats.has(k)).map(([, h]) => h)]);
+  const set = new Set([ghostMat, ...[...hiCache].filter(([k]) => !headMats.has(k) && !drillMats.has(k)).map(([, h]) => h)]);
   const add = m => { if (Array.isArray(m)) m.forEach(add); else if (m) set.add(m); };
   clampG.traverse(o => { if (o.isMesh && !o.userData.xray) { add(o.material); add(o.userData.orig); } });
   PARTS.forEach(p => { if (!p.head) p.objs.forEach(o => (o.userData.mats || []).forEach(add)); });
@@ -2359,7 +2822,7 @@ addEventListener('keydown', e => {
 
 function select(p) {
   selected = p || null;
-  for (const [g, ghost] of [[clampG, ghostMat], [headG, ghostHead], [workerRoot, ghostHead]]) g.traverse(m => {
+  for (const [g, ghost] of [[clampG, ghostMat], [headG, ghostHead], [workerRoot, ghostHead], [drillG, ghostHead], [carriage, ghostHead]]) g.traverse(m => {
     if (!m.isMesh || m.userData.xray) return;
     if (!m.userData.orig) m.userData.orig = m.material;
     if (!selected) { m.material = m.userData.orig; return; }
@@ -3016,7 +3479,7 @@ function applyScene(S) {
   const showW = document.getElementById('optWorker').checked;
   worker.visible = showW && !workerModel;
   workerRoot.visible = showW && !!workerModel;
-  pallet.visible = stand.visible = consoleG.visible = headG.visible = carriage.visible = zone.visible = tableG.visible = true;
+  pallet.visible = stand.visible = consoleG.visible = headG.visible = carriage.visible = zone.visible = tableG.visible = drillG.visible = true;
 
   // Trajectoire
   if (fl) {
@@ -3043,10 +3506,23 @@ const CAMS = {
   hexplode: { p: [-16.1, 13.1, 32.1], t: [-2.2, 3.6, 2.5] },
   catch: { p: [3.2, 7.4, 12], t: [0.8, 4.7, 0] },
   explode: { p: [-8.1, 12.5, 21.2], t: [-0.6, 4.6, 0] },
+  drill: { p: [14, 36, -84], t: [3, 1, -24] },   // foreuse STM-1500, vue de l'arrière du banc (le travailleur ne la cache pas)
 };
 let autoCam = true, camGoal = CAMS.intro;
 controls.addEventListener('start', () => { autoCam = false; document.getElementById('camChip').hidden = false; });
-document.getElementById('camBtn').addEventListener('click', () => { autoCam = true; document.getElementById('camChip').hidden = true; });
+document.getElementById('camBtn').addEventListener('click', () => { autoCam = true; document.getElementById('camChip').hidden = true; if (drillView) setDrillView(false); });
+// Vue « Foreuse » : la caméra va sur la foreuse complète (posée derrière le banc) ; un second clic revient à l'étape
+let drillView = false;
+function setDrillView(on) {
+  drillView = on;
+  document.getElementById('btnDrill').setAttribute('aria-pressed', String(on));
+  autoCam = true; document.getElementById('camChip').hidden = true;
+  camGoal = on ? CAMS.drill : (CAMS[steps[Math.max(0, lastStep | 0)] && steps[Math.max(0, lastStep | 0)].cam] || CAMS.overview);
+}
+document.getElementById('btnDrill').addEventListener('click', () => {
+  if (!drillView) { if (explodeTarget) setExplode(false); if (hexTarget) setHeadExplode(false); setPlaying(false); }
+  setDrillView(!drillView);
+});
 camera.position.set(...CAMS.intro.p); controls.target.set(...CAMS.intro.t);
 const goalP = new THREE.Vector3(), goalT = new THREE.Vector3();
 function updateCamera(dt) {
@@ -3108,6 +3584,7 @@ function renderTicks() {
 }
 function setPlaying(v) {
   playing = v;
+  if (v && drillView) setDrillView(false);
   $('bPlay').setAttribute('aria-label', v ? 'Pause' : 'Lecture');
   $('playIcon').innerHTML = v ? '<path d="M3 2h4v12H3zM9 2h4v12H9z"/>' : '<path d="M4 2l10 6-10 6z"/>';
 }
@@ -3155,7 +3632,7 @@ function updateUI(S, force) {
     $('dock').dataset.tone = s.tone || 'ok';
     $('capText').textContent = nb(s.summary ? summaryText(s.ev) : s.text);
     $('tmeta').textContent = `Étape ${S.i + 1}/${steps.length}`;
-    camGoal = CAMS[s.cam] || CAMS.overview;
+    camGoal = drillView ? CAMS.drill : (CAMS[s.cam] || CAMS.overview);
   }
   // Étapes faites : marquées en permanence (✓ bonne méthode, ✗ méthode dangereuse) ; l'étape en cours l'est dès qu'elle est terminée
   const doneK = explodeTarget || hexTarget ? -1 : S.i + (S.p > .995 ? 1 : 0), stepKey = doneK + '|' + S.i;
@@ -3206,13 +3683,13 @@ function summaryText(ev) {
 }
 
 /* ================= Nomenclature, fiche de pièce, vues ================= */
-const GRP = { hbox: 'Tête : boîte et couvercle', hspindle: 'Tête : broche, roulements, joints', hdrive: 'Tête : entraînement (pignons, chaîne, transmission, moteur)', hlube: 'Tête : lubrification (pompe, filtre, boyaux, raccords)', hmount: 'Tête : montage sur la foreuse', rear: 'Mandrin : arrière (vérin, roulement, adaptateur)', body: 'Mandrin : boîtier', front: 'Mandrin : avant (ressorts, cône, boulons, couvercles, mâchoires)', opt: 'Mandrin : options (adaptateur UM-070, bagues de guidage B, anneau WH-500)' };
+const GRP = { hbox: 'Tête : boîte et couvercle', hspindle: 'Tête : broche, roulements, joints', hdrive: 'Tête : entraînement (pignons, chaîne, transmission, moteur)', hlube: 'Tête : lubrification (pompe, filtre, boyaux, raccords)', hmount: 'Tête : montage sur la foreuse', rear: 'Mandrin : arrière (vérin, roulement, adaptateur)', body: 'Mandrin : boîtier', front: 'Mandrin : avant (ressorts, cône, boulons, couvercles, mâchoires)', opt: 'Mandrin : options (adaptateur UM-070, bagues de guidage B, anneau WH-500)', dframe: 'Foreuse STM-1500 : bâti (FBRA-002-150BM)', dsup: 'Foreuse : support de mât (FBRA-002-600BB)', dmast: 'Foreuse : mât (FBRA-002-300BB)', dext: 'Foreuse : rallonge, guide de tiges et poulie (UM-064-200C)', dfoot: 'Foreuse : foot clamp (clam), base et plaque d\'appui', dtable: 'Foreuse : table de tête (UM-064-200DS)', dfeed: 'Foreuse : vérin d\'avance supérieur (bazooka FTD-030-100ZZ)', dfeedc: 'Foreuse : vérin d\'avance (UM-064-100Z)', dtilt: 'Foreuse : vérins d\'inclinaison et de basculement (FBRA-002-515ZZ, UM-064-300Z)', dlegs: 'Foreuse : pattes, attelage et treuil' };
 const qtyOf = p => p.qty === 'n' ? P.n : p.qty;
 /* Noms des pièces en anglais (désignations des listes de pièces), affichés par défaut ; le français reste disponible */
 const NAME_EN = {"3506881": "Drive key Boyles 12HH (UM-012-189)", "3506879": "Key retaining spring", "3506910": "Chuck adapter (option 2, UM-012 head)", "B500-1500": "Bolt ½ × 1 ½ in", "B500-4500": "Bolt ½ × 4 ½ in", "NC500": "Nut ½-13 UNC", "3506909": "Hydraulic cylinder", "5035016": "U-cup seal", "5035018": "Wear ring", "3506908": "Piston", "5035015": "Piston U-cup seal", "5035017": "Piston wear ring", "5222624": "Roll pin", "5000199": "Bearing", "3506882": "Back-up ring", "5054078": "Retaining ring", "3506928": "Actuating sleeve (RR 50)", "2501-8-6": "90° elbow MJIC 6 × MP 8", "ZNPT250": "Grease fitting 1/8 NPT", "5041022": "V-ring seal", "3506870": "Chuck body", "3506880": "Lower spacer", "5040192": "Oil seal", "5200517": "Spring", "2920390": "Chuck bowl 12 ½ L (cone)", "UM-021-01-01": "Boyles H jaw set, size B", "B500-6500": "Bolt ½ × 6 ½ in", "3506878": "Upper spacer (1 ½ in bushing)", "B500-8000": "Bolt ½ × 8 in (with bushing)", "3506906": "Cap holder (cover)", "B500-2250": "Bolt ½ × 2 ¼ in", "3506907": "Cap adapter (jaw cover)", "B750-1500": "Bolt ¾ × 1 ½ in", "UM-070-608A": "Chuck adapter (option 1, UM-070 head)", "RING-WH500": "Jaw ring WH-500", "06-02": "Guide bushing, B rod", "06-22": "Guide bushing, B casing", "UM-012-104A": "Drill head housing", "UM-012-113A": "Housing cover (UM logo)", "B375-1000": "Bolt 3/8 × 1 in", "W375": "Flat washer 3/8", "UM-012-131": "Plug 1 in NPT", "UM-102-132": "Plug 3/8 in NPT", "UM-1214-121P": "Blidder cover (vent cover)", "UM-012-167": "Vent cover O-ring", "B312-1000": "Bolt 5/16 × 1 in", "W312": "Flat washer 5/16", "UM-012-101": "Boyles spindle", "UM-012-122": "Spindle key", "UM-012-128": "Upper bearing", "UM-012-129": "Lower bearing", "UM-012-121": "Spindle cover, transmission side (upper bearing housing)", "UM-012-124": "Upper seal", "UM-012-120": "Chuck adapter cover", "SHC500-4000": "Socket head cap screw ½-UNC × 4 in", "UM-012-107": "Heat-treated sleeve", "UM-012-106": "Chuck adjusting sleeve", "UM-012-126": "Lower seal", "UM-012-114": "Lower spindle cover (lower bearing housing)", "B500-1750": "Bolt ½-13 × 1 ¾ in", "W500": "Flat washer ½ in", "W500-M": "Flat washer ½ in (chuck adapter)", "UM-012-119": "Seal sleeve", "UM-012-117": "Spindle nut thrust washer", "UM-012-118": "Spindle clamp nut", "UM-012-115": "Spindle jam nut", "UM-012-108": "BQ guide sleeve", "UM-012-116": "Wear sleeve cover", "SS75-1250": "Set screw ¾-10 × 1 ¼ in", "SHCS312-1500": "Socket head cap screw 5/16 × 2 ½ in", "UM-012-102": "Driven sprocket (triple)", "UM-012-103": "Drive sprocket (triple) and shaft", "UM-012-169": "Hydraulic pump key", "UM-012-127": "Drive sprocket bearing", "UM-012-130": "Roller chain (one per strand)", "UM-012-125": "Transmission seal", "UM-012-123": "Seal seat", "UM-012-143": "4-speed transmission (Funk)", "B437-1500": "Bolt 7/16-UNC × 1 ½ in", "W437": "Lock washer 7/16", "UM-012-170": "Transmission / hydraulic motor coupling", "UM-012-192": "Internal retaining ring 1 ½ in", "AA6VM": "Hydraulic motor AA6VM160HD2-63W-VSD520B", "B750-2000": "Bolt ¾-10 × 2 in", "W750": "Flat washer ¾", "UM-063-290T": "90° flange elbow 1704-16-20", "UM-063-289T": "Split flange", "UM-012-208": "Flange O-ring", "UM-012-111": "Hydraulic pump cover", "UM-012-139": "Lubrication pump", "B250-750": "Bolt ¼-NC × ¾ in", "W250": "Flat washer ¼", "COOLER": "Oil cooler (not in parts list)", "UM-012-177": "Filter head", "UM-012-178": "Filter cartridge", "UM-10B-TR#6": "3-way valve BKH 3/8 NPT", "NDV-10-N": "Flow regulator", "A-1199-R-4048": "Breather", "UM-012-H08C": "Hose 3/8 in, breather (24 in)", "UM-012-H10C": "Hose 3/8 in, housing / transmission (3 ¾ in)", "UM-012-H11C": "Hose ½ in, transmission / sump (5 in)", "UM-012-H15C-UG": "Hose 3/8 in, sump / suction (9 ¾ in)", "UM-012-H16C-UG": "Hose 3/8 in, sump / suction (21 in)", "UM-012-H17C-UG": "Hose 3/8 in, filter outlet / cooler bottom (10 in)", "UM-012-H18C-UG": "Hose 3/8 in, cooler top / regulator (12 in)", "UM-012-H20C-UG": "Hose 3/8 in, pressure / filter (6 ¾ in)", "UM-012-H21C-UG": "Hose 3/8 in, regulator / transmission inlet (5 in)", "UM-012-H22C-UG": "Hose 3/8 in, transmission / housing (8 in)", "UM-012-H23C-UG": "Hose 3/8 in, transmission / cover (10 in)", "UM-012-H24C-UG": "Hose 3/8 in, regulator / lower bearing (9 in)", "UM-012-H25C-UG": "Hose 3/8 in, regulator / upper bearing (7 in)", "2404-6-4": "Adapter MJIC × MP", "2404-8-6": "Adapter MJIC × MP", "2501-06-04": "90° elbow MJIC × MP", "2501-6-6": "90° elbow MJIC × MP", "2501-6-8": "90° elbow MJIC × MP", "2501-8-8": "90° elbow MJIC × MP", "2501LL-8-8": "90° long elbow MJIC × MP", "2601-06-06-08": "Tee MJIC × MJIC × MP", "5000-6-6": "Coupling FP × FP", "6402-8-8": "Swivel adapter ORB × FJIC", "6500-06-06": "Swivel adapter MJIC × FJIC", "6600-06-06-06": "Swivel branch tee", "6600-8-8-8": "Swivel branch tee", "6602-06-06-06": "Swivel run tee", "6801-6-8": "90° elbow MJIC × MORB", "UM-012-105A": "Pivot pin", "UM-012-171": "Pivot pin hardened bushing", "HP1000": "Hitch pin (R-clip) 1 in", "TRAVAILLEUR": "Worker (3D model)"};
 let LANG = 'en';
 try { LANG = localStorage.getItem('clam-lang') === 'fr' ? 'fr' : 'en'; } catch (e) {}
-const pname = p => LANG === 'en' ? (NAME_EN[p.id] || p.name) : p.name;
+const pname = p => LANG === 'en' ? (p.en || NAME_EN[p.id] || p.name) : p.name;
 function renderBOM() {
   const el = $('bomList'); el.innerHTML = '';
   for (const [g, title] of Object.entries(GRP)) {
@@ -3240,7 +3717,7 @@ document.querySelectorAll('.langrow button').forEach(b => b.setAttribute('aria-p
 function renderCard() {
   const c = $('partCard');
   if (!selected) {
-    c.innerHTML = `<p class="meta">${PARTS.length} repères : toutes les pièces des listes de la tête UM-012-100UG (planches 2.2 et 2.3) et du mandrin UM-070-142AA, plus les options du mandrin. Cliquez sur une pièce dans la vue 3D ou dans la liste pour l'identifier. « Éclaté : tête » écarte les pièces de la tête (le mandrin monte d'un bloc) ; « Éclaté : mandrin » sépare les pièces du mandrin le long de son axe ; « Coupe du mandrin » ouvre le mandrin en deux (la tête reste entière).</p>`;
+    c.innerHTML = `<p class="meta">${PARTS.length} repères : toutes les pièces des listes de la tête UM-012-100UG (planches 2.2 et 2.3), du mandrin UM-070-142AA et de la foreuse STM-1500 (FBRA-002-100AS, planches 1.00 à 1.12), plus les options du mandrin. Cliquez sur une pièce dans la vue 3D ou dans la liste pour l'identifier. « Éclaté : tête » écarte les pièces de la tête (le mandrin monte d'un bloc) ; « Éclaté : mandrin » sépare les pièces du mandrin le long de son axe ; « Coupe du mandrin » ouvre le mandrin en deux (la tête reste entière).</p>`;
     nbDom(c);
     return;
   }
@@ -3290,8 +3767,8 @@ function pickPart(e) {
   const lbls = PARTS.filter(p => p.lbl && p.lbl.visible).map(p => p.lbl);
   const lh = lbls.length ? ray.intersectObjects(lbls, false) : [];
   if (lh.length) return lh[0].object.userData.part;
-  const hits = ray.intersectObjects([...clampG.children, ...headG.children, workerRoot], true).filter(h => {
-    if (cutOn && h.point.z > 0.002 && h.object.userData.part !== workerPart && (!inHead(h.object) || h.object.userData.cutWithChuck)) return false;
+  const hits = ray.intersectObjects([...clampG.children, ...headG.children, workerRoot, drillG, carriage], true).filter(h => {
+    if (cutOn && h.point.z > 0.002 && !(h.object.userData.part && h.object.userData.part.scene) && (!inHead(h.object) || h.object.userData.cutWithChuck)) return false;
     let o = h.object; while (o) { if (!o.visible) return false; o = o.parent; }
     return h.object.isMesh && h.object.userData.part && h.object.material !== ghostMat && h.object.material !== ghostHead;
   });
