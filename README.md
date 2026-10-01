@@ -82,9 +82,13 @@ Les 18 ressorts sont modélisés avec un fil rond de section constante : en comp
 - Matériaux unis (acier, peinture rouge), sans textures, pour que chaque pièce reste lisible.
 - **Aucune ombre portée** : lumière principale + lumière de remplissage opposée + lumière d'ambiance ; reflets neutres d'atelier. Fond uni, pas de décor.
 - Arêtes légèrement arrondies sur les pièces prismatiques.
-- Anticrénelage (MSAA + SMAA) en qualité haute ; le bouton **Qualité : haute / basse** (mémorisé) réduit la résolution pour les tablettes.
+- Anticrénelage MSAA + SMAA, toujours en haute qualité.
 - Les surfaces coïncidentes reçoivent un décalage de profondeur par matériau pour éviter le scintillement.
-- **Numéros de pièces** : jamais affichés en permanence. Le numéro et le nom apparaissent dans une info-bulle au survol (ou au toucher sur mobile) et l'étiquette s'affiche au clic sur la pièce, avec sa fiche dans la nomenclature.
+- **Numéros de pièces** : jamais affichés pendant l'animation. En vue éclatée, le numéro et le nom apparaissent dans une info-bulle au survol (ou au toucher sur mobile). La pièce sélectionnée garde sa couleur d'origine.
+- **Noms des pièces** : en anglais par défaut (désignations des listes de pièces), bouton **EN / FR** au-dessus de la liste des pièces (mémorisé).
+- **Pièces retirées** : elles sortent dans l'axe en surbrillance puis s'effacent ; la liste « Retiré » dans la vue 3D garde la trace de ce qui a été enlevé (l'élément de l'étape en cours est marqué).
+- Bout du mandrin d'après la planche 2.1 et une photo : couvercle et couvert peints comme le boîtier, ligne de joint, têtes de boulons zinguées en relief, 3 bushings qui dépassent.
+- Roulement 5000199 à rouleaux cylindriques (rouleaux et cage en laiton visibles) ; mâchoires en acier gris avec 2 × 2 plaquettes dentées, encoche centrale, rainures de guidage et anneau élastique.
 
 ## Textes
 
@@ -96,7 +100,10 @@ Tous les textes à l'écran sont courts et s'adressent aux travailleurs : une co
 - **Coupe du mandrin** : montre l'intérieur du mandrin (ressorts, boulons, voile, manchon, piston, roulement). La tête reste entière ; une pièce retirée du mandrin sort de la coupe.
 - **Éclaté : tête** : les pièces de la tête écartées de la boîte, le mandrin soulevé d'un bloc. Survoler une pièce pour voir son numéro et son nom, cliquer pour la sélectionner.
 - **Éclaté : mandrin** : toutes les pièces du mandrin séparées ; même principe (survol, clic).
-- **Qualité : haute / basse** : active ou coupe l'anticrénelage et la pleine résolution.
+- **?** : aide pour naviguer dans la 3D (affichée au premier passage).
+- **Plein écran** : la vue 3D et ses commandes occupent tout l'écran (Échap pour sortir).
+- **Pause à chaque étape** : à la fin de chaque étape, une carte « Étape n · fait » (formulation de PRO-OP-DD-005) est ancrée sur l'action dans la 3D ; Lecture pour continuer.
+- **Liste des pièces** : repliée par défaut, s'ouvre au clic.
 - **Énergie des ressorts** : indication qualitative seulement (Stockée / Libérée graduellement / Libérée d'un coup / Arrêtée par la retenue) avec une jauge de la compression restante. Aucune valeur de force ni d'énergie n'est affichée.
 
 ## Physique utilisée (estimations)

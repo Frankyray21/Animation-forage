@@ -78,6 +78,17 @@ button, input, select { font: inherit; color: inherit; }
 .outlist li::before { content: '✓ '; color: var(--ok); font-weight: 700; }
 .outlist li.new { font-weight: 600; }
 .outlist li.new::before { content: '● '; color: var(--accent); }
+.actdot { position: absolute; width: 14px; height: 14px; margin: -7px 0 0 -7px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 35%, transparent); pointer-events: none; animation: actpulse 1.4s ease-out infinite; }
+@keyframes actpulse { 0% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--accent) 70%, transparent); } 100% { box-shadow: 0 0 0 16px transparent; } }
+.actcard { position: absolute; max-width: min(270px, 60%); display: grid; gap: 2px; padding: 7px 10px 8px; border-radius: 8px; background: color-mix(in srgb, var(--panel) 92%, transparent); border: 1px solid var(--line); border-left: 4px solid var(--accent); font-size: 12.5px; pointer-events: none; box-shadow: 0 4px 14px rgba(0,0,0,.12); }
+.actcard b { font-size: 11px; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
+.actcard small { font-size: 11px; color: var(--muted); }
+.help { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); width: min(360px, calc(100% - 32px)); padding: 14px 16px; border-radius: 10px; background: var(--panel); border: 1px solid var(--line); box-shadow: 0 10px 30px rgba(0,0,0,.25); z-index: 5; }
+.help h3 { margin: 0 0 8px; font-size: 15px; }
+.help ul { margin: 0 0 12px; padding-left: 18px; display: grid; gap: 4px; font-size: 13px; }
+.stage.fs { position: fixed; inset: 0; z-index: 100; border-radius: 0; border: 0; height: 100%; }
+.stage.fs .view { height: auto; min-height: 0; }
+@media (prefers-reduced-motion: reduce) { .actdot { animation: none; } }
 .note { position: absolute; left: 12px; bottom: 10px; font-family: var(--mono); font-size: 11px; color: var(--muted); background: color-mix(in srgb, var(--scene) 80%, transparent); padding: 2px 6px; border-radius: 4px; pointer-events: none; }
 .flash { position: absolute; inset: 0; pointer-events: none; background: radial-gradient(ellipse at center, transparent 35%, var(--flash, var(--danger)) 120%); opacity: 0; }
 .banner { position: absolute; left: 50%; top: 56px; transform: translateX(-50%); pointer-events: none; text-align: center; font-family: var(--display); color: #fff; background: var(--danger); padding: 8px 18px 10px; border-radius: 6px; box-shadow: 0 8px 30px rgba(0,0,0,.25); max-width: calc(100% - 32px); }
@@ -191,6 +202,8 @@ details.params summary { cursor: pointer; padding: 10px 14px; font-weight: 600; 
 .card p { margin: 0; font-size: 13.5px; }
 .card .meta { font-size: 12.5px; color: var(--muted); }
 .card button { justify-self: start; border: 1px solid var(--line); background: var(--bg); border-radius: 6px; padding: 4px 10px; cursor: pointer; font-size: 13px; }
+.langrow { display: flex; align-items: center; gap: 10px; font-size: 13px; color: var(--muted); margin-bottom: -6px; }
+.langrow .units { margin-left: 0; }
 .bom { border: 1px solid var(--line); border-radius: 8px; background: var(--panel); padding: 0 12px; }
 .bom-toggle { cursor: pointer; padding: 11px 0; font-weight: 600; font-size: 14px; list-style-position: inside; }
 .bom[open] .bom-toggle { border-bottom: 1px solid var(--line); margin-bottom: 10px; }
@@ -221,11 +234,26 @@ details.params summary { cursor: pointer; padding: 10px 14px; font-weight: 600; 
         <button type="button" class="vbtn" id="btnCut" aria-pressed="true">Coupe du mandrin</button>
         <button type="button" class="vbtn" id="btnHeadExplode" aria-pressed="false">Éclaté : tête</button>
         <button type="button" class="vbtn" id="btnExplode" aria-pressed="false">Éclaté : mandrin</button>
-        <button type="button" class="vbtn" id="btnQuality" aria-pressed="true" title="Haute : pleine résolution et anticrénelage SMAA. Basse : pour tablette ou ordinateur lent.">Qualité : haute</button>
+        <button type="button" class="vbtn" id="btnHelp" aria-label="Aide : naviguer dans la 3D">?</button>
+        <button type="button" class="vbtn" id="btnFs" aria-pressed="false">Plein écran</button>
       </div>
       <div class="banner" id="banner" hidden><strong id="bannerTitle">PROJECTION</strong></div>
       <div class="note" id="note">Ressorts : course ×6</div>
       <div class="outlist" id="outList" hidden><b>Retiré</b><ul></ul></div>
+      <div class="actdot" id="actDot" hidden></div>
+      <div class="actcard" id="actCard" hidden><b id="actStep"></b><span id="actText"></span><small>Lecture pour continuer</small></div>
+      <div class="help" id="help" hidden role="dialog" aria-labelledby="helpTitle">
+        <h3 id="helpTitle">Naviguer dans la 3D</h3>
+        <ul>
+          <li><b>Tourner</b> : clic gauche + glisser</li>
+          <li><b>Déplacer</b> : clic droit + glisser (ou Maj + glisser)</li>
+          <li><b>Zoom</b> : molette</li>
+          <li><b>Revenir à la vue de l'étape</b> : « Recentrer la caméra »</li>
+          <li><b>Tablette</b> : 1 doigt tourne, 2 doigts zooment et déplacent</li>
+          <li><b>Vue éclatée</b> : survoler une pièce affiche son nom et son numéro</li>
+        </ul>
+        <button type="button" class="vbtn" id="helpOk">Compris</button>
+      </div>
     </div>
     <div class="dock" id="dock" data-tone="ok">
       <div class="caption" aria-live="polite">
@@ -275,6 +303,7 @@ details.params summary { cursor: pointer; padding: 10px 14px; font-weight: 600; 
     </section>
 
 
+    <div class="langrow" role="group" aria-label="Langue des noms de pièces"><span>Noms des pièces</span><div class="units"><button type="button" data-lang="en" aria-pressed="true">EN</button><button type="button" data-lang="fr" aria-pressed="false">FR</button></div></div>
     <details class="bom" id="bomSec">
       <summary class="bom-toggle">Liste des pièces</summary>
       <div class="card" id="partCard"></div>
@@ -509,7 +538,7 @@ const mat = {
   red: new THREE.MeshStandardMaterial({ color: 0xb3301e, roughness: .5, metalness: .15 }),
   steel: new THREE.MeshStandardMaterial({ color: 0x2c3135, roughness: .42, metalness: .65 }),
   steelLight: new THREE.MeshStandardMaterial({ color: 0xa7afb5, roughness: .45, metalness: .85 }),
-  bolt: new THREE.MeshStandardMaterial({ color: 0xc9a54a, roughness: .35, metalness: .8 }),
+  bolt: new THREE.MeshStandardMaterial({ color: 0xb4b9be, roughness: .32, metalness: .85 }),   // boulons zingués (photo du mandrin)
   spring: new THREE.MeshStandardMaterial({ color: 0x2a5bd7, roughness: .35, metalness: .35 }),
   pocket: new THREE.MeshStandardMaterial({ color: 0x0d0f10, roughness: 1 }),
   wood: new THREE.MeshStandardMaterial({ color: 0xa98357, roughness: .9 }),
@@ -530,6 +559,23 @@ const mat = {
 
 // boîte aux arêtes légèrement arrondies (reflets réalistes sur les chanfreins)
 const rboxGeo = (w, h, d) => new RoundedBoxGeometry(w, h, d, 2, Math.min(w, h, d) * .16);
+// Fusionne des géométries indexées de même format (position, normale, uv) en une seule
+function mergeGeos(list) {
+  const out = new THREE.BufferGeometry(), attrs = ['position', 'normal', 'uv'], data = {}, idx = [];
+  attrs.forEach(n => data[n] = []);
+  let off = 0;
+  for (const g of list) {
+    attrs.forEach(n => data[n].push(...g.attributes[n].array));
+    const ix = g.index ? g.index.array : [...Array(g.attributes.position.count).keys()];
+    for (const i of ix) idx.push(i + off);
+    off += g.attributes.position.count; g.dispose();
+  }
+  out.setAttribute('position', new THREE.Float32BufferAttribute(data.position, 3));
+  out.setAttribute('normal', new THREE.Float32BufferAttribute(data.normal, 3));
+  out.setAttribute('uv', new THREE.Float32BufferAttribute(data.uv, 2));
+  out.setIndex(idx);
+  return out;
+}
 function mesh(geo, m, { cast = true, receive = true } = {}) {
   const o = new THREE.Mesh(geo, m);
   o.castShadow = cast; o.receiveShadow = receive;
@@ -758,10 +804,25 @@ part({ id: '5035017', ref: '5035017', name: 'Bague d\'usure du piston', qty: 1, 
 part({ id: '5222624', ref: '5222624', name: 'Goupille élastique', qty: 4, grp: 'rear', ext: [5.8, 6.3], r: 4.6 },
   ringAt(4, 4.45, 45).map(([x, z]) => placeIn(mesh(new THREE.CylinderGeometry(u(.09), u(.09), u(.5), 12), mat.machined), x, 6.05, z)));
 const bearing = new THREE.Group();
-bearing.add(mesh(annulusIn(R.bearIn, 3.2, .9), mat.machined));
-{ const o = mesh(annulusIn(3.6, R.piston, .9), mat.machined); bearing.add(o); }
-{ const cage = mesh(annulusIn(3.3, 3.5, .5), mat.brass); cage.position.y = u(.2); bearing.add(cage); }
-for (let k = 0; k < 18; k++) { const [x, z] = polar(3.4, k * 20); const b = mesh(new THREE.SphereGeometry(u(.2), 12, 10), mat.steelLight); b.position.set(u(x), u(.45), u(z)); bearing.add(b); }
+// Roulement à rouleaux cylindriques (vue éclatée Boyles) : bague intérieure à épaulements, rouleaux visibles
+// entre les deux lèvres de la bague extérieure, cage en laiton à deux flasques
+bearing.add(mesh(annulusIn(R.bearIn, 3.18, .9), mat.machined));
+for (const y of [0, .82]) { const rib = mesh(annulusIn(3.17, 3.3, .08), mat.machined); rib.position.y = u(y); bearing.add(rib); }
+for (const y of [0, .8]) { const lip = mesh(annulusIn(3.6, R.piston, .1), mat.machined); lip.position.y = u(y); bearing.add(lip); }
+for (const y of [.08, .76]) { const rail = mesh(annulusIn(3.21, 3.58, .06), mat.brass); rail.position.y = u(y); bearing.add(rail); }
+{
+  const n = 50, rm = 3.39, geos = [];
+  for (let k = 0; k < n; k++) {
+    const a = k / n * Math.PI * 2, g = new THREE.CylinderGeometry(u(.15), u(.15), u(.62), 14);
+    g.translate(u(rm) * Math.cos(a), u(.45), -u(rm) * Math.sin(a)); geos.push(g);
+  }
+  const bars = [];   // barrettes de la cage entre les rouleaux
+  for (let k = 0; k < n; k++) {
+    const a = (k + .5) / n * Math.PI * 2, g = new THREE.BoxGeometry(u(.09), u(.62), u(.05));
+    g.rotateY(a); g.translate(u(3.52) * Math.cos(a), u(.45), -u(3.52) * Math.sin(a)); bars.push(g);
+  }
+  bearing.add(mesh(mergeGeos(geos), mat.steelLight), mesh(mergeGeos(bars), mat.brass));
+}
 placeIn(bearing, 0, 4.45, 0);
 part({ id: '5000199', ref: '5000199', name: 'Roulement', qty: 1, grp: 'rear', ext: [4.45, 5.35], r: 3.9, role: 'Le mandrin tourne, le piston non : le roulement transmet la poussée entre les deux.' }, bearing);
 part({ id: '3506882', ref: '3506882', name: 'Bague d\'appui (back-up ring)', qty: 1, grp: 'rear', ext: [4.22, 4.42], r: 3.8 }, placeIn(mesh(annulusIn(2.95, 3.75, .2), mat.machined), 0, 4.22, 0));
@@ -919,19 +980,31 @@ mat.knurl = (() => {
   const x = c.getContext('2d');
   x.fillStyle = '#9aa0a5'; x.fillRect(0, 0, 64, 64);
   x.strokeStyle = '#3b4044'; x.lineWidth = 3;
-  for (let i = -64; i < 128; i += 11) { x.beginPath(); x.moveTo(i, 0); x.lineTo(i + 64, 64); x.stroke(); x.beginPath(); x.moveTo(i + 64, 0); x.lineTo(i, 64); x.stroke(); }
+  for (let i = -64; i < 128; i += 9) { x.beginPath(); x.moveTo(i, 0); x.lineTo(i + 64, 64); x.stroke(); x.beginPath(); x.moveTo(i + 64, 0); x.lineTo(i, 64); x.stroke(); }
   const t = new THREE.CanvasTexture(c); t.wrapS = t.wrapT = THREE.RepeatWrapping; t.repeat.set(1, 2.4); t.colorSpace = THREE.SRGBColorSpace;
   return new THREE.MeshStandardMaterial({ map: t, color: 0xb9bec2, roughness: .5, metalness: .6 });
 })();
 const jawRm = y => (R.jawIn + lerp(R.bowlBot, R.bowlTop, y / JAW_H) - .02) / 2;   // rayon moyen du segment à la hauteur y
+mat.jawSteel = new THREE.MeshStandardMaterial({ color: 0x7d8388, roughness: .42, metalness: .75 });   // acier trempé gris des mâchoires
 const jaws = [...Array(8)].map((_, k) => {
   const j = new THREE.Group();
-  j.add(mesh(jawGeoH, mat.machined));
-  // plaquettes de carbure moletées (face de serrage)
-  for (const [y0, y1] of [[.3, 1.0], [1.2, 1.9], [2.1, 2.8]]) {
-    const pad = mesh(new THREE.BoxGeometry(u(.1), u(y1 - y0), u(.42)), [mat.boltBlack, mat.knurl, mat.boltBlack, mat.boltBlack, mat.boltBlack, mat.boltBlack]);
-    pad.position.set(u(R.jawIn + .02), u((y0 + y1) / 2), 0); j.add(pad);
+  j.add(mesh(jawGeoH, mat.jawSteel));
+  // Face de serrage (photos du jeu de mâchoires) : 2 colonnes × 2 rangées de plaquettes carbure dentées,
+  // encoche horizontale au milieu
+  const hm = JAW_H / 2;
+  for (const [y0, y1] of [[.22, hm - .16], [hm + .16, JAW_H - .22]]) for (const zc of [-.12, .12]) {
+    const pad = mesh(rboxGeo(u(.08), u(y1 - y0), u(.17)), mat.knurl);
+    pad.position.set(u(R.jawIn + .015), u((y0 + y1) / 2), u(zc)); j.add(pad);
   }
+  const notch = mesh(new THREE.BoxGeometry(u(.06), u(.16), u(R.jawIn * JAW_A * Math.PI / 180 * .98)), mat.pocket);
+  notch.position.set(u(R.jawIn + .005), u(hm), 0); j.add(notch);
+  // rainure de guidage sur chaque flanc
+  { const ha = JAW_A / 2 * Math.PI / 180;
+    for (const sg of [-1, 1]) {
+      const rg = (R.jawIn + R.bowlBot) / 2 + .15;
+      const gr = mesh(new THREE.BoxGeometry(u(.14), u(JAW_H - .1), u(.03)), mat.pocket);
+      gr.position.set(u(rg) * Math.cos(sg * ha), u(JAW_H / 2), -u(rg) * Math.sin(sg * ha)); gr.rotation.y = sg * ha; j.add(gr);
+    } }
   // trous de liaison sur les deux flancs, goupille vers le segment suivant
   const ha = JAW_A / 2 * Math.PI / 180, ga = (45 - JAW_A) * Math.PI / 180;
   for (const y of JAW_HOLES) {
@@ -941,7 +1014,7 @@ const jaws = [...Array(8)].map((_, k) => {
       hole.position.set(u(rm) * Math.cos(sg * ha), u(y), -u(rm) * Math.sin(sg * ha));
       hole.rotation.set(Math.PI / 2, sg * ha, 0, 'YXZ'); j.add(hole);
     }
-    const pin = mesh(new THREE.CylinderGeometry(u(.1), u(.1), u(rm * ga + .3), 10), mat.steelLight);
+    const pin = mesh(new THREE.CylinderGeometry(u(.09), u(.09), u(rm * ga + .3), 10), mat.rubber);   // anneau élastique noir qui relie les segments
     const am = ha + ga / 2;
     pin.position.set(u(rm) * Math.cos(am), u(y), -u(rm) * Math.sin(am));
     pin.rotation.set(Math.PI / 2, am, 0, 'YXZ'); j.add(pin);
@@ -970,11 +1043,12 @@ part({ id: 'B500-8000', ref: 'B500-8000', name: 'Boulon ½ × 8 po (avec entreto
 const CV_BASE = new THREE.Vector3(0, u(Y.rimT), 0);
 const cover = new THREE.Group();
 {
-  cover.add(mesh(annulusIn(R.capOut, R.body, Y.front - Y.rimT, ringAt(9, R.coverBolt, 12).map(([x, z]) => [x, z, .27])), mat.grey));
-  const lip = mesh(lobedAnnulus(R.lipIn, 3.95, R.capOut + .01, Y.lipT - Y.lipB, ringAt(3, R.jcBolt, 22).map(([x, z]) => [x, z, .38]), BOLTS.map((b, i) => boltAt(i)), 8.5), mat.grey);
+  cover.add(mesh(annulusIn(R.capOut, R.body, Y.front - Y.rimT, ringAt(9, R.coverBolt, 12).map(([x, z]) => [x, z, .27])), mat.paint));
+  const lip = mesh(lobedAnnulus(R.lipIn, 3.95, R.capOut + .01, Y.lipT - Y.lipB, ringAt(3, R.jcBolt, 22).map(([x, z]) => [x, z, .38]), BOLTS.map((b, i) => boltAt(i)), 8.5), mat.paint);
   lip.position.y = u(Y.lipB - Y.rimT);
-  const rim = band(R.body, Y.front - .6 - Y.rimT, Y.front - Y.rimT, mat.blue);
-  cover.add(lip, rim);
+  // joint couvercle / boîtier : la ligne près du bout visible sur la planche 2.1 (petit tore, aucune face superposée)
+  const seam = mesh(new THREE.TorusGeometry(u(R.body), u(.035), 6, 96), mat.pocket); seam.rotation.x = Math.PI / 2;
+  cover.add(lip, seam);
 }
 fadeable(cover);
 clampG.add(cover);
@@ -992,7 +1066,7 @@ const jawCover = new THREE.Group();
     ...ringAt(3, R.jcBolt, 22).map(([x, z]) => [x, z, .41]),
     ...BUSHED.map(i => [BOLTS[i].x / IN, BOLTS[i].z / IN, .55]),
     ...ringAt(6, 2.35, 30).map(([x, z]) => [x, z, .12]),
-  ]), mat.grey));
+  ]), mat.paint));
   for (let k = 0; k < 8; k++) {
     const t = mesh(rboxGeo(u(.55), u(.6), u(.24)), mat.grey);
     const a = (k + .5) * Math.PI / 4;
@@ -1000,7 +1074,6 @@ const jawCover = new THREE.Group();
     t.rotation.y = a;
     jawCover.add(t);
   }
-  jawCover.add(band(R.capOut, Y.front - .35 - Y.capB, Y.front - Y.capB, mat.blue));
 }
 fadeable(jawCover);
 clampG.add(jawCover);
@@ -2123,7 +2196,7 @@ const inHead = o => { for (; o; o = o.parent) if (o === headG) return true; retu
 const hiCache = new Map();
 function hiMat(m) {
   if (Array.isArray(m)) return m.map(hiMat);
-  if (!hiCache.has(m)) { const h = m.clone(); h.emissive = new THREE.Color(0xf2c230); h.emissiveIntensity = 0.45; h.transparent = false; h.opacity = 1; hiCache.set(m, h); }
+  if (!hiCache.has(m)) { const h = m.clone(); if (h.emissive) { h.emissive.setHex(0x000000); h.emissiveIntensity = 0; } h.transparent = false; h.opacity = 1; hiCache.set(m, h); }   // couleur d'origine : seules les autres pièces passent en fantôme hiCache.set(m, h); }
   return hiCache.get(m);
 }
 function clampMaterials() {
@@ -2208,19 +2281,19 @@ function removeBolt(S, i, p, from = null) {
 
 /* ---------- Étapes communes ---------- */
 const st = {
-  lever: { n: '1', title: 'Manettes fermées', cam: 'intro', dur: 3.5,
+  lever: { n: '1', title: 'Manettes fermées', cam: 'intro', dur: 3.5, act: 'Manettes du clam et du chuck en position fermée', at: () => levers[0],
     text: 'Mettre les manettes du clam et du chuck en position fermée. Le vérin ne pousse plus, mais les ressorts restent comprimés.',
     apply(S, p) { S.lever = ease(p); } },
-  jaws: { n: '2', title: 'Mâchoires fermées', cam: 'top', dur: 3,
+  jaws: { n: '2', title: 'Mâchoires fermées', cam: 'top', dur: 3, act: 'Jaws (mâchoires) en position fermée',
     text: 'Vérifier que les mâchoires sont fermées.',
     apply(S, p) { S.jaws = ease(p); } },
-  lock: { n: '3', title: 'Cadenasser', cam: 'intro', dur: 3,
+  lock: { n: '3', title: 'Cadenasser', cam: 'intro', dur: 3, act: 'Procédure de cadenassage appliquée', at: () => lockG,
     text: 'Cadenasser la foreuse. Le cadenassage coupe l\'hydraulique, pas l\'énergie des ressorts.',
     apply(S, p) { S.lock = ease(p); } },
-  jawCover: { n: '4', title: 'Retirer le couvert des mâchoires', cam: 'overview', dur: 5,
+  jawCover: { n: '4', title: 'Retirer le couvert des mâchoires', cam: 'overview', dur: 5, act: 'Boulons ¾ dévissés (clé 1 1/8), couvert des mâchoires retiré',
     text: 'Dévisser ses boulons ¾ (clé 1 1/8) et retirer le couvert.',
     apply(S, p) { for (let k = 0; k < 3; k++) S.jc.bolts[k] = seg(p, k * .1, k * .1 + .45); S.jc.lift = seg(p, .58, 1); } },
-  cover: { n: '5', title: 'Retirer le couvercle (9 boulons ½)', cam: 'overview', dur: 6,
+  cover: { n: '5', title: 'Retirer le couvercle (9 boulons ½)', cam: 'overview', dur: 6, act: '9 boulons ½ enlevés (clé ¾), couvercle retiré',
     text: 'Enlever les 9 boulons ½ (clé ¾) et le couvercle. Le cône et ses 9 boulons apparaissent. Les ressorts sont toujours comprimés.',
     apply(S, p) { for (let k = 0; k < 9; k++) S.cv.bolts[k] = seg(p, k * .045, k * .045 + .4); S.cv.lift = seg(p, .6, 1); S.springLbl = seg(p, .85, 1); } },
 };
@@ -2230,7 +2303,7 @@ const first5 = { n: '1–5', title: 'Étapes 1 à 5 faites', cam: 'overview', du
     st.lever.apply(S, seg(p, 0, .15)); st.jaws.apply(S, seg(p, .1, .25)); st.lock.apply(S, seg(p, .2, .35));
     st.jawCover.apply(S, seg(p, .3, .62)); st.cover.apply(S, seg(p, .62, 1));
   } };
-const skip6 = { n: '6', title: 'Boulons de retenue non remis', cam: 'bolts', dur: 5, tone: 'warn', flag: 'Omise',
+const skip6 = { n: '6', title: 'Boulons de retenue non remis', cam: 'bolts', dur: 5, tone: 'warn', flag: 'Omise', act: 'Boulons longs enlevés, non remis : aucune retenue',
   text: 'Les 3 boulons longs sont enlevés et ne sont pas remis. Plus rien ne retient le cône.',
   apply(S, p) {
     S.springLbl = 1;
@@ -2238,7 +2311,7 @@ const skip6 = { n: '6', title: 'Boulons de retenue non remis', cam: 'bolts', dur
     S.zone = seg(p, .7, 1);
   } };
 
-st.retain = { n: '6', title: 'Remettre les 3 boulons longs sans bushing', cam: 'bolts', dur: 8,
+st.retain = { n: '6', title: 'Remettre les 3 boulons longs sans bushing', cam: 'bolts', dur: 8, act: '3 boulons ½ × 8 remis sans bushing : retenue en place', at: () => pBolts[BUSHED[0]],
   text: 'Enlever les 3 boulons longs (½ × 8) et leurs bushings. Les revisser sans bushing : ils retiennent le cône s\'il part.',
   apply(S, p) {
     S.springLbl = 1;
@@ -2292,7 +2365,7 @@ const SCEN = {
     make: () => [
       st.lever, st.jaws, st.lock, st.jawCover, st.cover,
       st.retain,
-      { n: '7', title: 'Dévisser 1 tour à la fois, ordre 1 à 6', cam: 'bolts', dur: rounds() * 6 * 0.62 / 0.84,
+      { n: '7', title: 'Dévisser 1 tour à la fois, ordre 1 à 6', cam: 'bolts', dur: rounds() * 6 * 0.62 / 0.84, act: '6 boulons ½ × 6 ½ dévissés 1 tour à la fois (ordre 1 à 6), puis retirés',
         text: 'Dévisser les 6 boulons ½ un tour à la fois, dans l\'ordre 1 à 6. Les ressorts se détendent peu à peu, également. Retirer ensuite les 6 boulons.',
         apply(S, p) {
           S.springLbl = 1; S.ret = 1;
@@ -2300,10 +2373,10 @@ const SCEN = {
           ORDER.forEach((i, o) => { if (p > .84) removeBolt(S, i, seg(p, .84 + o * .012, .95 + o * .01), rounds()); });
           S.nums = 1 - seg(p, .9, 1);
         } },
-      { n: '8', title: 'Retirer les 3 boulons longs', cam: 'bolts', dur: 4,
+      { n: '8', title: 'Retirer les 3 boulons longs', cam: 'bolts', dur: 4, act: 'Ressorts détendus : 3 boulons longs retirés',
         text: 'Les ressorts sont détendus : les 3 boulons de retenue ne portent plus rien. Les enlever.',
         apply(S, p) { S.springLbl = 1; S.ret = 1 - seg(p, .6, .9); BUSHED.forEach((i, k) => removeBolt(S, i, seg(p, k * .08, .75 + k * .08), retainTurns())); } },
-      { n: '9', title: 'Changer les pièces', cam: 'overview', dur: 4.5,
+      { n: '9', title: 'Changer les pièces', cam: 'overview', dur: 4.5, act: 'Cône et mâchoires sortis : changer les pièces',
         text: 'Cône, mâchoires et ressorts sont accessibles, sans énergie résiduelle.',
         apply(S, p) { S.springLbl = 1 - seg(p, .5, 1); S.plateOut = ease(p); } },
     ],
@@ -2985,6 +3058,11 @@ function summaryText(ev) {
 /* ================= Nomenclature, fiche de pièce, vues ================= */
 const GRP = { hbox: 'Tête : boîte et couvercle', hspindle: 'Tête : broche, roulements, joints', hdrive: 'Tête : entraînement (pignons, chaîne, transmission, moteur)', hlube: 'Tête : lubrification (pompe, filtre, boyaux, raccords)', hmount: 'Tête : montage sur la foreuse', rear: 'Mandrin : arrière (vérin, roulement, adaptateur)', body: 'Mandrin : boîtier', front: 'Mandrin : avant (ressorts, cône, boulons, couvercles, mâchoires)', opt: 'Mandrin : options (adaptateur UM-070, bagues de guidage B, anneau WH-500)' };
 const qtyOf = p => p.qty === 'n' ? P.n : p.qty;
+/* Noms des pièces en anglais (désignations des listes de pièces), affichés par défaut ; le français reste disponible */
+const NAME_EN = {"3506881": "Drive key Boyles 12HH (UM-012-189)", "3506879": "Key retaining spring", "3506910": "Chuck adapter (option 2, UM-012 head)", "B500-1500": "Bolt ½ × 1 ½ in", "B500-4500": "Bolt ½ × 4 ½ in", "NC500": "Nut ½-13 UNC", "3506909": "Hydraulic cylinder", "5035016": "U-cup seal", "5035018": "Wear ring", "3506908": "Piston", "5035015": "Piston U-cup seal", "5035017": "Piston wear ring", "5222624": "Roll pin", "5000199": "Bearing", "3506882": "Back-up ring", "5054078": "Retaining ring", "3506928": "Actuating sleeve (RR 50)", "2501-8-6": "90° elbow MJIC 6 × MP 8", "ZNPT250": "Grease fitting 1/8 NPT", "5041022": "V-ring seal", "3506870": "Chuck body", "3506880": "Lower spacer", "5040192": "Oil seal", "5200517": "Spring", "2920390": "Chuck bowl 12 ½ L (cone)", "UM-021-01-01": "Boyles H jaw set, size B", "B500-6500": "Bolt ½ × 6 ½ in", "3506878": "Upper spacer (1 ½ in bushing)", "B500-8000": "Bolt ½ × 8 in (with bushing)", "3506906": "Cap holder (cover)", "B500-2250": "Bolt ½ × 2 ¼ in", "3506907": "Cap adapter (jaw cover)", "B750-1500": "Bolt ¾ × 1 ½ in", "UM-070-608A": "Chuck adapter (option 1, UM-070 head)", "RING-WH500": "Jaw ring WH-500", "06-02": "Guide bushing, B rod", "06-22": "Guide bushing, B casing", "UM-012-104A": "Drill head housing", "UM-012-113A": "Housing cover (UM logo)", "B375-1000": "Bolt 3/8 × 1 in", "W375": "Flat washer 3/8", "UM-012-131": "Plug 1 in NPT", "UM-102-132": "Plug 3/8 in NPT", "UM-1214-121P": "Blidder cover (vent cover)", "UM-012-167": "Vent cover O-ring", "B312-1000": "Bolt 5/16 × 1 in", "W312": "Flat washer 5/16", "UM-012-101": "Boyles spindle", "UM-012-122": "Spindle key", "UM-012-128": "Upper bearing", "UM-012-129": "Lower bearing", "UM-012-121": "Spindle cover, transmission side (upper bearing housing)", "UM-012-124": "Upper seal", "UM-012-120": "Chuck adapter cover", "SHC500-4000": "Socket head cap screw ½-UNC × 4 in", "UM-012-107": "Heat-treated sleeve", "UM-012-106": "Chuck adjusting sleeve", "UM-012-126": "Lower seal", "UM-012-114": "Lower spindle cover (lower bearing housing)", "B500-1750": "Bolt ½-13 × 1 ¾ in", "W500": "Flat washer ½ in", "W500-M": "Flat washer ½ in (chuck adapter)", "UM-012-119": "Seal sleeve", "UM-012-117": "Spindle nut thrust washer", "UM-012-118": "Spindle clamp nut", "UM-012-115": "Spindle jam nut", "UM-012-108": "BQ guide sleeve", "UM-012-116": "Wear sleeve cover", "SS75-1250": "Set screw ¾-10 × 1 ¼ in", "SHCS312-1500": "Socket head cap screw 5/16 × 2 ½ in", "UM-012-102": "Driven sprocket (triple)", "UM-012-103": "Drive sprocket (triple) and shaft", "UM-012-169": "Hydraulic pump key", "UM-012-127": "Drive sprocket bearing", "UM-012-130": "Roller chain (one per strand)", "UM-012-125": "Transmission seal", "UM-012-123": "Seal seat", "UM-012-143": "4-speed transmission (Funk)", "B437-1500": "Bolt 7/16-UNC × 1 ½ in", "W437": "Lock washer 7/16", "UM-012-170": "Transmission / hydraulic motor coupling", "UM-012-192": "Internal retaining ring 1 ½ in", "AA6VM": "Hydraulic motor AA6VM160HD2-63W-VSD520B", "B750-2000": "Bolt ¾-10 × 2 in", "W750": "Flat washer ¾", "UM-063-290T": "90° flange elbow 1704-16-20", "UM-063-289T": "Split flange", "UM-012-208": "Flange O-ring", "UM-012-111": "Hydraulic pump cover", "UM-012-139": "Lubrication pump", "B250-750": "Bolt ¼-NC × ¾ in", "W250": "Flat washer ¼", "COOLER": "Oil cooler (not in parts list)", "UM-012-177": "Filter head", "UM-012-178": "Filter cartridge", "UM-10B-TR#6": "3-way valve BKH 3/8 NPT", "NDV-10-N": "Flow regulator", "A-1199-R-4048": "Breather", "UM-012-H08C": "Hose 3/8 in, breather (24 in)", "UM-012-H10C": "Hose 3/8 in, housing / transmission (3 ¾ in)", "UM-012-H11C": "Hose ½ in, transmission / sump (5 in)", "UM-012-H15C-UG": "Hose 3/8 in, sump / suction (9 ¾ in)", "UM-012-H16C-UG": "Hose 3/8 in, sump / suction (21 in)", "UM-012-H17C-UG": "Hose 3/8 in, filter outlet / cooler bottom (10 in)", "UM-012-H18C-UG": "Hose 3/8 in, cooler top / regulator (12 in)", "UM-012-H20C-UG": "Hose 3/8 in, pressure / filter (6 ¾ in)", "UM-012-H21C-UG": "Hose 3/8 in, regulator / transmission inlet (5 in)", "UM-012-H22C-UG": "Hose 3/8 in, transmission / housing (8 in)", "UM-012-H23C-UG": "Hose 3/8 in, transmission / cover (10 in)", "UM-012-H24C-UG": "Hose 3/8 in, regulator / lower bearing (9 in)", "UM-012-H25C-UG": "Hose 3/8 in, regulator / upper bearing (7 in)", "2404-6-4": "Adapter MJIC × MP", "2404-8-6": "Adapter MJIC × MP", "2501-06-04": "90° elbow MJIC × MP", "2501-6-6": "90° elbow MJIC × MP", "2501-6-8": "90° elbow MJIC × MP", "2501-8-8": "90° elbow MJIC × MP", "2501LL-8-8": "90° long elbow MJIC × MP", "2601-06-06-08": "Tee MJIC × MJIC × MP", "5000-6-6": "Coupling FP × FP", "6402-8-8": "Swivel adapter ORB × FJIC", "6500-06-06": "Swivel adapter MJIC × FJIC", "6600-06-06-06": "Swivel branch tee", "6600-8-8-8": "Swivel branch tee", "6602-06-06-06": "Swivel run tee", "6801-6-8": "90° elbow MJIC × MORB", "UM-012-105A": "Pivot pin", "UM-012-171": "Pivot pin hardened bushing", "HP1000": "Hitch pin (R-clip) 1 in", "TRAVAILLEUR": "Worker (3D model)"};
+let LANG = 'en';
+try { LANG = localStorage.getItem('clam-lang') === 'fr' ? 'fr' : 'en'; } catch (e) {}
+const pname = p => LANG === 'en' ? (NAME_EN[p.id] || p.name) : p.name;
 function renderBOM() {
   const el = $('bomList'); el.innerHTML = '';
   for (const [g, title] of Object.entries(GRP)) {
@@ -2995,13 +3073,20 @@ function renderBOM() {
       b.setAttribute('aria-pressed', String(selected === p));
       b.innerHTML = `<span class="r"></span><span class="n"></span><span class="q"></span>`;
       b.querySelector('.r').textContent = p.ref;
-      b.querySelector('.n').textContent = nb(p.name);
+      b.querySelector('.n').textContent = LANG === 'en' ? pname(p) : nb(pname(p));
       b.querySelector('.q').textContent = `${p.qtyEst ? '≈' : ''}${qtyOf(p)}`;
       b.addEventListener('click', () => { if (p.head && explodeTarget) setExplode(false); select(selected === p ? null : p); if (p.opt && !explodeTarget) setExplode(true); });
       el.appendChild(b);
     });
   }
 }
+function setLang(l) {
+  LANG = l; try { localStorage.setItem('clam-lang', l); } catch (e) {}
+  document.querySelectorAll('.langrow button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.lang === l)));
+  renderBOM(); renderCard(); hideTip();
+}
+document.querySelectorAll('.langrow button').forEach(b => b.addEventListener('click', () => setLang(b.dataset.lang)));
+document.querySelectorAll('.langrow button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.lang === LANG)));
 function renderCard() {
   const c = $('partCard');
   if (!selected) {
@@ -3012,7 +3097,7 @@ function renderCard() {
   const p = selected;
   c.innerHTML = `<span class="ref"></span><h4></h4><p class="role"></p><p class="step"></p><p class="meta"></p><button type="button">Afficher toutes les pièces</button>`;
   c.querySelector('.ref').textContent = `${p.ref} · quantité ${p.qtyEst ? '≈ ' : ''}${qtyOf(p)}${p.qtyEst ? ' (compte estimé d\'après le dessin)' : ''}`;
-  c.querySelector('h4').textContent = nb(p.name);
+  c.querySelector('h4').textContent = LANG === 'en' ? pname(p) : nb(pname(p));
   c.querySelector('.role').textContent = nb(p.role || '');
   c.querySelector('.step').textContent = nb(p.step || '');
   c.querySelector('.meta').textContent = nb(p.note || (p.opt ? 'Pièce optionnelle : non montée sur le mandrin animé.' : ''));
@@ -3076,7 +3161,7 @@ let hoverEv = null, hoverQueued = false, tipTimer = 0;
 function hideTip() { tip.hidden = true; canvas.style.cursor = ''; }
 function showTip(p, ev) {
   $('tipRef').textContent = p.ref + (p.qty && p.qty !== 1 ? ` · ×${qtyOf(p)}` : '');
-  $('tipName').textContent = nb(p.name);
+  $('tipName').textContent = LANG === 'en' ? pname(p) : nb(pname(p));
   tip.hidden = false;
   const r = canvas.getBoundingClientRect(), w = tip.offsetWidth, h = tip.offsetHeight;
   let x = ev.clientX - r.left + 14, y = ev.clientY - r.top + 16;
@@ -3112,11 +3197,8 @@ applyTheme();
 
 /* ================= Boucle ================= */
 /* ---------- Post-traitement (qualité haute) : tonalité ACES, anticrénelage SMAA ----------
-   Qualité basse (tablettes, mobiles) : rendu direct, résolution limitée. Réglable par le bouton « Qualité ». */
-const QUALITY_KEY = 'clam-quality';
-const autoLow = /Android|iPhone|iPad|Mobi/i.test(navigator.userAgent) || (navigator.hardwareConcurrency || 8) <= 4 || Math.min(screen.width, screen.height) < 700;
-let quality = 'high';
-try { quality = localStorage.getItem(QUALITY_KEY) || (autoLow ? 'low' : 'high'); } catch (e) { quality = autoLow ? 'low' : 'high'; }
+   Toujours actif ; le rendu direct (« low ») ne sert qu'au banc d'essai. */
+let quality = 'high';   // toujours en haute qualité (le mode bas reste accessible au banc d'essai)
 let composer = null, smaa = null;
 function buildComposer() {
   const w = Math.max(2, view.clientWidth), h = Math.max(2, view.clientHeight);
@@ -3129,10 +3211,7 @@ function buildComposer() {
 }
 function setQuality(q) {
   quality = q;
-  try { localStorage.setItem(QUALITY_KEY, q); } catch (e) {}
   renderer.setPixelRatio(Math.min(devicePixelRatio, q === 'high' ? 2 : 1.25));
-  const b = document.getElementById('btnQuality');
-  if (b) { b.textContent = q === 'high' ? 'Qualité : haute' : 'Qualité : basse'; b.setAttribute('aria-pressed', String(q === 'high')); }
   resize();
 }
 function resize() {
@@ -3146,7 +3225,49 @@ function resize() {
     composer.setSize(w, h); smaa.setSize(w * renderer.getPixelRatio(), h * renderer.getPixelRatio());
   }
 }
-document.getElementById('btnQuality').addEventListener('click', () => setQuality(quality === 'high' ? 'low' : 'high'));
+// Plein écran : API du navigateur, sinon la vue occupe toute la fenêtre (iPhone, cadre intégré)
+const stage = document.querySelector('.stage');
+function setFs(on) {
+  stage.classList.toggle('fs', on); document.body.style.overflow = on ? 'hidden' : '';
+  const b = $('btnFs'); b.setAttribute('aria-pressed', String(on)); b.textContent = on ? 'Quitter le plein écran' : 'Plein écran';
+  requestAnimationFrame(resize);
+}
+$('btnFs').addEventListener('click', async () => {
+  const on = !stage.classList.contains('fs');
+  if (!on) { if (document.fullscreenElement) { try { await document.exitFullscreen(); } catch (e) {} } setFs(false); return; }
+  try { if (stage.requestFullscreen) await stage.requestFullscreen(); } catch (e) {}
+  setFs(true);
+});
+document.addEventListener('fullscreenchange', () => { if (!document.fullscreenElement && stage.classList.contains('fs')) setFs(false); });
+document.addEventListener('keydown', e => { if (e.key === 'Escape' && stage.classList.contains('fs') && !document.fullscreenElement) setFs(false); });
+// Aide à la navigation : au premier passage, puis avec le bouton « ? »
+const HELP_KEY = 'clam-help-seen';
+const showHelp = v => { $('help').hidden = !v; if (!v) try { localStorage.setItem(HELP_KEY, '1'); } catch (e) {} };
+$('btnHelp').addEventListener('click', () => showHelp($('help').hidden));
+$('helpOk').addEventListener('click', () => showHelp(false));
+{ let seen = false; try { seen = !!localStorage.getItem(HELP_KEY); } catch (e) {} if (!seen) showHelp(true); }
+// Pause à chaque étape : carte « fait » ancrée sur l'action dans la 3D
+let pauseStep = -1, pauseT = 0;
+const actV = new THREE.Vector3();
+function updateActCard() {
+  const card = $('actCard'), dot = $('actDot');
+  if (pauseStep >= 0 && (playing || Math.abs(T - pauseT) > 1e-6 || explodeE > 0 || hexE > 0)) pauseStep = -1;
+  if (pauseStep < 0) { card.hidden = dot.hidden = true; return; }
+  const s = steps[pauseStep];
+  const o = s.at ? s.at() : plate;
+  o.getWorldPosition(actV); actV.project(camera);
+  const w = view.clientWidth, h = view.clientHeight;
+  const x = (actV.x * .5 + .5) * w, y = (-actV.y * .5 + .5) * h;
+  dot.hidden = actV.z > 1; dot.style.left = `${x}px`; dot.style.top = `${y}px`;
+  $('actStep').textContent = `Étape ${s.n} · fait`;
+  $('actText').textContent = nb(s.act || s.title);
+  card.hidden = false;
+  const cw = card.offsetWidth, ch = card.offsetHeight;
+  let cx = x + 18, cy = y - ch - 18;
+  if (cx + cw > w - 10) cx = x - cw - 18;
+  if (cy < 52) cy = y + 18;
+  card.style.left = `${Math.max(10, Math.min(cx, w - cw - 10))}px`; card.style.top = `${Math.max(52, Math.min(cy, h - ch - 34))}px`;
+}
 setQuality(quality);
 new ResizeObserver(resize).observe(view);
 
@@ -3158,7 +3279,8 @@ function frame(now) {
     const { i } = locate(T);
     const end = starts[i] + steps[i].dur;
     T += dt * speed;
-    if ($('optPause').checked && T >= end && i < steps.length - 1) { T = end; setPlaying(false); }
+    if ($('optPause').checked && T >= end && i < steps.length - 1) { T = end - 1e-4; setPlaying(false); pauseStep = i; pauseT = T; }   // reste sur la fin de l'étape faite
+    else if ($('optPause').checked && T >= total && !steps[i].flight) { pauseStep = i; pauseT = total - 1e-3; }
     if (T >= total) { T = total - 1e-3; setPlaying(false); }
   }
   explodeE = reduceMotion ? explodeTarget : explodeE + Math.sign(explodeTarget - explodeE) * Math.min(Math.abs(explodeTarget - explodeE), dt / 1.4);
@@ -3172,6 +3294,7 @@ function frame(now) {
   updateCamera(dt);
   controls.update();
   gizmo.visible = !!gizmo.object;
+  updateActCard();
   if (quality === 'high' && composer) composer.render(); else renderer.render(scene, camera);
   requestAnimationFrame(frame);
 }
