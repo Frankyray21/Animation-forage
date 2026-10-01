@@ -224,10 +224,10 @@ details.params summary { cursor: pointer; padding: 10px 14px; font-weight: 600; 
         <button type="button" class="vbtn" id="btnCut" aria-pressed="true">Coupe du mandrin</button>
         <button type="button" class="vbtn" id="btnHeadExplode" aria-pressed="false">Éclaté : tête</button>
         <button type="button" class="vbtn" id="btnExplode" aria-pressed="false">Éclaté : mandrin</button>
-        <button type="button" class="vbtn" id="btnQuality" aria-pressed="true" title="Haute : occlusion ambiante, anticrénelage, ombres fines. Basse : pour tablette ou ordinateur lent.">Qualité : haute</button>
+        <button type="button" class="vbtn" id="btnQuality" aria-pressed="true" title="Haute : pleine résolution et anticrénelage SMAA. Basse : pour tablette ou ordinateur lent.">Qualité : haute</button>
       </div>
       <div class="banner" id="banner" hidden><strong id="bannerTitle">PROJECTION</strong></div>
-      <div class="note" id="note">Course des ressorts affichée ×6</div>
+      <div class="note" id="note">Ressorts : course ×6</div>
     </div>
     <div class="dock" id="dock" data-tone="ok">
       <div class="caption" aria-live="polite">
@@ -257,7 +257,7 @@ details.params summary { cursor: pointer; padding: 10px 14px; font-weight: 600; 
     <header class="brand">
       <p class="eyebrow">PRO-OP-DD-005 · Tête UM-012-100UG · Mandrin Boyles H</p>
       <h1>Clam sous tension</h1>
-      <p class="lede">Sur la tête de forage UM-012-100UG, placée à l'horizontale comme lors de l'accident, les 18 ressorts 5200517 du mandrin Boyles H (le « clam » ou chuck du plancher) restent comprimés tant que le cône (bol 2920390) est boulonné. La séquence de démontage sert à libérer cette énergie lentement.</p>
+      <p class="lede">Les 18 ressorts du clam (mandrin Boyles H) restent comprimés tant que le cône est boulonné. Démonter dans l'ordre : l'énergie se libère lentement. Sauter une étape : le cône est projeté.</p>
     </header>
 
     <section>
@@ -268,7 +268,7 @@ details.params summary { cursor: pointer; padding: 10px 14px; font-weight: 600; 
     <section class="readout" aria-label="Énergie des ressorts">
       <div class="big"><span class="unit">Énergie des ressorts</span><span class="state" id="eState">Stockée</span></div>
       <div class="meter" id="eMeter" title="Part de la compression initiale encore présente"><i id="eFill"></i></div>
-      <p class="equiv" id="equiv">Indication qualitative seulement : la raideur du ressort 5200517 n'est pas validée par une fiche technique, aucune valeur de force ou d'énergie n'est affichée.</p>
+      <p class="equiv" id="equiv">Jauge indicative, sans valeur chiffrée.</p>
     </section>
 
     <section class="steps">
@@ -277,29 +277,28 @@ details.params summary { cursor: pointer; padding: 10px 14px; font-weight: 600; 
     </section>
 
     <section class="bolts">
-      <h3 class="sec-title">Boulons ½ du cône 2920390</h3>
+      <h3 class="sec-title">Boulons du cône</h3>
       <div class="grid" id="boltGrid"></div>
-      <p class="hint">1 à 6 : B500-6500 (½ × 6 ½ po), dans l'ordre de dévissage de la procédure. R : B500-8000 (½ × 8 po) avec bushing (entretoise supérieure 3506878), remis sans bushing comme retenue.</p>
+      <p class="hint">1 à 6 : boulons ½ × 6 ½, dans l'ordre de dévissage. R : boulons ½ × 8 à bushing, remis sans bushing = retenue.</p>
     </section>
 
     <section class="bom" id="bomSec">
-      <h3 class="sec-title">Nomenclature : tête UM-012-100UG et mandrin Boyles H UM-070-142AA</h3>
+      <h3 class="sec-title">Pièces (tête et mandrin)</h3>
       <div class="card" id="partCard"></div>
       <div id="bomList" style="margin-top:10px"></div>
     </section>
 
 
     <section class="remontage">
-      <h3 class="sec-title">Au remontage (étapes 10 à 13)</h3>
+      <h3 class="sec-title">Au remontage</h3>
       <ul>
-        <li>Nettoyer les deux côtés du couvercle avant de le remettre.</li>
-        <li>Remettre d'abord les 3 boulons, puis visser les autres 1 tour à la fois dans l'ordre de l'étape 7, pour ne pas écraser les ressorts d'un seul côté.</li>
-        <li>Les 9 boulons ½ × 2 ¼ po (B500-2250) du couvercle sont remplacés par des neufs.</li>
-        <li>Serrer les 9 boulons à la clé dynamométrique : <b>105 lb·pi</b> (≈ 142 N·m).</li>
+        <li>Nettoyer les deux faces du couvercle.</li>
+        <li>Remettre d'abord les 3 boulons longs, puis les autres 1 tour à la fois, ordre de l'étape 7.</li>
+        <li>Boulons du couvercle : des neufs, serrés à <b>105 lb·pi</b> (142 N·m).</li>
       </ul>
     </section>
 
-    <p class="src">Sources : procédure PRO-OP-DD-005, <i>Démonter et remonter un clam et un chuck (mandrin) sur la foreuse</i>, révision mai 2021 ; planches de la tête de forage Boyles UM-012-100UG (cotes d'ensemble 2.1, vue éclatée et liste de pièces 2.2, raccords et boyaux 2.3, spécifications et coupe B-B 2.4) et liste de pièces, coupe A-A et vue éclatée du mandrin Boyles H UM-070-142AA / UM-012-142AA (pages 2.5 à 2.7), manuel de la foreuse STM-1500 (Usinage Marcotte). Toutes les pièces des listes sont représentées avec leurs quantités. La boîte de la tête est mise à l'échelle d'après les cotes hors tout de la planche 2.1 (dessin N.T.S.) ; le tracé des boyaux et l'emplacement des raccords sont approximatifs ; le chariot et le mât de la foreuse sont schématiques (hors documents). Pour le mandrin, le diamètre, la longueur et l'alésage suivent les cotes de la coupe A-A ; les autres cotes sont relevées sur le dessin (N.T.S.) et les pièces du mandrin marquées « emplacement approximatif » sont placées d'après cette coupe. La raideur des ressorts n'est pas dans ces documents : elle est calculée (350 N/mm) d'après les cotes publiées du ressort 5200517 (Ø 1 ½ × Ø int. ¾ × 6 po, fiches Geo Mines et Mirow Regent) et contrôlée avec la force de serrage publiée du mandrin 12HH (26 000 lb, JKS Boyles) ; les forces, énergies et trajectoires sont des estimations à des fins de formation.</p>
+    <p class="src">Sources : procédure PRO-OP-DD-005 (mai 2021) ; planches de la tête Boyles UM-012-100UG (2.1 à 2.4) et du mandrin Boyles H UM-070-142AA (2.5 à 2.7) ; manuel STM-1500 (Usinage Marcotte). Boyaux, chariot et mât : approximatifs. Mouvements et trajectoires : illustration pour la formation, non validés.</p>
   </aside>
 </div>
 
@@ -318,7 +317,6 @@ import { TransformControls } from 'three/addons/controls/TransformControls.js';
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
 import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
 import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
-import { GTAOPass } from 'three/addons/postprocessing/GTAOPass.js';
 import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
 import { SMAAPass } from 'three/addons/postprocessing/SMAAPass.js';
 
@@ -486,30 +484,15 @@ if ( ! gl_FrontFacing ) gl_FragColor.rgb = vec3( 0.105, 0.11, 0.118 );   // tein
 `;
 const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, preserveDrawingBuffer: false, powerPreference: 'high-performance' });
 renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
-renderer.shadowMap.enabled = true;
+renderer.shadowMap.enabled = false;   // pas d'ombres portées : toutes les pièces restent lisibles
 renderer.localClippingEnabled = true;
-renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 renderer.toneMapping = THREE.ACESFilmicToneMapping;
-renderer.toneMappingExposure = 1.08;
+renderer.toneMappingExposure = 1.0;
 
 const scene = new THREE.Scene();
 const pmrem = new THREE.PMREMGenerator(renderer);
-// Environnement d'atelier souterrain pour les reflets : parois sombres, tubes fluorescents au plafond, projecteur chaud.
-// (Les images HDRI externes sont bloquées ici : la pièce est construite en géométrie, comme RoomEnvironment.)
-function workshopEnvironment() {
-  const env = new THREE.Scene();
-  const wallM = new THREE.MeshStandardMaterial({ color: 0x3a3732, roughness: 1, side: THREE.BackSide });
-  env.add(new THREE.Mesh(new THREE.BoxGeometry(60, 24, 60), wallM));
-  const lamp = (w, d, x, z, c, i) => { const m = new THREE.Mesh(new THREE.BoxGeometry(w, .3, d), new THREE.MeshBasicMaterial({ color: c })); m.material.color.multiplyScalar(i); m.position.set(x, 11.8, z); env.add(m); };
-  lamp(10, 1.2, -12, 0, 0xdbe7f5, 9); lamp(10, 1.2, 12, 0, 0xdbe7f5, 9); lamp(1.2, 10, 0, -14, 0xdbe7f5, 7);
-  lamp(3, 3, 6, 16, 0xffd9a0, 14);   // projecteur de chantier, chaud
-  const floorM = new THREE.MeshStandardMaterial({ color: 0x5a564f, roughness: 1 });
-  const f = new THREE.Mesh(new THREE.PlaneGeometry(60, 60), floorM); f.rotation.x = -Math.PI / 2; f.position.y = -11.9; env.add(f);
-  return env;
-}
-scene.environment = pmrem.fromScene(workshopEnvironment(), 0.04).texture;
-const FOG_ROCK = new THREE.Color(0x2c2925);
-scene.fog = new THREE.Fog(FOG_ROCK, 55, 150);
+scene.environment = pmrem.fromScene(new RoomEnvironment(renderer), 0.04).texture;   // reflets neutres d'atelier
+scene.fog = new THREE.Fog(0xd7dce0, 30, 70);
 
 const camera = new THREE.PerspectiveCamera(38, 1, 0.4, 220);   // near à 4 cm : précision de profondeur suffisante pour les surfaces voisines
 camera.position.set(-9, 10, 14);
@@ -520,106 +503,25 @@ controls.maxPolarAngle = Math.PI * 0.49;
 controls.minDistance = 4;
 controls.maxDistance = 45;
 
-scene.add(new THREE.HemisphereLight(0xd8e2ee, 0x5e564c, 1.05));
-// projecteur de chantier (lumière principale, avec ombres) + deux luminaires de galerie
-const sun = new THREE.DirectionalLight(0xfff1dc, 2.3);
+scene.add(new THREE.HemisphereLight(0xeef3ff, 0x8a8f94, 1.0));
+// éclairage uniforme, sans ombres portées : lumière principale + lumière de remplissage opposée
+const sun = new THREE.DirectionalLight(0xffffff, 1.7);
 sun.position.set(7, 16, 9);
-for (const [x, z] of [[-14, 6], [16, -4]]) { const pl = new THREE.PointLight(0xdfe9f7, 180, 60, 2); pl.position.set(x, FLOOR + 36, z); scene.add(pl); }
-sun.castShadow = true;
-sun.shadow.mapSize.set(2048, 2048);
-Object.assign(sun.shadow.camera, { left: -14, right: 14, top: 14, bottom: -14, near: 1, far: 50 });
-sun.shadow.bias = -0.0002;
-sun.shadow.normalBias = 0.035;   // pas d'« acné » d'ombre qui scintille sur les pièces en mouvement
 scene.add(sun);
+const fill = new THREE.DirectionalLight(0xe8eef8, 0.8);
+fill.position.set(-9, 9, -8);
+scene.add(fill);
 
-/* ---------- Textures procédurales (PBR : couleur, rugosité, relief) ----------
-   Les banques de textures externes sont inaccessibles d'ici ; ces textures sont dessinées au chargement. */
-const texRnd = seed => () => (seed = (seed * 16807) % 2147483647) / 2147483647;
-function makeTex(c, { repeat = 1, srgb = true, aniso = true } = {}) {
-  const t = new THREE.CanvasTexture(c); t.wrapS = t.wrapT = THREE.RepeatWrapping; t.repeat.set(repeat, repeat);
-  if (srgb) t.colorSpace = THREE.SRGBColorSpace; if (aniso) t.anisotropy = renderer.capabilities.getMaxAnisotropy();
-  return t;
-}
-// carte de relief (gris) → carte de normales (Sobel), tuilable
-function normalFromHeight(hc, strength = 2) {
-  const w = hc.width, h = hc.height, src = hc.getContext('2d').getImageData(0, 0, w, h).data;
-  const c = document.createElement('canvas'); c.width = w; c.height = h; const x = c.getContext('2d'), out = x.createImageData(w, h);
-  const H = (i, j) => src[(((j + h) % h) * w + ((i + w) % w)) * 4] / 255;
-  for (let j = 0; j < h; j++) for (let i = 0; i < w; i++) {
-    const dx = (H(i + 1, j - 1) + 2 * H(i + 1, j) + H(i + 1, j + 1)) - (H(i - 1, j - 1) + 2 * H(i - 1, j) + H(i - 1, j + 1));
-    const dy = (H(i - 1, j + 1) + 2 * H(i, j + 1) + H(i + 1, j + 1)) - (H(i - 1, j - 1) + 2 * H(i, j - 1) + H(i + 1, j - 1));
-    const nx = -dx * strength, ny = -dy * strength, l = Math.hypot(nx, ny, 1), k = (j * w + i) * 4;
-    out.data[k] = (nx / l * .5 + .5) * 255; out.data[k + 1] = (ny / l * .5 + .5) * 255; out.data[k + 2] = (1 / l * .5 + .5) * 255; out.data[k + 3] = 255;
-  }
-  x.putImageData(out, 0, 0); return c;
-}
-const cnv = (n = 512) => { const c = document.createElement('canvas'); c.width = c.height = n; return c; };
-// bruit tuilable : somme de taches floues répétées aux bords
-function noiseCanvas(n, seed, { blobs = 160, rmin = 6, rmax = 40, base = 128, amp = 60 } = {}) {
-  const c = cnv(n), x = c.getContext('2d'), r = texRnd(seed);
-  x.fillStyle = `rgb(${base},${base},${base})`; x.fillRect(0, 0, n, n);
-  for (let i = 0; i < blobs; i++) {
-    const cx = r() * n, cy = r() * n, rad = rmin + r() * (rmax - rmin), v = base + (r() - .5) * 2 * amp;
-    const g = x.createRadialGradient(0, 0, 0, 0, 0, rad); g.addColorStop(0, `rgba(${v},${v},${v},.55)`); g.addColorStop(1, `rgba(${v},${v},${v},0)`);
-    for (const ox of [-n, 0, n]) for (const oy of [-n, 0, n]) { x.save(); x.translate(cx + ox, cy + oy); x.fillStyle = g; x.fillRect(-rad, -rad, 2 * rad, 2 * rad); x.restore(); }
-  }
-  return c;
-}
-const TEX = {};
-{
-  // acier usiné : fines stries d'outil, légères taches, micro-rayures
-  const n = 512, c = cnv(n), x = c.getContext('2d'), r = texRnd(5);
-  x.drawImage(noiseCanvas(n, 7, { blobs: 90, rmin: 20, rmax: 90, base: 205, amp: 18 }), 0, 0);
-  for (let j = 0; j < n; j += 2) { x.fillStyle = `rgba(0,0,0,${.03 + r() * .08})`; x.fillRect(0, j, n, 1); }
-  for (let i = 0; i < 70; i++) { x.strokeStyle = `rgba(255,255,255,${.15 + r() * .3})`; x.lineWidth = 1; const y0 = r() * n; x.beginPath(); x.moveTo(0, y0); x.lineTo(n, y0 + (r() - .5) * 3); x.stroke(); }
-  TEX.steelMap = makeTex(c, { repeat: 2 });
-  const hc = cnv(n), hx = hc.getContext('2d'); hx.fillStyle = '#808080'; hx.fillRect(0, 0, n, n);
-  for (let j = 0; j < n; j += 3) { hx.fillStyle = `rgba(0,0,0,${.1 + r() * .2})`; hx.fillRect(0, j, n, 1); }
-  for (let i = 0; i < 40; i++) { hx.fillStyle = `rgba(255,255,255,${.2 + r() * .3})`; hx.fillRect(r() * n, r() * n, 2 + r() * 40, 1); }
-  TEX.steelNormal = makeTex(normalFromHeight(hc, 1.2), { repeat: 2, srgb: false });
-  const rc = cnv(n), rx = rc.getContext('2d'); rx.drawImage(noiseCanvas(n, 9, { blobs: 120, rmin: 10, rmax: 70, base: 95, amp: 55 }), 0, 0);
-  TEX.steelRough = makeTex(rc, { repeat: 2, srgb: false });
-}
-{
-  // peinture industrielle : grain, poussière, éclats sur les arêtes et coulures de graisse
-  const n = 512, c = cnv(n), x = c.getContext('2d'), r = texRnd(21);
-  x.drawImage(noiseCanvas(n, 3, { blobs: 140, rmin: 15, rmax: 80, base: 228, amp: 22 }), 0, 0);
-  for (let i = 0; i < 30; i++) { x.fillStyle = `rgba(60,55,50,${.12 + r() * .25})`; x.beginPath(); x.ellipse(r() * n, r() * n, 6 + r() * 30, 3 + r() * 14, r() * 3, 0, Math.PI * 2); x.fill(); }   // graisse, salissures
-  for (let i = 0; i < 22; i++) { x.fillStyle = `rgba(120,122,125,${.7 + r() * .3})`; x.beginPath(); const px = r() * n, py = r() * n; x.moveTo(px, py); for (let k = 0; k < 6; k++) x.lineTo(px + (r() - .5) * 14, py + (r() - .5) * 14); x.closePath(); x.fill(); }   // éclats : métal nu
-  for (let i = 0; i < 2500; i++) { x.fillStyle = `rgba(0,0,0,${r() * .12})`; x.fillRect(r() * n, r() * n, 1, 1); }
-  TEX.paintMap = makeTex(c, { repeat: .6 });
-  const hc = cnv(n), hx = hc.getContext('2d'); hx.drawImage(noiseCanvas(n, 13, { blobs: 400, rmin: 2, rmax: 10, base: 128, amp: 50 }), 0, 0);
-  TEX.paintNormal = makeTex(normalFromHeight(hc, .9), { repeat: .6, srgb: false });
-  const rc = cnv(n), rx = rc.getContext('2d'); rx.drawImage(noiseCanvas(n, 17, { blobs: 100, rmin: 20, rmax: 90, base: 120, amp: 60 }), 0, 0);
-  TEX.paintRough = makeTex(rc, { repeat: .6, srgb: false });
-}
-{
-  // roche de galerie (grain grossier, veines) et sol de mine (roche concassée, boue)
-  const n = 512, r = texRnd(31);
-  const c = cnv(n), x = c.getContext('2d');
-  x.drawImage(noiseCanvas(n, 33, { blobs: 220, rmin: 8, rmax: 60, base: 96, amp: 55 }), 0, 0);
-  for (let i = 0; i < 16; i++) { x.strokeStyle = `rgba(200,190,170,${.08 + r() * .15})`; x.lineWidth = 1 + r() * 2; x.beginPath(); let px = r() * n, py = r() * n; x.moveTo(px, py); for (let k = 0; k < 8; k++) { px += (r() - .5) * 90; py += (r() - .5) * 90; x.lineTo(px, py); } x.stroke(); }
-  TEX.rockMap = makeTex(c, { repeat: 3 });
-  TEX.rockNormal = makeTex(normalFromHeight(noiseCanvas(n, 37, { blobs: 500, rmin: 3, rmax: 30, base: 128, amp: 70 }), 2.2), { repeat: 3, srgb: false });
-  const f = cnv(n), fx = f.getContext('2d');
-  fx.drawImage(noiseCanvas(n, 41, { blobs: 260, rmin: 6, rmax: 50, base: 88, amp: 40 }), 0, 0);
-  for (let i = 0; i < 900; i++) { const v = 60 + r() * 80; fx.fillStyle = `rgba(${v},${v - 4},${v - 10},${.5 + r() * .5})`; fx.beginPath(); fx.ellipse(r() * n, r() * n, 1 + r() * 5, 1 + r() * 3, r() * 3, 0, Math.PI * 2); fx.fill(); }
-  for (let i = 0; i < 6; i++) { fx.fillStyle = `rgba(30,32,36,${.25 + r() * .3})`; fx.beginPath(); fx.ellipse(r() * n, r() * n, 40 + r() * 90, 20 + r() * 50, r() * 3, 0, Math.PI * 2); fx.fill(); }   // flaques
-  TEX.floorMap = makeTex(f, { repeat: 40 });
-  TEX.floorNormal = makeTex(normalFromHeight(noiseCanvas(n, 43, { blobs: 600, rmin: 2, rmax: 14, base: 128, amp: 80 }), 2.5), { repeat: 40, srgb: false });
-  const rc = cnv(n), rx = rc.getContext('2d'); rx.drawImage(noiseCanvas(n, 47, { blobs: 80, rmin: 30, rmax: 120, base: 200, amp: 50 }), 0, 0);
-  TEX.floorRough = makeTex(rc, { repeat: 40, srgb: false });
-}
 const mat = {
   red: new THREE.MeshStandardMaterial({ color: 0xb3301e, roughness: .5, metalness: .15 }),
   steel: new THREE.MeshStandardMaterial({ color: 0x2c3135, roughness: .42, metalness: .65 }),
-  steelLight: new THREE.MeshStandardMaterial({ color: 0xa7afb5, roughness: .45, metalness: .85, map: TEX.steelMap, roughnessMap: TEX.steelRough, normalMap: TEX.steelNormal, normalScale: new THREE.Vector2(.3, .3) }),
+  steelLight: new THREE.MeshStandardMaterial({ color: 0xa7afb5, roughness: .45, metalness: .85 }),
   bolt: new THREE.MeshStandardMaterial({ color: 0xc9a54a, roughness: .35, metalness: .8 }),
   spring: new THREE.MeshStandardMaterial({ color: 0x2a5bd7, roughness: .35, metalness: .35 }),
   pocket: new THREE.MeshStandardMaterial({ color: 0x0d0f10, roughness: 1 }),
   wood: new THREE.MeshStandardMaterial({ color: 0xa98357, roughness: .9 }),
   woodDark: new THREE.MeshStandardMaterial({ color: 0x8a6a45, roughness: .95 }),
-  floor: new THREE.MeshStandardMaterial({ color: 0x6b6a66, map: TEX.floorMap, normalMap: TEX.floorNormal, normalScale: new THREE.Vector2(.8, .8), roughnessMap: TEX.floorRough, roughness: 1 }),
+  floor: new THREE.MeshStandardMaterial({ color: 0xb7bec3, roughness: .95 }),
   console: new THREE.MeshStandardMaterial({ color: 0x3b4247, roughness: .6, metalness: .3 }),
   knob: new THREE.MeshStandardMaterial({ color: 0x1b1b1b, roughness: .4 }),
   lockRed: new THREE.MeshStandardMaterial({ color: 0xc62828, roughness: .45 }),
@@ -655,8 +557,8 @@ const ring = (n, r, off = 0) => [...Array(n)].map((_, i) => { const a = (i * 360
 /* ---------- Matériaux supplémentaires ---------- */
 Object.assign(mat, {
   red: new THREE.MeshStandardMaterial({ color: 0xb8321f, roughness: .48, metalness: .12 }),
-  grey: new THREE.MeshStandardMaterial({ color: 0x9aa2a8, roughness: .5, metalness: .8, map: TEX.steelMap, roughnessMap: TEX.steelRough, normalMap: TEX.steelNormal, normalScale: new THREE.Vector2(.35, .35) }),
-  machined: new THREE.MeshStandardMaterial({ color: 0xc4cacf, roughness: .38, metalness: .92, map: TEX.steelMap, roughnessMap: TEX.steelRough, normalMap: TEX.steelNormal, normalScale: new THREE.Vector2(.45, .45) }),
+  grey: new THREE.MeshStandardMaterial({ color: 0x9aa2a8, roughness: .5, metalness: .8 }),
+  machined: new THREE.MeshStandardMaterial({ color: 0xc4cacf, roughness: .38, metalness: .92 }),
   rubber: new THREE.MeshStandardMaterial({ color: 0x151617, roughness: .75 }),
   boltBlack: new THREE.MeshStandardMaterial({ color: 0x2a2c2e, roughness: .4, metalness: .7 }),
   brass: new THREE.MeshStandardMaterial({ color: 0xc8a24a, roughness: .3, metalness: .9 }),
@@ -807,7 +709,7 @@ const BOLT = {
 };
 
 /* ---------- Sol, palette, support d'atelier ---------- */
-const PAINT = new THREE.MeshPhysicalMaterial({ color: 0xcf2d20, roughness: .55, metalness: .08, map: TEX.paintMap, roughnessMap: TEX.paintRough, normalMap: TEX.paintNormal, normalScale: new THREE.Vector2(.5, .5), clearcoat: .25, clearcoatRoughness: .5 });   // peinture rouge de la tête UM-012, usée et grasse
+const PAINT = new THREE.MeshPhysicalMaterial({ color: 0xc42a1c, roughness: .5, metalness: .08, clearcoat: .2, clearcoatRoughness: .5 });   // peinture rouge de la tête UM-012, usée et grasse
 Object.assign(mat, {
   blue: PAINT, paint: PAINT,
   green: new THREE.MeshStandardMaterial({ color: 0x3fa65a, roughness: .38, metalness: .3 }),
@@ -1627,45 +1529,6 @@ rig.add(carriage);
 
 /* ---------- Décor : galerie de mine (arche rocheuse, conduit de ventilation, câbles, luminaires) ----------
    Hors nomenclature. Masqué dans les vues éclatées. Aucune lampe frontale : l'éclairage vient des luminaires. */
-const drift = new THREE.Group();
-mat.rock = new THREE.MeshStandardMaterial({ color: 0x7d766c, roughness: 1, map: TEX.rockMap, normalMap: TEX.rockNormal, normalScale: new THREE.Vector2(1.3, 1.3), side: THREE.BackSide });
-{
-  // arche : demi-cylindre (voûte) + murs, axe le long de la broche (x), relief par bruit sur les sommets
-  const R = 27, L = 190, r = texRnd(53);
-  const g = new THREE.CylinderGeometry(R, R, L, 56, 24, true, 0, Math.PI);   // demi-tube ouvert vers le bas
-  const pos = g.attributes.position;
-  for (let i = 0; i < pos.count; i++) { const x = pos.getX(i), y = pos.getY(i), z = pos.getZ(i); const rr = Math.hypot(x, z); if (rr > 1) { const k = 1 + (r() - .5) * .07 + .03 * Math.sin(y * .7) * Math.cos(Math.atan2(z, x) * 5); pos.setXYZ(i, x * k, y, z * k); } }
-  g.computeVertexNormals();
-  const vault = new THREE.Mesh(g, mat.rock); vault.receiveShadow = true;
-  vault.rotation.z = Math.PI / 2; vault.rotation.y = Math.PI;   // ouvert vers le bas, axe x
-  vault.position.set(0, FLOOR + 2, 0);
-  drift.add(vault);
-  for (const sgn of [-1, 1]) {   // parois basses, légèrement inclinées, sous l'arche
-    const w = new THREE.Mesh(new THREE.PlaneGeometry(L, 4), new THREE.MeshStandardMaterial({ color: 0x6e675e, roughness: 1, map: TEX.rockMap, normalMap: TEX.rockNormal, side: THREE.DoubleSide }));
-    w.position.set(0, FLOOR + 1.9, sgn * (R - 1.2)); w.rotation.y = sgn * Math.PI / 2; w.receiveShadow = true; drift.add(w);
-  }
-  for (const xEnd of [-L / 2, L / 2]) { const cap = new THREE.Mesh(new THREE.CircleGeometry(R + 2, 48), new THREE.MeshStandardMaterial({ color: 0x3a3733, roughness: 1 })); cap.position.set(xEnd, FLOOR + 2, 0); cap.rotation.y = xEnd < 0 ? Math.PI / 2 : -Math.PI / 2; drift.add(cap); }
-  // conduit de ventilation jaune le long de la voûte, suspendu par des câbles
-  const duct = new THREE.Mesh(new THREE.CylinderGeometry(4.2, 4.2, L - 10, 32, 1, true), new THREE.MeshStandardMaterial({ color: 0xd9b23a, roughness: .7, side: THREE.DoubleSide }));
-  duct.rotation.z = Math.PI / 2; duct.position.set(0, FLOOR + 2 + R - 6.9, -13); duct.castShadow = true; drift.add(duct);
-  for (let x = -80; x <= 80; x += 20) { const ring = new THREE.Mesh(new THREE.TorusGeometry(4.3, .18, 6, 32), mat.dark); ring.rotation.y = Math.PI / 2; ring.position.set(x, duct.position.y, duct.position.z); drift.add(ring); }
-  // câbles électriques et tuyau d'air comprimé sur l'autre paroi
-  const cableM = new THREE.MeshStandardMaterial({ color: 0x151617, roughness: .6 });
-  for (const [y, z, rad, m] of [[14, -23.5, .22, cableM], [15.2, -23.2, .22, cableM], [11, -24.2, .55, new THREE.MeshStandardMaterial({ color: 0x3b4a5a, roughness: .5, metalness: .4 })]]) {
-    const pts = []; for (let x = -95; x <= 95; x += 10) pts.push(new THREE.Vector3(x, FLOOR + y - .6 * Math.abs(Math.sin(x * .31)), z));
-    const c = new THREE.Mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts), 120, rad, 8, false), m); drift.add(c);
-  }
-  // luminaires de galerie (boîtiers blancs, diffuseurs émissifs) aux positions des lampes
-  for (const [x, z] of [[-14, 6], [16, -4], [-50, 2], [52, 2]]) {
-    const body = new THREE.Mesh(rboxGeo(4.6, 1.1, 1.6), new THREE.MeshStandardMaterial({ color: 0xe8e8e4, roughness: .5 })); body.position.set(x, FLOOR + 37.2, z); drift.add(body);
-    const glow = new THREE.Mesh(new THREE.BoxGeometry(4.2, .12, 1.2), new THREE.MeshBasicMaterial({ color: 0xf6f8ff })); glow.position.set(x, FLOOR + 36.6, z); drift.add(glow);
-    const hang = new THREE.Mesh(new THREE.CylinderGeometry(.06, .06, 6, 6), cableM); hang.position.set(x, FLOOR + 40.5, z); drift.add(hang);
-  }
-  // quelques éboulis au pied des parois
-  const rubble = new THREE.MeshStandardMaterial({ color: 0x66605a, roughness: 1, map: TEX.rockMap, normalMap: TEX.rockNormal });
-  for (let i = 0; i < 26; i++) { const sz = .6 + r() * 1.8; const m = new THREE.Mesh(new THREE.DodecahedronGeometry(sz, 0), rubble); m.position.set((r() - .5) * 150, FLOOR + sz * .4, (r() < .5 ? -1 : 1) * (R - 3 - r() * 4)); m.rotation.set(r() * 3, r() * 3, r() * 3); m.castShadow = true; m.receiveShadow = true; drift.add(m); }
-}
-scene.add(drift);
 
 /* ---------- Clé à chocs électrique (à fil) sur le boulon actif, d'après la photo du chantier ----------
    Repère de l'outil : y = axe du boulon (vers le travailleur) ; -z local = bas en pose horizontale.
@@ -2128,7 +1991,7 @@ function applyExplode(e) {
   // Repères
   for (const p of PARTS) {
     if (!p.lbl || p.head) continue;
-    const show = (k > 0.85 && !(selected && selected !== p)) || (selected === p && hexE === 0);
+    const show = selected === p && hexE === 0;   // pas de numéros permanents : info-bulle au survol, étiquette au clic
     p.lbl.visible = show;
     if (!show) continue;
     p.lbl.material.opacity = k > 0.85 ? (k - 0.85) / 0.15 : 1;
@@ -2219,7 +2082,6 @@ function deOverlap(list) {
   }
 }
 // Pièces principales étiquetées dans la vue éclatée ; les autres le sont quand on les sélectionne
-const HEAD_LBL = new Set(['UM-012-104A', 'UM-012-113A', 'UM-012-101', 'UM-012-128', 'UM-012-129', 'UM-012-121', 'UM-012-120', 'UM-012-114', 'UM-012-118', 'UM-012-108', 'UM-012-102', 'UM-012-103', 'UM-012-130', 'UM-012-143', 'AA6VM', 'UM-012-139', 'COOLER', 'UM-012-177', 'UM-10B-TR#6', 'NDV-10-N', 'UM-012-105A', 'A-1199-R-4048']);
 function applyHeadExplode(h) {
   const k = ease(h);
   const kx = ease(explodeE);
@@ -2234,7 +2096,7 @@ function applyHeadExplode(h) {
     });
     if (!p.lbl) continue;
     // Quincaillerie, boyaux et raccords : étiquette seulement quand la pièce est sélectionnée.
-    const show = (k > 0.85 && !selected && HEAD_LBL.has(p.id)) || (selected === p && explodeE === 0);
+    const show = selected === p && explodeE === 0;   // pas de numéros permanents : info-bulle au survol, étiquette au clic
     p.lbl.visible = show;
     if (!show || !p.hc) continue;
     p.lbl.material.opacity = 1;
@@ -2243,7 +2105,7 @@ function applyHeadExplode(h) {
     shown.push(p.lbl);
   }
   deOverlap(PARTS.filter(q => q.lbl && q.lbl.visible).map(q => q.lbl));
-  if (k > 0.05) for (const o of [worker, workerRoot, consoleG, zone, trail, wrench, activeRing, carriage, drift]) o.visible = false;
+  if (k > 0.05) for (const o of [worker, workerRoot, consoleG, zone, trail, wrench, activeRing, carriage]) o.visible = false;
   if (labels && k > 0.02) for (const arr of Object.values(labels)) for (const sp of arr) if (sp) sp.visible = false;
 }
 
@@ -2359,38 +2221,38 @@ function removeBolt(S, i, p, from = null) {
 
 /* ---------- Étapes communes ---------- */
 const st = {
-  lever: { n: '1', title: 'Manettes en position fermée', cam: 'intro', dur: 3.5,
-    text: 'Sur la foreuse, placer les manettes du clam ou du chuck en position fermée : le vérin ne pousse plus ; les ressorts sont à leur plus grande longueur de service, mais restent comprimés.',
+  lever: { n: '1', title: 'Manettes fermées', cam: 'intro', dur: 3.5,
+    text: 'Mettre les manettes du clam et du chuck en position fermée. Le vérin ne pousse plus, mais les ressorts restent comprimés.',
     apply(S, p) { S.lever = ease(p); } },
   jaws: { n: '2', title: 'Mâchoires fermées', cam: 'top', dur: 3,
-    text: 'S\'assurer que les jaws (mâchoires UM-021-01-01 B) sont en position fermée.',
+    text: 'Vérifier que les mâchoires sont fermées.',
     apply(S, p) { S.jaws = ease(p); } },
-  lock: { n: '3', title: 'Cadenasser la foreuse', cam: 'intro', dur: 3,
-    text: 'Appliquer la procédure de cadenassage. Le cadenassage coupe l\'énergie hydraulique, mais pas celle des 18 ressorts : elle reste emmagasinée dans le mandrin.',
+  lock: { n: '3', title: 'Cadenasser', cam: 'intro', dur: 3,
+    text: 'Cadenasser la foreuse. Le cadenassage coupe l\'hydraulique, pas l\'énergie des ressorts.',
     apply(S, p) { S.lock = ease(p); } },
-  jawCover: { n: '4', title: 'Couvert des mâchoires', cam: 'overview', dur: 5,
-    text: 'Dévisser les boulons ¾ × 1 ½ (B750-1500) du couvert des mâchoires (adaptateur de capuchon 3506907) avec une clé 1 1/8, puis retirer le couvert. La procédure parle de 6 boulons ; la liste de pièces du Boyles H en compte 3.',
+  jawCover: { n: '4', title: 'Retirer le couvert des mâchoires', cam: 'overview', dur: 5,
+    text: 'Dévisser ses boulons ¾ (clé 1 1/8) et retirer le couvert.',
     apply(S, p) { for (let k = 0; k < 3; k++) S.jc.bolts[k] = seg(p, k * .1, k * .1 + .45); S.jc.lift = seg(p, .58, 1); } },
-  cover: { n: '5', title: 'Couvercle : 9 boulons ½', cam: 'overview', dur: 6,
-    text: 'Enlever les 9 boulons ½ × 2 ¼ (B500-2250) du couvercle (porte-capuchon 3506906) avec une clé ¾. La face du cône 2920390 et ses 9 boulons apparaissent. Dans le boîtier, les 18 ressorts 5200517 sont toujours comprimés.',
+  cover: { n: '5', title: 'Retirer le couvercle (9 boulons ½)', cam: 'overview', dur: 6,
+    text: 'Enlever les 9 boulons ½ (clé ¾) et le couvercle. Le cône et ses 9 boulons apparaissent. Les ressorts sont toujours comprimés.',
     apply(S, p) { for (let k = 0; k < 9; k++) S.cv.bolts[k] = seg(p, k * .045, k * .045 + .4); S.cv.lift = seg(p, .6, 1); S.springLbl = seg(p, .85, 1); } },
 };
-const first5 = { n: '1–5', title: 'Étapes 1 à 5 respectées', cam: 'overview', dur: 8,
-  text: 'Manettes fermées, mâchoires fermées, foreuse cadenassée, couvert des mâchoires et couvercle retirés. Les ressorts sont visibles et comprimés.',
+const first5 = { n: '1–5', title: 'Étapes 1 à 5 faites', cam: 'overview', dur: 8,
+  text: 'Manettes et mâchoires fermées, foreuse cadenassée, couvert et couvercle retirés. Les ressorts sont comprimés.',
   apply(S, p) {
     st.lever.apply(S, seg(p, 0, .15)); st.jaws.apply(S, seg(p, .1, .25)); st.lock.apply(S, seg(p, .2, .35));
     st.jawCover.apply(S, seg(p, .3, .62)); st.cover.apply(S, seg(p, .62, 1));
   } };
-const skip6 = { n: '6', title: 'Boulons à bushing retirés, non remis', cam: 'bolts', dur: 5, tone: 'warn', flag: 'Omise',
-  text: 'Les 3 boulons B500-8000 avec bushing sont enlevés et ne sont pas remis sans les bushings. Plus rien n\'empêchera la projection du cône.',
+const skip6 = { n: '6', title: 'Boulons de retenue non remis', cam: 'bolts', dur: 5, tone: 'warn', flag: 'Omise',
+  text: 'Les 3 boulons longs sont enlevés et ne sont pas remis. Plus rien ne retient le cône.',
   apply(S, p) {
     S.springLbl = 1;
     BUSHED.forEach((i, k) => { removeBolt(S, i, seg(p, k * .1, .6 + k * .1)); S.pb[i].bushOut = seg(p, .75, 1); });
     S.zone = seg(p, .7, 1);
   } };
 
-st.retain = { n: '6', title: 'Boulons de retenue remis sans bushing', cam: 'bolts', dur: 8,
-  text: 'Enlever les 3 boulons ½ × 8 (B500-8000) avec leurs bushings (entretoises supérieures 3506878) sur le cône, puis les remettre sans les bushings. Plus longs de 1 ½ po que les autres, ils restent vissés dans le manchon d\'actionnement : le cône peut monter de la course des ressorts, mais pas être projeté.',
+st.retain = { n: '6', title: 'Remettre les 3 boulons longs sans bushing', cam: 'bolts', dur: 8,
+  text: 'Enlever les 3 boulons longs (½ × 8) et leurs bushings. Les revisser sans bushing : ils retiennent le cône s\'il part.',
   apply(S, p) {
     S.springLbl = 1;
     BUSHED.forEach(i => {
@@ -2408,17 +2270,17 @@ function oneByOne(withRet) {
   const base = S => { S.springLbl = 1; S.zone = 1; S.nums = 1; if (withRet) S.ret = 1; };
   return [
     { n: '7', title: 'Boulons 4, 1 et 3 retirés au complet', cam: 'bolts', dur: 9, tone: 'warn', flag: 'Non respectée',
-      text: 'Au lieu d\'un tour à la fois, chaque boulon est sorti au complet avant de passer au suivant, en faisant le tour du cercle. Les boulons restants reprennent la charge.'
+      text: 'Chaque boulon est sorti au complet au lieu d\'un tour à la fois. Les autres boulons reprennent la charge.'
         + (withRet ? ' Les 3 boulons de retenue (R) ne portent rien : ils attendent devant le cône.' : ''),
       apply(S, p) { base(S); [4, 1, 3].forEach((n, k) => { const q = seg(p, k / 3, (k + 1) / 3); removeBolt(S, byNum(n), q); if (q > 0 && q < 1) S.active = byNum(n); }); } },
     { n: '7', title: 'Boulon 5 retiré : le cône bascule', cam: 'bolts', dur: 5, tone: 'warn', flag: 'Non respectée',
-      text: 'Il ne reste que les boulons 2 et 6, du même côté. Le cône bascule vers le côté libre et se coince dans son logement : ces 2 boulons portent presque toute la force des ressorts.',
+      text: 'Il reste les boulons 2 et 6, du même côté. Le cône bascule et se coince : ces 2 boulons portent presque tout.',
       apply(S, p) { base(S); removeBolt(S, byNum(5), p); S.active = p < 1 ? byNum(5) : -1; } },
     { n: '7', title: 'Boulon 2 retiré : un seul boulon retient tout', cam: 'bolts', dur: 5, tone: 'warn', flag: 'Non respectée',
-      text: 'Le boulon 6 porte maintenant toute la force des ressorts, soit 9 fois la charge qu\'il partage normalement avec les 8 autres.',
+      text: 'Le boulon 6 porte seul toute la force des ressorts.',
       apply(S, p) { base(S); removeBolt(S, byNum(2), p); S.active = p < 1 ? byNum(2) : byNum(6); } },
     { n: '7', title: 'Dévissage du boulon 6 sous pleine charge', cam: 'bolts', dur: 3.5, tone: 'danger', flag: 'Danger',
-      text: 'Le travailleur se penche pour dévisser le dernier boulon. Son filet, surchargé, commence à céder.',
+      text: 'Le travailleur se penche pour dévisser le dernier boulon. Le filet commence à céder.',
       apply(S, p) { base(S); S.pb[byNum(6)].turns = 0.25 * ease(p); S.active = byNum(6); } },
   ];
 }
@@ -2444,18 +2306,18 @@ const SCEN = {
       st.lever, st.jaws, st.lock, st.jawCover, st.cover,
       st.retain,
       { n: '7', title: 'Dévisser 1 tour à la fois, ordre 1 à 6', cam: 'bolts', dur: rounds() * 6 * 0.62 / 0.84,
-        text: 'Dévisser les 6 boulons ½ × 6 ½ (B500-6500) un seul tour à la fois, dans l\'ordre 1 à 6 de la photo. Les ressorts, comprimés de ¼ po, se détendent graduellement et de façon égale. On retire ensuite les 6 boulons.',
+        text: 'Dévisser les 6 boulons ½ un tour à la fois, dans l\'ordre 1 à 6. Les ressorts se détendent peu à peu, également. Retirer ensuite les 6 boulons.',
         apply(S, p) {
           S.springLbl = 1; S.ret = 1;
           starLoosen(S, seg(p, 0, .84));
           ORDER.forEach((i, o) => { if (p > .84) removeBolt(S, i, seg(p, .84 + o * .012, .95 + o * .01), rounds()); });
           S.nums = 1 - seg(p, .9, 1);
         } },
-      { n: '8', title: 'Dévisser les 3 derniers boulons', cam: 'bolts', dur: 4,
-        text: 'Les ressorts sont détendus : les 3 boulons de retenue B500-8000 ne portent plus de charge. On peut les enlever.',
+      { n: '8', title: 'Retirer les 3 boulons longs', cam: 'bolts', dur: 4,
+        text: 'Les ressorts sont détendus : les 3 boulons de retenue ne portent plus rien. Les enlever.',
         apply(S, p) { S.springLbl = 1; S.ret = 1 - seg(p, .6, .9); BUSHED.forEach((i, k) => removeBolt(S, i, seg(p, k * .08, .75 + k * .08), retainTurns())); } },
       { n: '9', title: 'Changer les pièces', cam: 'overview', dur: 4.5,
-        text: 'Le cône (bol 2920390), les mâchoires et les 18 ressorts 5200517 sont accessibles sans énergie résiduelle. Le piston 3506908 et ses joints se remplacent par l\'arrière.',
+        text: 'Cône, mâchoires et ressorts sont accessibles, sans énergie résiduelle.',
         apply(S, p) { S.springLbl = 1 - seg(p, .5, 1); S.plateOut = ease(p); } },
     ],
   },
@@ -2463,8 +2325,8 @@ const SCEN = {
     label: 'Erreur : boulons retirés un par un', sub: 'Étapes 6 et 7 non respectées', tone: 'danger',
     make: () => [
       first5, skip6, ...oneByOne(false),
-      { n: '!', title: 'Le filet cède : projection du cône', cam: 'wide', flight: true, tone: 'danger', flag: 'Projection', dir: null, ride: byNum(6),
-        text: 'Toute l\'énergie restante des ressorts est libérée d\'un coup. Le cône et les mâchoires partent à l\'horizontale, dans l\'axe du mandrin, là où se trouvent les mains et le corps du travailleur.' },
+      { n: '!', title: 'Le filet cède : cône projeté', cam: 'wide', flight: true, tone: 'danger', flag: 'Projection', dir: null, ride: byNum(6),
+        text: 'Toute l\'énergie des ressorts part d\'un coup. Le cône et les mâchoires sont projetés dans l\'axe, vers les mains et le corps du travailleur.' },
       { n: '⚠', title: 'Bilan', cam: 'wide', dur: 6, tone: 'danger', summary: true, text: '' },
     ],
   },
@@ -2473,7 +2335,7 @@ const SCEN = {
     make: () => [
       first5, st.retain, ...oneByOne(true),
       { n: '!', title: 'Le filet cède : les 3 boulons arrêtent le cône', cam: 'catch', catch: true, tone: 'warn', flag: 'Retenu', ride: byNum(6),
-        text: 'Le filet du boulon 6 cède et les ressorts lancent le cône dans l\'axe, vers le travailleur. Après quelques millimètres, il frappe les têtes des 3 boulons remis sans bushing à l\'étape 6 : la projection est stoppée.' },
+        text: 'Le filet du boulon 6 cède, le cône part vers le travailleur. Après quelques millimètres, les 3 boulons longs l\'arrêtent.' },
       { n: '✓', title: 'Bilan', cam: 'catch', dur: 6, tone: 'warn', summary: true, text: '' },
     ],
   },
@@ -2482,16 +2344,16 @@ const SCEN = {
     make: () => [
       first5, skip6,
       { n: '7', title: 'Desserrage 1 tour à la fois… le cône ne bouge pas', cam: 'bolts', dur: rounds() * 6 * 0.5, tone: 'warn',
-        text: 'Les boulons sont desserrés correctement, mais le cône reste coincé dans son logement (saleté, rouille). Les têtes de boulons montent, le cône reste en place : les ressorts sont toujours comprimés.',
+        text: 'Les boulons sont desserrés correctement, mais le cône reste coincé (saleté, rouille). Les ressorts sont toujours comprimés.',
         apply(S, p) { S.springLbl = 1; S.zone = 1; S.stuck = true; starLoosen(S, p); S.stuckLbl = seg(p, .5, .7); } },
       { n: '7', title: 'Boulons retirés : rien ne bouge', cam: 'bolts', dur: 5, tone: 'warn',
-        text: 'Tous les boulons sont enlevés. Le cône semble stable et les boulons ne portaient aucune charge. C\'est trompeur : 100 % de l\'énergie est encore dans les ressorts.',
+        text: 'Tous les boulons sont enlevés. Le cône semble stable. C\'est trompeur : toute l\'énergie est encore dans les ressorts.',
         apply(S, p) { S.springLbl = 1; S.zone = 1; S.stuck = true; S.stuckLbl = 1; S.nums = 1 - seg(p, .7, 1); ORDER.forEach((i, o) => removeBolt(S, i, seg(p, o * .06, .7 + o * .05), rounds())); } },
       { n: '8', title: 'Le travailleur se penche pour décoincer le cône', cam: 'bolts', dur: 3.5, tone: 'danger', flag: 'Danger',
-        text: 'Un coup ou une vibration suffit : le cône se décoince brusquement. Sans les 3 boulons de retenue de l\'étape 6, rien ne l\'arrête.',
+        text: 'Un coup ou une vibration suffit : le cône se décoince d\'un coup. Sans les 3 boulons de retenue, rien ne l\'arrête.',
         apply(S, p) { S.springLbl = 1; S.zone = 1; S.stuck = true; S.stuckLbl = 1; S.shake = seg(p, .35, 1); } },
       { n: '!', title: 'Le cône se décoince : projection', cam: 'wide', flight: true, tone: 'danger', flag: 'Projection', dir: [0.22, 1, 0.04], ride: -1,
-        text: 'L\'énergie des ressorts, restée intacte, est libérée d\'un coup. Avec l\'étape 6, les 3 boulons remis sans bushing l\'auraient arrêté après quelques millimètres.' },
+        text: 'L\'énergie des ressorts part d\'un coup. Avec l\'étape 6, les 3 boulons longs l\'auraient arrêté.' },
       { n: '⚠', title: 'Bilan', cam: 'wide', dur: 6, tone: 'danger', summary: true, text: '' },
     ],
   },
@@ -2905,7 +2767,7 @@ function applyScene(S) {
   const showW = document.getElementById('optWorker').checked;
   worker.visible = showW && !workerModel;
   workerRoot.visible = showW && !!workerModel;
-  pallet.visible = stand.visible = consoleG.visible = headG.visible = carriage.visible = zone.visible = drift.visible = true;
+  pallet.visible = stand.visible = consoleG.visible = headG.visible = carriage.visible = zone.visible = true;
 
   // Trajectoire
   if (fl) {
@@ -3033,15 +2895,15 @@ function updateUI(S, force) {
     $('capTitle').textContent = nb('Vue éclatée : mandrin Boyles H (UM-070-142AA)');
     $('capTag').hidden = true;
     $('dock').dataset.tone = 'ok';
-    $('capText').textContent = nb('Toutes les pièces de la liste du mandrin UM-070-142AA, dans l\'ordre d\'assemblage : clavettes, roulement et vérin à gauche, capuchons avant à droite. Au-dessus : l\'adaptateur UM-070-608A (option, tête UM-070) et les bagues de guidage B (UM-021-06-02 et -22). En dessous : le jeu de mâchoires B installé et l\'anneau WH-500 (grosseur B seulement). La tête de forage est masquée dans cette vue. Cliquez sur une pièce pour l\'identifier ; le bouton Lecture ramène à l\'animation.');
+    $('capText').textContent = nb('Toutes les pièces du mandrin. Survolez une pièce pour son numéro, cliquez pour sa fiche. Lecture ramène à l\'animation.');
   }
   if (hexTarget && lastStep !== 'h') {
     lastStep = 'h';
     $('capNum').textContent = '⊕';
-    $('capTitle').textContent = nb('Vue éclatée : tête de forage Boyles (UM-012-100UG)');
+    $('capTitle').textContent = nb('Vue éclatée : tête de forage');
     $('capTag').hidden = true;
     $('dock').dataset.tone = 'ok';
-    $('capText').textContent = nb('Les pièces de la tête s\'écartent de la boîte : la broche, ses manchons et ses écrous descendent ; la transmission et le moteur montent ; le couvercle, les boyaux puis, plus loin, les pignons et la chaîne sortent par la face avant ; la pompe, le filtre, le refroidisseur et la vanne descendent ; l\'axe de pivot recule. Le mandrin monte d\'un bloc. Cliquez sur une pièce pour l\'identifier ; le bouton Lecture ramène à l\'animation.');
+    $('capText').textContent = nb('Pièces de la tête écartées, mandrin soulevé. Survolez une pièce pour son numéro, cliquez pour sa fiche. Lecture ramène à l\'animation.');
   }
   if (!explodeTarget && !hexTarget && S.i !== lastStep) {
     lastStep = S.i;
@@ -3096,7 +2958,7 @@ function updateUI(S, force) {
   });
 
   $('note').textContent = fl && steps[S.i].flight ? `Projection au ralenti ×${SLOWMO}`
-    : cat && steps[S.i].catch ? `Mouvement ralenti : dans la réalité, ≈ ${fr(cat.ms, 0)} ms` : 'Course des ressorts affichée ×6';
+    : cat && steps[S.i].catch ? 'Mouvement au ralenti' : 'Ressorts : course ×6';
 
   // Bandeau d'impact
   const banner = $('banner'), flash = $('flash');
@@ -3123,13 +2985,13 @@ const IMPACT_TXT = { visage: 'IMPACT AU VISAGE', tronc: 'IMPACT AU TRONC', hanch
 const ZONE_TXT = { visage: 'le visage', tronc: 'le tronc', hanches: 'les hanches', jambes: 'les jambes' };
 function summaryText(ev) {
   if (ev.catch) {
-    return `Le filet du boulon 6 a cédé : l'énergie restante des ressorts est libérée d'un coup et le cône 2920390 part dans l'axe du mandrin. Les 3 boulons B500-8000 remis sans bushing à l'étape 6 l'arrêtent après quelques millimètres de course, en quelques millisecondes. Les mains et le visage du travailleur sont épargnés. C'est un quasi-accident : même erreur que le scénario « boulons retirés un par un », mais la retenue a fait son travail. Les 3 boulons ont encaissé le choc : il faut les remplacer par des neufs avant de remonter le mandrin.`;
+    return `Quasi-accident. Le filet du boulon 6 a cédé, le cône est parti vers le travailleur. Les 3 boulons longs remis sans bushing (étape 6) l'ont arrêté après quelques millimètres. Remplacer ces 3 boulons par des neufs avant de remonter.`;
   }
   const F = ev.F;
-  const hands = F.hands ? `Il frappe d'abord les mains posées sur la clé, quelques millisecondes après la rupture : impossible de les retirer à temps. ` : '';
-  const hit = F.impact ? `Il atteint ensuite ${ZONE_TXT[F.impact.zone]} du travailleur, puis tombe au sol.` : F.feet ? `Il n'atteint pas le corps du travailleur, mais ce bloc d'acier retombe à ses pieds.` : 'Il n\'atteint pas le corps du travailleur, mais il tombe au sol de façon imprévisible.';
-  const spr = F.springs.length ? ` Des ressorts 5200517 peuvent aussi être éjectés.` : '';
-  return `L'énergie restante des ressorts est libérée en une fraction de seconde. Le cône 2920390 et ses mâchoires partent dans l'axe du mandrin, à l'horizontale. ${hands}${hit}${spr} La procédure (1 tour à la fois, retenue de l'étape 6) évite ce scénario.`;
+  const hands = F.hands ? `Il frappe d'abord les mains sur la clé. ` : '';
+  const hit = F.impact ? `Puis ${ZONE_TXT[F.impact.zone]} du travailleur.` : F.feet ? `Il retombe aux pieds du travailleur.` : 'Il tombe au sol de façon imprévisible.';
+  const spr = F.springs.length ? ` Des ressorts peuvent aussi être éjectés.` : '';
+  return `Accident. Le cône et les mâchoires sont projetés dans l'axe du mandrin. ${hands}${hit}${spr} La procédure (1 tour à la fois, retenue de l'étape 6) évite ce scénario.`;
 }
 
 /* ================= Nomenclature, fiche de pièce, vues ================= */
@@ -3252,29 +3114,26 @@ canvas.addEventListener('pointerleave', e => { if (e.pointerType === 'mouse') hi
 function applyTheme() {
   const bg = new THREE.Color(css('--scene') || '#d7dce0');
   scene.background = bg;
+  scene.fog.color.copy(bg);
+  mat.floor.color.set(css('--floor') || '#b7bec3');
 }
 matchMedia('(prefers-color-scheme: dark)').addEventListener('change', applyTheme);
 new MutationObserver(applyTheme).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme', 'class'] });
 applyTheme();
 
 /* ================= Boucle ================= */
-/* ---------- Post-traitement (qualité haute) : occlusion ambiante (GTAO), tonalité ACES, anticrénelage SMAA ----------
+/* ---------- Post-traitement (qualité haute) : tonalité ACES, anticrénelage SMAA ----------
    Qualité basse (tablettes, mobiles) : rendu direct, résolution limitée. Réglable par le bouton « Qualité ». */
 const QUALITY_KEY = 'clam-quality';
 const autoLow = /Android|iPhone|iPad|Mobi/i.test(navigator.userAgent) || (navigator.hardwareConcurrency || 8) <= 4 || Math.min(screen.width, screen.height) < 700;
 let quality = 'high';
 try { quality = localStorage.getItem(QUALITY_KEY) || (autoLow ? 'low' : 'high'); } catch (e) { quality = autoLow ? 'low' : 'high'; }
-let composer = null, gtao = null, smaa = null;
+let composer = null, smaa = null;
 function buildComposer() {
   const w = Math.max(2, view.clientWidth), h = Math.max(2, view.clientHeight);
   const rt = new THREE.WebGLRenderTarget(w, h, { type: THREE.HalfFloatType, samples: renderer.capabilities.isWebGL2 ? 4 : 0 });
   composer = new EffectComposer(renderer, rt);
   composer.addPass(new RenderPass(scene, camera));
-  gtao = new GTAOPass(scene, camera, w, h, {}, { radius: .9, distanceExponent: 1, thickness: 1, scale: 1.1, samples: 12, distanceFallOff: 1, screenSpaceRadius: false }, { lumaPhi: 10, depthPhi: 2, normalPhi: 3, radius: 4, radiusExponent: 1, rings: 2, samples: 12 });
-  gtao.output = GTAOPass.OUTPUT.Default;
-  gtao.blendIntensity = .9;
-  gtao.normalMaterial.clippingPlanes = [CUT];   // la moitié coupée ne doit pas assombrir l'intérieur du mandrin
-  composer.addPass(gtao);
   composer.addPass(new OutputPass());
   smaa = new SMAAPass(w * renderer.getPixelRatio(), h * renderer.getPixelRatio());
   composer.addPass(smaa);
@@ -3283,8 +3142,6 @@ function setQuality(q) {
   quality = q;
   try { localStorage.setItem(QUALITY_KEY, q); } catch (e) {}
   renderer.setPixelRatio(Math.min(devicePixelRatio, q === 'high' ? 2 : 1.25));
-  sun.shadow.mapSize.set(q === 'high' ? 2048 : 1024, q === 'high' ? 2048 : 1024);
-  if (sun.shadow.map) { sun.shadow.map.dispose(); sun.shadow.map = null; }
   const b = document.getElementById('btnQuality');
   if (b) { b.textContent = q === 'high' ? 'Qualité : haute' : 'Qualité : basse'; b.setAttribute('aria-pressed', String(q === 'high')); }
   resize();
@@ -3297,7 +3154,7 @@ function resize() {
   camera.updateProjectionMatrix();
   if (quality === 'high') {
     if (!composer) buildComposer();
-    composer.setSize(w, h); gtao.setSize(w, h); smaa.setSize(w * renderer.getPixelRatio(), h * renderer.getPixelRatio());
+    composer.setSize(w, h); smaa.setSize(w * renderer.getPixelRatio(), h * renderer.getPixelRatio());
   }
 }
 document.getElementById('btnQuality').addEventListener('click', () => setQuality(quality === 'high' ? 'low' : 'high'));
@@ -3326,8 +3183,7 @@ function frame(now) {
   updateCamera(dt);
   controls.update();
   gizmo.visible = !!gizmo.object;
-  if (scene.background && scene.background.isColor) scene.fog.color.copy(drift.visible ? FOG_ROCK : scene.background);   // brume de roche dans la galerie, fond uni dans les vues éclatées
-  if (quality === 'high' && composer) { gtao.normalMaterial.clippingPlanes = cutOn ? [CUT] : null; composer.render(); } else renderer.render(scene, camera);
+  if (quality === 'high' && composer) composer.render(); else renderer.render(scene, camera);
   requestAnimationFrame(frame);
 }
 

@@ -79,20 +79,24 @@ Les 18 ressorts sont modélisés avec un fil rond de section constante : en comp
 
 ## Rendu
 
-- **Matériaux PBR procéduraux** : acier usiné (stries d'outil, micro-rayures), peinture rouge usée (grain, éclats, graisse, vernis léger), roche et sol de galerie ; cartes de couleur, de rugosité et de normales dessinées au chargement (aucune texture externe, aucun CDN d'images).
-- **Arêtes arrondies** sur les pièces prismatiques pour que les reflets accrochent les chanfreins.
-- **Éclairage** : environnement d'atelier (panneaux fluorescents) pour les reflets, soleil directionnel avec ombres, deux luminaires de galerie et lumière d'ambiance ; brume de roche à distance. Pas de source lumineuse de lampe frontale.
-- **Décor** : galerie de mine (voûte de roche, parois, conduit de ventilation, câbles, luminaires, éboulis), masquée dans les vues éclatées.
-- **Post-traitement** : occlusion ambiante (GTAO) et anti-aliasing (MSAA + SMAA) en qualité haute. Le bouton **Qualité : haute / basse** (mémorisé) coupe le post-traitement et réduit la résolution pour les tablettes ; la qualité basse est choisie d'office sur les appareils modestes.
+- Matériaux unis (acier, peinture rouge), sans textures, pour que chaque pièce reste lisible.
+- **Aucune ombre portée** : lumière principale + lumière de remplissage opposée + lumière d'ambiance ; reflets neutres d'atelier. Fond uni, pas de décor.
+- Arêtes légèrement arrondies sur les pièces prismatiques.
+- Anticrénelage (MSAA + SMAA) en qualité haute ; le bouton **Qualité : haute / basse** (mémorisé) réduit la résolution pour les tablettes.
 - Les surfaces coïncidentes reçoivent un décalage de profondeur par matériau pour éviter le scintillement.
+- **Numéros de pièces** : jamais affichés en permanence. Le numéro et le nom apparaissent dans une info-bulle au survol (ou au toucher sur mobile) et l'étiquette s'affiche au clic sur la pièce, avec sa fiche dans la nomenclature.
+
+## Textes
+
+Tous les textes à l'écran sont courts et s'adressent aux travailleurs : une consigne par étape, sans numéros de pièces ni valeurs calculées. Les numéros et les fiches de pièces restent accessibles au survol et au clic.
 
 ## Commandes
 
 - Lecture / pause : bouton jaune ou barre d'espace. Étape précédente / suivante : flèches.
 - **Coupe du mandrin** : montre l'intérieur du mandrin (ressorts, boulons, voile, manchon, piston, roulement). La tête reste entière ; une pièce retirée du mandrin sort de la coupe.
-- **Éclaté : tête** : les pièces de la tête écartées de la boîte, le mandrin soulevé d'un bloc. Les pièces principales sont étiquetées ; les autres le sont quand on les sélectionne.
-- **Éclaté : mandrin** : toutes les pièces du mandrin séparées, avec leur numéro.
-- **Qualité : haute / basse** : active ou coupe l'occlusion ambiante, l'anti-aliasing et la pleine résolution.
+- **Éclaté : tête** : les pièces de la tête écartées de la boîte, le mandrin soulevé d'un bloc. Survoler une pièce pour voir son numéro et son nom, cliquer pour la sélectionner.
+- **Éclaté : mandrin** : toutes les pièces du mandrin séparées ; même principe (survol, clic).
+- **Qualité : haute / basse** : active ou coupe l'anticrénelage et la pleine résolution.
 - **Énergie des ressorts** : indication qualitative seulement (Stockée / Libérée graduellement / Libérée d'un coup / Arrêtée par la retenue) avec une jauge de la compression restante. Aucune valeur de force ni d'énergie n'est affichée.
 
 ## Physique utilisée (estimations)
