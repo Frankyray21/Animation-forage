@@ -91,7 +91,8 @@ Les 18 ressorts sont modélisés avec un fil rond de section constante : en comp
 - **Pièces retirées** : elles sortent dans l'axe en surbrillance, puis sont rangées sur une petite table de travail à côté du mandrin (couvert, couvercle et cône à plat, boulons et bushings couchés en rangées). La liste « Retiré » dans la vue 3D garde la trace de ce qui a été enlevé (l'élément de l'étape en cours est marqué).
 - **Séquence** : chaque étape faite reste marquée : « ✓ Fait » en vert pour la bonne méthode, « ✗ À éviter » ou « ✗ Dangereux » pour une erreur de méthode.
 - Coupe sans scintillement : la teinte de coupe (faces arrière) est repoussée d'environ 1 mm derrière les faces avant, et les faces en contact orientées dans le même sens sont décalées de quelques centièmes de pouce.
-- Bout du mandrin d'après la planche 2.1 et une photo : couvercle et couvert peints comme le boîtier, ligne de joint, têtes de boulons zinguées en relief, 3 bushings qui dépassent.
+- Bout du mandrin d'après la planche « Complete assembly UM-070-142AA » et une photo : le couvert des mâchoires 3506907 forme un **disque surélevé de 0,9 po** (arête chanfreinée, ligne de joint au pied) au-dessus de la couronne du porte-capuchon et de ses 9 boulons ; couvercle et couvert peints comme le boîtier, boulons zingués.
+- **Alésage traversant** : aucune tige dans la tête ; on voit au travers de la broche, du mandrin jusqu'au nez de broche.
 - Roulement 5000199 à rouleaux cylindriques (rouleaux et cage en laiton visibles) ; mâchoires en acier gris avec 2 × 2 plaquettes dentées, encoche centrale, rainures de guidage et anneau élastique.
 
 ## Textes

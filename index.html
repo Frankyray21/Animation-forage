@@ -386,7 +386,8 @@ const Y = {
   bowlB: 10.6, plateB: 13.14, plateT: 13.7,   // bol 2920390 : arrière, dessous et dessus de la bride
   rimT: 13.6,                       // dessus de l'enveloppe du boîtier
   lipB: 13.75, lipT: 14.3,          // lèvre du porte-capuchon 3506906
-  capB: 14.3, front: 15.2,          // adaptateur de capuchon 3506907, face avant
+  capB: 14.3, front: 15.2,          // adaptateur de capuchon 3506907, face avant (disque surélevé de 0,9 po au-dessus du couvercle, planche UM-070-142AA)
+  cvFront: 14.3,                    // face avant du porte-capuchon 3506906 (couronne des 9 boulons)
 };
 const R = {
   body: 6.06, rimIn: 5.45, springBlockIn: 4.2, web: 2.3, hubIn: 1.9,
@@ -1058,7 +1059,7 @@ part({ id: 'B500-8000', ref: 'B500-8000', name: 'Boulon ½ × 8 po (avec entreto
 const CV_BASE = new THREE.Vector3(0, u(Y.rimT), 0);
 const cover = new THREE.Group();
 {
-  cover.add(mesh(annulusIn(R.capOut, R.body, Y.front - Y.rimT, ringAt(9, R.coverBolt, 12).map(([x, z]) => [x, z, .27])), mat.paint));
+  cover.add(mesh(annulusIn(R.capOut + .02, R.body, Y.cvFront - Y.rimT, ringAt(9, R.coverBolt, 12).map(([x, z]) => [x, z, .27])), mat.paint));
   const lip = mesh(lobedAnnulus(R.lipIn, 3.95, R.capOut + .01, Y.lipT - Y.lipB, ringAt(3, R.jcBolt, 22).map(([x, z]) => [x, z, .38]), BOLTS.map((b, i) => boltAt(i)), 8.5), mat.paint);
   lip.position.y = u(Y.lipB - Y.rimT);
   // joint couvercle / boîtier : la ligne près du bout visible sur la planche 2.1 (petit tore, aucune face superposée)
@@ -1067,13 +1068,13 @@ const cover = new THREE.Group();
 }
 fadeable(cover);
 clampG.add(cover);
-part({ id: '3506906', ref: '3506906', name: 'Porte-capuchon (couvercle)', qty: 1, grp: 'front', ext: [Y.rimT, Y.front], r: 6.1, anim: true, role: 'Couvercle avant, fixé au boîtier. Sa lèvre intérieure recouvre les 9 boulons du bol.', step: 'Étape 5 : retiré après ses 9 boulons ½ × 2 ¼. Étape 10 : nettoyer ses deux faces avant de le remettre.' }, cover);
+part({ id: '3506906', ref: '3506906', name: 'Porte-capuchon (couvercle)', qty: 1, grp: 'front', ext: [Y.rimT, Y.cvFront], r: 6.1, anim: true, role: 'Couvercle avant, fixé au boîtier. Sa lèvre intérieure recouvre les 9 boulons du bol.', step: 'Étape 5 : retiré après ses 9 boulons ½ × 2 ¼. Étape 10 : nettoyer ses deux faces avant de le remettre.' }, cover);
 const cvBolts = ringAt(9, R.coverBolt, 12).map(([x, z]) => {
   const b = fadeable(makeBolt(BOLT.B500_2250));
-  b.userData.base = new THREE.Vector3(u(x), u(Y.front), u(z));
+  b.userData.base = new THREE.Vector3(u(x), u(Y.cvFront), u(z));
   clampG.add(b); return b;
 });
-part({ id: 'B500-2250', ref: 'B500-2250', name: 'Boulon ½ × 2 ¼ po', qty: 9, grp: 'front', ext: [12.95, 15.51], r: 6.1, anim: true, role: 'Fixent le porte-capuchon au boîtier.', step: 'Étape 5 : clé ¾. Étapes 12 et 13 : remplacés par des neufs, serrés à 105 lb·pi (≈ 142 N·m).' }, cvBolts);
+part({ id: 'B500-2250', ref: 'B500-2250', name: 'Boulon ½ × 2 ¼ po', qty: 9, grp: 'front', ext: [12.05, 14.61], r: 6.1, anim: true, role: 'Fixent le porte-capuchon au boîtier.', step: 'Étape 5 : clé ¾. Étapes 12 et 13 : remplacés par des neufs, serrés à 105 lb·pi (≈ 142 N·m).' }, cvBolts);
 const JC_BASE = new THREE.Vector3(0, u(Y.capB), 0);
 const jawCover = new THREE.Group();
 {
@@ -1082,6 +1083,9 @@ const jawCover = new THREE.Group();
     ...BUSHED.map(i => [BOLTS[i].x / IN, BOLTS[i].z / IN, .55]),
     ...ringAt(6, 2.35, 30).map(([x, z]) => [x, z, .12]),
   ]), mat.paint));
+  // arête avant chanfreinée du disque surélevé (planche : contour adouci)
+  const ch = mesh(new THREE.TorusGeometry(u(R.capOut - .06), u(.07), 8, 96), mat.paint); ch.rotation.x = Math.PI / 2; ch.position.y = u(Y.front - Y.capB - .07); jawCover.add(ch);
+  const foot = mesh(new THREE.TorusGeometry(u(R.capOut + .02), u(.035), 6, 96), mat.pocket); foot.rotation.x = Math.PI / 2; foot.position.y = u(Y.cvFront - Y.capB + .02); jawCover.add(foot);   // ligne de joint au pied du disque surélevé
   for (let k = 0; k < 8; k++) {
     const t = mesh(rboxGeo(u(.55), u(.6), u(.24)), mat.grey);
     const a = (k + .5) * Math.PI / 4;
@@ -1279,8 +1283,8 @@ const EVT = { x: -7.5, z: -4.8 };
 {
   const sp = new THREE.Group();
   { const tube = mesh(annulusIn(1.5, 1.9, 20.55), mat.machined); tube.position.y = u(.05); sp.add(tube); }   // 0,05 po en retrait du couvercle UM-012-116
-  const thrTop = hcyl(1.92, 4.45, threadMat(mat.machined, 4.45, 4), 48); thrTop.position.y = u(16.1 + 2.225); sp.add(thrTop);   // s'arrête 0,05 po avant le bout du tube : pas de faces superposées
-  const thrBot = hcyl(1.92, 3.0, threadMat(mat.machined, 3.0, 6), 48); thrBot.position.y = u(1.35); sp.add(thrBot);   // dépasse de 0,15 po le couvercle UM-012-116 : pas de faces superposées au nez de broche
+  const thrTop = mesh(new THREE.CylinderGeometry(u(1.92), u(1.92), u(4.45), 48, 1, true), threadMat(mat.machined, 4.45, 4));   // tube ouvert : on voit à travers la broche (pas de tige) thrTop.position.y = u(16.1 + 2.225); sp.add(thrTop);   // s'arrête 0,05 po avant le bout du tube : pas de faces superposées
+  const thrBot = mesh(new THREE.CylinderGeometry(u(1.92), u(1.92), u(3.0), 48, 1, true), threadMat(mat.machined, 3.0, 6)); thrBot.position.y = u(1.35); sp.add(thrBot);   // dépasse de 0,15 po le couvercle UM-012-116 : pas de faces superposées au nez de broche
   placeIn(sp, 0, -12.6, 0);
   hpart({ id: 'UM-012-101', ref: 'UM-012-101', name: 'Broche Boyles', qty: 1, grp: 'hspindle', role: 'Arbre creux entraîné par la chaîne ; le mandrin est fixé à son bout, côté transmission. Vitesse max. 1 200 tr/min.', hx: [0, -26, 0] }, sp);
 }
