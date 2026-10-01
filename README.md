@@ -48,6 +48,12 @@ Correspondance avec la procédure :
 
 Les 9 boulons du cône traversent le voile du boîtier (entretoises inférieures 3506880 et joints 5040192) et se vissent dans le manchon d'actionnement 3506928. Ce sont eux qui retiennent le cône contre les 18 ressorts.
 
+## Clam et chuck
+
+- **Chuck (mandrin)** : sur la tête de forage, tourne avec la broche ; serre la tige pour la faire tourner et la pousser ou la tirer. C'est la pièce modélisée ici (Boyles H, UM-070-142AA, sur la tête UM-012-100UG).
+- **Clam (rod clamp, foot clamp)** : fixé à l'avant du mât, près du trou, ne tourne pas ; retient le train de tiges quand le chuck s'ouvre (recul de la tête, ajout ou retrait de tiges) pour qu'il ne glisse pas dans le trou. Non modélisé (vue éclatée UM-079-100AA « rod clamp 12 HH »).
+- Les deux sont fermés par ressorts et ouverts par le vérin hydraulique : même danger d'énergie résiduelle, même procédure PRO-OP-DD-005.
+
 ## Scénarios
 
 | Scénario | Ce qui est montré |
