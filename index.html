@@ -513,7 +513,7 @@ function solvePlate(cons, t) {
 /* ================= Scène ================= */
 const canvas = document.getElementById('c');
 const view = document.getElementById('view');
-// Faces intérieures révélées par la coupe : sombres et mates, comme une surface coupée (évite les reflets qui « flashent »)
+// Faces intérieures révélées par la coupe : une seule teinte sombre et mate, comme une surface coupée
 // Face intérieure qui coïncide avec la face extérieure d'une autre pièce : toujours derrière (pas de z-fighting)
 THREE.ShaderChunk.logdepthbuf_fragment += `
 #if defined( USE_LOGDEPTHBUF ) && defined( USE_LOGDEPTHBUF_EXT ) && NUM_CLIPPING_PLANES > 0
@@ -522,7 +522,7 @@ if ( ! gl_FrontFacing ) gl_FragDepthEXT = min( 1.0, gl_FragDepthEXT + 0.0001 );
 `;
 THREE.ShaderChunk.opaque_fragment += `
 #if NUM_CLIPPING_PLANES > 0
-if ( ! gl_FrontFacing ) gl_FragColor.rgb = gl_FragColor.rgb * 0.28 + vec3( 0.045 );
+if ( ! gl_FrontFacing ) gl_FragColor.rgb = vec3( 0.105, 0.11, 0.118 );   // teinte de coupe uniforme, sans éclairage ni texture : deux faces superposées ne peuvent plus clignoter
 #endif
 `;
 const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, preserveDrawingBuffer: false, logarithmicDepthBuffer: true });   // profondeur précise : pas de scintillement entre surfaces proches
