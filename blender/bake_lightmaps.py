@@ -153,7 +153,9 @@ def bake(groups):
             o.hide_render = True
         bpy.context.view_layer.objects.active = dups[0]
         bpy.ops.object.join()
-        proxies.append(bpy.context.view_layer.objects.active)
+        px = bpy.context.view_layer.objects.active
+        px.data.uv_layers.active = px.data.uv_layers['LM']   # la cuisson suit la couche UV active
+        proxies.append(px)
     bpy.ops.object.select_all(action='DESELECT')
     for p in proxies: p.select_set(True)
     bpy.context.view_layer.objects.active = proxies[0]
