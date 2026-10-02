@@ -98,6 +98,7 @@ Les 18 ressorts sont modélisés avec un fil rond de section constante : en comp
 
 - Matériaux unis (acier, peinture rouge), sans textures, pour que chaque pièce reste lisible.
 - La foreuse STM-1500 est d'un rouge brique, moins vif que la tête, et placée plus loin derrière le banc ; le brouillard lointain est repoussé pour ne pas la délaver.
+- **Manettes interactives** : cliquer la manette CLAM ou CHUCK la bascule (ouverte ⇄ fermée) ; le vérin, le cône et les mâchoires suivent. Lecture, changement d'étape ou de scénario ramènent l'animation. Foreuse cadenassée : les manettes ne répondent pas et une bulle rappelle que le cadenassage ne libère pas l'énergie des ressorts.
 - **Bulle santé-sécurité** : l'info-bulle d'une pièce (clic, ou survol en vue éclatée) ajoute une courte ligne santé-sécurité (encadré jaune, sans titre) qui rappelle l'étape de la procédure liée à la pièce (cadenassage, boulons longs de retenue, dévissage 1 tour à la fois, ne pas se placer devant le cône, etc.).
 - Sur téléphone (≤ 600 px) : les boutons de vue tiennent sur une seule ligne défilante avec des libellés courts (Coupe, Éclaté tête, Foreuse, Éclaté chuck, ?, ⛶), sous la puce du scénario ; en plein écran, la liste des étapes est repliée en bas à droite.
 - **Aucune ombre portée** : lumière principale + lumière de remplissage opposée + lumière d'ambiance ; reflets neutres d'atelier. Fond uni, pas de décor.

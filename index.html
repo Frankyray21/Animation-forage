@@ -2221,6 +2221,7 @@ const levers = [['CLAM', -0.45], ['CHUCK', 0.45]].map(([name, x]) => {
   const rod = mesh(new THREE.CylinderGeometry(0.06, 0.07, 1.35, 14), mat.leverRod); rod.position.y = 0.67;
   const grip = mesh(new THREE.CapsuleGeometry(0.11, 0.38, 6, 14), mat.grip); grip.position.y = 1.52;
   L.add(rod, grip);
+  L.userData.lever = name; L.traverse(o => { o.userData.lever = name; });
   consoleG.add(L); return L;
 });
 {   // repère de position : FERMÉ à gauche, OUVERT à droite (sens de la manette)
@@ -3334,6 +3335,23 @@ function animateWorker(S, fl) {
 const STROKE = .35;   // po : recul du piston, du manchon, des 9 boulons et du cône quand le vérin est sous pression (illustratif)
 const HYD_PARTS = new Set(['3506908', '5035015', '5035017', '5000199', '3506882', '5054078', '3506928']);
 let hydVis = 0;
+// Manettes interactives : cliquer une manette la bascule (ouverte ⇄ fermée) ; le vérin, le cône et les mâchoires suivent.
+// Lecture, changement d'étape ou de scénario : retour à l'état de l'animation. Foreuse cadenassée : les manettes ne répondent pas.
+const leverMan = { on: false, target: 0, v: 0 };
+function leverBlend(S, dt) {
+  if (!leverMan.on) return;
+  leverMan.v += Math.sign(leverMan.target - leverMan.v) * Math.min(Math.abs(leverMan.target - leverMan.v), dt / .7);
+  S.lever = leverMan.v; S.hyd = 1 - leverMan.v;
+}
+function leverToggle(S, name, e) {
+  if (S.lock > .5) { showMsgTip('Foreuse cadenassée', 'Les manettes ne répondent pas. Les ressorts restent comprimés : le cadenassage ne libère pas leur énergie.', e); return; }
+  setPlaying(false);
+  const cur = leverMan.on ? leverMan.v : S.lever;
+  leverMan.on = true; leverMan.v = cur; leverMan.target = cur > .5 ? 0 : 1;
+  showMsgTip(`Manette ${name} · ${leverMan.target ? 'fermée' : 'ouverte'}`, leverMan.target
+    ? 'Le vérin relâche : les ressorts avancent le cône, les mâchoires se ferment. Les ressorts restent comprimés.'
+    : 'Le vérin recule le cône, les mâchoires s\'ouvrent. Avant de démonter : manettes fermées (étape 1), puis cadenassage (étape 3).', e);
+}
 function applyScene(S) {
   hydVis = S.hyd * (1 - ease(Math.max(explodeE, hexE)));
   const hOff = -u(STROKE) * hydVis;
@@ -3576,7 +3594,7 @@ Object.entries(SCEN).forEach(([key, s]) => {
   scenList.appendChild(b);
 });
 function selectScen(key) {
-  scen = key; T = 0; playing = false; autoCam = true; $('camChip').hidden = true;
+  scen = key; T = 0; playing = false; leverMan.on = false; autoCam = true; $('camChip').hidden = true;
   [...scenList.children].forEach(b => b.setAttribute('aria-selected', String(b.dataset.key === key)));
   $('scenChipText').textContent = SCEN[key].label;
   $('scenChip').dataset.tone = SCEN[key].tone;
@@ -3605,15 +3623,16 @@ function renderTicks() {
 }
 function setPlaying(v) {
   playing = v;
+  if (v) leverMan.on = false;
   if (v && drillView) setDrillView(false);
   $('bPlay').setAttribute('aria-label', v ? 'Pause' : 'Lecture');
   $('playIcon').innerHTML = v ? '<path d="M3 2h4v12H3zM9 2h4v12H9z"/>' : '<path d="M4 2l10 6-10 6z"/>';
 }
 $('bPlay').addEventListener('click', () => { if (explodeTarget) setExplode(false); if (hexTarget) setHeadExplode(false); if (!playing && T >= total - 1e-3) T = 0; setPlaying(!playing); });
-$('bRestart').addEventListener('click', () => { T = 0; setPlaying(false); autoCam = true; $('camChip').hidden = true; });
-$('bPrev').addEventListener('click', () => { const { i, p } = locate(T); T = starts[p < 0.05 && i > 0 ? i - 1 : i]; setPlaying(false); });
-$('bNext').addEventListener('click', () => { const { i } = locate(T); T = i < steps.length - 1 ? starts[i + 1] : total - 1e-3; setPlaying(false); });
-$('scrub').addEventListener('input', e => { T = e.target.value / 1000 * total; setPlaying(false); });
+$('bRestart').addEventListener('click', () => { T = 0; leverMan.on = false; setPlaying(false); autoCam = true; $('camChip').hidden = true; });
+$('bPrev').addEventListener('click', () => { const { i, p } = locate(T); T = starts[p < 0.05 && i > 0 ? i - 1 : i]; leverMan.on = false; setPlaying(false); });
+$('bNext').addEventListener('click', () => { const { i } = locate(T); T = i < steps.length - 1 ? starts[i + 1] : total - 1e-3; leverMan.on = false; setPlaying(false); });
+$('scrub').addEventListener('input', e => { T = e.target.value / 1000 * total; leverMan.on = false; setPlaying(false); });
 $('optSpeed').addEventListener('change', e => { speed = +e.target.value; });
 addEventListener('keydown', e => {
   if (e.target.closest('input, select, textarea')) return;
@@ -3780,6 +3799,15 @@ $('btnCut').addEventListener('click', () => { setCut(!cutOn); if (explodeTarget)
 const ray = new THREE.Raycaster(), ptr = new THREE.Vector2();
 let downAt = null;
 canvas.addEventListener('pointerdown', e => { downAt = [e.clientX, e.clientY]; });
+// Manette sous le curseur (CLAM ou CHUCK), sinon null
+function pickLever(e) {
+  if (!consoleG.visible || explodeE > 0 || hexE > 0) return null;
+  const r = canvas.getBoundingClientRect();
+  ptr.set((e.clientX - r.left) / r.width * 2 - 1, -(e.clientY - r.top) / r.height * 2 + 1);
+  ray.setFromCamera(ptr, camera);
+  const h = ray.intersectObjects(levers, true);
+  return h.length ? h[0].object.userData.lever : null;
+}
 // Pièce sous le curseur : une étiquette visible d'abord, sinon la pièce elle-même
 function pickPart(e) {
   const r = canvas.getBoundingClientRect();
@@ -3797,6 +3825,8 @@ function pickPart(e) {
 }
 canvas.addEventListener('pointerup', e => {
   if (!downAt || Math.hypot(e.clientX - downAt[0], e.clientY - downAt[1]) > 5) return;
+  const lv = pickLever(e);
+  if (lv) { leverToggle(stateAt(T), lv, e); return; }
   const p = pickPart(e);
   select(p);
   // clic (ou toucher) : nom et numéro à l'endroit cliqué, dans toutes les vues, quelques secondes
@@ -3835,17 +3865,26 @@ const tip = $('tip');
 const clickTipOn = () => !tip.hidden && !!tipTimer;
 let hoverEv = null, hoverQueued = false, tipTimer = 0;
 function hideTip() { tip.hidden = true; clearTimeout(tipTimer); tipTimer = 0; canvas.style.cursor = ''; }
-function showTip(p, ev) {
-  $('tipRef').textContent = p.ref + (p.qty && p.qty !== 1 ? ` · ×${qtyOf(p)}` : '');
-  $('tipName').textContent = LANG === 'en' ? pname(p) : nb(pname(p));
-  const sst = sstOf(p), box = $('tipSst'); box.hidden = !sst;
-  if (sst) box.textContent = sst;
+// Message court à l'endroit cliqué (manettes), même bulle que les pièces
+function showMsgTip(title, msg, ev) {
+  $('tipRef').textContent = title; $('tipName').textContent = '';
+  const box = $('tipSst'); box.hidden = !msg; box.textContent = msg || '';
+  placeTip(ev); clearTimeout(tipTimer); tipTimer = setTimeout(hideTip, 7000);
+}
+function placeTip(ev) {
   tip.hidden = false;
   const r = canvas.getBoundingClientRect(), w = tip.offsetWidth, h = tip.offsetHeight;
   let x = ev.clientX - r.left + 14, y = ev.clientY - r.top + 16;
   if (x + w > r.width - 8) x = ev.clientX - r.left - w - 12;
   if (y + h > r.height - 8) y = ev.clientY - r.top - h - 12;
   tip.style.left = `${Math.max(8, Math.min(x, r.width - w - 8))}px`; tip.style.top = `${Math.max(8, y)}px`;
+}
+function showTip(p, ev) {
+  $('tipRef').textContent = p.ref + (p.qty && p.qty !== 1 ? ` · ×${qtyOf(p)}` : '');
+  $('tipName').textContent = LANG === 'en' ? pname(p) : nb(pname(p));
+  const sst = sstOf(p), box = $('tipSst'); box.hidden = !sst;
+  if (sst) box.textContent = sst;
+  placeTip(ev);
 }
 canvas.addEventListener('pointermove', e => {
   if (e.pointerType === 'touch' || e.pointerType === 'pen') return;   // le tactile affiche le nom au toucher
@@ -3855,7 +3894,9 @@ canvas.addEventListener('pointermove', e => {
   hoverQueued = true;
   requestAnimationFrame(() => {
     hoverQueued = false;
-    const ev = hoverEv, p = pickPart(ev);
+    const ev = hoverEv;
+    if (pickLever(ev)) { canvas.style.cursor = 'pointer'; return; }
+    const p = pickPart(ev);
     const exploded = explodeTarget || hexTarget;
     if (!p) { if (exploded || !clickTipOn()) hideTip(); canvas.style.cursor = ''; return; }
     canvas.style.cursor = 'pointer';
@@ -3981,6 +4022,7 @@ function frame(now) {
   explodeE = reduceMotion ? explodeTarget : explodeE + Math.sign(explodeTarget - explodeE) * Math.min(Math.abs(explodeTarget - explodeE), dt / 1.4);
   hexE = reduceMotion ? hexTarget : hexE + Math.sign(hexTarget - hexE) * Math.min(Math.abs(hexTarget - hexE), dt / 1.4);
   const S = explodeE > 0 || hexE > 0 ? stateAt(0) : stateAt(T);
+  leverBlend(S, dt);
   poseRig(Math.max(ease(explodeE), ease(hexE)));
   applyScene(S);
   applyExplode(explodeE);
@@ -4026,7 +4068,7 @@ async function start() {
   resize();
   const S = stateAt(T); applyScene(S); updateUI(S, true);
   requestAnimationFrame(frame);
-  window.__clam = { stateAt, steps: () => steps, starts: () => starts, total: () => total, setT: v => { T = v; }, P, setExplode, setHeadExplode, headExplodeNow: v => { setHeadExplode(v); hexE = v ? 1 : 0; }, setCutUI: setCut, explodeNow: v => { setExplode(v); explodeE = v ? 1 : 0; }, select: id => select(byId(id)), PARTS, camera, setQuality, worker: { set: setWorker, get: () => ({ x: WORKER_GLB.position.x, y: WORKER_GLB.position.y, z: WORKER_GLB.position.z, rotYdeg: WORKER_GLB.rotY * 180 / Math.PI, scale: WORKER_GLB.scale, loaded: !!workerModel }), root: workerRoot }, setCut: v => { cutOn = v; applyCut(); } };
+  window.__clam = { stateAt, steps: () => steps, starts: () => starts, total: () => total, setT: v => { T = v; }, P, setExplode, setHeadExplode, headExplodeNow: v => { setHeadExplode(v); hexE = v ? 1 : 0; }, setCutUI: setCut, explodeNow: v => { setExplode(v); explodeE = v ? 1 : 0; }, select: id => select(byId(id)), PARTS, camera, setQuality, worker: { set: setWorker, get: () => ({ x: WORKER_GLB.position.x, y: WORKER_GLB.position.y, z: WORKER_GLB.position.z, rotYdeg: WORKER_GLB.rotY * 180 / Math.PI, scale: WORKER_GLB.scale, loaded: !!workerModel }), root: workerRoot }, setCut: v => { cutOn = v; applyCut(); }, levers, THREE, state: () => stateAt(T), leverMan: () => ({ ...leverMan }) };
 }
 start();
 </script>
