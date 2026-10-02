@@ -141,11 +141,27 @@ sc.render.bake.margin_type = 'EXTEND'
 sc.render.bake.use_clear = True
 sc.render.bake.use_pass_direct = True; sc.render.bake.use_pass_indirect = True; sc.render.bake.use_pass_color = False
 
-def bake(selected):
+# Cycles cuit objet par objet (une synchronisation de la scène par objet) : chaque groupe est cuit
+# sur une copie fusionnée (mêmes UV « LM », mêmes matériaux) ; les originaux, masqués au rendu, sont exportés.
+def bake(groups):
+    proxies = []
+    for group in groups:
+        bpy.ops.object.select_all(action='DESELECT')
+        dups = []
+        for o in group:
+            d = o.copy(); d.data = o.data.copy(); sc.collection.objects.link(d); dups.append(d); d.select_set(True)
+            o.hide_render = True
+        bpy.context.view_layer.objects.active = dups[0]
+        bpy.ops.object.join()
+        proxies.append(bpy.context.view_layer.objects.active)
     bpy.ops.object.select_all(action='DESELECT')
-    for o in selected: o.select_set(True)
-    bpy.context.view_layer.objects.active = selected[0]
+    for p in proxies: p.select_set(True)
+    bpy.context.view_layer.objects.active = proxies[0]
     bpy.ops.object.bake(type='DIFFUSE', pass_filter={'DIRECT', 'INDIRECT'}, use_clear=True, margin=sc.render.bake.margin)
+    for p in proxies:
+        me = p.data; bpy.data.objects.remove(p, do_unlink=True); bpy.data.meshes.remove(me)
+    for group in groups:
+        for o in group: o.hide_render = False
 
 def set_head_image(name):
     for k, m in cache.items():
@@ -154,37 +170,20 @@ def set_head_image(name):
 # A : pose assemblée (tête sur le banc, mandrin, table, plancher)
 tb = time.time()
 set_head_image('head_a')
-bake(tg['h'] + tg['c'])
+bake([tg['h'], tg['c']])
 log(f'cuisson A (tête + banc) : {time.time() - tb:.0f} s')
-# masque de couverture des îlots (pour le lissage) : cuisson EMIT sans marge
-def coverage(group, image):
-    tmp = {}
+# masque de couverture des îlots (pour le lissage) : triangles UV « LM » tracés à la taille de l'atlas
+def coverage(group, size):
+    from PIL import Image, ImageDraw
+    im = Image.new('L', (size, size), 0); dr = ImageDraw.Draw(im)
     for o in group:
-        for s in o.material_slots:
-            m = s.material
-            if m.name in tmp: continue
-            em = m.node_tree.nodes.new('ShaderNodeEmission'); em.inputs['Strength'].default_value = 1
-            out = m.node_tree.nodes['Material Output']
-            old = out.inputs['Surface'].links[0].from_socket
-            m.node_tree.links.new(em.outputs['Emission'], out.inputs['Surface'])
-            tmp[m.name] = (m, em, old)
-    pix = None
-    mask = bpy.data.images.new('mask_' + image.name, image.size[0], image.size[1], alpha=False, float_buffer=True)
-    for m, em, old in tmp.values(): m.node_tree.nodes['LM'].image = mask
-    bpy.ops.object.select_all(action='DESELECT')
-    for o in group: o.select_set(True)
-    bpy.context.view_layer.objects.active = group[0]
-    s0 = cy.samples; cy.samples = 1
-    bpy.ops.object.bake(type='EMIT', use_clear=True, margin=0)
-    cy.samples = s0
-    pix = np.array(mask.pixels[:], dtype=np.float32).reshape(image.size[1], image.size[0], 4)[..., 0] > .5
-    for m, em, old in tmp.values():
-        m.node_tree.links.new(old, m.node_tree.nodes['Material Output'].inputs['Surface'])
-        m.node_tree.nodes.remove(em); m.node_tree.nodes['LM'].image = image
-    bpy.data.images.remove(mask)
-    return pix
-mask_h = coverage(tg['h'], imgs['head_a'])
-mask_c = coverage(tg['c'], imgs['bench'])
+        me = o.data; uv = me.uv_layers['LM'].data
+        me.calc_loop_triangles()
+        for t in me.loop_triangles:
+            dr.polygon([(uv[l].uv[0] * size, (1 - uv[l].uv[1]) * size) for l in t.loops], fill=255)
+    return np.array(im)[::-1] > 0          # lignes de bas en haut, comme les pixels Blender
+mask_h = coverage(tg['h'], SIZE_H)
+mask_c = coverage(tg['c'], SIZE_C)
 
 # E : tête éclatée (pièces écartées, sans banc, mandrin, table ni plancher)
 tb = time.time()
@@ -198,7 +197,7 @@ for o in objs:
         o.location = o.location + dv; moved.append((o, dv))
 bpy.context.view_layer.update()
 set_head_image('head_e')
-bake(tg['h'])
+bake([tg['h']])
 for o, dv in moved: o.location = o.location - dv
 for o in others: o.hide_render = False
 set_head_image('head_a')
