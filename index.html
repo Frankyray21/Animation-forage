@@ -369,7 +369,6 @@ details.params summary { cursor: pointer; padding: 10px 14px; font-weight: 600; 
 <script type="module">
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
-import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { TransformControls } from 'three/addons/controls/TransformControls.js';
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
@@ -551,6 +550,24 @@ if ( ! gl_FrontFacing ) gl_FragColor.rgb = vec3( 0.105, 0.11, 0.118 );   // tein
 gl_FragDepth = gl_FrontFacing ? gl_FragCoord.z : min( 1.0, gl_FragCoord.z + 1.5e-6 );
 #endif
 `;
+// Usure de la peinture (matériaux PAINT_WEAR) : la couleur de sommet r < 1 marque les arêtes arrondies ; là où le canal bleu
+// de la texture d'usure est bas (taches), le métal nu apparaît ; ailleurs l'arête est juste un peu plus sombre (saleté).
+THREE.ShaderChunk.color_fragment = `
+#ifdef PAINT_WEAR
+	#ifdef USE_MAP
+	float chip = ( 1.0 - vColor.r ) * ( 1.0 - sampledDiffuseColor.b );
+	#else
+	float chip = 1.0 - vColor.r;
+	#endif
+	diffuseColor.rgb = mix( diffuseColor.rgb * mix( 1.0, 0.7, 1.0 - vColor.r ), vec3( 0.30, 0.31, 0.32 ), smoothstep( 0.1, 0.42, chip ) );
+#elif defined( USE_COLOR_ALPHA )
+	diffuseColor *= vColor;
+#elif defined( USE_COLOR )
+	diffuseColor.rgb *= vColor;
+#endif
+`;
+{ const copy = THREE.MeshPhysicalMaterial.prototype.copy;   // les clones (fantômes, surbrillance, fondu) gardent la définition PAINT_WEAR
+  THREE.MeshPhysicalMaterial.prototype.copy = function (src) { copy.call(this, src); if (src.defines && src.defines.PAINT_WEAR !== undefined) this.defines.PAINT_WEAR = ''; return this; }; }
 const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, preserveDrawingBuffer: false, powerPreference: 'high-performance' });
 renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
 renderer.shadowMap.enabled = false;   // pas d'ombres portées : toutes les pièces restent lisibles
@@ -560,7 +577,24 @@ renderer.toneMappingExposure = 1.0;
 
 const scene = new THREE.Scene();
 const pmrem = new THREE.PMREMGenerator(renderer);
-scene.environment = pmrem.fromScene(new RoomEnvironment(renderer), 0.04).texture;   // reflets neutres d'atelier
+// Atelier procédural pour les reflets (PMREM) : sol sombre, murs gris, néons froids au plafond, lampe chaude, armoires sombres.
+// Les surfaces usinées accrochent des reflets contrastés ; aucune ombre portée, aucune image téléchargée.
+function workshopEnvironment() {
+  const s = new THREE.Scene();
+  const g = new THREE.BoxGeometry(); g.deleteAttribute('uv');
+  const add = (m, p, sc, ry = 0) => { const o = new THREE.Mesh(g, m); o.position.set(...p); o.scale.set(...sc); o.rotation.y = ry; s.add(o); return o; };
+  const lamp = (k, col) => { const m = new THREE.MeshBasicMaterial({ color: col }); m.color.multiplyScalar(k); return m; };
+  add(new THREE.MeshStandardMaterial({ color: 0x9a9da0, side: THREE.BackSide, roughness: .9 }), [0, 6, 0], [30, 16, 30]);   // murs et plafond
+  add(new THREE.MeshStandardMaterial({ color: 0x35373b, roughness: 1 }), [0, -2.05, 0], [29.8, .1, 29.8]);                 // sol sombre
+  for (const x of [-7, 0, 7]) for (const z of [-4, 4]) add(lamp(8, 0xdce9ff), [x, 13.9, z], [4.5, .1, .9]);                   // 6 néons froids
+  add(lamp(4, 0xffd2a0), [-14.9, 5, 3], [.1, 3, 5]);                                                                         // lampe chaude, mur gauche
+  add(lamp(3, 0xeaf2ff), [14.9, 6, -4], [.1, 5, 7]);                                                                         // panneau froid faible, mur droit
+  const dark = new THREE.MeshStandardMaterial({ color: 0x4a4e52, roughness: .8 });                                            // armoires et établis sombres
+  add(dark, [8, 0, 8], [5, 4, 3], .4); add(dark, [-9, -.5, -8], [6, 3, 2.5], -.3); add(dark, [3, -1, -10], [8, 2, 2]);
+  const pl = new THREE.PointLight(0xffffff, 600, 40, 2); pl.position.set(0, 12, 0); s.add(pl);
+  return s;
+}
+scene.environment = pmrem.fromScene(workshopEnvironment(), 0.04).texture;
 scene.fog = new THREE.Fog(0xd7dce0, 95, 210);
 
 const camera = new THREE.PerspectiveCamera(38, 1, 0.4, 220);   // near à 4 cm : précision de profondeur suffisante pour les surfaces voisines
@@ -604,8 +638,106 @@ const mat = {
   boot: new THREE.MeshStandardMaterial({ color: 0x3a2a1c, roughness: .8 }),
 };
 
-// boîte aux arêtes légèrement arrondies (reflets réalistes sur les chanfreins)
-const rboxGeo = (w, h, d) => new RoundedBoxGeometry(w, h, d, 2, Math.min(w, h, d) * .16);
+/* ---------- Textures procédurales partagées (PBR) : bruit périodique à graine fixe, aucune image téléchargée ----------
+   Créées une seule fois (3 textures de 512 px, le reste en 256 px ou moins) et partagées par tous les matériaux et leurs clones. */
+const PTX = (() => {
+  let sd = 20240517; const rnd = () => (sd = (sd * 16807) % 2147483647) / 2147483647;
+  const sm = t => t * t * (3 - 2 * t);
+  // bruit de valeur périodique (grille de « cells » cellules), « oct » octaves ; valeurs dans [0,1]
+  const fbm = (S, cells, oct, gain = .5) => {
+    const out = new Float32Array(S * S); let amp = 1, tot = 0;
+    for (let o = 0; o < oct; o++, cells *= 2, amp *= gain) {
+      const g = new Float32Array(cells * cells); for (let i = 0; i < g.length; i++) g[i] = rnd();
+      const k = cells / S;
+      for (let y = 0; y < S; y++) {
+        const fy = y * k, y0 = Math.floor(fy), ty = sm(fy - y0), y1 = (y0 + 1) % cells;
+        for (let x = 0; x < S; x++) {
+          const fx = x * k, x0 = Math.floor(fx), tx = sm(fx - x0), x1 = (x0 + 1) % cells;
+          const a = g[y0 * cells + x0], b = g[y0 * cells + x1], c = g[y1 * cells + x0], d = g[y1 * cells + x1];
+          const top = a + (b - a) * tx, bot = c + (d - c) * tx;
+          out[y * S + x] += amp * (top + (bot - top) * ty);
+        }
+      }
+      tot += amp;
+    }
+    for (let i = 0; i < out.length; i++) out[i] /= tot;
+    return out;
+  };
+  const canvas = S => { const c = document.createElement('canvas'); c.width = c.height = S; return [c, c.getContext('2d')]; };
+  const tex = (c, { srgb = false, rep = 1 } = {}) => {
+    const t = new THREE.CanvasTexture(c); t.wrapS = t.wrapT = THREE.RepeatWrapping; t.repeat.set(rep, rep);
+    if (srgb) t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = renderer.capabilities.getMaxAnisotropy(); return t;
+  };
+  // image RVB depuis f(x, y) → [r, g, b] dans [0,1]
+  const rgb = (f, S, opt) => {
+    const [c, x] = canvas(S), im = x.createImageData(S, S), d = im.data;
+    for (let y = 0; y < S; y++) for (let xx = 0; xx < S; xx++) { const [r, g, b] = f(xx, y), i = (y * S + xx) * 4; d[i] = r * 255; d[i + 1] = g * 255; d[i + 2] = b * 255; d[i + 3] = 255; }
+    x.putImageData(im, 0, 0); return [tex(c, opt), x];
+  };
+  // carte de normales (espace tangent) depuis un relief périodique h ; k : amplitude
+  const normal = (h, S, k, opt) => {
+    const [c, x] = canvas(S), im = x.createImageData(S, S), d = im.data;
+    for (let y = 0; y < S; y++) for (let xx = 0; xx < S; xx++) {
+      const dx = (h[y * S + (xx + 1) % S] - h[y * S + (xx + S - 1) % S]) * k, dy = (h[((y + 1) % S) * S + xx] - h[((y + S - 1) % S) * S + xx]) * k;
+      const l = 1 / Math.hypot(dx, dy, 1), i = (y * S + xx) * 4;
+      d[i] = 128 - dx * l * 127; d[i + 1] = 128 + dy * l * 127; d[i + 2] = 128 + l * 127; d[i + 3] = 255;
+    }
+    x.putImageData(im, 0, 0); return tex(c, opt);
+  };
+  const T = { fbm, rgb, normal, tex };
+  // peinture « peau d'orange » : relief fin de faible amplitude
+  { const S = 512, h = fbm(S, 40, 4, .55); T.paintN = normal(h, S, 3.5); }
+  // fonte brute : grain moyen et petites piqûres de coulée
+  { const S = 512, h = fbm(S, 56, 5, .6);
+    for (let i = 0; i < 420; i++) { const cx = rnd() * S, cy = rnd() * S, r = 1.5 + rnd() * 3.5, dep = .25 + rnd() * .35;
+      for (let y = -5; y <= 5; y++) for (let x = -5; x <= 5; x++) { const dd = (x * x + y * y) / (r * r); if (dd < 1) { const j = (((cy + y) | 0) + S) % S * S + (((cx + x) | 0) + S) % S; h[j] -= dep * (1 - dd); } } }
+    T.castN = normal(h, S, 4.5, { rep: .5 }); }
+  // acier usiné : stries de tournage (lignes selon u, variant selon v) sur un micro-grain
+  { const S = 256, n = fbm(S, 16, 3), m = fbm(S, 64, 2), h = new Float32Array(S * S);
+    for (let y = 0; y < S; y++) for (let x = 0; x < S; x++) h[y * S + x] = .5 + .28 * Math.sin(y * Math.PI * 2 * 64 / S + n[y * S + x] * 2.2) * (.5 + .5 * n[y * S + x]) + .22 * m[y * S + x];
+    T.machN = normal(h, S, 2.2); }
+  // rugosité commune (canal vert, .72–1) : patine, traces de doigts, poussière
+  { const S = 256, n = fbm(S, 5, 4, .55); T.rough = rgb((x, y) => { const g = .72 + .28 * n[y * S + x]; return [1, g, 1]; }, S, { rep: .5 })[0]; }
+  // usure de la peinture (multiplie la couleur) : poussière et voile gris par endroits, coulures, fines rayures ;
+  // canal bleu = 1 − masque d'écaillage (taches rares, utilisées seulement aux arêtes par le patch PAINT_WEAR)
+  { const S = 512, dust = fbm(S, 4, 3, .5), blob = fbm(S, 9, 3, .5);
+    const [t, x] = rgb((xx, y) => { const d = .88 + .12 * dust[y * S + xx], b = blob[y * S + xx]; const chip = Math.min(1, Math.max(0, (b - .6) / .08)); return [d, d, 1 - chip]; }, S, { srgb: true, rep: .25 });   // une image = 40 cm
+    x.globalCompositeOperation = 'multiply';
+    for (let i = 0; i < 14; i++) { const px = rnd() * S, py = rnd() * S, L = 30 + rnd() * 120; const g = x.createLinearGradient(0, py, 0, py + L); g.addColorStop(0, 'rgba(150,150,150,.45)'); g.addColorStop(1, 'rgba(150,150,150,0)'); x.fillStyle = g; x.fillRect(px, py, 2 + rnd() * 3, L); }   // coulures
+    x.strokeStyle = 'rgba(170,170,170,.6)'; x.lineWidth = 1;
+    for (let i = 0; i < 48; i++) { const px = rnd() * S, py = rnd() * S, a = rnd() * Math.PI, L = 8 + rnd() * 40; x.beginPath(); x.moveTo(px, py); x.lineTo(px + Math.cos(a) * L, py + Math.sin(a) * L); x.stroke(); }   // rayures
+    t.needsUpdate = true; T.paintMap = t; }
+  // boulons zingués : zinc légèrement terni ; bandes selon v (dessus, chanfrein, pans de la tête hexagonale, voir hexHeadGeo) ;
+  // trace de clé = chanfrein et arêtes des pans un peu plus sombres
+  { const S = 256, n = fbm(S, 8, 3, .55);
+    T.boltMap = rgb((x, y) => { const v = 1 - y / S, uu = x / S; let k = .8 + .2 * n[y * S + x];
+      const cham = Math.max(0, 1 - Math.abs(v - .48) / .09); k *= 1 - .22 * cham;
+      if (v > .55) { const mm = ((uu - 1 / 12) % (1 / 6) + 1 / 6) % (1 / 6), dc = Math.min(mm, 1 / 6 - mm); k *= 1 - .3 * Math.max(0, 1 - dc / .012); }   // distance à l'arête de pan la plus proche
+      return [k, k * .99, k * .95]; }, S, { srgb: true })[0]; }
+  // boyau tressé : deux nappes de brins croisés (dessus / dessous)
+  { const S = 256, Pp = 32, h = new Float32Array(S * S);
+    for (let y = 0; y < S; y++) for (let x = 0; x < S; x++) {
+      const a = ((x + y) % Pp) / Pp, b = (((x - y) % Pp) + Pp) % Pp / Pp, over = ((Math.floor((x + y) / Pp) + Math.floor((x - y + S) / Pp)) & 1) === 0;
+      h[y * S + x] = Math.sin(Math.PI * (over ? a : b)) * .8 + .2 * Math.sin(Math.PI * (over ? b : a)); }
+    T.braidMap = rgb((x, y) => { const k = .5 + .45 * h[y * S + x]; return [k, k, k]; }, S, { srgb: true })[0];
+    T.braidN = normal(h, S, 2.5); }
+  return T;
+})();
+// boîte aux arêtes légèrement arrondies (reflets réalistes sur les chanfreins). UV en unités de scène, comme les extrusions (textures à la même échelle
+// sur toutes les pièces) ; couleur de sommet r = 1 sur les faces planes, plus basse sur les arêtes (usure, voir PAINT_WEAR)
+const rboxGeo = (w, h, d) => {
+  const g = new RoundedBoxGeometry(w, h, d, 2, Math.min(w, h, d) * .16);
+  const nrm = g.attributes.normal, uv = g.attributes.uv, N = nrm.count, per = N / 6, col = new Float32Array(N * 3);
+  const dims = [[d, h], [d, h], [w, d], [w, d], [w, h], [w, h]];
+  for (let i = 0; i < N; i++) {
+    const k = 1 - Math.max(Math.abs(nrm.getX(i)), Math.abs(nrm.getY(i)), Math.abs(nrm.getZ(i)));
+    const c = 1 - Math.min(1, Math.max(0, (k - .04) / .22));
+    col[i * 3] = col[i * 3 + 1] = col[i * 3 + 2] = c;
+    const [du, dv] = dims[Math.floor(i / per)]; uv.setXY(i, uv.getX(i) * du, uv.getY(i) * dv);
+  }
+  g.setAttribute('color', new THREE.BufferAttribute(col, 3));
+  return g;
+};
 // Fusionne des géométries indexées de même format (position, normale, uv) en une seule
 function mergeGeos(list) {
   const out = new THREE.BufferGeometry(), attrs = ['position', 'normal', 'uv'], data = {}, idx = [];
@@ -641,15 +773,26 @@ function annulus(rIn, rOut, h, holes = [], segs = 72) {
 const ring = (n, r, off = 0) => [...Array(n)].map((_, i) => { const a = (i * 360 / n + off) * Math.PI / 180; return [r * Math.cos(a), -r * Math.sin(a)]; });
 
 /* ---------- Matériaux supplémentaires ---------- */
+const V2 = (x, y = x) => new THREE.Vector2(x, y);
 Object.assign(mat, {
   red: new THREE.MeshStandardMaterial({ color: 0xb8321f, roughness: .48, metalness: .12 }),
-  grey: new THREE.MeshStandardMaterial({ color: 0x9aa2a8, roughness: .5, metalness: .8 }),
-  machined: new THREE.MeshStandardMaterial({ color: 0xc4cacf, roughness: .38, metalness: .92 }),
-  rubber: new THREE.MeshStandardMaterial({ color: 0x151617, roughness: .75 }),
-  boltBlack: new THREE.MeshStandardMaterial({ color: 0x2a2c2e, roughness: .4, metalness: .7 }),
-  brass: new THREE.MeshStandardMaterial({ color: 0xc8a24a, roughness: .3, metalness: .9 }),
-  sealRed: new THREE.MeshStandardMaterial({ color: 0x8a1c14, roughness: .6 }),
+  // fonte brute non peinte (voile, moyeu, bride du bol…) : grain de coulée, plus mate
+  grey: new THREE.MeshStandardMaterial({ color: 0x8f969b, roughness: .6, metalness: .78, normalMap: PTX.castN, normalScale: V2(.3), roughnessMap: PTX.rough }),
+  // acier usiné : stries de tournage, reflets anisotropes (étirés le long de l'axe des pièces tournées)
+  machined: new THREE.MeshPhysicalMaterial({ color: 0xc4cacf, roughness: .42, metalness: .92, normalMap: PTX.machN, normalScale: V2(.12), roughnessMap: PTX.rough, anisotropy: .4, anisotropyRotation: Math.PI / 2 }),
+  rubber: new THREE.MeshStandardMaterial({ color: 0x141516, roughness: .5, roughnessMap: PTX.rough }),   // noir satiné
+  boltBlack: new THREE.MeshStandardMaterial({ color: 0x2e3134, roughness: .42, metalness: .7, map: PTX.boltMap, roughnessMap: PTX.rough }),
+  brass: new THREE.MeshStandardMaterial({ color: 0xc8a24a, roughness: .32, metalness: .9, roughnessMap: PTX.rough }),
+  sealRed: new THREE.MeshStandardMaterial({ color: 0x8a1c14, roughness: .6, roughnessMap: PTX.rough }),
 });
+// pièces internes du vérin (piston, manchon d'actionnement, alésage, roulement) : acier usiné sous une pellicule d'huile
+mat.oiled = new THREE.MeshPhysicalMaterial({ color: 0xb9c0c5, roughness: .36, metalness: .9, normalMap: PTX.machN, normalScale: V2(.1), roughnessMap: PTX.rough, anisotropy: .35, anisotropyRotation: Math.PI / 2, clearcoat: .3, clearcoatRoughness: .2 });
+// boulons zingués légèrement ternis (bandes de la tête hexagonale : voir hexHeadGeo) ; petites pièces d'acier clair
+Object.assign(mat.bolt, { map: PTX.boltMap, roughnessMap: PTX.rough, roughness: .4 }); mat.bolt.color.set(0xc3c7ca);
+Object.assign(mat.steelLight, { normalMap: PTX.machN, normalScale: V2(.1), roughnessMap: PTX.rough });
+Object.assign(mat.console, { normalMap: PTX.paintN, normalScale: V2(.2), roughnessMap: PTX.rough });
+{ const rN = PTX.castN.clone(), rR = PTX.rough.clone(); rN.repeat.set(60, 60); rR.repeat.set(40, 40);   // béton du plancher : grain fin
+  Object.assign(mat.floor, { normalMap: rN, normalScale: V2(.25), roughnessMap: rR }); }
 mat.spring.color.set(0x2456d0);
 
 /* ---------- Registre des pièces (nomenclature) ---------- */
@@ -669,6 +812,7 @@ scene.add(rig);
 function poseRig(k) {   // k = 0 : horizontal (accident) ; k = 1 : vertical à l'origine (vues éclatées)
   rig.quaternion.slerpQuaternions(QH, QI, k);
   rig.position.lerpVectors(PH, new THREE.Vector3(), k);
+  shadowMat.opacity = 1 - k;   // ombres de contact effacées en vue éclatée
 }
 const clampG = new THREE.Group();   // tout le clam : pivote et s'éclate en vue éclatée
 rig.add(clampG);
@@ -734,17 +878,25 @@ function jawGeo(rIn, rOutB, rOutT, h, deg) {
 }
 // Texture de filetage (13 filets/po pour ½-13, 10 pour ¾-10…)
 const threadTexCache = new Map();
-function threadMat(base, lenIn, tpi) {
-  const key = `${base.uuid}|${lenIn}|${tpi}`;
+function threadMat(base, lenIn, tpi, rust = false) {
+  const key = `${base.uuid}|${lenIn}|${tpi}|${rust}`;
   if (threadTexCache.has(key)) return threadTexCache.get(key);
   // profil de filet adouci (dégradé) + filtrage anisotrope : pas de moiré qui scintille quand la caméra bouge
-  const c = document.createElement('canvas'); c.width = 4; c.height = 32;
+  // rust : toute la tige dans une image (filets répétés), teinte brune légère sur le dernier pouce sous la tête (boulons longs)
+  const N = rust ? Math.max(1, Math.round(lenIn * tpi)) : 1;
+  const c = document.createElement('canvas'); c.width = rust ? 16 : 4; c.height = 32 * N;
   const x = c.getContext('2d');
   const g = x.createLinearGradient(0, 0, 0, 32);
   g.addColorStop(0, '#8a8a8a'); g.addColorStop(.5, '#f2f2f2'); g.addColorStop(1, '#8a8a8a');
-  x.fillStyle = g; x.fillRect(0, 0, 4, 32);
+  x.fillStyle = g; for (let i = 0; i < N; i++) { x.save(); x.translate(0, 32 * i); x.fillRect(0, 0, c.width, 32); x.restore(); }
+  if (rust) {
+    let sd = 3; const rnd = () => (sd = (sd * 16807) % 2147483647) / 2147483647;
+    const H = 32 * tpi * .9, gr = x.createLinearGradient(0, 0, 0, H); gr.addColorStop(0, 'rgba(150,88,40,.55)'); gr.addColorStop(.5, 'rgba(150,88,40,.3)'); gr.addColorStop(1, 'rgba(150,88,40,0)');
+    x.globalCompositeOperation = 'multiply'; x.fillStyle = gr; x.fillRect(0, 0, 16, H);
+    for (let i = 0; i < 40; i++) { x.fillStyle = `rgba(120,65,30,${.15 + rnd() * .3})`; x.fillRect(rnd() * 16, rnd() * H * .8, 1 + rnd() * 3, 2 + rnd() * 6); }
+  }
   const t = new THREE.CanvasTexture(c);
-  t.wrapS = t.wrapT = THREE.RepeatWrapping; t.repeat.set(1, lenIn * tpi); t.colorSpace = THREE.SRGBColorSpace;
+  t.wrapS = t.wrapT = THREE.RepeatWrapping; t.repeat.set(1, lenIn * tpi / N); t.colorSpace = THREE.SRGBColorSpace;
   t.anisotropy = renderer.capabilities.getMaxAnisotropy();
   t.userData.thread = true;
   const m = base.clone(); m.map = t;
@@ -766,11 +918,17 @@ function hexHeadGeo(af, H) {
     P.push(new THREE.Vector3(rho * x, Math.min(h, h - (rho - rTop) * t30), rho * z));
     C.push(new THREE.Vector3(rTop * x, h, rTop * z));
   }
-  const pos = [], e1 = new THREE.Vector3(), e2 = new THREE.Vector3(), nn = new THREE.Vector3();
+  const pos = [], uvs = [], e1 = new THREE.Vector3(), e2 = new THREE.Vector3(), nn = new THREE.Vector3();
+  // UV : dessus planaire (v < .4), chanfrein (v ≈ .4–.55), pans (v .55–1) ; u = angle autour de l'axe (texture des boulons)
+  const uvOf = v => { const r = Math.hypot(v.x, v.z), ang = Math.atan2(-v.z, v.x) / (2 * Math.PI) + .5;
+    if (v.y >= h - 1e-9 && r <= rTop + 1e-9) return [.5 + v.x / (2 * rTop) * .9, .2 + v.z / (2 * rTop) * .36];
+    return [ang, v.y <= 1e-9 ? 1 : .55]; };
   const tri = (a, b, c, ex) => {   // ex : direction attendue de la normale (sens de rotation corrigé au besoin)
     nn.crossVectors(e1.subVectors(b, a), e2.subVectors(c, a));
     if (nn.dot(ex) < 0) [b, c] = [c, b];
     pos.push(a.x, a.y, a.z, b.x, b.y, b.z, c.x, c.y, c.z);
+    const t = [uvOf(a), uvOf(b), uvOf(c)], mx = Math.max(t[0][0], t[1][0], t[2][0]);
+    for (const q of t) { if (mx - q[0] > .5) q[0] += 1; uvs.push(q[0], q[1]); }   // couture u = 0/1 : pas d'étirement
   };
   const O = new THREE.Vector3(0, h, 0), O0 = new THREE.Vector3(), UP = new THREE.Vector3(0, 1, 0), DN = new THREE.Vector3(0, -1, 0);
   for (let i = 0; i < N; i++) {
@@ -784,7 +942,7 @@ function hexHeadGeo(af, H) {
   }
   const g = new THREE.BufferGeometry();
   g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
-  g.setAttribute('uv', new THREE.Float32BufferAttribute(new Array(pos.length / 3 * 2).fill(0), 2));
+  g.setAttribute('uv', new THREE.Float32BufferAttribute(uvs, 2));
   g.computeVertexNormals();
   hexHeadCache.set(key, g);
   return g;
@@ -809,7 +967,7 @@ function makeBolt({ af, headH, d, L, tpi = 13, socket = false, headD }, m = mat.
   }
   // tige filetée : s'arrête 0,015 po avant la longueur nominale (jamais au ras d'une surface), bout chanfreiné
   const tip = Math.min(.06, d * .12), Ls = L - .015 - tip;
-  const shank = mesh(new THREE.CylinderGeometry(u(d / 2), u(d / 2), u(Ls), 20, 1, true), threadMat(m, Ls, tpi));
+  const shank = mesh(new THREE.CylinderGeometry(u(d / 2), u(d / 2), u(Ls), 20, 1, true), threadMat(m, Ls, tpi, L >= 4));
   shank.position.y = -u(Ls) / 2;
   const end = mesh(new THREE.CylinderGeometry(u(d / 2), u(d * .4), u(tip), 20), m);
   end.position.y = -u(Ls + tip / 2);
@@ -844,15 +1002,34 @@ const BOLT = {
 };
 
 /* ---------- Sol, palette, support d'atelier ---------- */
-const PAINT = new THREE.MeshPhysicalMaterial({ color: 0xa8120f, roughness: .55, metalness: .05, clearcoat: .15, clearcoatRoughness: .5 });   // rouge franc (le mappage ACES tire vers l'orange : couleur de base plus profonde)   // peinture rouge de la tête UM-012, usée et grasse
+// Peinture rouge de la tête UM-012 (rouge franc : le mappage ACES tire vers l'orange, couleur de base plus profonde) :
+// peau d'orange (normalMap), rugosité variable (.40–.56), poussière et coulures (map), métal nu aux arêtes écaillées (PAINT_WEAR)
+const PAINT = new THREE.MeshPhysicalMaterial({ color: 0xa8120f, roughness: .56, metalness: .05, clearcoat: .2, clearcoatRoughness: .4,
+  map: PTX.paintMap, normalMap: PTX.paintN, normalScale: V2(.2), roughnessMap: PTX.rough, vertexColors: true });
+PAINT.defines.PAINT_WEAR = '';
+// fonte peinte (boîte de la tête, boîtier et cylindre du mandrin) : grain de coulée sous la peinture, un peu plus sombre et plus mate
+mat.castPaint = PAINT.clone(); Object.assign(mat.castPaint, { normalMap: PTX.castN, normalScale: V2(.28), roughness: .68, clearcoat: .1 }); mat.castPaint.color.set(0x9a100e);
 Object.assign(mat, {
-  blue: PAINT, paint: PAINT,
+  blue: mat.castPaint, paint: PAINT,
   green: new THREE.MeshStandardMaterial({ color: 0x3fa65a, roughness: .38, metalness: .3 }),
 });
-mat.spring = new THREE.MeshPhysicalMaterial({ color: 0x2e8a44, roughness: .42, metalness: .35, clearcoat: .5, clearcoatRoughness: .35 });   // acier à ressort, peinture verte (ressort 5200517)
+mat.spring = new THREE.MeshPhysicalMaterial({ color: 0x2e8a44, roughness: .5, metalness: .35, roughnessMap: PTX.rough, clearcoat: .4, clearcoatRoughness: .35 });   // acier à ressort, peinture verte légèrement patinée (ressort 5200517)
 const floor = mesh(new THREE.PlaneGeometry(200, 200), mat.floor, { cast: false });
 floor.rotation.x = -Math.PI / 2; floor.position.y = FLOOR;
 scene.add(floor);
+// Ombres de contact (pas d'ombres portées) : disque à dégradé radial, transparent, sans écriture de profondeur, jamais cliquable
+const shadowMat = (() => {
+  const c = document.createElement('canvas'); c.width = c.height = 256; const x = c.getContext('2d');
+  const g = x.createRadialGradient(128, 128, 0, 128, 128, 128); g.addColorStop(0, 'rgba(0,0,0,.6)'); g.addColorStop(.45, 'rgba(0,0,0,.42)'); g.addColorStop(.8, 'rgba(0,0,0,.1)'); g.addColorStop(1, 'rgba(0,0,0,0)');
+  x.fillStyle = g; x.fillRect(0, 0, 256, 256);
+  return new THREE.MeshBasicMaterial({ map: new THREE.CanvasTexture(c), transparent: true, opacity: 1, depthWrite: false });
+})();
+const contactShadows = [];
+function contactShadow(x, z, rx, rz) {
+  const m = new THREE.Mesh(new THREE.PlaneGeometry(2, 2), shadowMat);
+  m.rotation.x = -Math.PI / 2; m.position.set(x, FLOOR + .012, z); m.scale.set(rx, rz, 1); m.renderOrder = -1; m.raycast = () => {};
+  scene.add(m); contactShadows.push(m); return m;
+}
 const pallet = new THREE.Group();
 for (const z of [-2.3, -1.15, 0, 1.15, 2.3]) { const b = mesh(rboxGeo(5.8, 0.2, 0.95), mat.wood); b.position.set(0, -0.1, z); pallet.add(b); }
 for (const x of [-2.4, 0, 2.4]) { const b = mesh(rboxGeo(0.95, 1.2, 5.6), mat.woodDark); b.position.set(x, -0.8, 0); pallet.add(b); }
@@ -884,14 +1061,14 @@ part({ id: 'NC500', ref: 'NC500', name: 'Écrou ½-13 UNC', qty: 10, grp: 'rear'
   ringAt(10, R.tie, 18).map(([x, z]) => placeIn(mesh(new THREE.CylinderGeometry(u(.433), u(.433), u(.44), 6), mat.boltBlack), x, 7.92, z)));
 const cyl = new THREE.Group();
 cyl.add(mesh(annulusIn(R.cylIn, R.body, Y.cylT - Y.cylB, ringAt(10, R.tie, 18).map(([x, z]) => [x, z, .28])), mat.blue));
-{ const wall = mesh(annulusIn(3.95, R.cylIn, .5), mat.grey); cyl.add(wall); }
+{ const wall = mesh(annulusIn(3.95, R.cylIn, .5), mat.oiled); cyl.add(wall); }
 cyl.add(band(R.body, 6.6 - Y.cylB, 6.85 - Y.cylB, mat.machined));
 placeIn(cyl, 0, Y.cylB, 0);
 part({ id: '3506909', ref: '3506909', name: 'Cylindre hydraulique', qty: 1, grp: 'rear', ext: [3.7, 7.0], r: 6.1, role: 'Chambre du piston hydraulique qui ouvre le mandrin.' }, cyl);
 part({ id: '5035016', ref: '5035016', name: 'Joint en U (U-cup)', qty: 1, grp: 'rear', ext: [3.84, 3.96], r: 4.1, note: 'Voir « How assembly the seal » ; emplacement approximatif.' }, placeIn(oring(3.97, .07), 0, 3.9, 0));
 part({ id: '5035018', ref: '5035018', name: 'Bague d\'usure', qty: 1, grp: 'rear', ext: [4.04, 4.16], r: 4.1, note: 'Emplacement approximatif.' }, placeIn(oring(3.97, .06, mat.sealRed), 0, 4.1, 0));
 const piston = new THREE.Group();
-piston.add(mesh(annulusIn(R.piston, R.cylIn - .01, 1.4), mat.grey));
+piston.add(mesh(annulusIn(R.piston, R.cylIn - .01, 1.4), mat.oiled));
 for (const y of [.4, 1.0]) { const gr = mesh(new THREE.TorusGeometry(u(R.cylIn - .02), u(.05), 6, 96), mat.pocket); gr.rotation.x = Math.PI / 2; gr.position.y = u(y); piston.add(gr); }
 ownMats(piston); placeIn(piston, 0, 4.4, 0);
 part({ id: '3506908', ref: '3506908', name: 'Piston', qty: 1, grp: 'rear', ext: [4.4, 5.8], r: 5.0, role: 'Sous pression hydraulique, il pousse le roulement et le manchon d\'actionnement : les 9 boulons tirent le bol vers l\'arrière, les ressorts se compriment et les mâchoires s\'ouvrent.' }, piston);
@@ -902,9 +1079,9 @@ part({ id: '5222624', ref: '5222624', name: 'Goupille élastique', qty: 4, grp: 
 const bearing = new THREE.Group();
 // Roulement à rouleaux cylindriques (vue éclatée Boyles) : bague intérieure à épaulements, rouleaux visibles
 // entre les deux lèvres de la bague extérieure, cage en laiton à deux flasques
-bearing.add(mesh(annulusIn(R.bearIn, 3.18, .9), mat.machined));
-for (const y of [0, .82]) { const rib = mesh(annulusIn(3.17, 3.3, .08), mat.machined); rib.position.y = u(y); bearing.add(rib); }
-for (const y of [0, .8]) { const lip = mesh(annulusIn(3.6, R.piston, .1), mat.machined); lip.position.y = u(y); bearing.add(lip); }
+bearing.add(mesh(annulusIn(R.bearIn, 3.18, .9), mat.oiled));
+for (const y of [0, .82]) { const rib = mesh(annulusIn(3.17, 3.3, .08), mat.oiled); rib.position.y = u(y); bearing.add(rib); }
+for (const y of [0, .8]) { const lip = mesh(annulusIn(3.6, R.piston, .1), mat.oiled); lip.position.y = u(y); bearing.add(lip); }
 for (const y of [.08, .76]) { const rail = mesh(annulusIn(3.21, 3.58, .06), mat.brass); rail.position.y = u(y); bearing.add(rail); }
 {
   const n = 50, rm = 3.39, geos = [];
@@ -924,8 +1101,8 @@ part({ id: '5000199', ref: '5000199', name: 'Roulement', qty: 1, grp: 'rear', ex
 part({ id: '3506882', ref: '3506882', name: 'Bague d\'appui (back-up ring)', qty: 1, grp: 'rear', ext: [4.22, 4.42], r: 3.8 }, placeIn(mesh(annulusIn(2.95, 3.75, .2), mat.machined), 0, 4.22, 0));
 part({ id: '5054078', ref: '5054078', name: 'Anneau de retenue', qty: 1, grp: 'rear', ext: [4.08, 4.18], r: 3.0 }, placeIn(oring(2.93, .05, mat.boltBlack), 0, 4.13, 0));
 const act = new THREE.Group();
-act.add(mesh(annulusIn(R.act, R.actTube, 3.0), mat.grey));
-{ const fl = mesh(annulusIn(R.act, R.actFl, 1.9, BOLTS.map(b => [b.x / IN, b.z / IN, .25])), mat.grey); fl.position.y = u(3.0); act.add(fl); }
+act.add(mesh(annulusIn(R.act, R.actTube, 3.0), mat.oiled));
+{ const fl = mesh(annulusIn(R.act, R.actFl, 1.9, BOLTS.map(b => [b.x / IN, b.z / IN, .25])), mat.oiled); fl.position.y = u(3.0); act.add(fl); }
 ownMats(act); placeIn(act, 0, 4.2, 0);
 part({ id: '3506928', ref: '3506928', name: 'Manchon d\'actionnement (RR 50)', qty: 1, grp: 'rear', ext: [4.2, 9.1], r: 4.0, role: 'Les 9 boulons du bol y sont vissés : c\'est lui qui retient le bol contre les ressorts.' }, act);
 const elbow = new THREE.Group();
@@ -990,7 +1167,8 @@ function buildBody() {
   thread.material.side = THREE.BackSide; thread.position.y = u(3.3 + 2.3);
   const face = mesh(annulusIn(R.rimIn - .02, R.body, .02), mat.machined);
   placeIn(face, 0, Y.rimT - .02, 0);
-  body.add(shell, web, hub, thread, face, band(R.body, 7.0, 7.25, mat.machined));
+  const seam = mesh(new THREE.TorusGeometry(u(R.body) + .0008, u(.03), 6, 96), mat.castPaint); seam.rotation.x = Math.PI / 2; seam.position.y = u((Y.housB + Y.rimT) / 2);   // ligne de joint de coulée
+  body.add(shell, web, hub, thread, face, seam, band(R.body, 7.0, 7.25, mat.machined));
 }
 part({ id: '3506870', ref: '3506870', name: 'Boîtier du mandrin', qty: 1, grp: 'body', ext: [3.3, 13.6], r: 6.1, role: 'Pièce principale : loge les 18 ressorts, guide le bol et reçoit le couvercle avant. Son moyeu fileté se visse sur la broche.' }, body);
 buildBody();
@@ -1089,17 +1267,15 @@ const jawGeoH = jawSet(R.jawIn);
 jawGeoH.scale(1, (JAW_H - .04) / JAW_H, 1); jawGeoH.translate(0, u(.02), 0);   // en retrait de 0,02 po du fond et de la face du bol
 // Détail des segments (photos du jeu Boyles 12HH) : bloc conique, 3 trous de liaison traversants,
 // 3 plaquettes de carbure moletées sur la face de serrage, goupilles entre les segments.
-mat.knurl = (() => {
-  const c = document.createElement('canvas'); c.width = c.height = 64;
-  const x = c.getContext('2d');
-  x.fillStyle = '#9aa0a5'; x.fillRect(0, 0, 64, 64);
-  x.strokeStyle = '#3b4044'; x.lineWidth = 3;
-  for (let i = -64; i < 128; i += 9) { x.beginPath(); x.moveTo(i, 0); x.lineTo(i + 64, 64); x.stroke(); x.beginPath(); x.moveTo(i + 64, 0); x.lineTo(i, 64); x.stroke(); }
-  const t = new THREE.CanvasTexture(c); t.wrapS = t.wrapT = THREE.RepeatWrapping; t.repeat.set(1, 2.4); t.colorSpace = THREE.SRGBColorSpace;
-  return new THREE.MeshStandardMaterial({ map: t, color: 0xb9bec2, roughness: .5, metalness: .6 });
+mat.knurl = (() => {   // moletage des plaquettes : pyramides (relief), pointes polies par l'usage, creux sombres ; pas de 1 mm (UV en dm)
+  const S = 128, Pp = 16, tri = a => 1 - Math.abs(2 * (a - Math.floor(a)) - 1), h = new Float32Array(S * S);
+  for (let y = 0; y < S; y++) for (let x = 0; x < S; x++) h[y * S + x] = Math.min(tri((x + y) / Pp), tri((x - y) / Pp));
+  const map = PTX.rgb((x, y) => { const w = .3 + .62 * Math.pow(h[y * S + x], 1.6); return [w, w, w * 1.02]; }, S, { srgb: true, rep: 100 })[0];
+  const nm = PTX.normal(h, S, 3, { rep: 100 });
+  return new THREE.MeshStandardMaterial({ map, normalMap: nm, normalScale: V2(.6), color: 0xc9ccce, roughness: .45, metalness: .7 });
 })();
 const jawRm = y => (R.jawIn + lerp(R.bowlBot, R.bowlTop, y / JAW_H) - .02) / 2;   // rayon moyen du segment à la hauteur y
-mat.jawSteel = new THREE.MeshStandardMaterial({ color: 0x7d8388, roughness: .42, metalness: .75 });   // acier trempé gris des mâchoires
+mat.jawSteel = new THREE.MeshPhysicalMaterial({ color: 0x5c6165, roughness: .4, metalness: .85, roughnessMap: PTX.rough, normalMap: PTX.castN, normalScale: V2(.18), clearcoat: .35, clearcoatRoughness: .25 });   // acier trempé gris sombre des mâchoires, arêtes brillantes
 const jaws = [...Array(8)].map((_, k) => {
   const j = new THREE.Group();
   j.add(mesh(jawGeoH, mat.jawSteel));
@@ -1230,7 +1406,7 @@ rig.add(headG);
 mat.yellowBrg = new THREE.MeshStandardMaterial({ color: 0xd8c63c, roughness: .35, metalness: .5 });
 mat.beigeBrg = new THREE.MeshStandardMaterial({ color: 0xe3dcb4, roughness: .35, metalness: .45 });
 mat.black = new THREE.MeshStandardMaterial({ color: 0x1d1f21, roughness: .55, metalness: .35 });
-mat.hose = new THREE.MeshStandardMaterial({ color: 0xa9aeb2, roughness: .5, metalness: .3 });   // boyau tressé gris (planches)
+mat.hose = new THREE.MeshStandardMaterial({ color: 0xb4b9bd, roughness: .48, metalness: .55, map: PTX.braidMap, normalMap: PTX.braidN, normalScale: V2(.5) });   // boyau tressé inox gris (planches)
 mat.white = new THREE.MeshStandardMaterial({ color: 0xe8eaeb, roughness: .5 });
 mat.sealBlue = new THREE.MeshStandardMaterial({ color: 0x2a47a8, roughness: .5 });
 const hpart = (def, objs) => {
@@ -1277,7 +1453,10 @@ function hoseIn(pts, r = .33) {
   const v = pts.map(([x, y, z]) => new THREE.Vector3(u(x), u(y), u(z)));
   const g = new THREE.Group();
   const curve = new THREE.CatmullRomCurve3(v, false, 'catmullrom', .35);
-  g.add(mesh(new THREE.TubeGeometry(curve, Math.max(24, pts.length * 16), u(r), 10, false), mat.hose));
+  // tresse à l'échelle du boyau : la même image (partagée) est répétée selon sa longueur et sa circonférence
+  const hm = mat.hose.clone(), L = curve.getLength(), ru = Math.max(1, Math.round(L / u(.5))), rv = Math.max(1, Math.round(2 * Math.PI * r / .5));
+  hm.map = mat.hose.map.clone(); hm.normalMap = mat.hose.normalMap.clone(); hm.map.repeat.set(ru, rv); hm.normalMap.repeat.set(ru, rv);
+  g.add(mesh(new THREE.TubeGeometry(curve, Math.max(24, pts.length * 16), u(r), 10, false), hm));
   g.userData.curve = curve;
   return g;
 }
@@ -1295,27 +1474,30 @@ function fittingAt([x, y, z], m = mat.brass, dir = null) {
 const hbox = new THREE.Group();
 {
   const holes = [[0, 0, 4.2], [DRIVE_X, DRIVE_Z, 2.3]];
-  const bottom = mesh(plateXZ(HB.x0, HB.x1, HB.z0, HB.z1, HB.wall, holes), mat.paint); placeIn(bottom, 0, HB.y0, 0);
-  const top = mesh(plateXZ(HB.x0, HB.x1, HB.z0, HB.z1, HB.wall, [...holes, [-7.5, -4.8, 1.07]]), mat.paint); placeIn(top, 0, HB.y1 - HB.wall, 0);
+  const cp = mat.castPaint;   // parois moulées (grain de fonte sous la peinture) ; poignée et couvercle lisses
+  const bottom = mesh(plateXZ(HB.x0, HB.x1, HB.z0, HB.z1, HB.wall, holes), cp); placeIn(bottom, 0, HB.y0, 0);
+  const top = mesh(plateXZ(HB.x0, HB.x1, HB.z0, HB.z1, HB.wall, [...holes, [-7.5, -4.8, 1.07]]), cp); placeIn(top, 0, HB.y1 - HB.wall, 0);
   const H = HB.y1 - HB.y0 - 2 * HB.wall, yc = (HB.y0 + HB.y1) / 2;
-  const endL = box(HB.wall, H, HB.z1 - HB.z0, mat.paint); placeIn(endL, HB.x0 + HB.wall / 2, yc, 0);
-  const endR = box(HB.wall, H, HB.z1 - HB.z0, mat.paint); placeIn(endR, HB.x1 - HB.wall / 2, yc, 0);
-  const back = box(HB.x1 - HB.x0 - 2 * HB.wall, H, HB.wall, mat.paint); placeIn(back, (HB.x0 + HB.x1) / 2, yc, HB.z0 + HB.wall / 2);
+  const endL = box(HB.wall, H, HB.z1 - HB.z0, cp); placeIn(endL, HB.x0 + HB.wall / 2, yc, 0);
+  const endR = box(HB.wall, H, HB.z1 - HB.z0, cp); placeIn(endR, HB.x1 - HB.wall / 2, yc, 0);
+  const back = box(HB.x1 - HB.x0 - 2 * HB.wall, H, HB.wall, cp); placeIn(back, (HB.x0 + HB.x1) / 2, yc, HB.z0 + HB.wall / 2);
   // cadre de la face ouverte (+z), fermée par le couvercle
-  const rimT = box(HB.x1 - HB.x0 - 2 * HB.wall, 1.0, HB.wall, mat.paint); placeIn(rimT, (HB.x0 + HB.x1) / 2, HB.y1 - HB.wall - .5, HB.z1 - HB.wall / 2);
-  const rimB = box(HB.x1 - HB.x0 - 2 * HB.wall, 1.0, HB.wall, mat.paint); placeIn(rimB, (HB.x0 + HB.x1) / 2, HB.y0 + HB.wall + .5, HB.z1 - HB.wall / 2);
+  const rimT = box(HB.x1 - HB.x0 - 2 * HB.wall, 1.0, HB.wall, cp); placeIn(rimT, (HB.x0 + HB.x1) / 2, HB.y1 - HB.wall - .5, HB.z1 - HB.wall / 2);
+  const rimB = box(HB.x1 - HB.x0 - 2 * HB.wall, 1.0, HB.wall, cp); placeIn(rimB, (HB.x0 + HB.x1) / 2, HB.y0 + HB.wall + .5, HB.z1 - HB.wall / 2);
   hbox.add(bottom, top, endL, endR, back, rimT, rimB);
-  // poignée (face +x) et pied à rainures
+  // poignée (face +x) et pied à rainures ; cordons de soudure discrets au pied de la poignée
   const hp = [[HB.x1, -5.6, 3.2], [HB.x1 + 1.3, -5.2, 3.2], [HB.x1 + 1.3, -1.4, 3.2], [HB.x1, -1.0, 3.2]].map(([x, y, z]) => new THREE.Vector3(u(x), u(y), u(z)));
   hbox.add(mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(hp, false, 'catmullrom', .1), 30, u(.35), 10, false), mat.paint));
-  const foot = box(4.5, .8, 3.5, mat.paint); placeIn(foot, HB.x1 - 2.5, HB.y0 - .4, HB.z1 - 1.2); hbox.add(foot);
+  for (const y of [-5.6, -1.0]) { const w = mesh(new THREE.TorusGeometry(u(.42), u(.09), 6, 24), cp); w.rotation.y = Math.PI / 2; placeIn(w, HB.x1 + .03, y, 3.2); hbox.add(w); }
+  const foot = box(4.5, .8, 3.5, cp); placeIn(foot, HB.x1 - 2.5, HB.y0 - .4, HB.z1 - 1.2); hbox.add(foot);
   for (const z of [-.7, .7]) { const sl = box(1.6, .82, .5, mat.pocket); placeIn(sl, HB.x1 - 1.2, HB.y0 - .4, HB.z1 - 1.2 + z); hbox.add(sl); }
   // plaque signalétique
   const tag = box(.05, 1.4, 2.4, mat.machined); placeIn(tag, HB.x1 + .03, -1.6, 0); hbox.add(tag);
   // 2 charnières de l'axe de pivot (face -z) : forage souterrain (x -10,8) et de surface (x -7,9), planche 2.1
   for (const x of [PIN_XS[0], PIN_XS[1]]) {
-    const t = mesh(annulusIn(.52, 1.0, HB.y1 - HB.y0), mat.paint); placeIn(t, x, HB.y0, HB.z0 - 1.0); hbox.add(t);
-    const web = box(.8, HB.y1 - HB.y0, .6, mat.paint); placeIn(web, x, (HB.y0 + HB.y1) / 2, HB.z0 - .3); hbox.add(web);
+    const t = mesh(annulusIn(.52, 1.0, HB.y1 - HB.y0), cp); placeIn(t, x, HB.y0, HB.z0 - 1.0); hbox.add(t);
+    const web = box(.8, HB.y1 - HB.y0, .6, cp); placeIn(web, x, (HB.y0 + HB.y1) / 2, HB.z0 - .3); hbox.add(web);
+    for (const sx of [-1, 1]) { const w = hcyl(.09, HB.y1 - HB.y0 - .3, cp, 10); placeIn(w, x + sx * .44, (HB.y0 + HB.y1) / 2, HB.z0 - .05); hbox.add(w); }   // cordons de soudure de la charnière
   }
 }
 hpart({ id: 'UM-012-104A', ref: 'UM-012-104A', name: 'Boîte de la tête de forage', qty: 1, grp: 'hbox', role: 'Carter qui porte la broche, l\'entraînement par chaîne et le bain d\'huile (huile à engrenage 80W90, vidange toutes les 300 heures). Ne pas souder sur la tête lorsqu\'elle est assemblée. Pour installer le mandrin, appeler Usinage Marcotte (planche 2.4).', hx: [0, 0, 0] }, hbox);
@@ -1691,9 +1873,9 @@ hpart({ id: 'W750', ref: 'W750', name: 'Rondelle plate ¾', qty: 8, grp: 'hdrive
 }
 // Banc de travail : la tête est retirée de la foreuse et posée sur ce banc (repère machine, pouces ; z = hauteur)
 const carriage = new THREE.Group();
-mat.mast = new THREE.MeshStandardMaterial({ color: 0x7d868c, roughness: .55, metalness: .45 });
-mat.bench = new THREE.MeshStandardMaterial({ color: 0x3f6f8f, roughness: .6, metalness: .35 });
-mat.benchTop = new THREE.MeshStandardMaterial({ color: 0x8b9399, roughness: .45, metalness: .6 });
+mat.mast = new THREE.MeshStandardMaterial({ color: 0x7d868c, roughness: .55, metalness: .45, normalMap: PTX.paintN, normalScale: V2(.2), roughnessMap: PTX.rough });
+mat.bench = new THREE.MeshStandardMaterial({ color: 0x3f6f8f, roughness: .6, metalness: .35, normalMap: PTX.paintN, normalScale: V2(.25), roughnessMap: PTX.rough });   // bâti peint
+mat.benchTop = new THREE.MeshStandardMaterial({ color: 0x8b9399, roughness: .48, metalness: .6, normalMap: PTX.machN, normalScale: V2(.15), roughnessMap: PTX.rough });   // plateau de tôle
 const BENCH = { x0: -26, x1: 8, y0: -18, y1: 18, top: HB.z0 - 4.7 };
 const benchParts = [];
 {
@@ -1798,9 +1980,9 @@ scene.add(consoleG);
   for (const x of [-0.6, 0.6]) { const port = mesh(new THREE.CylinderGeometry(0.09, 0.09, 0.1, 16), mat.steelLight); port.rotation.x = Math.PI / 2; port.position.set(x, 4.18, -0.61); consoleG.add(port); }
 }
 // Banc de valves hydrauliques : 2 sections côte à côte (clam, chuck), manettes épaisses à poignée rouge, plaques gravées
-mat.valve = new THREE.MeshStandardMaterial({ color: 0x1f3d6b, roughness: .45, metalness: .5 });
-mat.leverRod = new THREE.MeshStandardMaterial({ color: 0x2b2f33, roughness: .35, metalness: .7 });
-mat.grip = new THREE.MeshStandardMaterial({ color: 0xc62828, roughness: .5 });
+mat.valve = new THREE.MeshStandardMaterial({ color: 0x1f3d6b, roughness: .45, metalness: .5, normalMap: PTX.castN, normalScale: V2(.25), roughnessMap: PTX.rough });
+mat.leverRod = new THREE.MeshStandardMaterial({ color: 0x2b2f33, roughness: .35, metalness: .7, roughnessMap: PTX.rough });
+mat.grip = new THREE.MeshStandardMaterial({ color: 0xc62828, roughness: .5, roughnessMap: PTX.rough });
 const levers = [['CLAM', -0.45], ['CHUCK', 0.45]].map(([name, x]) => {
   const sec = mesh(rboxGeo(0.62, 0.6, 0.9), mat.valve); sec.position.set(x, 4.75, 0); consoleG.add(sec);
   const tag = new THREE.Mesh(new THREE.PlaneGeometry(0.5, 0.25), new THREE.MeshStandardMaterial({ map: plateTex([[name, 70, 66]]), roughness: .6 }));
@@ -2828,7 +3010,7 @@ const PLATE_BASE = new THREE.Vector3();
 const TBL = { x: -3.0, z: 5.4, w: 10.4, d: 5.2, top: FLOOR + 7.4 };
 const tableG = new THREE.Group();
 {
-  const tm = new THREE.MeshStandardMaterial({ color: 0x5d6770, roughness: .55, metalness: .45 });
+  const tm = new THREE.MeshStandardMaterial({ color: 0x5d6770, roughness: .55, metalness: .45, normalMap: PTX.machN, normalScale: V2(.12), roughnessMap: PTX.rough });
   const top = mesh(rboxGeo(TBL.w, .22, TBL.d), tm); top.position.set(TBL.x, TBL.top - .11, TBL.z); tableG.add(top);
   const h = TBL.top - .22 - FLOOR;
   for (const sx of [-1, 1]) for (const sz of [-1, 1]) { const l = mesh(rboxGeo(.24, h, .24), tm); l.position.set(TBL.x + sx * (TBL.w / 2 - .35), FLOOR + h / 2, TBL.z + sz * (TBL.d / 2 - .35)); tableG.add(l); }
@@ -3660,9 +3842,17 @@ async function start() {
     if (!o.isMesh || !m || Array.isArray(m) || !m.map || !m.map.userData.thread || !g || g.groups.length !== 3 || g.userData.capsFlat) return;
     g.userData.capsFlat = true;
     const uv = g.attributes.uv, idx = g.index, v = .25 / m.map.repeat.y;   // teinte moyenne du filet, uniforme
-    for (const gr of g.groups.slice(1)) for (let i = gr.start; i < gr.start + gr.count; i++) { const k = idx ? idx.getX(i) : i; uv.setXY(k, 0, v); }
+    for (const gr of g.groups.slice(1)) for (let i = gr.start; i < gr.start + gr.count; i++) { const k = idx ? idx.getX(i) : i; uv.setXY(k, uv.getX(k), v); }   // u conservé : repère tangent valide
     uv.needsUpdate = true;
   });
+  // matériaux à couleur de sommet (peinture, usure des arêtes) : les géométries sans attribut reçoivent du blanc (faces planes, intactes)
+  scene.traverse(o => {
+    const g = o.geometry; if (!o.isMesh || !g || g.attributes.color || ![].concat(o.material).some(m => m && m.vertexColors)) return;
+    g.setAttribute('color', new THREE.BufferAttribute(new Float32Array(g.attributes.position.count * 3).fill(1), 3));
+  });
+  // ombres de contact sous le banc (avec la tête) et sous la table, d'après leur emprise au sol
+  rig.updateWorldMatrix(true, true);
+  for (const o of [carriage, tableG]) { const b = new THREE.Box3().setFromObject(o), c = b.getCenter(new THREE.Vector3()), sz = b.getSize(new THREE.Vector3()); contactShadow(c.x, c.z, sz.x * .62, sz.z * .62); }
   // priorité de profondeur par matériau : surfaces confondues toujours départagées de la même façon
   {
     const seen = new Set();
