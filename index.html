@@ -3957,7 +3957,7 @@ new ResizeObserver(resize).observe(view);
    Occlusion ambiante douce cuite dans Cycles (blender/bake_lightmaps.py) : lightmaps/head_lm.glb (géométrie + 2e UV « LM »)
    et 3 atlas (tête assemblée, tête éclatée, banc). Appliquée en aoMap (uv1) : seule la lumière d'ambiance est atténuée
    dans les creux ; les lumières directes restent, sans ombre portée. Sans ces fichiers : rendu temps réel inchangé. */
-const LM = { snap: null, ok: false, done: false, on: true, I: .8, head: new Set(), bench: new Set(), A: null, E: null, B: null, k: -1, n: 0, skip: 0 };
+const LM = { snap: null, ok: false, done: false, on: true, I: .8, head: new Set(), bench: new Set(), A: null, E: null, B: null, k: -1, n: 0, skip: 0, miss: 0 };
 // Instantané au démarrage : maillages de la tête (h) et du banc (c), ordre de traverse(), repère relatif au rig
 function lmSnap() {
   rig.updateWorldMatrix(true, true);
@@ -3999,6 +3999,35 @@ function lmGeo(prims, rel, Rinv) {
   out.applyMatrix4(back.multiply(prims[0].matrixWorld));
   return out;
 }
+// Reprend position, normale, uv et couleur exactes du sommet d'origine confondu (le GLB est quantifié et
+// ses normales recalculées par Blender) ; seule la 2e couche UV vient du GLB
+function lmRestore(ng, og) {
+  const op = og.attributes.position, on = og.attributes.normal, ou = og.attributes.uv, oc = og.attributes.color;
+  if (!op || !on) return 0;
+  const Q = 1e3, key = (x, y, z) => x + ',' + y + ',' + z, map = new Map();
+  for (let i = 0; i < op.count; i++) { const k = key(Math.round(op.getX(i) * Q), Math.round(op.getY(i) * Q), Math.round(op.getZ(i) * Q)); if (!map.has(k)) map.set(k, []); map.get(k).push(i); }
+  const P = ng.attributes.position, N = ng.attributes.normal, U = ng.attributes.uv, C = ng.attributes.color;
+  let miss = 0;
+  for (let i = 0; i < P.count; i++) {
+    const x = P.getX(i), y = P.getY(i), z = P.getZ(i), kx = Math.round(x * Q), ky = Math.round(y * Q), kz = Math.round(z * Q);
+    let best = -1, bs = 1e9;
+    for (let a = -1; a <= 1; a++) for (let b = -1; b <= 1; b++) for (let c = -1; c <= 1; c++) {
+      const l = map.get(key(kx + a, ky + b, kz + c)); if (!l) continue;
+      for (const j of l) {
+        const dp = Math.hypot(op.getX(j) - x, op.getY(j) - y, op.getZ(j) - z);
+        if (dp > 2e-3) continue;
+        let sc = dp / 1e-3 + (1 - (on.getX(j) * N.getX(i) + on.getY(j) * N.getY(i) + on.getZ(j) * N.getZ(i))) * 10;
+        if (ou && U) sc += (Math.abs(ou.getX(j) - U.getX(i)) + Math.abs(ou.getY(j) - U.getY(i))) * 100;
+        if (sc < bs) { bs = sc; best = j; }
+      }
+    }
+    if (best < 0) { miss++; continue; }
+    P.setXYZ(i, op.getX(best), op.getY(best), op.getZ(best)); N.setXYZ(i, on.getX(best), on.getY(best), on.getZ(best));
+    if (ou && U) U.setXY(i, ou.getX(best), ou.getY(best));
+    if (oc && C) C.setXYZ(i, oc.getX(best), oc.getY(best), oc.getZ(best));
+  }
+  return miss;
+}
 function lmApply(root) {
   root.updateMatrixWorld(true);
   const R = root.getObjectByName('LM_root');
@@ -4019,6 +4048,7 @@ function lmApply(root) {
     const tol = ng ? b0.getSize(new THREE.Vector3()).length() * .01 + 1e-3 : 0;
     if (!ng || b0.min.distanceTo(b1.min) > tol || b0.max.distanceTo(b1.max) > tol || Array.isArray(cur) !== ng.groups.length > 0) { LM.skip++; continue; }
     if ([].concat(cur).some(m => m.vertexColors) && !ng.attributes.color) ng.setAttribute('color', new THREE.BufferAttribute(new Float32Array(ng.attributes.position.count * 3).fill(1), 3));
+    LM.miss += lmRestore(ng, o.geometry);
     ng.computeBoundingSphere();
     o.geometry = ng;
     const nm = Array.isArray(cur) ? cur.map(m => mine(m, g)) : mine(cur, g);

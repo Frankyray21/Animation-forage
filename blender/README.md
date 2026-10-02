@@ -20,3 +20,15 @@ python3 scene.py --views 3 --samples 64 --no-blend
 ou, avec Blender installé : `blender -b -P scene.py -- --views 1,2`.
 
 Contraintes respectées : ressorts verts (0x2e8a44), machine propre (ni saleté ni graisse), peinture rouge sans peau d'orange marquée.
+
+## Éclairage cuit pour la page (lightmaps)
+
+- `export_static.mjs` : exporte, depuis la page, les pièces fixes de la tête et du banc (`LM_<g>_<i>`) et leurs occulteurs (`OC_*` : boulons, mandrin, table) en GLB, plus les décalages de la tête éclatée (`lm_work/lm_src.glb`, `lm_src.json`, non versionnés).
+- `bake_lightmaps.py` : 2e couche UV « LM » (Smart UV Project, regroupement en atlas), cuisson Cycles *Diffuse* directe + indirecte sous un environnement blanc uniforme (tête assemblée, tête éclatée, banc), lissage dans les îlots, export vers `../lightmaps/`.
+
+```bash
+node export_static.mjs lm_work            # PLAYWRIGHT=… CHROME=… si besoin
+python3 bake_lightmaps.py --src lm_work   # environ 5 min (CPU 4 cœurs, 256 échantillons)
+```
+
+Voir la section « Éclairage cuit (Blender) » du README principal.
