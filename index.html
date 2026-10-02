@@ -793,7 +793,7 @@ Object.assign(mat.bolt, { roughness: .36, metalness: .85 }); mat.bolt.color.set(
 Object.assign(mat.steelLight, { normalMap: PTX.machN, normalScale: V2(.03) });
 // porte-capuchon 3506906 : tôle peinte noir mat ; adaptateur de capuchon 3506907 (jaw cover) : plaque zinguée jaune (photos)
 mat.blackPaint = new THREE.MeshPhysicalMaterial({ color: 0x1b1d1f, roughness: .62, metalness: .1, clearcoat: .08, clearcoatRoughness: .6 });
-mat.zincPlate = new THREE.MeshStandardMaterial({ color: 0xcfc08a, roughness: .42, metalness: .8 });
+mat.zincPlate = new THREE.MeshStandardMaterial({ color: 0xb4babf, roughness: .3, metalness: .9 });   // acier zingué gris métallique, lisse (différent des boulons jaunes)
 Object.assign(mat.console, { normalMap: PTX.paintN, normalScale: V2(.2), roughnessMap: PTX.rough });
 { const rN = PTX.castN.clone(), rR = PTX.rough.clone(); rN.repeat.set(60, 60); rR.repeat.set(40, 40);   // béton du plancher : grain fin
   Object.assign(mat.floor, { normalMap: rN, normalScale: V2(.25), roughnessMap: rR }); }
