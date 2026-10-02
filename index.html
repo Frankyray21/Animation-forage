@@ -77,7 +77,7 @@ button, input, select { font: inherit; color: inherit; }
 @keyframes actpulse { 0% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--accent) 70%, transparent); } 100% { box-shadow: 0 0 0 16px transparent; } }
 .actcard { position: absolute; max-width: min(270px, 60%); display: grid; gap: 2px; padding: 7px 10px 8px; border-radius: 8px; background: color-mix(in srgb, var(--panel) 92%, transparent); border: 1px solid var(--line); border-left: 4px solid var(--accent); font-size: 12.5px; pointer-events: none; box-shadow: 0 4px 14px rgba(0,0,0,.12); }
 /* Encadré « procédure » (option Numéros des boulons) : blanc, bordure orange, gros texte, flèche rouge vers le boulon */
-.proccard { position: absolute; z-index: 5; pointer-events: none; background: #fff; color: #111; border: 5px solid #e8853a; padding: 12px 20px; font-family: 'Times New Roman', Georgia, serif; font-size: clamp(17px, 2.4vw, 28px); line-height: 1.2; text-align: center; max-width: min(400px, 58%); box-shadow: 0 6px 20px rgba(0,0,0,.18); }
+.proccard { position: absolute; z-index: 5; pointer-events: none; background: #fff; color: #111; border: 4px solid #e8853a; padding: 7px 12px; font-family: 'Times New Roman', Georgia, serif; font-size: clamp(14px, 1.6vw, 19px); line-height: 1.2; text-align: center; max-width: min(250px, 42%); box-shadow: 0 6px 20px rgba(0,0,0,.18); }
 .proccard small { display: block; font-size: .62em; color: #444; margin-top: 4px; }
 .procline { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; z-index: 4; }
 .actcard b { font-size: 11px; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
@@ -3846,14 +3846,27 @@ function updateProcCard(S) {
   if (card.innerHTML !== html) card.innerHTML = html;
   card.hidden = false; svg.style.display = 'block';   // (SVGElement n'a pas la propriété hidden)
   const w = view.clientWidth, h = view.clientHeight;
-  let x = 0, y = 1e9;   // boulon du groupe le plus haut à l'écran : la flèche reste dégagée de l'encadré
-  for (const b of o) { b.getWorldPosition(procV); procV.project(camera); const by = (-procV.y * .5 + .5) * h; if (by < y) { y = by; x = (procV.x * .5 + .5) * w; } }
+  // boîte écran du groupe de boulons ; l'encadré se place juste à côté (droite si possible, sinon gauche), sans recouvrir le groupe
+  let x0 = 1e9, x1 = -1e9, y0 = 1e9, y1 = -1e9, ax = 0, ay = 1e9;
+  for (const b of o) { b.getWorldPosition(procV); procV.project(camera); const bx = (procV.x * .5 + .5) * w, by = (-procV.y * .5 + .5) * h; x0 = Math.min(x0, bx); x1 = Math.max(x1, bx); y0 = Math.min(y0, by); y1 = Math.max(y1, by); if (by < ay) { ay = by; ax = bx; } }
   const cw = card.offsetWidth, ch = card.offsetHeight;
-  // encadré en bas à droite (hors des boulons), flèche depuis son bord le plus proche vers le boulon
-  const cx = w - cw - 14, cy = h - ch - 44;
+  // candidats : droite, gauche, dessous, dessus, puis les 4 coins ; on garde le premier qui ne recouvre pas les boulons (pastilles comprises)
+  const cw2 = cw, ch2 = ch, m = 40, gap = 26, X0 = x0 - m, X1 = x1 + m, Y0 = y0 - m, Y1 = y1 + m;
+  const cands = [[X1 + gap, (Y0 + Y1) / 2 - ch2 / 2], [X0 - gap - cw2, (Y0 + Y1) / 2 - ch2 / 2], [(X0 + X1) / 2 - cw2 / 2, Y1 + gap], [(X0 + X1) / 2 - cw2 / 2, Y0 - gap - ch2],
+    [w - cw2 - 12, 60], [12, 60], [w - cw2 - 12, h - ch2 - 40], [12, h - ch2 - 40]];
+  let cx = 0, cy = 0, best = 1e18;
+  for (let [px, py] of cands) {
+    px = Math.max(10, Math.min(w - cw2 - 10, px)); py = Math.max(60, Math.min(h - ch2 - 40, py));
+    const ov = Math.max(0, Math.min(px + cw2, X1) - Math.max(px, X0)) * Math.max(0, Math.min(py + ch2, Y1) - Math.max(py, Y0));
+    if (ov < best) { best = ov; cx = px; cy = py; if (ov === 0) break; }
+  }
   card.style.left = `${cx}px`; card.style.top = `${cy}px`;
-  const ex = Math.max(cx, Math.min(cx + cw, x)), ey = y < cy ? cy : cy + ch / 2;
-  const seg = $('procSeg'); seg.setAttribute('x1', ex); seg.setAttribute('y1', ey); seg.setAttribute('x2', x + 8); seg.setAttribute('y2', y + 6);
+  // flèche : du bord de l'encadré vers le boulon du groupe le plus proche
+  const kx = cx + cw / 2, ky = cy + ch / 2; let bx = ax, by = ay, bd = 1e18;
+  for (const b of o) { b.getWorldPosition(procV); procV.project(camera); const px = (procV.x * .5 + .5) * w, py = (-procV.y * .5 + .5) * h, d = (px - kx) ** 2 + (py - ky) ** 2; if (d < bd) { bd = d; bx = px; by = py; } }
+  const ex = Math.max(cx, Math.min(cx + cw, bx)), ey = Math.max(cy, Math.min(cy + ch, by));   // point du bord le plus proche
+  const dx = bx - ex, dy = by - ey, L = Math.hypot(dx, dy) || 1;
+  const seg = $('procSeg'); seg.setAttribute('x1', ex); seg.setAttribute('y1', ey); seg.setAttribute('x2', bx - dx / L * 14); seg.setAttribute('y2', by - dy / L * 14);
 }
 function updateActCard() {
   const card = $('actCard'), dot = $('actDot');
