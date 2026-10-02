@@ -2282,27 +2282,31 @@ loadWorkerModel();
 poseWorker(new THREE.Vector3(5.3, BODY.hip, 0), .127, .08, [new THREE.Vector3(HANDS.x, HANDS.y, -HANDS.z), new THREE.Vector3(HANDS.x, HANDS.y, HANDS.z)]);
 
 /* ---------- Étiquettes ---------- */
-function makeLabel(text, { bg = '#111518', fg = '#ffffff', h = 0.36, font = '600 44px "IBM Plex Sans", sans-serif', pad = 22, round = 14, parent = scene } = {}) {
+function makeLabel(text, { bg = '#111518', fg = '#ffffff', h = 0.36, font = '600 44px "IBM Plex Sans", sans-serif', pad = 22, round = 14, parent = scene, closable = true } = {}) {
   const c = document.createElement('canvas');
   const x = c.getContext('2d');
   x.font = font;
-  const w = Math.ceil(x.measureText(text).width) + pad * 2;
+  const w = Math.ceil(x.measureText(text).width) + pad * 2 + (closable ? 30 : 0);   // place pour le × de fermeture
   c.width = Math.max(w, 64); c.height = 64;
   x.font = font;
   x.fillStyle = bg;
   x.beginPath(); x.roundRect(0, 0, c.width, c.height, round); x.fill();
   x.fillStyle = fg; x.textAlign = 'center'; x.textBaseline = 'middle';
-  x.fillText(text, c.width / 2, 34);
+  x.fillText(text, (c.width - (closable ? 30 : 0)) / 2, 34);
+  if (closable) {   // × dans le coin : un clic (ou toucher) sur le repère le ferme
+    x.strokeStyle = 'rgba(255,255,255,.55)'; x.lineWidth = 3; x.beginPath(); x.moveTo(c.width - 24, 22); x.lineTo(c.width - 12, 34); x.moveTo(c.width - 12, 22); x.lineTo(c.width - 24, 34); x.stroke();
+  }
   const tex = new THREE.CanvasTexture(c); tex.colorSpace = THREE.SRGBColorSpace;
   const s = new THREE.Sprite(new THREE.SpriteMaterial({ map: tex, depthTest: false, transparent: true }));
   s.scale.set(h * c.width / c.height, h, 1);
   s.renderOrder = 10;
+  s.userData.closable = closable;
   parent.add(s);
   return s;
 }
 // Étiquette de pièce compacte : numéro seulement ; le nom s'affiche au survol (info-bulle)
 function makePartLabel(p, { h, parent }) {
-  const s = makeLabel(p.ref, { parent, h, font: '600 40px "IBM Plex Mono", monospace', fg: '#f2c230', bg: 'rgba(17,21,24,.88)', round: 10, pad: 14 });
+  const s = makeLabel(p.ref, { parent, h, font: '600 40px "IBM Plex Mono", monospace', fg: '#f2c230', bg: 'rgba(17,21,24,.88)', round: 10, pad: 14, closable: false });
   s.userData.part = p;
   return s;
 }
@@ -2330,8 +2334,8 @@ let labels = null;
 function buildLabels() {
   if (labels) Object.values(labels).flat().forEach(s => s.parent && s.parent.remove(s));
   labels = {
-    nums: BOLTS.map(b => b.num ? makeLabel(String(b.num), { font: '700 46px "Barlow Condensed", sans-serif', h: 0.4, bg: '#f2c230', fg: '#111518', round: 32, parent: rig }) : null),
-    ret: BUSHED.map(() => makeLabel('R', { font: '700 46px "Barlow Condensed", sans-serif', h: 0.4, bg: '#2c7a4c', round: 32, parent: rig })),
+    nums: BOLTS.map(b => b.num ? makeLabel(String(b.num), { font: '700 46px "Barlow Condensed", sans-serif', h: 0.4, bg: '#f2c230', fg: '#111518', round: 32, parent: rig , closable: false }) : null),
+    ret: BUSHED.map(() => makeLabel('R', { font: '700 46px "Barlow Condensed", sans-serif', h: 0.4, bg: '#2c7a4c', round: 32, parent: rig , closable: false })),
     springsC: [makeLabel('Ressorts comprimés', { bg: '#1f7a34', h: 0.32, parent: rig })],
     springsF: [makeLabel('Ressorts détendus', { bg: '#2c7a4c', h: 0.32, parent: rig })],
     stuck: [makeLabel('Cône coincé : ressorts toujours comprimés', { bg: '#c42b1f', h: 0.32, parent: rig })],
@@ -2366,7 +2370,10 @@ function buildLabels() {
     p.lbl.visible = false;
   });
 }
-const labelOpacity = (s, a) => { if (!s) return; s.visible = a > 0.01; s.material.opacity = a; };
+const labelOpacity = (s, a) => { if (!s) return; if (s.userData.dismissed) a = 0; s.visible = a > 0.01; s.material.opacity = a; };
+// Repères fermés par l'utilisateur : réaffichés au changement d'étape, de scénario ou au redémarrage
+const closableLabels = () => Object.values(labels).flat().filter(s => s && s.userData.closable);
+const resetLabels = () => closableLabels().forEach(s => { s.userData.dismissed = false; });
 
 /* ---------- Trajectoire ---------- */
 const trailGeo = new THREE.BufferGeometry();
@@ -3385,7 +3392,7 @@ Object.entries(SCEN).forEach(([key, s]) => {
   scenList.appendChild(b);
 });
 function selectScen(key) {
-  scen = key; T = 0; playing = false; leverMan.on = false; autoCam = true; $('camChip').hidden = true;
+  scen = key; T = 0; playing = false; leverMan.on = false; resetLabels(); autoCam = true; $('camChip').hidden = true;
   [...scenList.children].forEach(b => b.setAttribute('aria-selected', String(b.dataset.key === key)));
   $('scenChipText').textContent = SCEN[key].label;
   $('scenChip').dataset.tone = SCEN[key].tone;
@@ -3419,7 +3426,7 @@ function setPlaying(v) {
   $('playIcon').innerHTML = v ? '<path d="M3 2h4v12H3zM9 2h4v12H9z"/>' : '<path d="M4 2l10 6-10 6z"/>';
 }
 $('bPlay').addEventListener('click', () => { if (explodeTarget) setExplode(false); if (hexTarget) setHeadExplode(false); if (!playing && T >= total - 1e-3) T = 0; setPlaying(!playing); });
-$('bRestart').addEventListener('click', () => { T = 0; leverMan.on = false; setPlaying(false); autoCam = true; $('camChip').hidden = true; });
+$('bRestart').addEventListener('click', () => { T = 0; leverMan.on = false; resetLabels(); setPlaying(false); autoCam = true; $('camChip').hidden = true; });
 $('bPrev').addEventListener('click', () => { const { i, p } = locate(T); T = starts[p < 0.05 && i > 0 ? i - 1 : i]; leverMan.on = false; setPlaying(false); });
 $('bNext').addEventListener('click', () => { const { i } = locate(T); T = i < steps.length - 1 ? starts[i + 1] : total - 1e-3; leverMan.on = false; setPlaying(false); });
 $('scrub').addEventListener('input', e => { T = e.target.value / 1000 * total; leverMan.on = false; setPlaying(false); });
@@ -3472,7 +3479,7 @@ function updateUI(S, force) {
   // Étapes faites : marquées en permanence (✓ bonne méthode, ✗ méthode dangereuse) ; l'étape en cours l'est dès qu'elle est terminée
   const doneK = explodeTarget || hexTarget ? -1 : S.i + (S.p > .995 ? 1 : 0), stepKey = doneK + '|' + S.i;
   if (stepKey !== lastStepKey) {
-    lastStepKey = stepKey;
+    lastStepKey = stepKey; resetLabels();
     for (const ol of [$('stepList'), $('fsStepList')]) [...ol.children].forEach((li, k) => { li.classList.toggle('done', k < doneK); li.classList.toggle('now', k === S.i && doneK >= 0); });
   }
   $('scrub').value = Math.round(T / total * 1000);
@@ -3594,6 +3601,16 @@ $('btnCut').addEventListener('click', () => { setCut(!cutOn); if (explodeTarget)
 const ray = new THREE.Raycaster(), ptr = new THREE.Vector2();
 let downAt = null;
 canvas.addEventListener('pointerdown', e => { downAt = [e.clientX, e.clientY]; });
+// Repère (étiquette fermable) sous le curseur, sinon null
+function pickLabel(e) {
+  const vis = closableLabels().filter(s => s.visible && s.material.opacity > .3);
+  if (!vis.length) return null;
+  const r = canvas.getBoundingClientRect();
+  ptr.set((e.clientX - r.left) / r.width * 2 - 1, -(e.clientY - r.top) / r.height * 2 + 1);
+  ray.setFromCamera(ptr, camera);
+  const h = ray.intersectObjects(vis, false);
+  return h.length ? h[0].object : null;
+}
 // Manette sous le curseur (CLAM ou CHUCK), sinon null
 function pickLever(e) {
   if (!consoleG.visible || explodeE > 0 || hexE > 0) return null;
@@ -3620,6 +3637,8 @@ function pickPart(e) {
 }
 canvas.addEventListener('pointerup', e => {
   if (!downAt || Math.hypot(e.clientX - downAt[0], e.clientY - downAt[1]) > 5) return;
+  const lb = pickLabel(e);
+  if (lb) { lb.userData.dismissed = true; lb.visible = false; hideTip(); return; }
   const lv = pickLever(e);
   if (lv) { leverToggle(stateAt(T), lv, e); return; }
   const p = pickPart(e);
@@ -3689,7 +3708,7 @@ canvas.addEventListener('pointermove', e => {
   requestAnimationFrame(() => {
     hoverQueued = false;
     const ev = hoverEv;
-    if (pickLever(ev)) { canvas.style.cursor = 'pointer'; return; }
+    if (pickLabel(ev) || pickLever(ev)) { canvas.style.cursor = 'pointer'; return; }
     const p = pickPart(ev);
     const exploded = explodeTarget || hexTarget;
     if (!p) { if (exploded || !clickTipOn()) hideTip(); canvas.style.cursor = ''; return; }
