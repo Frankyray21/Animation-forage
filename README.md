@@ -48,7 +48,9 @@ Correspondance avec la procédure :
 
 Les 9 boulons du cône traversent le voile du boîtier (entretoises inférieures 3506880 et joints 5040192) et se vissent dans le manchon d'actionnement 3506928. Ce sont eux qui retiennent le cône contre les 18 ressorts.
 
-## Foreuse STM-1500 (livre de pièces FBRA-002-100AS, section 1)
+## Foreuse STM-1500 (page séparée : `foreuse.html`)
+
+La foreuse, sa console de commande UM-051 et son groupe hydraulique FMX-005 sont sur une page distincte du même dépôt, `foreuse.html` (lien depuis l'en-tête d'`index.html`, et retour). `index.html` ne contient plus que la tête de forage, le mandrin, le banc, le poste CLAM/CHUCK, le travailleur et l'animation. (livre de pièces FBRA-002-100AS, section 1)
 
 La tête de forage a été **retirée de la foreuse et posée sur un banc de travail** (support de pivot boulonné sur le plateau). La foreuse complète est modélisée derrière le banc, mât couché à l'horizontale (position de transport, planche 1.04), sans la tête. Bouton **Foreuse (drill)** : la caméra va sur la foreuse ; un second clic revient à l'étape.
 
