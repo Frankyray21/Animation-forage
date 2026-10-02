@@ -3171,13 +3171,16 @@ function applyScene(S) {
 
   // Couvert des mâchoires + boulons ¾
   const RC = S.recent || {}, hiK = k => k ? .55 : .14;
-  const numsJC = $('optNums').checked && !D.flightS && explodeE === 0 && hexE === 0;   // option « Numéros des boulons » : boulons du couvert (J) et du couvercle (C)
+  // option « Numéros des boulons » : seulement le groupe de la prochaine action (J → C → 1-6 → L), comme l'encadré « procédure »
+  const numsOn = $('optNums').checked && !D.flightS && explodeE === 0 && hexE === 0;
+  const nextGrp = !numsOn ? '' : S.jc.lift < .01 ? 'J' : S.cv.lift < .01 ? 'C' : S.cv.lift > .99 && ORDER.some(i => S.pb[i].gone < .99) ? 'P' : S.cv.lift > .99 && BUSHED.some(i => S.pb[i].gone < .99) ? 'L' : '';
+  const numsJC = numsOn;
   S.jc.bolts.forEach((r, k) => {
     const b = jcBolts[k], base = b.userData.base, s = seg(r, 0, .6);
     const from = new THREE.Vector3(base.x, base.y + 0.3 * s, base.z);
     boltToTable(b, from, TABLE.jcBolt(k), seg(r, .6, 1), s * 6 * Math.PI * 2);
     setOpacity(b, 1); glow(b, r > 0 ? hiK(RC.jc) : 0);
-    labels.numsJ[k].position.set(b.position.x, b.position.y + .45, b.position.z); labelOpacity(labels.numsJ[k], numsJC && r < .6 ? 1 : 0);
+    labels.numsJ[k].position.set(b.position.x, b.position.y + .45, b.position.z); labelOpacity(labels.numsJ[k], nextGrp === 'J' && r < .6 ? 1 : 0);
   });
   toTable(jawCover, JC_BASE, TABLE.jc, S.jc.lift);
   glow(jawCover, S.jc.lift > 0 || S.jc.bolts[0] > 0 ? hiK(RC.jc) : 0);
@@ -3187,7 +3190,7 @@ function applyScene(S) {
     const from = new THREE.Vector3(base.x, base.y + 0.25 * s, base.z);
     boltToTable(b, from, TABLE.cvBolt(k), seg(r, .6, 1), s * 5 * Math.PI * 2);
     setOpacity(b, 1); glow(b, r > 0 ? hiK(RC.cv) : 0);
-    labels.numsC[k].position.set(b.position.x, b.position.y + .45, b.position.z); labelOpacity(labels.numsC[k], numsJC && r < .6 ? 1 : 0);
+    labels.numsC[k].position.set(b.position.x, b.position.y + .45, b.position.z); labelOpacity(labels.numsC[k], nextGrp === 'C' && r < .6 ? 1 : 0);
   });
   toTable(cover, CV_BASE, TABLE.cv, S.cv.lift, 2.2);
   glow(cover, S.cv.lift > 0 || S.cv.bolts[0] > 0 ? hiK(RC.cv) : 0);
@@ -3291,14 +3294,14 @@ function applyScene(S) {
     }
     if (labels.nums[i]) {
       labels.nums[i].position.set(o.position.x, o.position.y + 0.55, o.position.z);
-      labelOpacity(labels.nums[i], fl ? 0 : Math.max(S.nums, numsOpt) * (1 - b.gone));
+      labelOpacity(labels.nums[i], fl ? 0 : Math.max(S.nums, nextGrp === 'P' ? 1 : 0) * (1 - b.gone));
     }
     if (B.bushing) {
       const L = labels.ret[BUSHED.indexOf(i)];
       L.position.set(o.position.x, o.position.y + 0.55, o.position.z);
       const hide = S.catchD && steps[S.i] && steps[S.i].catch ? seg(S.catchP, CATCH_T0 - .04, CATCH_T0) * (1 - seg(S.catchP, .6, .7)) : 0;
       labelOpacity(L, 0);   // pastilles « R » retirées
-      const NL = labels.numsL[BUSHED.indexOf(i)]; NL.position.copy(L.position); labelOpacity(NL, numsOpt * (1 - b.gone));
+      const NL = labels.numsL[BUSHED.indexOf(i)]; NL.position.copy(L.position); labelOpacity(NL, (nextGrp === 'L' ? 1 : 0) * (1 - b.gone));
     }
   });
 
