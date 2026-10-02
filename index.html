@@ -377,6 +377,7 @@ import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
 import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
 import { OutlinePass } from 'three/addons/postprocessing/OutlinePass.js';
 import { SMAAPass } from 'three/addons/postprocessing/SMAAPass.js';
+import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
 
 /* ================= Constantes physiques et géométriques ================= */
 const U = 0.1;                 // 1 unité de scène = 0,1 m
@@ -594,7 +595,7 @@ function workshopEnvironment() {
   const pl = new THREE.PointLight(0xffffff, 600, 40, 2); pl.position.set(0, 12, 0); s.add(pl);
   return s;
 }
-scene.environment = pmrem.fromScene(workshopEnvironment(), 0.04).texture;
+scene.environment = pmrem.fromScene(new RoomEnvironment(renderer), 0.04).texture;   // reflets neutres et uniformes : pas d'ombrage marqué (workshopEnvironment conservé, non utilisé)
 scene.fog = new THREE.Fog(0xd7dce0, 95, 210);
 
 const camera = new THREE.PerspectiveCamera(38, 1, 0.8, 160);   // near à 8 cm, far réduit : 2× plus de précision de profondeur (scintillement sur GPU mobile)
@@ -606,12 +607,12 @@ controls.maxPolarAngle = Math.PI * 0.49;
 controls.minDistance = 4;
 controls.maxDistance = 90;
 
-scene.add(new THREE.HemisphereLight(0xeef3ff, 0x8a8f94, 0.9));
+scene.add(new THREE.HemisphereLight(0xeef3ff, 0xb9bec3, 1.1));   // éclairage uniforme, dessous clairs
 // éclairage uniforme, sans ombres portées : lumière principale + lumière de remplissage opposée
 const sun = new THREE.DirectionalLight(0xffffff, 1.45);
 sun.position.set(7, 16, 9);
 scene.add(sun);
-const fill = new THREE.DirectionalLight(0xe8eef8, 0.8);
+const fill = new THREE.DirectionalLight(0xe8eef8, 1.0);
 fill.position.set(-9, 9, -8);
 scene.add(fill);
 
