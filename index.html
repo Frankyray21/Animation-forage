@@ -892,7 +892,7 @@ function threadMat(base, lenIn, tpi, rust = false) {
   const c = document.createElement('canvas'); c.width = rust ? 16 : 4; c.height = 32 * N;
   const x = c.getContext('2d');
   const g = x.createLinearGradient(0, 0, 0, 32);
-  g.addColorStop(0, '#8a8a8a'); g.addColorStop(.5, '#f2f2f2'); g.addColorStop(1, '#8a8a8a');
+  g.addColorStop(0, '#b0b0b0'); g.addColorStop(.5, '#e4e4e4'); g.addColorStop(1, '#b0b0b0');   // contraste réduit : moins de moiré de loin
   x.fillStyle = g; for (let i = 0; i < N; i++) { x.save(); x.translate(0, 32 * i); x.fillRect(0, 0, c.width, 32); x.restore(); }
   if (rust) {
     let sd = 3; const rnd = () => (sd = (sd * 16807) % 2147483647) / 2147483647;
@@ -902,7 +902,7 @@ function threadMat(base, lenIn, tpi, rust = false) {
   }
   const t = new THREE.CanvasTexture(c);
   t.wrapS = t.wrapT = THREE.RepeatWrapping; t.repeat.set(1, lenIn * tpi / N); t.colorSpace = THREE.SRGBColorSpace;
-  t.anisotropy = renderer.capabilities.getMaxAnisotropy();
+  t.anisotropy = renderer.capabilities.getMaxAnisotropy(); t.generateMipmaps = true; t.minFilter = THREE.LinearMipmapLinearFilter;
   t.userData.thread = true;
   const m = base.clone(); m.map = t;
   threadTexCache.set(key, m);
@@ -1275,9 +1275,9 @@ jawGeoH.scale(1, (JAW_H - .04) / JAW_H, 1); jawGeoH.translate(0, u(.02), 0);   /
 mat.knurl = (() => {   // moletage des plaquettes : pyramides (relief), pointes polies par l'usage, creux sombres ; pas de 1 mm (UV en dm)
   const S = 128, Pp = 16, tri = a => 1 - Math.abs(2 * (a - Math.floor(a)) - 1), h = new Float32Array(S * S);
   for (let y = 0; y < S; y++) for (let x = 0; x < S; x++) h[y * S + x] = Math.min(tri((x + y) / Pp), tri((x - y) / Pp));
-  const map = PTX.rgb((x, y) => { const w = .1 + .3 * Math.pow(h[y * S + x], 1.6); return [w, w, w * 1.04]; }, S, { srgb: true, rep: 100 })[0];
-  const nm = PTX.normal(h, S, 3, { rep: 100 });
-  return new THREE.MeshStandardMaterial({ map, normalMap: nm, normalScale: V2(.6), color: 0x3a3d40, roughness: .5, metalness: .6 });   // plaquettes de carbure noires (seules parties qui agrippent)
+  const map = PTX.rgb((x, y) => { const w = .14 + .22 * Math.pow(h[y * S + x], 1.6); return [w, w, w * 1.04]; }, S, { srgb: true, rep: 40 })[0];
+  const nm = PTX.normal(h, S, 3, { rep: 40 });
+  return new THREE.MeshStandardMaterial({ map, normalMap: nm, normalScale: V2(.3), color: 0x3a3d40, roughness: .5, metalness: .6 });   // moletage plus grossier et moins contrasté : pas de moiré   // plaquettes de carbure noires (seules parties qui agrippent)
 })();
 const jawRm = y => (R.jawIn + lerp(R.bowlBot, R.bowlTop, y / JAW_H) - .02) / 2;   // rayon moyen du segment à la hauteur y
 mat.jawSteel = new THREE.MeshPhysicalMaterial({ color: 0x9ea4a9, roughness: .36, metalness: .9, roughnessMap: PTX.rough, normalMap: PTX.machN, normalScale: V2(.12), clearcoat: .15, clearcoatRoughness: .3 });   // corps des mâchoires en acier usiné ; seules les plaquettes sont en carbure noir
