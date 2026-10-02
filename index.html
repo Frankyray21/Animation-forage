@@ -337,6 +337,7 @@ details.params summary { cursor: pointer; padding: 10px 14px; font-weight: 600; 
         </label>
         <label><input type="checkbox" id="optWorker" checked> Travailleur</label>
         <label><input type="checkbox" id="optNums" autocomplete="off"> Numéros des boulons</label>
+        <label id="optLMw" hidden title="Occlusion ambiante cuite dans Blender (Cycles) sur les pièces fixes de la tête et du banc"><input type="checkbox" id="optLM" checked autocomplete="off"> Éclairage réaliste (Blender)</label>
       </div>
     </div>
   </section>
@@ -3952,6 +3953,102 @@ function updateActCard() {
 setQuality(quality);
 new ResizeObserver(resize).observe(view);
 
+/* ================= Éclairage cuit (Blender) : pièces fixes de la tête et du banc =================
+   Occlusion ambiante douce cuite dans Cycles (blender/bake_lightmaps.py) : lightmaps/head_lm.glb (géométrie + 2e UV « LM »)
+   et 3 atlas (tête assemblée, tête éclatée, banc). Appliquée en aoMap (uv1) : seule la lumière d'ambiance est atténuée
+   dans les creux ; les lumières directes restent, sans ombre portée. Sans ces fichiers : rendu temps réel inchangé. */
+const LM = { snap: null, ok: false, done: false, on: true, I: .8, head: new Set(), bench: new Set(), A: null, E: null, B: null, k: -1, n: 0, skip: 0 };
+// Instantané au démarrage : maillages de la tête (h) et du banc (c), ordre de traverse(), repère relatif au rig
+function lmSnap() {
+  rig.updateWorldMatrix(true, true);
+  const inv = rig.matrixWorld.clone().invert();
+  LM.snap = {};
+  for (const [g, G] of [['h', headG], ['c', carriage]]) { const l = []; G.traverse(o => { if (o.isMesh) l.push([o, inv.clone().multiply(o.matrixWorld)]); }); LM.snap[g] = l; }
+}
+// Matériaux cuits et leurs clones de surbrillance (sélection)
+const lmMats = set => [...set].flatMap(m => hiCache.has(m) ? [m, hiCache.get(m)] : [m]);
+// Tête éclatée : fondu de l'atlas « assemblée » vers l'atlas « éclatée » (pièces séparées)
+function lmUpdate(force) {
+  if (!LM.ok) return;
+  const k = ease(hexE);
+  if (!force && k === LM.k) return;
+  LM.k = k;
+  const go = (set, tex, I) => { for (const m of lmMats(set)) { const t = LM.on ? tex : null; if (!m.aoMap !== !t) m.needsUpdate = true; m.aoMap = t; m.aoMapIntensity = I; } };
+  go(LM.head, k < .5 ? LM.A : LM.E, LM.I * Math.abs(1 - 2 * k));
+  go(LM.bench, LM.B, LM.I);
+}
+// Géométrie du GLB (repère du rig) → repère local du maillage du site ; attributs en Float32
+function lmGeo(prims, rel, Rinv) {
+  const back = rel.clone().invert().multiply(Rinv), AT = [['position', 3], ['normal', 3], ['uv', 2], ['uv1', 2], ['color', 3]];
+  const has = a => prims.every(p => p.geometry.attributes[a]);
+  if (!has('position') || !has('normal') || !has('uv1')) return null;
+  const used = AT.filter(([a]) => has(a)), n = prims.reduce((s, p) => s + p.geometry.attributes.position.count, 0);
+  const out = new THREE.BufferGeometry(), arr = used.map(([, k]) => new Float32Array(n * k)), idx = [];
+  let base = 0;
+  for (const p of prims) {
+    const g = p.geometry, c = g.attributes.position.count;
+    used.forEach(([a, k], j) => { const s = g.attributes[a]; for (let i = 0; i < c; i++) { arr[j][(base + i) * k] = s.getX(i); arr[j][(base + i) * k + 1] = s.getY(i); if (k > 2) arr[j][(base + i) * k + 2] = s.getZ(i); } });
+    const start = idx.length;
+    if (g.index) for (let i = 0; i < g.index.count; i++) idx.push(base + g.index.getX(i)); else for (let i = 0; i < c; i++) idx.push(base + i);
+    const mi = /^m(\d+)_/.exec(p.material && p.material.name || '');
+    if (prims.length > 1) out.addGroup(start, idx.length - start, mi ? +mi[1] : 0);
+    base += c;
+  }
+  used.forEach(([a, k], j) => out.setAttribute(a, new THREE.BufferAttribute(arr[j], k)));
+  out.setIndex(idx);
+  out.applyMatrix4(back.multiply(prims[0].matrixWorld));
+  return out;
+}
+function lmApply(root) {
+  root.updateMatrixWorld(true);
+  const R = root.getObjectByName('LM_root');
+  if (!R) throw new Error('LM_root absent');
+  const Rinv = R.matrixWorld.clone().invert(), own = new Map(), b0 = new THREE.Box3(), b1 = new THREE.Box3();
+  const mine = (m, g) => {
+    if (!own.has(m)) { const c = m.clone(); (g === 'h' ? headMats : drillMats).add(c); (g === 'h' ? LM.head : LM.bench).add(c); own.set(m, c); }
+    return own.get(m);
+  };
+  for (const node of [...R.children]) {
+    const mm = /^LM_([hc])_(\d+)$/.exec(node.name), e = mm && LM.snap[mm[1]] && LM.snap[mm[1]][+mm[2]];
+    if (!e) continue;
+    const [o, rel] = e, g = mm[1], cur = o.userData.orig || o.material;
+    const prims = node.isMesh ? [node] : node.children.filter(c => c.isMesh);
+    const ng = prims.length ? lmGeo(prims, rel, Rinv) : null;
+    // contrôle : même boîte englobante que la pièce du site, même nombre de matériaux
+    if (ng) { o.geometry.computeBoundingBox(); ng.computeBoundingBox(); b0.copy(o.geometry.boundingBox); b1.copy(ng.boundingBox); }
+    const tol = ng ? b0.getSize(new THREE.Vector3()).length() * .01 + 1e-3 : 0;
+    if (!ng || b0.min.distanceTo(b1.min) > tol || b0.max.distanceTo(b1.max) > tol || Array.isArray(cur) !== ng.groups.length > 0) { LM.skip++; continue; }
+    if ([].concat(cur).some(m => m.vertexColors) && !ng.attributes.color) ng.setAttribute('color', new THREE.BufferAttribute(new Float32Array(ng.attributes.position.count * 3).fill(1), 3));
+    ng.computeBoundingSphere();
+    o.geometry = ng;
+    const nm = Array.isArray(cur) ? cur.map(m => mine(m, g)) : mine(cur, g);
+    if (o.material === cur) o.material = nm;
+    if (o.userData.orig) o.userData.orig = nm;
+    LM.n++;
+  }
+  LM.ok = LM.n > 0;
+  if (!LM.ok) return;
+  $('optLMw').hidden = false;
+  lmUpdate(true);
+  if (selected) select(selected);   // sélection en cours : couleurs d'origine recalculées
+}
+function lmLoad() {
+  let base;
+  try { base = new URL('lightmaps/', document.baseURI).href; if (!/^https?:|^file:/.test(base)) throw 0; }
+  catch (e) { LM.done = true; return; }   // page sans adresse (aperçu intégré) : éclairage temps réel seul
+  const tl = new THREE.TextureLoader();
+  const tex = f => new Promise((ok, ko) => tl.load(base + f, t => { t.channel = 1; t.flipY = false; t.anisotropy = 4; ok(t); }, undefined, ko));
+  const glb = import('three/addons/loaders/DRACOLoader.js').then(({ DRACOLoader }) => new Promise((ok, ko) => {   // géométrie compressée (Draco)
+    const d = new DRACOLoader().setDecoderPath('https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/libs/draco/gltf/'), l = new GLTFLoader().setDRACOLoader(d);
+    l.load(base + 'head_lm.glb', g => { d.dispose(); ok(g); }, undefined, e => { d.dispose(); ko(e); });
+  }));
+  Promise.all([glb, tex('head_a.jpg'), tex('head_e.jpg'), tex('bench.jpg')]).then(([gltf, A, E, B]) => {
+    Object.assign(LM, { A, E, B });
+    try { lmApply(gltf.scene); } catch (e) { console.info('Éclairage cuit : non appliqué (' + e.message + ').'); }
+  }).catch(() => console.info('Éclairage cuit : fichiers lightmaps/ absents, éclairage temps réel seul.')).finally(() => { LM.done = true; });
+}
+$('optLM').addEventListener('change', e => { LM.on = e.target.checked; lmUpdate(true); });
+
 let last = performance.now();
 function frame(now) {
   const dt = Math.min(0.1, (now - last) / 1000);
@@ -3972,6 +4069,7 @@ function frame(now) {
   applyScene(S);
   applyExplode(explodeE);
   applyHeadExplode(hexE);
+  lmUpdate();
   updateUI(S);
   updateCamera(dt);
   controls.update();
@@ -4004,6 +4102,7 @@ async function start() {
   // ombres de contact sous le banc (avec la tête) et sous la table, d'après leur emprise au sol
   rig.updateWorldMatrix(true, true);
   for (const o of [carriage, tableG]) { const b = new THREE.Box3().setFromObject(o), c = b.getCenter(new THREE.Vector3()), sz = b.getSize(new THREE.Vector3()); contactShadow(c.x, c.z, sz.x * .62, sz.z * .62); }
+  lmSnap();
   // priorité de profondeur par matériau : surfaces confondues toujours départagées de la même façon
   {
     const seen = new Set();
@@ -4021,7 +4120,8 @@ async function start() {
   resize();
   const S = stateAt(T); applyScene(S); updateUI(S, true);
   requestAnimationFrame(frame);
-  window.__clam = { stateAt, steps: () => steps, starts: () => starts, total: () => total, setT: v => { T = v; }, P, setExplode, setHeadExplode, headExplodeNow: v => { setHeadExplode(v); hexE = v ? 1 : 0; }, setCutUI: setCut, explodeNow: v => { setExplode(v); explodeE = v ? 1 : 0; }, select: id => select(byId(id)), PARTS, camera, setQuality, worker: { set: setWorker, get: () => ({ x: WORKER_GLB.position.x, y: WORKER_GLB.position.y, z: WORKER_GLB.position.z, rotYdeg: WORKER_GLB.rotY * 180 / Math.PI, scale: WORKER_GLB.scale, loaded: !!workerModel }), root: workerRoot }, setCut: v => { cutOn = v; applyCut(); }, levers, THREE, state: () => stateAt(T), leverMan: () => ({ ...leverMan }), oilG, labels: () => labels, STROKE, JAW_OPEN };
+  lmLoad();
+  window.__clam = { stateAt, steps: () => steps, starts: () => starts, total: () => total, setT: v => { T = v; }, P, setExplode, setHeadExplode, headExplodeNow: v => { setHeadExplode(v); hexE = v ? 1 : 0; }, setCutUI: setCut, explodeNow: v => { setExplode(v); explodeE = v ? 1 : 0; }, select: id => select(byId(id)), PARTS, camera, setQuality, worker: { set: setWorker, get: () => ({ x: WORKER_GLB.position.x, y: WORKER_GLB.position.y, z: WORKER_GLB.position.z, rotYdeg: WORKER_GLB.rotY * 180 / Math.PI, scale: WORKER_GLB.scale, loaded: !!workerModel }), root: workerRoot }, setCut: v => { cutOn = v; applyCut(); }, levers, THREE, state: () => stateAt(T), leverMan: () => ({ ...leverMan }), oilG, labels: () => labels, STROKE, JAW_OPEN, lm: LM };
 }
 start();
 </script>
