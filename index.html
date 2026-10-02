@@ -315,6 +315,7 @@ details.params summary { cursor: pointer; padding: 10px 14px; font-weight: 600; 
           <select id="optSpeed"><option value="0.5">0,5×</option><option value="1" selected>1×</option><option value="2">2×</option></select>
         </label>
         <label><input type="checkbox" id="optWorker" checked> Travailleur</label>
+        <label><input type="checkbox" id="optNums" autocomplete="off"> Numéros des boulons</label>
       </div>
     </div>
   </section>
@@ -2351,6 +2352,7 @@ function buildLabels() {
     jawsO: [makeLabel('Jaws s\'ouvrent', { h: 0.28, parent: rig })],
     jawsC: [makeLabel('Jaws se ferment', { bg: '#2c7a4c', h: 0.28, parent: rig })],
     hold: [makeLabel('Ressorts comprimés même fermés', { bg: '#1f7a34', h: 0.28, parent: rig })],
+    count: [makeLabel('6 boulons (bolts) : 1 tour à la fois, ordre 1 → 6 · 3 boulons longs : retenue', { bg: '#111518', h: 0.26, parent: rig, closable: false })],
     zone: [makeLabel('Zone de projection', { bg: '#c42b1f', h: 0.32, parent: rig })],
     ...Object.fromEntries(['outJc', 'outCv', 'outBush', 'outPb', 'outPlate'].map(k => [k, [tblLabel()]])),
   };
@@ -2364,7 +2366,8 @@ function buildLabels() {
   // Repères du mécanisme (gros plan CAMS.hyd) : sous le mandrin, hors des rangées de boutons, centrés pour tenir aussi sur un écran étroit ;
   // deux rangées (huile au-dessus, sens de la course en dessous) ; un seul de back/push/hold visible à la fois
   labels.oil[0].position.set(0.4, u(4.3), -1.8);                                             // sous le cylindre, vers le raccord (monde ≈ −2,9 ; 3,0 ; 0,4)
-  for (const k of ['back', 'push', 'hold']) labels[k][0].position.set(0.4, u(10.5), -2.15);   // sous le milieu du mandrin (monde ≈ −1,3 ; 2,6 ; 0,4)
+  for (const k of ['back', 'push', 'hold']) labels[k][0].position.set(0.4, u(10.5), -2.15);
+  labels.count[0].position.set(0.4, u(10.5), -2.6);   // option « Numéros des boulons » : rappel du nombre et de l'ordre, sous le mandrin   // sous le milieu du mandrin (monde ≈ −1,3 ; 2,6 ; 0,4)
   for (const k of ['jawsO', 'jawsC']) labels[k][0].position.set(0.5, u(13.5), -1.25);         // sous les mâchoires (monde ≈ −0,6 ; 3,5 ; 0,5)
   // Repères de pièces pour la vue éclatée (dans le groupe du clam)
   PARTS.forEach(p => {
@@ -3244,7 +3247,9 @@ function applyScene(S) {
     setSpringLen(m, Math.max(u(3.2), LC + t - compVis + hOff));   // vérin sous pression : plus comprimés ; jamais sous la longueur à spires jointives
   });
 
-  // Boulons du cône
+  // Boulons du cône ; option « Numéros des boulons » : numéros visibles dès que le couvercle est retiré (capture d'écran pour les travailleurs)
+  const numsOpt = $('optNums').checked && S.cv.lift > .99 && !fl ? 1 : 0;
+  labelOpacity(labels.count[0], numsOpt);
   S.pb.forEach((b, i) => {
     const o = pBolts[i], B = BOLTS[i];
     const bush = B.bushing ? BUSH_H * (1 - b.bushOut) : 0;
@@ -3270,7 +3275,7 @@ function applyScene(S) {
     }
     if (labels.nums[i]) {
       labels.nums[i].position.set(o.position.x, o.position.y + 0.55, o.position.z);
-      labelOpacity(labels.nums[i], fl ? 0 : S.nums * (1 - b.gone));
+      labelOpacity(labels.nums[i], fl ? 0 : Math.max(S.nums, numsOpt) * (1 - b.gone));
     }
     if (B.bushing) {
       const L = labels.ret[BUSHED.indexOf(i)];
