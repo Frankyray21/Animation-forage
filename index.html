@@ -257,6 +257,17 @@ details.params summary { cursor: pointer; padding: 10px 14px; font-weight: 600; 
 .bom-row[aria-pressed="true"] { background: var(--shade); box-shadow: inset 3px 0 0 var(--accent); }
 .bom-row .r { font-family: var(--mono); font-size: 12px; overflow-wrap: anywhere; }
 .bom-row .q { font-family: var(--mono); font-size: 12px; color: var(--muted); text-align: right; }
+/* Galerie « Vues réalistes » (rendus Blender) : vignettes et visionneuse plein écran */
+.gal { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+.gal figure { margin: 0; display: grid; gap: 4px; min-width: 0; }
+.gal button { display: block; width: 100%; padding: 0; border: 1px solid var(--line); border-radius: 6px; background: var(--bg); cursor: zoom-in; overflow: hidden; }
+.gal img { display: block; width: 100%; aspect-ratio: 16 / 10; object-fit: cover; }
+.gal figcaption { font-size: 12px; line-height: 1.3; color: var(--muted); }
+.gal-note { margin: 0 0 10px; font-size: 12.5px; color: var(--muted); }
+.lb { position: fixed; inset: 0; z-index: 50; background: rgba(10, 14, 17, .9); display: grid; place-items: center; align-content: center; padding: 20px; cursor: zoom-out; }
+.lb img { max-width: 100%; max-height: calc(100vh - 100px); border-radius: 6px; box-shadow: 0 12px 40px rgba(0, 0, 0, .5); cursor: default; }
+.lb p { margin: 10px 0 0; max-width: 60ch; color: #e3e8eb; font-size: 13.5px; text-align: center; }
+.lb .help-x { position: fixed; top: 12px; right: 12px; }
 .src { font-size: 12px; color: var(--muted); margin: 0; border-top: 1px solid var(--line); padding-top: 12px; }
 
 @media (prefers-reduced-motion: reduce) { .dock::before { transition: none; } }
@@ -354,6 +365,17 @@ details.params summary { cursor: pointer; padding: 10px 14px; font-weight: 600; 
       <div class="card" id="partCard"></div>
       <div id="bomList" style="margin-top:10px"></div>
     </details>
+    <details class="bom" id="galSec">
+      <summary class="bom-toggle">Vues réalistes (rendu Blender)</summary>
+      <p class="gal-note">Images fixes tracées en rayons (Cycles) à partir du même modèle 3D ; cliquer pour agrandir.</p>
+      <div class="gal" id="gal">
+        <figure><button type="button" data-full="renders/01_ensemble.jpg"><img src="renders/01_ensemble.jpg" alt="Rendu Blender : tête de forage et mandrin posés sur le banc, vue trois-quarts avant" onerror="this.closest('figure').hidden = true"></button><figcaption>Tête et mandrin sur le banc (drill head and chuck on the bench)</figcaption></figure>
+        <figure><button type="button" data-full="renders/02_face_mandrin.jpg"><img src="renders/02_face_mandrin.jpg" alt="Rendu Blender : gros plan de la face avant du mandrin" onerror="this.closest('figure').hidden = true"></button><figcaption>Face avant du mandrin : couvercle (cap holder), couvert des mâchoires (jaw cover), boulons</figcaption></figure>
+        <figure><button type="button" data-full="renders/03_coupe.jpg"><img src="renders/03_coupe.jpg" alt="Rendu Blender : mandrin coupé en deux, ressorts verts, piston, cône et mâchoires visibles" onerror="this.closest('figure').hidden = true"></button><figcaption>Mandrin en coupe (cutaway) : ressorts (springs), piston, cône (bowl), mâchoires (jaws)</figcaption></figure>
+        <figure><button type="button" data-full="renders/04_couvercle_retire.jpg"><img src="renders/04_couvercle_retire.jpg" alt="Rendu Blender : couvercle retiré, 9 boulons du cône visibles, couvercle et couvert sur la table" onerror="this.closest('figure').hidden = true"></button><figcaption>Couvercle retiré (cover removed) : les 9 boulons du cône (bowl bolts)</figcaption></figure>
+      </div>
+    </details>
+    <div class="lb" id="lb" hidden role="dialog" aria-label="Image agrandie"><button type="button" class="help-x" id="lbX" aria-label="Fermer">×</button><img id="lbImg" alt=""><p id="lbCap"></p></div>
 
 
     <section class="remontage">
@@ -3826,6 +3848,20 @@ $('helpX').addEventListener('click', () => showHelp(false));
 $('helpVeil').addEventListener('click', () => showHelp(false));   // clic en dehors de la fenêtre : fermer
 document.addEventListener('keydown', e => { if (e.key === 'Escape' && !$('help').hidden) showHelp(false); });
 { let seen = false; try { seen = !!localStorage.getItem(HELP_KEY); } catch (e) {} if (!seen) showHelp(true); }
+// Galerie des rendus Blender : vignettes cachées si l'image manque (artefact sans fichiers), visionneuse plein écran
+{
+  const lb = $('lb'), gal = $('gal');
+  const showLb = (src, cap) => { $('lbImg').src = src; $('lbImg').alt = cap; $('lbCap').textContent = cap; lb.hidden = false; };
+  const hideLb = () => { lb.hidden = true; $('lbImg').src = ''; };
+  gal.querySelectorAll('img').forEach(im => { if (im.complete && !im.naturalWidth) im.closest('figure').hidden = true; });
+  const check = () => { $('galSec').hidden = [...gal.querySelectorAll('figure')].every(f => f.hidden); };
+  gal.querySelectorAll('img').forEach(im => { im.addEventListener('error', check); im.addEventListener('load', check); });
+  check();
+  gal.addEventListener('click', e => { const b = e.target.closest('button[data-full]'); if (b) showLb(b.dataset.full, b.closest('figure').querySelector('figcaption').textContent); });
+  $('lbX').addEventListener('click', hideLb);
+  lb.addEventListener('click', e => { if (e.target === lb || e.target === $('lbCap')) hideLb(); });   // clic en dehors de l'image : fermer
+  document.addEventListener('keydown', e => { if (e.key === 'Escape' && !lb.hidden) hideLb(); });
+}
 // Pause à chaque étape : carte « fait » ancrée sur l'action dans la 3D
 let pauseStep = -1, pauseT = 0;
 const actV = new THREE.Vector3();

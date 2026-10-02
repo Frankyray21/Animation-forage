@@ -136,6 +136,12 @@ Les 18 ressorts sont modélisés avec un fil rond de section constante : en comp
 - **Alésage traversant** : aucune tige dans la tête ; on voit au travers de la broche, du mandrin jusqu'au nez de broche.
 - Roulement 5000199 à rouleaux cylindriques (rouleaux et cage en laiton visibles) ; mâchoires en acier gris avec 2 × 2 plaquettes dentées, encoche centrale, rainures de guidage et anneau élastique.
 
+## Vues réalistes (Blender)
+
+Sous la nomenclature, la section repliable **Vues réalistes (rendu Blender)** montre quatre images fixes tracées en rayons (Cycles, CPU, dénoiseur OpenImageDenoise, 1600 × 1000, caméra 35 mm avec légère profondeur de champ) : tête et mandrin sur le banc ; face avant du mandrin (couvercle, couvert des mâchoires, boulons) ; mandrin en coupe (ressorts verts, piston, cône, mâchoires) ; couvercle retiré avec les 9 boulons du cône. Un clic ouvre l'image en grand (fermeture par ×, Échap ou clic à côté). Les vignettes dont l'image ne charge pas sont masquées.
+
+Les images (`renders/*.jpg`) viennent du **même modèle 3D** : la scène three.js est exportée en GLB (`blender/tete_mandrin.glb`, un maillage par pièce nommé par sa référence), puis `blender/scene.py` refait les matériaux PBR (peinture rouge, fonte, acier usiné, zinc jaune des boulons, zinc gris du couvert, noir mat du couvercle, ressorts verts), l'éclairage d'atelier et la coupe du mandrin, et rend les vues. Voir `blender/README.md` pour rejouer le rendu ; `blender/tete_mandrin.blend` s'ouvre directement dans Blender.
+
 ## Textes
 
 Tous les textes à l'écran sont courts et s'adressent aux travailleurs : une consigne par étape, sans numéros de pièces ni valeurs calculées. Les numéros et les fiches de pièces restent accessibles au survol et au clic.
