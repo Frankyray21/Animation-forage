@@ -142,6 +142,12 @@ Sous la nomenclature, la section repliable **Vues réalistes (rendu Blender)** m
 
 Les images (`renders/*.jpg`) viennent du **même modèle 3D** : la scène three.js est exportée en GLB (`blender/tete_mandrin.glb`, un maillage par pièce nommé par sa référence), puis `blender/scene.py` refait les matériaux PBR (peinture rouge, fonte, acier usiné, zinc jaune des boulons, zinc gris du couvert, noir mat du couvercle, ressorts verts), l'éclairage d'atelier et la coupe du mandrin, et rend les vues. Voir `blender/README.md` pour rejouer le rendu ; `blender/tete_mandrin.blend` s'ouvre directement dans Blender.
 
+## Vidéo de la procédure
+
+La section repliable **Vidéo de la procédure** (juste avant les vues réalistes) contient `video/procedure_boyles_h.mp4` : le scénario A « Procédure respectée », étapes 1 à 9, pour former les travailleurs (H.264, 1280 × 720, 24 i/s, 1 min 24 s, sans son ; aperçu `video/procedure_poster.jpg`). Plan : carton titre sur le rendu Blender de l'ensemble ; animation 3D à vitesse 1× (coupe du mandrin, numéros des boulons et encadré procédure, travailleur), numéro et titre de l'étape en bandeau, fin de chaque étape figée 1,5 s ; rendus Blender intercalés avec léger zoom (face avant avant l'étape 4, coupe et couvercle retiré avant l'étape 6) ; carton « À retenir ». Si la vidéo ou son aperçu ne se chargent pas (artefact sans fichiers), la section est masquée.
+
+Elle est produite par `video/make_video.mjs` : capture image par image, déterministe, de l'animation (`video/capture.mjs`, chromium + Playwright ; dt fixe et horloge virtuelle injectés dans une copie servie de la page, `index.html` n'est pas modifié), cartons rendus en PNG, montage et encodage ffmpeg (fondus enchaînés). Voir `video/README.md` pour la refaire.
+
 ## Textes
 
 Tous les textes à l'écran sont courts et s'adressent aux travailleurs : une consigne par étape, sans numéros de pièces ni valeurs calculées. Les numéros et les fiches de pièces restent accessibles au survol et au clic.
