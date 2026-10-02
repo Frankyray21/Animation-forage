@@ -46,6 +46,9 @@ html = sub(html, '</head>', `<style>
 #capBand small { margin-left: auto; font-family: "IBM Plex Mono", monospace; font-size: 15px; font-weight: 400; color: #c9d1d6; white-space: nowrap; }
 </style>
 </head>`);
+// encadré procédure : jamais sous le bandeau (marge basse 40 px + 64 px de bandeau)
+if (!html.includes('h - ch2 - 40')) throw new Error('motif absent : h - ch2 - 40');
+html = html.replaceAll('h - ch2 - 40', `h - ch2 - (window.__padB || 40)`);
 html = sub(html, '<div class="flash" id="flash"></div>', '<div class="flash" id="flash"></div><div id="capBand"><b id="capBandN"></b><span id="capBandT"></span><small id="capBandS">PRO-OP-DD-005 · Procédure respectée</small></div>');
 
 // --- serveur local du dépôt ---
@@ -103,7 +106,7 @@ if (INFO) { console.log(info.steps.map((s, i) => `${s.n} ${s.title} (${info.star
 
 const FROM = +arg('from', 0), TO = Math.min(+arg('to', plan.length), plan.length);
 const view = await page.evaluate(() => { const b = document.getElementById('view').getBoundingClientRect(); return { x: b.left, y: b.top, width: b.width, height: b.height }; });
-await page.evaluate(fps => { window.__cap = true; window.__fixedDt = 1 / fps; window.__go = 0; }, FPS);
+await page.evaluate(([fps, pad]) => { window.__cap = true; window.__fixedDt = 1 / fps; window.__go = 0; window.__padB = pad; }, [FPS, +(process.env.PAD_B || 104)]);
 // une image calculée (rendu facultatif) à l'instant t ; l'horloge virtuelle avance avec l'indice k
 async function step(fr, render) {
   const n = await page.evaluate(([fr, render, fps]) => {
@@ -117,6 +120,11 @@ async function step(fr, render) {
 // préchauffage : 24 images à T = 0 (la caméra quitte la vue d'accueil), puis les images avant FROM, sans rendu
 for (let i = 0; i < 24; i++) await step({ k: i - 24, t: 0, step: 0 }, false);
 for (let k = 0; k < FROM; k++) await step(plan[k], false);
+if (process.argv.includes('--scan')) {   // contrôle : position de l'encadré procédure à chaque image, sans rendu
+  const rows = [];
+  for (let k = 0; k < plan.length; k++) { await step(plan[k], false); rows.push(await page.evaluate(() => { const c = document.getElementById('procCard'); return c.hidden ? null : [c.offsetLeft, c.offsetTop, c.offsetWidth, c.offsetHeight]; })); }
+  fs.writeFileSync(path.join(OUT, `scan_${process.env.PAD_B || 104}.json`), JSON.stringify(rows)); await browser.close(); server.close(); process.exit(0);
+}
 const t0 = Date.now();
 for (let k = FROM; k < TO; k++) {
   const f = path.join(OUT, `f_${String(k).padStart(5, '0')}.jpg`);

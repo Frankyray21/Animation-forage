@@ -371,7 +371,7 @@ details.params summary { cursor: pointer; padding: 10px 14px; font-weight: 600; 
     <details class="bom" id="vidSec">
       <summary class="bom-toggle">Vidéo de la procédure</summary>
       <video class="vid" id="vid" controls preload="none" playsinline poster="video/procedure_poster.jpg" src="video/procedure_boyles_h.mp4" aria-label="Vidéo de formation : procédure respectée, étapes 1 à 9" onerror="this.closest('details').hidden = true"></video>
-      <p class="gal-note vid-note">Scénario A « Procédure respectée », étapes 1 à 9 (1 min 24 s, sans son) : l'animation 3D ci-dessus, avec trois rendus Blender. Pour former les travailleurs.</p>
+      <p class="gal-note vid-note">Scénario A « Procédure respectée », étapes 1 à 9 (1&nbsp;min&nbsp;24&nbsp;s, sans son) : l'animation 3D de cette page, avec trois rendus Blender. Pour former les travailleurs.</p>
     </details>
     <details class="bom" id="galSec">
       <summary class="bom-toggle">Vues réalistes (rendu Blender)</summary>
@@ -3856,8 +3856,8 @@ $('helpX').addEventListener('click', () => showHelp(false));
 $('helpVeil').addEventListener('click', () => showHelp(false));   // clic en dehors de la fenêtre : fermer
 document.addEventListener('keydown', e => { if (e.key === 'Escape' && !$('help').hidden) showHelp(false); });
 { let seen = false; try { seen = !!localStorage.getItem(HELP_KEY); } catch (e) {} if (!seen) showHelp(true); }
-// Vidéo de la procédure : section cachée si le fichier ou l'aperçu manque (artefact sans fichiers)
-{ const v = $('vid'), hide = () => { $('vidSec').hidden = true; }; v.addEventListener('error', hide); const p = new Image(); p.onerror = hide; p.src = v.getAttribute('poster'); }
+// Vidéo de la procédure : section cachée si le fichier ou l'aperçu manque (artefact sans fichiers) ou si le navigateur ne lit pas le H.264
+{ const v = $('vid'), hide = () => { $('vidSec').hidden = true; }; v.addEventListener('error', hide); if (!v.canPlayType('video/mp4; codecs="avc1.64001f"')) hide(); const p = new Image(); p.onerror = hide; p.src = v.getAttribute('poster'); }
 // Galerie des rendus Blender : vignettes cachées si l'image manque (artefact sans fichiers), visionneuse plein écran
 {
   const lb = $('lb'), gal = $('gal');

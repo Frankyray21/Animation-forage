@@ -26,10 +26,10 @@ def opt(name, default=None):
 TEST = bool(opt('--test', False))
 SRC = opt('--src', os.path.join(HERE, 'lm_work'))
 OUT = opt('--out', os.path.join(HERE, '..', 'lightmaps'))
-SAMPLES = int(opt('--samples', 16 if TEST else 128))
+SAMPLES = int(opt('--samples', 16 if TEST else 256))
 SIZE_H = int(opt('--size', 512 if TEST else 2048))     # atlas de la tête (assemblée et éclatée)
 SIZE_C = SIZE_H // 2                                    # atlas du banc
-MARGIN = 0.004                                          # marge entre îlots (fraction de l'atlas)
+MARGIN = 0.003                                          # marge entre îlots (fraction de l'atlas)
 FLOOR_ALBEDO = .9                                       # plancher clair : peu d'assombrissement des faces du dessous
 os.makedirs(OUT, exist_ok=True)
 t0 = time.time()
@@ -110,6 +110,9 @@ def unwrap(group):
     bpy.ops.object.select_all(action='DESELECT')
     for o in group:
         me = o.data
+        # sommets confondus fusionnés (le GLB de three.js sépare les faces) : îlots UV d'un seul tenant ;
+        # normales, UV d'origine et couleurs restent portées par les coins
+        bm = bmesh.new(); bm.from_mesh(me); bmesh.ops.remove_doubles(bm, verts=bm.verts, dist=1e-5); bm.to_mesh(me); bm.free()
         if not me.uv_layers:                    # TEXCOORD_0 doit rester la couche d'origine
             me.uv_layers.new(name='UVMap')
         lm = me.uv_layers.get('LM') or me.uv_layers.new(name='LM')
@@ -119,10 +122,9 @@ def unwrap(group):
     bpy.ops.object.mode_set(mode='EDIT')
     bpy.ops.mesh.select_all(action='SELECT')
     bpy.ops.uv.select_all(action='SELECT')
-    bpy.ops.uv.smart_project(angle_limit=math.radians(60), island_margin=0.0, area_weight=0.0, correct_aspect=True, scale_to_bounds=False)
+    bpy.ops.uv.smart_project(angle_limit=math.radians(66), island_margin=0.0, area_weight=0.0, correct_aspect=True, scale_to_bounds=False)
     bpy.ops.uv.select_all(action='SELECT')
-    bpy.ops.uv.average_islands_scale()
-    bpy.ops.uv.pack_islands(rotate=True, rotate_method='ANY', scale=True, margin_method='FRACTION', margin=MARGIN, shape_method='CONVEX')
+    bpy.ops.uv.pack_islands(rotate=True, rotate_method='ANY', scale=True, margin_method='FRACTION', margin=MARGIN, shape_method='CONCAVE')
     bpy.ops.object.mode_set(mode='OBJECT')
 for g in ('h', 'c'):
     unwrap(tg[g]); log(f'UV {g} : {len(tg[g])} objets')
@@ -237,9 +239,9 @@ def save(image, mask, fname, sigma):
     Image.fromarray((v[::-1] * 255 + .5).astype(np.uint8), 'L').save(os.path.join(OUT, fname), quality=90, optimize=True)
     log(f'{fname} : {os.path.getsize(os.path.join(OUT, fname)) // 1024} Ko, {json.dumps(stats[fname])}')
 # l'image Blender a son origine en bas ; le glTF retourne v (v' = 1 - v) : on enregistre de haut en bas (flipY = false côté site)
-save(imgs['head_a'], mask_h, 'head_a.jpg', 1.2)
-save(imgs['head_e'], mask_h, 'head_e.jpg', 1.2)
-save(imgs['bench'], mask_c, 'bench.jpg', 1.2)
+save(imgs['head_a'], mask_h, 'head_a.jpg', 1.5)
+save(imgs['head_e'], mask_h, 'head_e.jpg', 1.5)
+save(imgs['bench'], mask_c, 'bench.jpg', 1.5)
 
 # ---------- export : cibles seules, 2 couches UV, couleurs de sommet, Draco ----------
 for o in objs:
