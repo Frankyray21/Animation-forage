@@ -597,7 +597,7 @@ function workshopEnvironment() {
 scene.environment = pmrem.fromScene(workshopEnvironment(), 0.04).texture;
 scene.fog = new THREE.Fog(0xd7dce0, 95, 210);
 
-const camera = new THREE.PerspectiveCamera(38, 1, 0.4, 220);   // near à 4 cm : précision de profondeur suffisante pour les surfaces voisines
+const camera = new THREE.PerspectiveCamera(38, 1, 0.8, 160);   // near à 8 cm, far réduit : 2× plus de précision de profondeur (scintillement sur GPU mobile)
 camera.position.set(-9, 10, 14);
 const controls = new OrbitControls(camera, canvas);
 controls.enableDamping = true;
@@ -777,19 +777,22 @@ const V2 = (x, y = x) => new THREE.Vector2(x, y);
 Object.assign(mat, {
   red: new THREE.MeshStandardMaterial({ color: 0xb8321f, roughness: .48, metalness: .12 }),
   // fonte brute non peinte (voile, moyeu, bride du bol…) : grain de coulée, plus mate
-  grey: new THREE.MeshStandardMaterial({ color: 0x8f969b, roughness: .6, metalness: .78, normalMap: PTX.castN, normalScale: V2(.3), roughnessMap: PTX.rough }),
+  grey: new THREE.MeshStandardMaterial({ color: 0x9aa0a5, roughness: .55, metalness: .78, normalMap: PTX.castN, normalScale: V2(.08) }),
   // acier usiné : stries de tournage, reflets anisotropes (étirés le long de l'axe des pièces tournées)
-  machined: new THREE.MeshPhysicalMaterial({ color: 0xc4cacf, roughness: .42, metalness: .92, normalMap: PTX.machN, normalScale: V2(.12), roughnessMap: PTX.rough, anisotropy: .4, anisotropyRotation: Math.PI / 2 }),
+  machined: new THREE.MeshPhysicalMaterial({ color: 0xc4cacf, roughness: .38, metalness: .9, normalMap: PTX.machN, normalScale: V2(.03), anisotropy: .15, anisotropyRotation: Math.PI / 2 }),   // acier usiné propre et lisse (photos)
   rubber: new THREE.MeshStandardMaterial({ color: 0x141516, roughness: .5, roughnessMap: PTX.rough }),   // noir satiné
   boltBlack: new THREE.MeshStandardMaterial({ color: 0x2e3134, roughness: .42, metalness: .7, map: PTX.boltMap, roughnessMap: PTX.rough }),
   brass: new THREE.MeshStandardMaterial({ color: 0xc8a24a, roughness: .32, metalness: .9, roughnessMap: PTX.rough }),
   sealRed: new THREE.MeshStandardMaterial({ color: 0x8a1c14, roughness: .6, roughnessMap: PTX.rough }),
 });
 // pièces internes du vérin (piston, manchon d'actionnement, alésage, roulement) : acier usiné sous une pellicule d'huile
-mat.oiled = new THREE.MeshPhysicalMaterial({ color: 0xb9c0c5, roughness: .36, metalness: .9, normalMap: PTX.machN, normalScale: V2(.1), roughnessMap: PTX.rough, anisotropy: .35, anisotropyRotation: Math.PI / 2, clearcoat: .3, clearcoatRoughness: .2 });
+mat.oiled = new THREE.MeshPhysicalMaterial({ color: 0xbcc2c7, roughness: .34, metalness: .9, normalMap: PTX.machN, normalScale: V2(.03), anisotropy: .15, anisotropyRotation: Math.PI / 2, clearcoat: .2, clearcoatRoughness: .25 });
 // boulons zingués légèrement ternis (bandes de la tête hexagonale : voir hexHeadGeo) ; petites pièces d'acier clair
-Object.assign(mat.bolt, { map: PTX.boltMap, roughnessMap: PTX.rough, roughness: .4 }); mat.bolt.color.set(0xc3c7ca);
-Object.assign(mat.steelLight, { normalMap: PTX.machN, normalScale: V2(.1), roughnessMap: PTX.rough });
+Object.assign(mat.bolt, { roughness: .36, metalness: .85 }); mat.bolt.color.set(0xc9b878);   // zinc jaune (passivation dorée, photos du mandrin), propre
+Object.assign(mat.steelLight, { normalMap: PTX.machN, normalScale: V2(.03) });
+// porte-capuchon 3506906 : tôle peinte noir mat ; adaptateur de capuchon 3506907 (jaw cover) : plaque zinguée jaune (photos)
+mat.blackPaint = new THREE.MeshPhysicalMaterial({ color: 0x1b1d1f, roughness: .62, metalness: .1, clearcoat: .08, clearcoatRoughness: .6 });
+mat.zincPlate = new THREE.MeshStandardMaterial({ color: 0xcfc08a, roughness: .42, metalness: .8 });
 Object.assign(mat.console, { normalMap: PTX.paintN, normalScale: V2(.2), roughnessMap: PTX.rough });
 { const rN = PTX.castN.clone(), rR = PTX.rough.clone(); rN.repeat.set(60, 60); rR.repeat.set(40, 40);   // béton du plancher : grain fin
   Object.assign(mat.floor, { normalMap: rN, normalScale: V2(.25), roughnessMap: rR }); }
@@ -967,7 +970,7 @@ function makeBolt({ af, headH, d, L, tpi = 13, socket = false, headD }, m = mat.
   }
   // tige filetée : s'arrête 0,015 po avant la longueur nominale (jamais au ras d'une surface), bout chanfreiné
   const tip = Math.min(.06, d * .12), Ls = L - .015 - tip;
-  const shank = mesh(new THREE.CylinderGeometry(u(d / 2), u(d / 2), u(Ls), 20, 1, true), threadMat(m, Ls, tpi, L >= 4));
+  const shank = mesh(new THREE.CylinderGeometry(u(d / 2), u(d / 2), u(Ls), 20, 1, true), threadMat(m, Ls, tpi, false));   // filets propres, sans rouille
   shank.position.y = -u(Ls) / 2;
   const end = mesh(new THREE.CylinderGeometry(u(d / 2), u(d * .4), u(tip), 20), m);
   end.position.y = -u(Ls + tip / 2);
@@ -1333,8 +1336,8 @@ part({ id: 'B500-8000', ref: 'B500-8000', name: 'Boulon ½ × 8 po (avec entreto
 const CV_BASE = new THREE.Vector3(0, u(Y.rimT), 0);
 const cover = new THREE.Group();
 {
-  cover.add(mesh(annulusIn(R.capOut + .02, R.body, Y.cvFront - Y.rimT, ringAt(9, R.coverBolt, 12).map(([x, z]) => [x, z, .27])), mat.paint));
-  const lip = mesh(lobedAnnulus(R.lipIn, 3.95, R.capOut + .01, Y.lipT - Y.lipB, ringAt(3, R.jcBolt, 22).map(([x, z]) => [x, z, .38]), BOLTS.map((b, i) => boltAt(i)), 8.5), mat.paint);
+  cover.add(mesh(annulusIn(R.capOut + .02, R.body, Y.cvFront - Y.rimT, ringAt(9, R.coverBolt, 12).map(([x, z]) => [x, z, .27])), mat.blackPaint));
+  const lip = mesh(lobedAnnulus(R.lipIn, 3.95, R.capOut + .01, Y.lipT - Y.lipB, ringAt(3, R.jcBolt, 22).map(([x, z]) => [x, z, .38]), BOLTS.map((b, i) => boltAt(i)), 8.5), mat.blackPaint);
   lip.position.y = u(Y.lipB - Y.rimT);
   // joint couvercle / boîtier : la ligne près du bout visible sur la planche 2.1 (petit tore, aucune face superposée)
   const seam = mesh(new THREE.TorusGeometry(u(R.body), u(.035), 6, 96), mat.pocket); seam.rotation.x = Math.PI / 2;
@@ -1356,9 +1359,9 @@ const jawCover = new THREE.Group();
     ...ringAt(3, R.jcBolt, 22).map(([x, z]) => [x, z, .41]),
     ...BUSHED.map(i => [BOLTS[i].x / IN, BOLTS[i].z / IN, .55]),
     ...ringAt(6, 2.35, 30).map(([x, z]) => [x, z, .12]),
-  ]), mat.paint));
+  ]), mat.zincPlate));
   // arête avant chanfreinée du disque surélevé (planche : contour adouci)
-  const ch = mesh(new THREE.TorusGeometry(u(R.capOut - .06), u(.07), 8, 96), mat.paint); ch.rotation.x = Math.PI / 2; ch.position.y = u(Y.front - Y.capB - .07); jawCover.add(ch);
+  const ch = mesh(new THREE.TorusGeometry(u(R.capOut - .06), u(.07), 8, 96), mat.zincPlate); ch.rotation.x = Math.PI / 2; ch.position.y = u(Y.front - Y.capB - .07); jawCover.add(ch);
   const foot = mesh(new THREE.TorusGeometry(u(R.capOut + .02), u(.035), 6, 96), mat.pocket); foot.rotation.x = Math.PI / 2; foot.position.y = u(Y.cvFront - Y.capB + .02); jawCover.add(foot);   // ligne de joint au pied du disque surélevé
   for (let k = 0; k < 8; k++) {
     const t = mesh(rboxGeo(u(.55), u(.6), u(.24)), mat.grey);
@@ -1512,7 +1515,7 @@ const coverPlate = new THREE.Group();
 {
   const W = HB.x1 - HB.x0, Hh = HB.y1 - HB.y0;
   const plate = box(W, Hh, .45, [mat.paint, mat.paint, mat.paint, mat.paint, (() => { const m = PAINT.clone(); m.map = coverTex; return m; })(), mat.paint]);
-  plate.position.set(u((HB.x0 + HB.x1) / 2), u((HB.y0 + HB.y1) / 2), u(HB.z1 + .225));
+  plate.position.set(u((HB.x0 + HB.x1) / 2), u((HB.y0 + HB.y1) / 2), u(HB.z1 + .205));   // dos enfoncé de 0,02 po dans le couvercle : aucune face coplanaire
   coverPlate.add(plate);
   const boss = hcyl(.7, .9, mat.paint); boss.rotation.x = Math.PI / 2; placeIn(boss, 1.9, -3.6, HB.z1 + .9); coverPlate.add(boss);
 }
@@ -2584,7 +2587,7 @@ const inHead = o => { for (; o; o = o.parent) if (o === headG) return true; retu
 const hiCache = new Map();
 function hiMat(m) {
   if (Array.isArray(m)) return m.map(hiMat);
-  if (!hiCache.has(m)) { const h = m.clone(); if (h.emissive) { h.emissive.setHex(0x000000); h.emissiveIntensity = 0; } h.transparent = false; h.opacity = 1; hiCache.set(m, h); }   // couleur d'origine : seules les autres pièces passent en fantôme hiCache.set(m, h); }
+  if (!hiCache.has(m)) { const h = m.clone(); if (h.emissive) { h.emissive.setHex(0x000000); h.emissiveIntensity = 0; } h.transparent = false; h.opacity = 1; h.polygonOffset = m.polygonOffset; h.polygonOffsetUnits = m.polygonOffsetUnits; hiCache.set(m, h); }   // couleur d'origine : seules les autres pièces passent en fantôme hiCache.set(m, h); }
   return hiCache.get(m);
 }
 function clampMaterials() {
