@@ -70,7 +70,6 @@ La tête de forage a été **retirée de la foreuse et posée sur un banc de tra
 | Procédure respectée | Étapes 1 à 9. L'énergie des ressorts descend graduellement à 0. |
 | Erreur : boulons retirés un par un | Étapes 6 et 7 non respectées. Le dernier boulon porte toute la force, son filet cède et le cône est projeté. |
 | Erreur rattrapée : cône retenu | Même erreur, mais l'étape 6 a été faite. Les 3 boulons remis sans bushing arrêtent le cône après quelques millimètres. |
-| Erreur : cône coincé, sans retenue | Étape 6 omise. Le cône reste coincé, puis se décoince d'un coup et est projeté. |
 
 ## Travailleur (modèle 3D)
 
@@ -98,6 +97,7 @@ Les 18 ressorts sont modélisés avec un fil rond de section constante : en comp
 
 - Matériaux unis (acier, peinture rouge), sans textures, pour que chaque pièce reste lisible.
 - La foreuse STM-1500 est d'un rouge brique, moins vif que la tête, et placée plus loin derrière le banc ; le brouillard lointain est repoussé pour ne pas la délaver.
+- **Actionner les manettes** : séquence manette → huile sous pression (chambre ambrée dans la vue en coupe, jusqu'au raccord du vérin) → piston, roulement, manchon, boulons et cône reculent de 0,18 po (jeu réel du modèle) → les mâchoires (jaws), retenues par le jaw cover, s'ouvrent radialement ; au relâchement, les ressorts avancent le cône et les jaws se ferment. Pièces en mouvement surlignées brièvement, repères courts dans la scène (« Huile sous pression », « ◀ Cône (bowl) recule », « Ressorts comprimés même fermés »…), gros plan automatique à l'étape 1. L'ouverture des jaws est exagérée ×6 (note dans la scène).
 - **Manettes interactives** : cliquer la manette CLAM ou CHUCK la bascule (ouverte ⇄ fermée) ; le vérin, le cône et les mâchoires suivent. Lecture, changement d'étape ou de scénario ramènent l'animation. Foreuse cadenassée : les manettes ne répondent pas et une bulle rappelle que le cadenassage ne libère pas l'énergie des ressorts.
 - **Bulle santé-sécurité** : l'info-bulle d'une pièce (clic, ou survol en vue éclatée) ajoute une courte ligne santé-sécurité (encadré jaune, sans titre) qui rappelle l'étape de la procédure liée à la pièce (cadenassage, boulons longs de retenue, dévissage 1 tour à la fois, ne pas se placer devant le cône, etc.).
 - Sur téléphone (≤ 600 px) : les boutons de vue tiennent sur une seule ligne défilante avec des libellés courts (Coupe, Éclaté tête, Foreuse, Éclaté chuck, ?, ⛶), sous la puce du scénario ; en plein écran, la liste des étapes est repliée en bas à droite.

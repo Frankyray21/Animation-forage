@@ -275,7 +275,7 @@ details.params summary { cursor: pointer; padding: 10px 14px; font-weight: 600; 
         </div>
       </div>
       <div class="banner" id="banner" hidden><strong id="bannerTitle">PROJECTION</strong></div>
-      <div class="note" id="note">Ressorts : course ×6</div>
+      <div class="note" id="note">Courses exagérées ×6 : ressorts, ouverture des jaws</div>
       <details class="steps fs-steps" id="fsSteps" open><summary>Étapes de la procédure</summary><ol id="fsStepList"></ol></details>
       <div class="actdot" id="actDot" hidden></div>
       <div class="actcard" id="actCard" hidden><b id="actStep"></b><span id="actText"></span><small>Lecture pour continuer</small></div>
@@ -430,6 +430,12 @@ const HUB_H = 0;                          // rien du bol ne dépasse au-dessus d
 const BOWL_DEPTH = u(Y.plateT - Y.bowlB); // le bol descend de 3,1 po sous sa face avant
 const BUSH_H = u(1.5);                    // entretoise supérieure 3506878
 const LC = PLATE_TOP0 - PLATE_T - POCKET; // longueur comprimée des ressorts (5,64 po)
+// Vérin : course visible du bloc mobile (piston 3506908 → roulement → manchon 3506928 → 9 boulons → bol 2920390), vers l'arrière sous pression.
+// 0,18 po = jeu réel du modèle : piston → fond du cylindre (4,4 → 4,2), dos du bol → sommet des entretoises 3506880 (10,6 → 10,42). Non amplifiée.
+const STROKE = .18;
+const CONE_TAN = (R.bowlTop - R.bowlBot) / (Y.plateT - Y.bowlB);   // conicité de l'alésage du bol (≈ 0,158, θ ≈ 9°)
+const JAW_X = 6;                                                    // amplification de l'ouverture des mâchoires (vraie : course × conicité ≈ 0,03 po, invisible)
+const JAW_OPEN = STROKE * CONE_TAN * JAW_X;                         // po : ouverture radiale à cône reculé (≈ 0,28) ; garder < 0,5 (talon 2,45 + Δr < moyeu 2,96)
 const R_BOLT = u(R.bolt), R_SPRING = u(R.spring), R_COVER_BOLT = u(R.coverBolt), R_JC_BOLT = u(R.jcBolt);
 const BOLT_A0 = 2;                        // angle (°) du 1er des 9 boulons du bol ; B500-8000 à 82°, 202°, 322°
 
@@ -818,6 +824,13 @@ function setOpacity(obj, a) {
   obj.visible = a > 0.01;
   for (const m of obj.userData.mats || []) { m.opacity = a; m.depthWrite = a > 0.99; }
 }
+// Matériaux propres à une pièce (surbrillance possible), sans transparence : pièces opaques du bloc mobile du vérin
+function ownMats(obj) {
+  const m = new Map();
+  obj.traverse(o => { if (o.isMesh) { if (!m.has(o.material)) m.set(o.material, o.material.clone()); o.material = m.get(o.material); } });
+  obj.userData.mats = [...m.values()];
+  return obj;
+}
 const BOLT = {
   B500_2250: { af: .75, headH: .31, d: .5, L: 2.25 },
   B500_6500: { af: .75, headH: .31, d: .5, L: 6.5 },
@@ -878,7 +891,7 @@ part({ id: '5035018', ref: '5035018', name: 'Bague d\'usure', qty: 1, grp: 'rear
 const piston = new THREE.Group();
 piston.add(mesh(annulusIn(R.piston, R.cylIn - .01, 1.4), mat.grey));
 for (const y of [.4, 1.0]) { const gr = mesh(new THREE.TorusGeometry(u(R.cylIn - .02), u(.05), 6, 96), mat.pocket); gr.rotation.x = Math.PI / 2; gr.position.y = u(y); piston.add(gr); }
-placeIn(piston, 0, 4.4, 0);
+ownMats(piston); placeIn(piston, 0, 4.4, 0);
 part({ id: '3506908', ref: '3506908', name: 'Piston', qty: 1, grp: 'rear', ext: [4.4, 5.8], r: 5.0, role: 'Sous pression hydraulique, il pousse le roulement et le manchon d\'actionnement : les 9 boulons tirent le bol vers l\'arrière, les ressorts se compriment et les mâchoires s\'ouvrent.' }, piston);
 part({ id: '5035015', ref: '5035015', name: 'Joint en U du piston', qty: 1, grp: 'rear', ext: [5.33, 5.47], r: 5.1 }, placeIn(oring(5.0, .09), 0, 5.4, 0));
 part({ id: '5035017', ref: '5035017', name: 'Bague d\'usure du piston', qty: 1, grp: 'rear', ext: [4.73, 4.87], r: 5.1 }, placeIn(oring(5.0, .07, mat.sealRed), 0, 4.8, 0));
@@ -904,14 +917,14 @@ for (const y of [.08, .76]) { const rail = mesh(annulusIn(3.21, 3.58, .06), mat.
   }
   bearing.add(mesh(mergeGeos(geos), mat.steelLight), mesh(mergeGeos(bars), mat.brass));
 }
-placeIn(bearing, 0, 4.45, 0);
+ownMats(bearing); placeIn(bearing, 0, 4.45, 0);
 part({ id: '5000199', ref: '5000199', name: 'Roulement', qty: 1, grp: 'rear', ext: [4.45, 5.35], r: 3.9, role: 'Le mandrin tourne, le piston non : le roulement transmet la poussée entre les deux.' }, bearing);
 part({ id: '3506882', ref: '3506882', name: 'Bague d\'appui (back-up ring)', qty: 1, grp: 'rear', ext: [4.22, 4.42], r: 3.8 }, placeIn(mesh(annulusIn(2.95, 3.75, .2), mat.machined), 0, 4.22, 0));
 part({ id: '5054078', ref: '5054078', name: 'Anneau de retenue', qty: 1, grp: 'rear', ext: [4.08, 4.18], r: 3.0 }, placeIn(oring(2.93, .05, mat.boltBlack), 0, 4.13, 0));
 const act = new THREE.Group();
 act.add(mesh(annulusIn(R.act, R.actTube, 3.0), mat.grey));
 { const fl = mesh(annulusIn(R.act, R.actFl, 1.9, BOLTS.map(b => [b.x / IN, b.z / IN, .25])), mat.grey); fl.position.y = u(3.0); act.add(fl); }
-placeIn(act, 0, 4.2, 0);
+ownMats(act); placeIn(act, 0, 4.2, 0);
 part({ id: '3506928', ref: '3506928', name: 'Manchon d\'actionnement (RR 50)', qty: 1, grp: 'rear', ext: [4.2, 9.1], r: 4.0, role: 'Les 9 boulons du bol y sont vissés : c\'est lui qui retient le bol contre les ressorts.' }, act);
 const elbow = new THREE.Group();
 { const hx = mesh(new THREE.CylinderGeometry(u(.45), u(.45), u(.5), 6), mat.machined); hx.position.y = u(.25);
@@ -930,6 +943,23 @@ const zerk = new THREE.Group();
 { const [x, z] = polar(R.body, 110); placeIn(zerk, x, 4.4, z); zerk.rotation.order = 'YXZ'; zerk.rotation.y = (110 - 90) * Math.PI / 180; zerk.rotation.x = -Math.PI / 2; }
 part({ id: 'ZNPT250', ref: 'ZNPT250', name: 'Graisseur 1/8 NPT', qty: 1, grp: 'rear', ext: [4.2, 4.6], r: 6.8, with: '3506909' }, zerk);
 part({ id: '5041022', ref: '5041022', name: 'Joint en V (V-ring)', qty: 1, grp: 'rear', ext: [6.94, 7.06], r: 5.9, role: 'Étanchéité tournante entre le cylindre et le boîtier.' }, placeIn(oring(5.7, .07, mat.green), 0, 7.0, 0));
+
+/* ---------- Huile sous pression (vue en coupe) ---------- */
+// Section de la chambre annulaire du vérin, dessinée dans le plan de coupe juste du côté conservé (x = −0,003) : jamais tranchée,
+// jamais fantôme (xray), jamais cliquable (pas de part). DEVANT la bride du piston 3506908 (y 5,8 + recul) jusqu'au boîtier (y 7,0),
+// r 3,9 → 5,0 ; plus le perçage d'arrivée sous le raccord 2501-8-6 (y 6,3, en bas : polar(R.body, 90) → z < 0).
+const OIL = { y0: 5.8, y1: Y.housB, r0: R.piston, r1: R.cylIn, port: { y: 6.3, w: .3, r1: R.body } };   // po
+const OIL_SEL = new Set(['3506909', '3506908', '2501-8-6', '5035015', '5035017', '5041022']);   // pièces dont la fiche garde la chambre visible
+mat.oil = new THREE.MeshBasicMaterial({ color: 0xf0a030, transparent: true, opacity: 0, depthWrite: false, side: THREE.DoubleSide });
+const oilG = new THREE.Group();
+oilG.position.x = -0.003; oilG.visible = false;
+const oilQuads = [[1, false], [-1, false], [-1, true]].map(([sg, port]) => {   // chambre (haut, bas) et perçage côté raccord
+  const q = mesh(new THREE.PlaneGeometry(1, 1), mat.oil, { cast: false, receive: false });
+  q.rotation.y = Math.PI / 2;   // plan x = const : la largeur (x géom.) devient z (rayon), la hauteur reste y (axe)
+  q.renderOrder = 3; q.userData.xray = true; q.userData.sg = sg; q.userData.port = port;
+  oilG.add(q); return q;
+});
+clampG.add(oilG);
 
 /* ---------- Boîtier 3506870 ---------- */
 mat.springBlock = mat.grey.clone();   // bloc des logements de ressorts : coupé plus profond en vue coupée
@@ -966,8 +996,8 @@ buildBody();
 /* ---------- Avant : entretoises inférieures, ressorts, bol ---------- */
 part({ id: '3506880', ref: '3506880', name: 'Entretoise inférieure', qty: 9, grp: 'front', ext: [9.1, 10.4], r: 3.9, role: 'Guide chaque boulon du bol à travers le voile du boîtier.' },
   BOLTS.map(b => placeIn(mesh(annulusIn(.27, .4, 1.34, [], 24), mat.machined), b.x / IN, Y.webB - .02, b.z / IN)));   // dépassent de 0,02 po : pas au ras du voile
-part({ id: '5040192', ref: '5040192', name: 'Joint d\'huile', qty: 9, grp: 'front', ext: [10.36, 10.48], r: 3.9, role: 'Étanchéité de chaque boulon dans le voile.' },
-  BOLTS.map(b => placeIn(oring(.36, .06), b.x / IN, 10.42, b.z / IN)));
+part({ id: '5040192', ref: '5040192', name: 'Joint d\'huile', qty: 9, grp: 'front', ext: [10.24, 10.36], r: 3.9, role: 'Étanchéité de chaque boulon dans le voile.' },
+  BOLTS.map(b => placeIn(oring(.36, .06), b.x / IN, 10.3, b.z / IN)));   // dans le voile : le dos du bol passe à 10,42 à pleine course du vérin
 
 class Helix extends THREE.Curve {
   constructor(r, turns) { super(); this.r = r; this.turns = turns; }
@@ -2565,6 +2595,12 @@ function buildLabels() {
     stuck: [makeLabel('Cône coincé : ressorts toujours comprimés', { bg: '#c42b1f', h: 0.32, parent: rig })],
     open: [makeLabel('Manettes ouvertes', { h: 0.32 })],
     closed: [makeLabel('Manettes fermées', { bg: '#2c7a4c', h: 0.32 })],
+    oil: [makeLabel('Huile sous pression', { bg: '#b5651d', h: 0.28, parent: rig })],
+    back: [makeLabel('◀ Cône (bowl) recule', { h: 0.28, parent: rig })],
+    push: [makeLabel('Ressorts avancent le cône ▶', { bg: '#1f7a34', h: 0.28, parent: rig })],
+    jawsO: [makeLabel('Jaws s\'ouvrent', { h: 0.28, parent: rig })],
+    jawsC: [makeLabel('Jaws se ferment', { bg: '#2c7a4c', h: 0.28, parent: rig })],
+    hold: [makeLabel('Ressorts comprimés même fermés', { bg: '#1f7a34', h: 0.28, parent: rig })],
     zone: [makeLabel('Zone de projection', { bg: '#c42b1f', h: 0.32, parent: rig })],
     ...Object.fromEntries(['outJc', 'outCv', 'outBush', 'outPb', 'outPlate'].map(k => [k, [tblLabel()]])),
   };
@@ -2575,6 +2611,11 @@ function buildLabels() {
   labels.open[0].position.set(-11.5, FLOOR + 1.9 * 7.5, 4.5);
   labels.closed[0].position.set(-11.5, FLOOR + 1.9 * 7.5, 4.5);
   labels.zone[0].position.set(0.4, PLATE_TOP0 + 3.2, 2.2);
+  // Repères du mécanisme (gros plan CAMS.hyd) : sous le mandrin, hors des rangées de boutons, centrés pour tenir aussi sur un écran étroit ;
+  // deux rangées (huile au-dessus, sens de la course en dessous) ; un seul de back/push/hold visible à la fois
+  labels.oil[0].position.set(0.4, u(4.3), -1.8);                                             // sous le cylindre, vers le raccord (monde ≈ −2,9 ; 3,0 ; 0,4)
+  for (const k of ['back', 'push', 'hold']) labels[k][0].position.set(0.4, u(10.5), -2.15);   // sous le milieu du mandrin (monde ≈ −1,3 ; 2,6 ; 0,4)
+  for (const k of ['jawsO', 'jawsC']) labels[k][0].position.set(0.5, u(13.5), -1.25);         // sous les mâchoires (monde ≈ −0,6 ; 3,5 ; 0,5)
   // Repères de pièces pour la vue éclatée (dans le groupe du clam)
   PARTS.forEach(p => {
     if (p.scene) return;
@@ -2860,7 +2901,7 @@ function select(p) {
 /* ================= État de l'animation ================= */
 function initState() {
   return {
-    lever: 0, jaws: 0, lock: 0, hyd: 1,   // hyd : 1 = vérin sous pression (manettes ouvertes, mâchoires ouvertes)
+    lever: 0, jaws: 0, lock: 0, hyd: 1, press: 1,   // hyd : 1 = vérin sous pression (manettes ouvertes, mâchoires ouvertes) ; press : 1 = huile sous pression dans la chambre (suit la manette, précède la course)
     jc: { bolts: Array(3).fill(0), lift: 0 },
     cv: { bolts: Array(9).fill(0), lift: 0 },
     pb: BOLTS.map(() => ({ turns: 0, lift: 0, gone: 0, bushOut: 0 })),
@@ -2880,9 +2921,10 @@ function removeBolt(S, i, p, from = null) {
 
 /* ---------- Étapes communes ---------- */
 const st = {
-  lever: { n: '1', title: 'Manettes fermées', cam: 'mech', dur: 5, act: 'Manettes fermées : le vérin relâche, le cône avance, les mâchoires se ferment', at: () => levers[0],
+  lever: { n: '1', title: 'Manettes fermées', cam: 'mech', cam2: 'hyd', cam2At: .2, dur: 6, act: 'Manettes fermées : le vérin relâche, le cône avance, les mâchoires se ferment', at: () => lastCamKey === 'hyd' ? plate : levers[0],
     text: 'Mettre les manettes du clam et du chuck en position fermée. Le vérin relâche : les ressorts avancent le cône et les mâchoires se ferment. Les ressorts restent comprimés.',
-    apply(S, p) { S.lever = ease(seg(p, 0, .35)); S.hyd = 1 - ease(seg(p, .35, .95)); } },
+    // manettes au banc (0–1,3 s) → gros plan sur le mandrin coupé (dès 1,2 s) → l'huile n'est plus sous pression (2–2,5 s) → les ressorts avancent le bloc (2,5–5,1 s)
+    apply(S, p) { S.lever = ease(seg(p, 0, .22)); S.press = 1 - ease(seg(p, .4, .48)); S.hyd = 1 - ease(seg(p, .48, .88)); } },
   jaws: { n: '2', title: 'Mâchoires (jaws) fermées', cam: 'top', dur: 3, act: 'Jaws (mâchoires) en position fermée', at: () => jaws[0],
     text: 'Vérifier que les mâchoires sont fermées.',
     apply(S, p) { S.jaws = ease(p); } },
@@ -2996,24 +3038,6 @@ const SCEN = {
       { n: '!', title: 'Le filet cède : les 3 boulons arrêtent le cône', cam: 'catch', catch: true, tone: 'warn', flag: 'Retenu', ride: byNum(6),
         text: 'Le filet du boulon 6 cède, le cône part vers le travailleur. Après quelques millimètres, les 3 boulons longs l\'arrêtent.' },
       { n: '✓', title: 'Bilan', cam: 'catch', dur: 6, tone: 'warn', summary: true, text: '' },
-    ],
-  },
-  C: {
-    label: 'Erreur : cône coincé, sans retenue', sub: 'Étape 6 omise', tone: 'danger',
-    make: () => [
-      first5, skip6,
-      { n: '7', title: 'Desserrage 1 tour à la fois… le cône ne bouge pas', cam: 'bolts', dur: rounds() * 6 * 0.5, tone: 'warn',
-        text: 'Les boulons sont desserrés correctement, mais le cône reste coincé (saleté, rouille). Les ressorts sont toujours comprimés.',
-        apply(S, p) { S.springLbl = 1; S.zone = 1; S.stuck = true; starLoosen(S, p); S.stuckLbl = seg(p, .5, .7); } },
-      { n: '7', title: 'Boulons retirés : rien ne bouge', cam: 'bolts', dur: 5, tone: 'warn',
-        text: 'Tous les boulons sont enlevés. Le cône semble stable. C\'est trompeur : toute l\'énergie est encore dans les ressorts.',
-        apply(S, p) { S.springLbl = 1; S.zone = 1; S.stuck = true; S.stuckLbl = 1; S.nums = 1 - seg(p, .7, 1); ORDER.forEach((i, o) => removeBolt(S, i, seg(p, o * .06, .7 + o * .05), rounds())); } },
-      { n: '8', title: 'Le travailleur se penche pour décoincer le cône', cam: 'bolts', dur: 3.5, tone: 'danger', flag: 'Danger',
-        text: 'Un coup ou une vibration suffit : le cône se décoince d\'un coup. Sans les 3 boulons de retenue, rien ne l\'arrête.',
-        apply(S, p) { S.springLbl = 1; S.zone = 1; S.stuck = true; S.stuckLbl = 1; S.shake = seg(p, .35, 1); } },
-      { n: '!', title: 'Le cône se décoince : projection', cam: 'wide', flight: true, tone: 'danger', flag: 'Projection', dir: [0.22, 1, 0.04], ride: -1,
-        text: 'L\'énergie des ressorts part d\'un coup. Avec l\'étape 6, les 3 boulons longs l\'auraient arrêté.' },
-      { n: '⚠', title: 'Bilan', cam: 'wide', dur: 6, tone: 'danger', summary: true, text: '' },
     ],
   },
 };
@@ -3332,29 +3356,42 @@ function animateWorker(S, fl) {
     workerBody.position.z = -(hip.x - 5.3) * .9;
   }
 }
-const STROKE = .35;   // po : recul du piston, du manchon, des 9 boulons et du cône quand le vérin est sous pression (illustratif)
 const HYD_PARTS = new Set(['3506908', '5035015', '5035017', '5000199', '3506882', '5054078', '3506928']);
 let hydVis = 0;
 // Manettes interactives : cliquer une manette la bascule (ouverte ⇄ fermée) ; le vérin, le cône et les mâchoires suivent.
+// Ordre : manette (0–0,55 s) → pression (0,45–0,7 s) → course (0,7–1,8 s). Recliquer en cours : repart de la pose courante.
 // Lecture, changement d'étape ou de scénario : retour à l'état de l'animation. Foreuse cadenassée : les manettes ne répondent pas.
-const leverMan = { on: false, target: 0, v: 0 };
+const LEVER_T = 1.8;   // s
+const leverMan = { on: false, dir: 0, q: 1, from: { lever: 0, hyd: 1, press: 1 } };   // dir 1 = fermer
 function leverBlend(S, dt) {
   if (!leverMan.on) return;
-  leverMan.v += Math.sign(leverMan.target - leverMan.v) * Math.min(Math.abs(leverMan.target - leverMan.v), dt / .7);
-  S.lever = leverMan.v; S.hyd = 1 - leverMan.v;
+  leverMan.q = reduceMotion ? 1 : Math.min(1, leverMan.q + dt / LEVER_T);
+  const { dir, q, from } = leverMan;
+  S.lever = lerp(from.lever, dir, ease(seg(q, 0, .3)));
+  S.press = lerp(from.press, 1 - dir, ease(seg(q, .25, .4)));
+  S.hyd = lerp(from.hyd, 1 - dir, ease(seg(q, .4, 1)));
 }
 function leverToggle(S, name, e) {
   if (S.lock > .5) { showMsgTip('Foreuse cadenassée', 'Les manettes ne répondent pas. Les ressorts restent comprimés : le cadenassage ne libère pas leur énergie.', e); return; }
   setPlaying(false);
-  const cur = leverMan.on ? leverMan.v : S.lever;
-  leverMan.on = true; leverMan.v = cur; leverMan.target = cur > .5 ? 0 : 1;
-  showMsgTip(`Manette ${name} · ${leverMan.target ? 'fermée' : 'ouverte'}`, leverMan.target
+  if (leverMan.on) leverBlend(S, 0);                                   // pose courante si un basculement est en cours
+  const cur = leverMan.on ? leverMan.dir : S.lever;
+  leverMan.on = true; leverMan.q = 0; leverMan.dir = cur > .5 ? 0 : 1;
+  leverMan.from = { lever: S.lever, hyd: S.hyd, press: S.press };
+  showMsgTip(`Manette ${name} · ${leverMan.dir ? 'fermée' : 'ouverte'}`, leverMan.dir
     ? 'Le vérin relâche : les ressorts avancent le cône, les mâchoires se ferment. Les ressorts restent comprimés.'
     : 'Le vérin recule le cône, les mâchoires s\'ouvrent. Avant de démonter : manettes fermées (étape 1), puis cadenassage (étape 3).', e);
 }
 function applyScene(S) {
-  hydVis = S.hyd * (1 - ease(Math.max(explodeE, hexE)));
-  const hOff = -u(STROKE) * hydVis;
+  const vis = 1 - ease(Math.max(explodeE, hexE));   // repères du mécanisme éteints en vue éclatée
+  hydVis = S.hyd * vis;
+  const hOff = -u(STROKE) * hydVis;                 // < 0 : bloc mobile reculé vers la tête
+  const pressVis = S.press * vis;
+  const mvK = 4 * S.hyd * (1 - S.hyd) * vis;        // cloche sur la course (0 aux deux repos, 1 à mi-course) : surbrillance et repères de sens, sans clignotement
+  const mvGlow = .3 * mvK;
+  const closing = leverMan.on ? leverMan.dir === 1 : S.lever > .5;   // manettes fermées (ou en train de l'être) : ce sont les ressorts qui poussent
+  const onLever = (steps[S.i].apply === st.lever.apply || leverMan.on) && explodeE === 0 && hexE === 0 && !S.flight;   // repères de sens : étape 1 (copie de st.lever) ou manette cliquée
+  const oilOK = vis > .01 && !S.flight && (!selected || OIL_SEL.has(selected.id));
   const D = S.D;
   levers.forEach(L => { L.rotation.z = lerp(-0.55, 0.55, S.lever); });
   labelOpacity(labels.open[0], S.i <= 2 && scen === 'A' ? 1 - S.lever : 0);
@@ -3406,12 +3443,35 @@ function applyScene(S) {
     plate.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), n);
     plate.position.set(0, PLATE_TOP0 + a + hOff, 0);
     if (S.plateOut > 0) toTable(plate, PLATE_BASE.set(0, PLATE_TOP0 + a, 0), TABLE.plate, S.plateOut, 2.6, -Math.PI / 2);   // posé face vers le bas, mâchoires en haut
-    glow(plate, S.plateOut > 0 ? (RC.plate ? .45 : .12) : 0);
+    glow(plate, S.plateOut > 0 ? (RC.plate ? .45 : .12) : mvGlow);   // plateMats : bol et mâchoires
   }
+  // Mâchoires : retenues axialement par le couvert des jaws 3506907, elles ne reculent pas avec le bol (−hOff dans le repère du bol) ;
+  // le cône qui recule les laisse s'écarter radialement (ouverture amplifiée ×JAW_X, annoncée dans la note)
   jaws.forEach(j => {
-    const off = u(0.16) * hydVis;   // mâchoires ouvertes quand le cône est reculé
-    j.position.set(off * Math.cos(j.userData.a), u(JAW_Y0), -off * Math.sin(j.userData.a));
+    const dr = u(JAW_OPEN) * hydVis;
+    j.position.set(dr * Math.cos(j.userData.a), u(JAW_Y0) - hOff, -dr * Math.sin(j.userData.a));
   });
+  for (const o of [piston, bearing, act]) glow(o, mvGlow);   // piston → roulement → manchon : même course que le bol
+  // Huile sous pression : section de la chambre (position/échelle seulement)
+  oilG.visible = cutOn && oilOK && pressVis > .01;
+  if (oilG.visible) {
+    mat.oil.opacity = .6 * pressVis;
+    const y0 = OIL.y0 + hOff / IN;   // le piston recule : la chambre s'allonge (1,2 → 1,38 po)
+    for (const q of oilQuads) {
+      const { sg, port } = q.userData;
+      if (port) { q.position.set(0, u(OIL.port.y), sg * u((OIL.r1 + OIL.port.r1) / 2)); q.scale.set(u(OIL.port.r1 - OIL.r1), u(OIL.port.w), 1); }
+      else { q.position.set(0, u((y0 + OIL.y1) / 2), sg * u((OIL.r0 + OIL.r1) / 2)); q.scale.set(u(OIL.r1 - OIL.r0), u(OIL.y1 - y0), 1); }
+    }
+  }
+  // Repères du mécanisme : au plus trois à la fois, hors vue éclatée
+  const mvL = Math.min(1, 1.6 * mvK);   // pleine opacité de hyd ≈ 0,18 à 0,82
+  labelOpacity(labels.oil[0], oilOK ? pressVis : 0);
+  labelOpacity(labels.back[0], onLever && !closing ? mvL : 0);
+  labelOpacity(labels.jawsO[0], onLever && !closing ? mvL : 0);
+  const holdK = onLever && closing ? ease(seg(1 - S.hyd, .93, 1)) : 0;   // enchaîné après la course, jamais superposé aux repères de sens
+  labelOpacity(labels.push[0], onLever && closing ? mvL * (1 - holdK) : 0);
+  labelOpacity(labels.jawsC[0], onLever && closing ? mvL * (1 - holdK) : 0);
+  labelOpacity(labels.hold[0], holdK);   // cône avancé : le message clé de l'étape 1
 
   // Ressorts
   const t = travel();
@@ -3447,13 +3507,13 @@ function applyScene(S) {
       const from = new THREE.Vector3(B.x, PLATE_TOP0 + bush + H(b.turns) + b.lift + jolt + hOff, B.z);
       boltToTable(o, from, TABLE.pBolt(i), b.gone, b.turns * Math.PI * 2);
       setOpacity(o, fl && S.ride === -1 && b.gone < 1 ? 0 : 1);
-      glow(o, b.gone > 0 ? hiK(RC.pb && RC.pb[i]) : 0);
+      glow(o, b.gone > 0 ? hiK(RC.pb && RC.pb[i]) : mvGlow);
     }
     if (B.bushing) {
       const k = BUSHED.indexOf(i), bo = b.bushOut;
       const from = new THREE.Vector3(B.x, PLATE_TOP0 + 1.4 * ease(seg(bo, 0, .5)) + hOff, B.z);
       boltToTable(bushings[k], from, TABLE.bush(k), seg(bo, .5, 1));
-      setOpacity(bushings[k], 1); glow(bushings[k], bo > 0 ? hiK(RC.bush) : 0);
+      setOpacity(bushings[k], 1); glow(bushings[k], bo > 0 ? hiK(RC.bush) : mvGlow);
     }
     if (labels.nums[i]) {
       labels.nums[i].position.set(o.position.x, o.position.y + 0.55, o.position.z);
@@ -3538,6 +3598,7 @@ function applyScene(S) {
 const CAMS = {
   intro: { p: [-4, 11.5, 27], t: [-1.8, 2.8, -0.8] },
   mech: { p: [-6.2, 7.8, 21.5], t: [-6.4, 1.6, 1.2] },   // banc de commande et mandrin coupé dans le même cadre
+  hyd: { p: [-1.9, 6.4, 7.0], t: [-1.9, 4.6, 0] },   // gros plan du mandrin coupé (2e cadrage de l'étape 1) : vérin, ressorts, cône, mâchoires
   overview: { p: [0.8, 9.5, 23], t: [0.4, 2.0, 1.2] },
   top: { p: [4.2, 11.0, 11.5], t: [0.2, 4.6, 0] },
   bolts: { p: [2.8, 10.2, 8.2], t: [0.2, 4.8, 0] },
@@ -3557,6 +3618,7 @@ function setDrillView(on) {
   document.getElementById('btnDrill').setAttribute('aria-pressed', String(on));
   autoCam = true; document.getElementById('camChip').hidden = true;
   camGoal = on ? CAMS.drill : (CAMS[steps[Math.max(0, lastStep | 0)] && steps[Math.max(0, lastStep | 0)].cam] || CAMS.overview);
+  lastCamKey = '';   // retour de la vue foreuse en cours d'étape 1 : le 2e cadrage est réévalué au tick suivant
 }
 document.getElementById('btnDrill').addEventListener('click', () => {
   if (!drillView) { if (explodeTarget) setExplode(false); if (hexTarget) setHeadExplode(false); setPlaying(false); }
@@ -3643,7 +3705,7 @@ addEventListener('keydown', e => {
 
 // Paramètres des ressorts : valeurs internes fixes (DEFAULTS), non affichées
 
-let lastStep = -1, uiTick = 0, lastStepKey = '';
+let lastStep = -1, uiTick = 0, lastStepKey = '', lastCamKey = '';
 function updateUI(S, force) {
   const s = steps[S.i];
   const D = S.D;
@@ -3672,7 +3734,12 @@ function updateUI(S, force) {
     $('dock').dataset.tone = s.tone || 'ok';
     $('capText').textContent = nb(s.summary ? summaryText(s.ev) : s.text);
     $('tmeta').textContent = `Étape ${S.i + 1}/${steps.length}`;
-    camGoal = drillView ? CAMS.drill : (CAMS[s.cam] || CAMS.overview);
+    camGoal = drillView ? CAMS.drill : (CAMS[s.cam] || CAMS.overview); lastCamKey = s.cam;
+  }
+  // Étape à deux cadrages : manettes au banc, puis gros plan sur le mécanisme dès cam2At (retour au 1er cadrage si on recule)
+  if (!explodeTarget && !hexTarget && !drillView && s.cam2) {
+    const key = S.p >= s.cam2At ? s.cam2 : s.cam;
+    if (key !== lastCamKey) { lastCamKey = key; camGoal = CAMS[key] || CAMS.overview; }
   }
   // Étapes faites : marquées en permanence (✓ bonne méthode, ✗ méthode dangereuse) ; l'étape en cours l'est dès qu'elle est terminée
   const doneK = explodeTarget || hexTarget ? -1 : S.i + (S.p > .995 ? 1 : 0), stepKey = doneK + '|' + S.i;
@@ -3686,7 +3753,7 @@ function updateUI(S, force) {
   const fl = !!S.flight, cat = S.catchD;
 
   $('note').textContent = fl && steps[S.i].flight ? `Projection au ralenti ×${SLOWMO}`
-    : cat && steps[S.i].catch ? 'Mouvement au ralenti' : 'Ressorts : course ×6';
+    : cat && steps[S.i].catch ? 'Mouvement au ralenti' : `Courses exagérées ×${X} : ressorts, ouverture des jaws`;
 
   // Bandeau d'impact
   const banner = $('banner'), flash = $('flash');
@@ -4068,7 +4135,7 @@ async function start() {
   resize();
   const S = stateAt(T); applyScene(S); updateUI(S, true);
   requestAnimationFrame(frame);
-  window.__clam = { stateAt, steps: () => steps, starts: () => starts, total: () => total, setT: v => { T = v; }, P, setExplode, setHeadExplode, headExplodeNow: v => { setHeadExplode(v); hexE = v ? 1 : 0; }, setCutUI: setCut, explodeNow: v => { setExplode(v); explodeE = v ? 1 : 0; }, select: id => select(byId(id)), PARTS, camera, setQuality, worker: { set: setWorker, get: () => ({ x: WORKER_GLB.position.x, y: WORKER_GLB.position.y, z: WORKER_GLB.position.z, rotYdeg: WORKER_GLB.rotY * 180 / Math.PI, scale: WORKER_GLB.scale, loaded: !!workerModel }), root: workerRoot }, setCut: v => { cutOn = v; applyCut(); }, levers, THREE, state: () => stateAt(T), leverMan: () => ({ ...leverMan }) };
+  window.__clam = { stateAt, steps: () => steps, starts: () => starts, total: () => total, setT: v => { T = v; }, P, setExplode, setHeadExplode, headExplodeNow: v => { setHeadExplode(v); hexE = v ? 1 : 0; }, setCutUI: setCut, explodeNow: v => { setExplode(v); explodeE = v ? 1 : 0; }, select: id => select(byId(id)), PARTS, camera, setQuality, worker: { set: setWorker, get: () => ({ x: WORKER_GLB.position.x, y: WORKER_GLB.position.y, z: WORKER_GLB.position.z, rotYdeg: WORKER_GLB.rotY * 180 / Math.PI, scale: WORKER_GLB.scale, loaded: !!workerModel }), root: workerRoot }, setCut: v => { cutOn = v; applyCut(); }, levers, THREE, state: () => stateAt(T), leverMan: () => ({ ...leverMan }), oilG, labels: () => labels, STROKE, JAW_OPEN };
 }
 start();
 </script>
