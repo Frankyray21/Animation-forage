@@ -76,7 +76,7 @@ button, input, select { font: inherit; color: inherit; }
 .actdot { position: absolute; width: 14px; height: 14px; margin: -7px 0 0 -7px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 35%, transparent); pointer-events: none; animation: actpulse 1.4s ease-out infinite; }
 @keyframes actpulse { 0% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--accent) 70%, transparent); } 100% { box-shadow: 0 0 0 16px transparent; } }
 .actcard { position: absolute; max-width: min(270px, 60%); display: grid; gap: 2px; padding: 7px 10px 8px; border-radius: 8px; background: color-mix(in srgb, var(--panel) 92%, transparent); border: 1px solid var(--line); border-left: 4px solid var(--accent); font-size: 12.5px; pointer-events: none; box-shadow: 0 4px 14px rgba(0,0,0,.12); }
-/* Encadré « procédure » (option Numéros des boulons) : blanc, bordure orange, gros texte, flèche rouge vers le boulon */
+/* Encadré « procédure » (option Numéros et consignes) : blanc, bordure orange, gros texte, flèche rouge vers le boulon */
 .proccard { position: absolute; z-index: 5; pointer-events: auto; cursor: grab; user-select: none; touch-action: none; background: #fff; color: #111; border: 4px solid #e8853a; padding: 7px 12px; font-family: 'Times New Roman', Georgia, serif; font-size: clamp(14px, 1.6vw, 19px); line-height: 1.2; text-align: center; max-width: min(250px, 42%); box-shadow: 0 6px 20px rgba(0,0,0,.18); }
 .proccard.drag { cursor: grabbing; box-shadow: 0 10px 28px rgba(0,0,0,.3); }
 .proccard .pin { position: absolute; top: -12px; right: -12px; width: 24px; height: 24px; border-radius: 50%; background: #e8853a; color: #fff; font-size: 13px; line-height: 24px; text-align: center; cursor: pointer; border: 2px solid #fff; }
@@ -336,7 +336,7 @@ details.params summary { cursor: pointer; padding: 10px 14px; font-weight: 600; 
           <select id="optSpeed"><option value="0.5">0,5×</option><option value="1" selected>1×</option><option value="2">2×</option></select>
         </label>
         <label><input type="checkbox" id="optWorker" checked> Travailleur</label>
-        <label><input type="checkbox" id="optNums" autocomplete="off"> Numéros des boulons</label>
+        <label title="Numéros des boulons et encadré « procédure » : consigne de l'étape, flèche vers l'objet concerné"><input type="checkbox" id="optNums" autocomplete="off"> Numéros et consignes</label>
         <label title="Plusieurs plans par étape : plan large, gros plans sur les mains, l'outil et le boulon, coupe du mécanisme"><input type="checkbox" id="optShots" checked autocomplete="off"> Caméra auto (plans variés)</label>
         <label id="optLMw" hidden title="Occlusion ambiante cuite dans Blender (Cycles) sur les pièces fixes de la tête et du banc"><input type="checkbox" id="optLM" checked autocomplete="off"> Éclairage réaliste (Blender)</label>
       </div>
@@ -2397,7 +2397,7 @@ function buildLabels() {
     jawsO: [makeLabel('Jaws s\'ouvrent', { h: 0.28, parent: rig })],
     jawsC: [makeLabel('Jaws se ferment', { bg: '#2c7a4c', h: 0.28, parent: rig })],
     hold: [makeLabel('Ressorts comprimés même fermés', { bg: '#1f7a34', h: 0.28, parent: rig })],
-    // option « Numéros des boulons » : numéros de tous les boulons et fiches par groupe (comme les étiquettes de la table)
+    // option « Numéros et consignes » : numéros de tous les boulons et fiches par groupe (comme les étiquettes de la table)
     numsL: BUSHED.map((_, k) => makeLabel('L' + (k + 1), { font: '700 46px "Barlow Condensed", sans-serif', h: 0.4, bg: '#2c7a4c', fg: '#ffffff', round: 32, parent: rig , closable: false })),
     numsC: [...Array(9)].map((_, k) => makeLabel('C' + (k + 1), { font: '700 46px "Barlow Condensed", sans-serif', h: 0.4, bg: '#111518', fg: '#ffffff', round: 32, parent: rig , closable: false })),
     numsJ: [...Array(3)].map((_, k) => makeLabel('J' + (k + 1), { font: '700 46px "Barlow Condensed", sans-serif', h: 0.4, bg: '#111518', fg: '#ffffff', round: 32, parent: rig , closable: false })),
@@ -3572,7 +3572,7 @@ function applyScene(S) {
 
   // Couvert des mâchoires + boulons ¾
   const RC = S.recent || {}, hiK = k => k ? .55 : .14;
-  // option « Numéros des boulons » : seulement le groupe de la prochaine action (J → C → 1-6 → L), comme l'encadré « procédure »
+  // option « Numéros et consignes » : seulement le groupe de la prochaine action (J → C → 1-6 → L), comme l'encadré « procédure »
   const numsOn = $('optNums').checked && !D.flightS && explodeE === 0 && hexE === 0;
   const nextGrp = !numsOn ? '' : S.jc.lift < .01 ? 'J' : S.cv.lift < .01 ? 'C' : S.cv.lift > .99 && ORDER.some(i => S.pb[i].gone < .25) ? 'P' : S.cv.lift > .99 && BUSHED.some(i => S.pb[i].gone < .25) ? 'L' : '';
   // pièces portées : couvert et couvercle tirés, portés et posés par le travailleur, leurs boulons dans leurs trous puis rangés
@@ -3663,7 +3663,7 @@ function applyScene(S) {
     setSpringLen(m, Math.max(u(3.2), LC + t - compVis + hOff));   // vérin sous pression : plus comprimés ; jamais sous la longueur à spires jointives
   });
 
-  // Boulons du cône ; option « Numéros des boulons » : numéros visibles dès que le couvercle est retiré (capture d'écran pour les travailleurs)
+  // Boulons du cône ; option « Numéros et consignes » : numéros visibles dès que le couvercle est retiré (capture d'écran pour les travailleurs)
   const optN = $('optNums').checked && !fl && explodeE === 0 && hexE === 0, numsOpt = optN && S.cv.lift > .99 ? 1 : 0;
   for (const k of ['infoPb', 'infoL', 'infoC', 'infoJ']) labelOpacity(labels[k][0], 0);   // fiches remplacées par l'encadré « procédure » (updateProcCard)
   S.pb.forEach((b, i) => {
@@ -4270,9 +4270,18 @@ let procPin = null, procDrag = null, procAuto = null;   // procAuto : position a
 }
 function updateProcCard(S) {
   const card = $('procCard'), svg = $('procLine');
-  const on = $('optNums').checked && !S.D.flightS && explodeE === 0 && hexE === 0;
+  const s = steps[S.i];
+  const on = $('optNums').checked && !S.D.flightS && explodeE === 0 && hexE === 0 && !s.catch && !s.summary;
   let html = '', o = null;
-  if (on) {
+  // étapes sans boulons : consigne de PRO-OP-DD-005, flèche vers l'objet concerné
+  const CONS = {
+    '1': ['Manettes CLAM et CHUCK en position fermée<small>étape 1 · poste de commande · le vérin relâche, les ressorts restent comprimés</small>', () => levers.map(L => L.localToWorld(LEVER_GRIP.clone()))],
+    '2': ['Mâchoires (jaws) fermées<small>étape 2 · vérifier avant de démonter</small>', () => jaws],
+    '3': ['Cadenasser la foreuse — le cadenassage ne libère pas l\'énergie des ressorts<small>étape 3 · cadenas et étiquette sur le poste de commande</small>', () => [lockG]],
+    '9': ['Ressorts détendus : retirer le cône (bowl) et les mâchoires, changer les pièces<small>étape 9 · plus d\'énergie résiduelle</small>', () => [plate]],
+  };
+  if (on && CONS[s.n]) { html = CONS[s.n][0]; o = CONS[s.n][1](); }
+  else if (on) {
     if (S.jc.lift < .01) { html = '3 boulons ¾ à dévisser avec une clé 1 1/8<small>J1 à J3 · B750-1500 · couvert des mâchoires (jaw cover) · étape 4</small>'; o = jcBolts; }
     else if (S.cv.lift < .01) { html = '9 boulons ½ à dévisser avec une clé ¾<small>C1 à C9 · B500-2250 · porte-capuchon (cap holder) · étape 5</small>'; o = cvBolts; }
     else if (S.cv.lift > .99) {
@@ -4283,11 +4292,16 @@ function updateProcCard(S) {
   }
   if (!html || !o) { card.hidden = true; svg.style.display = 'none'; return; }
   if (card.dataset.html !== html) { card.dataset.html = html; procAuto = null; card.innerHTML = html + '<span class="pin" id="procPinBtn" title="Replacer automatiquement">↺</span>'; $('procPinBtn').hidden = !procPin; }
-  card.hidden = false; svg.style.display = 'block';   // (SVGElement n'a pas la propriété hidden)
+  card.hidden = false;
   const w = view.clientWidth, h = view.clientHeight;
-  // boîte écran du groupe de boulons ; l'encadré se place juste à côté (droite si possible, sinon gauche), sans recouvrir le groupe
+  // cibles à l'écran (objets ou points monde) ; hors champ : pas de flèche, encadré dans un coin
+  const pts = [];
+  for (const b of o) { (b.isVector3 ? procV.copy(b) : b.getWorldPosition(procV)).project(camera); const bx = (procV.x * .5 + .5) * w, by = (-procV.y * .5 + .5) * h; if (procV.z < 1 && bx > -10 && bx < w + 10 && by > -10 && by < h + 10) pts.push([bx, by]); }
+  svg.style.display = pts.length ? 'block' : 'none';   // (SVGElement n'a pas la propriété hidden)
+  // boîte écran du groupe ; l'encadré se place juste à côté (droite si possible, sinon gauche), sans recouvrir le groupe
   let x0 = 1e9, x1 = -1e9, y0 = 1e9, y1 = -1e9, ax = 0, ay = 1e9;
-  for (const b of o) { b.getWorldPosition(procV); procV.project(camera); const bx = (procV.x * .5 + .5) * w, by = (-procV.y * .5 + .5) * h; x0 = Math.min(x0, bx); x1 = Math.max(x1, bx); y0 = Math.min(y0, by); y1 = Math.max(y1, by); if (by < ay) { ay = by; ax = bx; } }
+  for (const [bx, by] of pts) { x0 = Math.min(x0, bx); x1 = Math.max(x1, bx); y0 = Math.min(y0, by); y1 = Math.max(y1, by); if (by < ay) { ay = by; ax = bx; } }
+  if (!pts.length) { x0 = x1 = w * 2; y0 = y1 = h * 2; }
   const cw = card.offsetWidth, ch = card.offsetHeight;
   // candidats : droite, gauche, dessous, dessus, puis les 4 coins ; on garde le premier qui ne recouvre pas les boulons (pastilles comprises)
   const cw2 = cw, ch2 = ch, m = 40, gap = 26, X0 = x0 - m, X1 = x1 + m, Y0 = y0 - m, Y1 = y1 + m;
@@ -4305,7 +4319,7 @@ function updateProcCard(S) {
   card.style.left = `${cx}px`; card.style.top = `${cy}px`;
   // flèche : du bord de l'encadré vers le boulon du groupe le plus proche
   const kx = cx + cw / 2, ky = cy + ch / 2; let bx = ax, by = ay, bd = 1e18;
-  for (const b of o) { b.getWorldPosition(procV); procV.project(camera); const px = (procV.x * .5 + .5) * w, py = (-procV.y * .5 + .5) * h, d = (px - kx) ** 2 + (py - ky) ** 2; if (d < bd) { bd = d; bx = px; by = py; } }
+  for (const [px, py] of pts) { const d = (px - kx) ** 2 + (py - ky) ** 2; if (d < bd) { bd = d; bx = px; by = py; } }
   const ex = Math.max(cx, Math.min(cx + cw, bx)), ey = Math.max(cy, Math.min(cy + ch, by));   // point du bord le plus proche
   const dx = bx - ex, dy = by - ey, L = Math.hypot(dx, dy) || 1;
   const seg = $('procSeg'); seg.setAttribute('x1', ex); seg.setAttribute('y1', ey); seg.setAttribute('x2', bx - dx / L * 14); seg.setAttribute('y2', by - dy / L * 14);
