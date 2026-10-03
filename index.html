@@ -337,6 +337,7 @@ details.params summary { cursor: pointer; padding: 10px 14px; font-weight: 600; 
         </label>
         <label><input type="checkbox" id="optWorker" checked> Travailleur</label>
         <label><input type="checkbox" id="optNums" autocomplete="off"> Numéros des boulons</label>
+        <label title="Plusieurs plans par étape : plan large, gros plans sur les mains, l'outil et le boulon, coupe du mécanisme"><input type="checkbox" id="optShots" checked autocomplete="off"> Caméra auto (plans variés)</label>
         <label id="optLMw" hidden title="Occlusion ambiante cuite dans Blender (Cycles) sur les pièces fixes de la tête et du banc"><input type="checkbox" id="optLM" checked autocomplete="off"> Éclairage réaliste (Blender)</label>
       </div>
     </div>
@@ -2140,7 +2141,7 @@ const W = (() => {
     const shaft = mesh(new THREE.CylinderGeometry(.62, .66, 3.6, 22), mat.rubber); shaft.position.set(.15, 2.2, 0); boot.add(shaft);
     const ref = mesh(new THREE.CylinderGeometry(.635, .635, .18, 22, 1, true), mat.reflect); ref.position.set(.15, 3.6, 0); boot.add(ref);
     boot.position.set(5.3, FLOOR, s * .62); worker.add(boot);
-    return { s,
+    return { s, boot,
       thigh: seg(.52, .66, mat.coverall, [[.5, .2 / WL.thigh, mat.reflect]]),
       shin: seg(.44, .5, mat.coverall, [[.62, .2 / WL.shin, mat.reflect]]),
       knee: ball(.52, mat.coverall), hipJ: ball(.64, mat.coverall) };
@@ -2225,12 +2226,16 @@ function ik2(A, T, l1, l2, pole) {
   const n = pole.clone().addScaledVector(dir, -pole.dot(dir)).normalize();
   return { J: A.clone().addScaledVector(dir, l1 * ca).addScaledVector(n, l1 * sa), E };
 }
-// Pose : hanches (monde), inclinaison du tronc vers la tête de forage, inclinaison de la tête, cibles des mains
-function poseWorker(hip, lean, tilt, hands) {
+// Pose : hanches, inclinaison du tronc vers la tête de forage, inclinaison de la tête, cibles des mains,
+// décalage des pieds (marche), palm : poids par main, la cible est la paume (et non le poignet) ;
+// coordonnées du groupe du travailleur (= monde à sa place devant le mandrin)
+function poseWorker(hip, lean, tilt, hands, feet = null, palm = null) {
   W.legs.forEach((L, k) => {
     const H = hip.clone().add(wTmp2.set(0, -.2, L.s * .55));
-    const { J } = ik2(ANKLE[k], H, WL.shin, WL.thigh, new THREE.Vector3(-1, 0, 0));   // genou vers l'avant
-    placeLimb(L.shin, ANKLE[k], J); placeLimb(L.thigh, J, H);
+    const An = feet ? ANKLE[k].clone().add(feet[k]) : ANKLE[k];
+    const { J } = ik2(An, H, WL.shin, WL.thigh, new THREE.Vector3(-1, 0, 0));   // genou vers l'avant
+    placeLimb(L.shin, An, J); placeLimb(L.thigh, J, H);
+    L.boot.position.set(An.x, An.y - .9, An.z + L.s * .02);
     L.knee.position.copy(J); L.hipJ.position.copy(H);
   });
   const up = new THREE.Vector3(-Math.sin(lean), Math.cos(lean), 0);
@@ -2245,7 +2250,9 @@ function poseWorker(hip, lean, tilt, hands) {
   W.head.position.copy(hd); W.head.rotation.set(0, 0, 0.3 + (lean - .127) + tilt - .08);
   W.arms.forEach((A, k) => {
     const S0 = sh.clone().add(new THREE.Vector3(Math.sin(lean) * .25, -.3, A.s * 1.12));
-    const { J, E } = ik2(S0, hands[k], WL.upper, WL.fore, new THREE.Vector3(.3, -1, A.s * .7));
+    const pole = new THREE.Vector3(.3, -1, A.s * .7);
+    let { J, E } = ik2(S0, hands[k], WL.upper, WL.fore, pole);
+    if (palm && palm[k] > 0) ({ J, E } = ik2(S0, hands[k].clone().addScaledVector(wTmp.subVectors(E, J).normalize(), -.75 * palm[k]), WL.upper, WL.fore, pole));   // paume sur la cible
     placeLimb(A.up, S0, J); placeLimb(A.fore, J, E);
     A.sho.position.copy(S0); A.elb.position.copy(J);
     // main dans l'axe de l'avant-bras, paume vers l'intérieur
@@ -2720,30 +2727,85 @@ function removeBolt(S, i, p, from = null) {
   b.gone = seg(p, .7, 1);
 }
 
+/* ---------- Mise en scène du travailleur : trajet, gestes, clé à chocs (fonction de l'étape et de p seulement) ----------
+   S.spot : place et orientation (yaw : 0 = face au mandrin, vers −x) ; S.reach : mains sur une manette, le cadenas ou une pièce ;
+   S.tool : clé à chocs sur le boulon a, en route vers b (w), approche depuis le corps (on). */
+const HOME = { x: 5.3, z: 0, yaw: 0, dist: 0, mv: 0 };
+const CONSOLE_SPOT = { x: -11.4, z: 8.6, yaw: -Math.PI / 2 };   // devant le poste de commande, face aux manettes
+// trajet banc → poste : contourne la table de travail par l'avant
+const WALK = new THREE.CatmullRomCurve3([[5.3, 0], [4.9, 4.4], [3.6, 9.6], [-3.5, 10.6], [-9.6, 10.6], [-11.4, 8.6]].map(([x, z]) => new THREE.Vector3(x, 0, z)), false, 'centripetal');
+const WALK_L = WALK.getLength();
+const nearAng = (a, ref) => a + Math.round((ref - a) / (2 * Math.PI)) * 2 * Math.PI;
+const WALK_YAW = (() => { const out = []; let prev = 0; for (let i = 0; i <= 64; i++) { const d = WALK.getTangentAt(i / 64); prev = nearAng(Math.atan2(d.z, -d.x), prev); out.push(prev); } return out; })();
+// q : 0 → 1 sur le trajet (back : retour du poste au banc) ; vitesse constante, départ et arrêt doux
+function walkSpot(S, q, back = false) {
+  if (q <= 0 || q >= 1) { S.spot = (q >= 1) !== back ? { ...CONSOLE_SPOT, dist: 0, mv: 0 } : null; return; }
+  const a = .18, e = q < a ? q * q / (2 * a * (1 - a)) : q > 1 - a ? 1 - (1 - q) ** 2 / (2 * a * (1 - a)) : (q - a / 2) / (1 - a);
+  const u = back ? 1 - e : e, P = WALK.getPointAt(u), f = u * 64, i = Math.min(63, Math.floor(f));
+  let yaw = lerp(WALK_YAW[i], WALK_YAW[i + 1], f - i) + (back ? Math.PI : 0);
+  const y0 = back ? nearAng(CONSOLE_SPOT.yaw, WALK_YAW[64] + Math.PI) : nearAng(HOME.yaw, WALK_YAW[0]);
+  const y1 = back ? nearAng(HOME.yaw, WALK_YAW[0] + Math.PI) : nearAng(CONSOLE_SPOT.yaw, WALK_YAW[64]);
+  yaw = lerp(y0, yaw, ease(seg(q, 0, .14))); yaw = lerp(yaw, y1, ease(seg(q, .86, 1)));
+  S.spot = { x: P.x, z: P.z, yaw, dist: e * WALK_L, mv: Math.min(1, 6 * Math.min(q, 1 - q)) };
+}
+// Clé à chocs sur une suite de boulons : dévissage de durée tau, déplacement gam vers le suivant (fractions de l'étape) ; renvoie le début du boulon k
+function toolSeq(S, set, idx, p, p0, tau, gam, inn = .04) {
+  const n = idx.length, stp = tau + gam, f = (p - p0) / stp;
+  const k = Math.max(0, Math.min(n - 1, Math.floor(f))), r = f - k, tf = tau / stp;
+  const end = p0 + (n - 1) * stp + tau, on = seg(p, p0 - inn, p0) * (1 - seg(p, end, end + inn));
+  S.tool = on > 0 ? { set, a: idx[k], b: idx[Math.min(n - 1, k + 1)], w: k < n - 1 && r > tf ? clamp01((r - tf) / (1 - tf)) : 0, on } : null;
+  return j => p0 + j * stp;
+}
+
 /* ---------- Étapes communes ---------- */
 const st = {
-  lever: { n: '1', title: 'Manettes fermées', cam: 'mech', cam2: 'hyd', cam2At: .2, dur: 6, act: 'Manettes fermées : le vérin relâche, le cône avance, les mâchoires se ferment', at: () => lastCamKey === 'hyd' ? plate : levers[0],
+  // shots : plans de la caméra auto (at = fraction de l'étape, cut = coupe franche) ; cam / cam2 : cadrage unique (case « Caméra auto » décochée)
+  lever: { n: '1', title: 'Manettes fermées', cam: 'mech', cam2: 'hyd', cam2At: .47, dur: 8.5, act: 'Manettes fermées : le vérin relâche, le cône avance, les mâchoires se ferment', at: () => lastCamKey === 'hyd' ? plate : levers[0],
+    shots: [{ at: 0, cam: 'walk' }, { at: .2, cam: 'lever' }, { at: .47, cam: 'hyd' }],
     text: 'Mettre les manettes du clam et du chuck en position fermée. Le vérin relâche : les ressorts avancent le cône et les mâchoires se ferment. Les ressorts restent comprimés.',
-    // manettes au banc (0–1,3 s) → gros plan sur le mandrin coupé (dès 1,2 s) → l'huile n'est plus sous pression (2–2,5 s) → les ressorts avancent le bloc (2,5–5,1 s)
-    apply(S, p) { S.lever = ease(seg(p, 0, .22)); S.press = 1 - ease(seg(p, .4, .48)); S.hyd = 1 - ease(seg(p, .48, .88)); } },
+    // le travailleur va au poste (0–2,3 s) et ferme les 2 manettes (2,8–3,9 s) → gros plan sur le mandrin coupé : l'huile n'est plus sous pression (4,3–4,8 s) → les ressorts avancent le bloc (4,8–7,7 s)
+    apply(S, p) {
+      walkSpot(S, seg(p, 0, .27));
+      S.reach = { kind: 'lever', k: ease(seg(p, .26, .33)) * (1 - ease(seg(p, .5, .58))) };
+      S.lever = ease(seg(p, .33, .46)); S.press = 1 - ease(seg(p, .5, .56)); S.hyd = 1 - ease(seg(p, .56, .9));
+    } },
   jaws: { n: '2', title: 'Mâchoires (jaws) fermées', cam: 'top', dur: 3, act: 'Jaws (mâchoires) en position fermée', at: () => jaws[0],
+    shots: [{ at: 0, cam: 'jawsFront' }],
     text: 'Vérifier que les mâchoires sont fermées.',
     apply(S, p) { S.jaws = ease(p); } },
-  lock: { n: '3', title: 'Cadenasser', cam: 'intro', dur: 3, act: 'Procédure de cadenassage appliquée', at: () => lockG,
+  lock: { n: '3', title: 'Cadenasser', cam: 'intro', dur: 3.5, act: 'Procédure de cadenassage appliquée', at: () => lockG,
+    shots: [{ at: 0, cam: 'lockClose', cut: true }],
     text: 'Cadenasser la foreuse. Le cadenassage coupe l\'hydraulique, pas l\'énergie des ressorts.',
-    apply(S, p) { S.lock = ease(p); } },
-  jawCover: { n: '4', title: 'Retirer le couvert des mâchoires (jaw cover)', cam: 'overview', dur: 5, act: 'Boulons ¾ dévissés (clé 1 1/8), couvert des mâchoires retiré',
+    // la main pose le cadenas et l'étiquette sur le poste, puis se retire
+    apply(S, p) { S.lock = ease(seg(p, .18, .68)); S.reach = { kind: 'lock', k: ease(seg(p, 0, .18)) * (1 - ease(seg(p, .74, .92))) }; } },
+  jawCover: { n: '4', title: 'Retirer le couvert des mâchoires (jaw cover)', cam: 'overview', dur: 7.5, act: 'Boulons ¾ dévissés (clé 1 1/8), couvert des mâchoires retiré',
+    shots: [{ at: 0, cam: 'walk' }, { at: .27, cam: 'tool' }, { at: .66, cam: 'pull' }, { at: .83, cam: 'tableJC' }],
     text: 'Dévisser ses boulons ¾ (clé 1 1/8) et retirer le couvert.',
-    apply(S, p) { for (let k = 0; k < 3; k++) S.jc.bolts[k] = seg(p, k * .1, k * .1 + .45); S.jc.lift = seg(p, .58, 1); } },
-  cover: { n: '5', title: 'Retirer le couvercle (cap holder, 9 boulons ½)', cam: 'overview', dur: 6, act: '9 boulons ½ enlevés (clé ¾), couvercle retiré',
+    // retour au banc (0–2,3 s), clé à chocs sur J1, J2 puis J3, couvert tiré à la main puis posé sur la table
+    apply(S, p) {
+      walkSpot(S, seg(p, 0, .3), true);
+      const at = toolSeq(S, 'jc', [0, 1, 2], p, .35, .073, .033);
+      for (let k = 0; k < 3; k++) S.jc.bolts[k] = seg(p, at(k), at(k) + .073 / .6);
+      S.jc.lift = seg(p, .7, 1);
+      S.reach = { kind: 'jc', k: ease(seg(p, .66, .7)) * (1 - ease(seg(S.jc.lift, .3, .45))) };
+    } },
+  cover: { n: '5', title: 'Retirer le couvercle (cap holder, 9 boulons ½)', cam: 'overview', dur: 9, act: '9 boulons ½ enlevés (clé ¾), couvercle retiré',
+    shots: [{ at: 0, cam: 'plongee' }, { at: .3, cam: 'tool' }, { at: .68, cam: 'pull' }, { at: .8, cam: 'bolts' }],
     text: 'Enlever les 9 boulons ½ (clé ¾) et le couvercle. Le cône et ses 9 boulons apparaissent. Les ressorts sont toujours comprimés.',
-    apply(S, p) { for (let k = 0; k < 9; k++) S.cv.bolts[k] = seg(p, k * .045, k * .045 + .4); S.cv.lift = seg(p, .6, 1); S.springLbl = seg(p, .85, 1); } },
+    // C1 à C9 un à la fois, puis couvercle tiré à la main et posé sur la table
+    apply(S, p) {
+      const at = toolSeq(S, 'cv', [0, 1, 2, 3, 4, 5, 6, 7, 8], p, .04, .05, .022);
+      for (let k = 0; k < 9; k++) S.cv.bolts[k] = seg(p, at(k), at(k) + .05 / .6);
+      S.cv.lift = seg(p, .72, 1); S.springLbl = seg(p, .9, 1);
+      S.reach = { kind: 'cv', k: ease(seg(p, .68, .72)) * (1 - ease(seg(S.cv.lift, .3, .45))) };
+    } },
 };
 const first5 = { n: '1–5', title: 'Étapes 1 à 5 faites', cam: 'overview', dur: 8,
   text: 'Manettes et mâchoires fermées, foreuse cadenassée, couvert et couvercle retirés. Les ressorts sont comprimés.',
   apply(S, p) {
     st.lever.apply(S, seg(p, 0, .15)); st.jaws.apply(S, seg(p, .1, .25)); st.lock.apply(S, seg(p, .2, .35));
     st.jawCover.apply(S, seg(p, .3, .62)); st.cover.apply(S, seg(p, .62, 1));
+    S.spot = S.reach = S.tool = null;   // résumé : le travailleur reste au banc
   } };
 const skip6 = { n: '6', title: 'Boulons de retenue non remis', cam: 'bolts', dur: 5, tone: 'warn', flag: 'Omise', act: 'Boulons longs enlevés, non remis : aucune retenue',
   text: 'Les 3 boulons longs sont enlevés et ne sont pas remis. Plus rien ne retient le cône.',
@@ -2753,15 +2815,18 @@ const skip6 = { n: '6', title: 'Boulons de retenue non remis', cam: 'bolts', dur
     S.zone = seg(p, .7, 1);
   } };
 
-st.retain = { n: '6', title: 'Remettre les 3 boulons longs (bolts) sans bushing', cam: 'bolts', dur: 8, act: '3 boulons ½ × 8 remis sans bushing : retenue en place', at: () => pBolts[BUSHED[0]],
+st.retain = { n: '6', title: 'Remettre les 3 boulons longs (bolts) sans bushing', cam: 'bolts', dur: 9, act: '3 boulons ½ × 8 remis sans bushing : retenue en place', at: () => pBolts[BUSHED[0]],
+  shots: [{ at: 0, cam: 'boltL' }, { at: .66, cam: 'bolts' }],
   text: 'Enlever les 3 boulons longs (½ × 8) et leurs bushings. Les revisser sans bushing : ils retiennent le cône s\'il part.',
+  // un boulon long à la fois : dévissé, sorti, bushing posé sur la table, remis et revissé
   apply(S, p) {
     S.springLbl = 1;
-    BUSHED.forEach(i => {
-      const b = S.pb[i];
-      b.turns = seg(p, .6, .78) > 0 ? lerp(ENG, retainTurns(), ease(seg(p, .7, .95))) : ENG * ease(seg(p, 0, .32));
-      b.lift = 1.4 * ease(seg(p, .32, .45)) * (1 - ease(seg(p, .6, .72)));
-      b.bushOut = seg(p, .42, .6);
+    const at = toolSeq(S, 'pb', BUSHED, p, .04, .267, .03);
+    BUSHED.forEach((i, k) => {
+      const b = S.pb[i], q = seg(p, at(k), at(k) + .267);
+      b.turns = seg(q, .6, .78) > 0 ? lerp(ENG, retainTurns(), ease(seg(q, .7, .95))) : ENG * ease(seg(q, 0, .32));
+      b.lift = 1.4 * ease(seg(q, .32, .45)) * (1 - ease(seg(q, .6, .72)));
+      b.bushOut = seg(q, .42, .6);
     });
     S.ret = seg(p, .9, 1);
   } };
@@ -2772,16 +2837,20 @@ function oneByOne(withRet) {
   const base = S => { S.springLbl = 1; S.zone = 1; S.nums = 1; if (withRet) S.ret = 1; };
   return [
     { n: '7', title: 'Boulons 4, 1 et 3 retirés au complet', cam: 'bolts', dur: 9, tone: 'warn', flag: 'Non respectée',
+      shots: [{ at: 0, cam: 'bolts' }, { at: .08, cam: 'tool' }, { at: .7, cam: 'bolts' }],
       text: 'Chaque boulon est sorti au complet au lieu d\'un tour à la fois. Les autres boulons reprennent la charge.'
         + (withRet ? ' Les 3 boulons longs ne portent rien : ils attendent devant le cône.' : ''),
       apply(S, p) { base(S); [4, 1, 3].forEach((n, k) => { const q = seg(p, k / 3, (k + 1) / 3); removeBolt(S, byNum(n), q); if (q > 0 && q < 1) S.active = byNum(n); }); } },
     { n: '7', title: 'Boulon 5 retiré : le cône bascule', cam: 'bolts', dur: 5, tone: 'warn', flag: 'Non respectée',
+      shots: [{ at: 0, cam: 'tool' }, { at: .62, cam: 'bolts' }],
       text: 'Il reste les boulons 2 et 6, du même côté. Le cône bascule et se coince : ces 2 boulons portent presque tout.',
       apply(S, p) { base(S); removeBolt(S, byNum(5), p); S.active = p < 1 ? byNum(5) : -1; } },
     { n: '7', title: 'Boulon 2 retiré : un seul boulon retient tout', cam: 'bolts', dur: 5, tone: 'warn', flag: 'Non respectée',
+      shots: [{ at: 0, cam: 'tool' }, { at: .62, cam: 'bolts' }],
       text: 'Le boulon 6 porte seul toute la force des ressorts.',
       apply(S, p) { base(S); removeBolt(S, byNum(2), p); S.active = p < 1 ? byNum(2) : byNum(6); } },
     { n: '7', title: 'Dévissage du boulon 6 sous pleine charge', cam: 'bolts', dur: 3.5, tone: 'danger', flag: 'Danger',
+      shots: [{ at: 0, cam: 'boltL' }],   // gros plan sur le boulon qui va céder
       text: 'Le travailleur se penche pour dévisser le dernier boulon. Le filet commence à céder.',
       apply(S, p) { base(S); S.pb[byNum(6)].turns = 0.25 * ease(p); S.active = byNum(6); } },
   ];
@@ -2790,13 +2859,15 @@ function oneByOne(withRet) {
 /* Desserrage en étoile : 1 tour à la fois, ordre 1 → 6, sur `rounds()` tours */
 function starLoosen(S, p) {
   const R = rounds();
-  const g = p * 6 * R;
+  const g = p * 6 * R, TR = .3;   // TR : début de chaque tour, la clé passe au boulon suivant
   ORDER.forEach((i, o) => {
     let t = 0;
-    for (let r = 0; r < R; r++) t += clamp01(g - (r * 6 + o));
+    for (let r = 0; r < R; r++) t += clamp01((g - (r * 6 + o) - TR) / (1 - TR));
     S.pb[i].turns = t;
   });
-  S.active = p < 1 ? ORDER[Math.floor(g) % 6] : -1;
+  const slot = Math.min(6 * R - 1, Math.floor(g)), cur = ORDER[slot % 6];
+  S.active = p < 1 ? cur : -1;
+  S.tool = p < 1 ? { set: 'pb', a: slot ? ORDER[(slot - 1) % 6] : cur, b: cur, w: slot ? clamp01((g - slot) / TR) : 1, on: slot ? 1 : clamp01(g / TR) } : null;
   S.nums = 1;
 }
 
@@ -2808,6 +2879,8 @@ const SCEN = {
       st.lever, st.jaws, st.lock, st.jawCover, st.cover,
       st.retain,
       { n: '7', title: 'Dévisser 1 tour à la fois, ordre 1 à 6', cam: 'bolts', dur: rounds() * 6 * 0.62 / 0.84, act: '6 boulons ½ × 6 ½ dévissés 1 tour à la fois (ordre 1 à 6), puis retirés',
+        // ordre 1 → 6 de face, clé au boulon actif, ressorts en coupe qui se détendent
+        shots: [{ at: 0, cam: 'bolts' }, { at: .12, cam: 'tool' }, { at: .3, cam: 'bolts' }, { at: .42, cam: 'hyd' }, { at: .56, cam: 'tool' }, { at: .7, cam: 'bolts' }, { at: .78, cam: 'hyd' }, { at: .88, cam: 'bolts' }],
         text: 'Dévisser les 6 boulons ½ un tour à la fois, dans l\'ordre 1 à 6. Les ressorts se détendent peu à peu, également. Retirer ensuite les 6 boulons.',
         apply(S, p) {
           S.springLbl = 1; S.ret = 1;
@@ -2815,12 +2888,20 @@ const SCEN = {
           ORDER.forEach((i, o) => { if (p > .84) removeBolt(S, i, seg(p, .84 + o * .012, .95 + o * .01), rounds()); });
           S.nums = 1 - seg(p, .9, 1);
         } },
-      { n: '8', title: 'Retirer les 3 boulons longs', cam: 'bolts', dur: 4, act: 'Ressorts détendus : 3 boulons longs retirés',
+      { n: '8', title: 'Retirer les 3 boulons longs', cam: 'bolts', dur: 5, act: 'Ressorts détendus : 3 boulons longs retirés',
+        shots: [{ at: 0, cam: 'boltL' }, { at: .78, cam: 'bolts' }],
         text: 'Les ressorts sont détendus : les 3 boulons de retenue ne portent plus rien. Les enlever.',
-        apply(S, p) { S.springLbl = 1; S.ret = 1 - seg(p, .6, .9); BUSHED.forEach((i, k) => removeBolt(S, i, seg(p, k * .08, .75 + k * .08), retainTurns())); } },
-      { n: '9', title: 'Changer les pièces', cam: 'overview', dur: 4.5, act: 'Cône et mâchoires sortis : changer les pièces',
+        // un boulon long à la fois (clé à chocs), puis posé sur la table
+        apply(S, p) {
+          S.springLbl = 1; S.ret = 1 - seg(p, .78, .95);
+          const at = toolSeq(S, 'pb', BUSHED, p, .05, .182, .05);
+          BUSHED.forEach((i, k) => removeBolt(S, i, seg(p, at(k), at(k) + .26), retainTurns()));
+        } },
+      { n: '9', title: 'Changer les pièces', cam: 'overview', dur: 5, act: 'Cône et mâchoires sortis : changer les pièces',
+        shots: [{ at: 0, cam: 'overview' }, { at: .5, cam: 'tablePlate' }],
         text: 'Cône, mâchoires et ressorts sont accessibles, sans énergie résiduelle.',
-        apply(S, p) { S.springLbl = 1 - seg(p, .5, 1); S.plateOut = ease(p); } },
+        // le cône est tiré à deux mains hors du boîtier, puis posé sur la table
+        apply(S, p) { S.springLbl = 1 - seg(p, .5, 1); S.plateOut = ease(seg(p, .1, 1)); S.reach = { kind: 'plate', k: ease(seg(p, 0, .1)) * (1 - ease(seg(S.plateOut, .3, .45))) }; } },
     ],
   },
   B: {
@@ -3047,6 +3128,7 @@ function stateAt(t) {
   const { i, p } = locate(t);
   const S = initState();
   for (let k = 0; k < i; k++) steps[k].apply(S, 1);
+  S.reach = S.tool = null;   // gestes : ceux de l'étape en cours seulement
   const before = { jc: S.jc.lift + S.jc.bolts.reduce((a, b) => a + b, 0), cv: S.cv.lift + S.cv.bolts.reduce((a, b) => a + b, 0), pb: S.pb.map(b => b.gone), bush: S.pb.reduce((a, b) => a + b.bushOut, 0), plate: S.plateOut };
   steps[i].apply(S, p);
   S.recent = {   // pièces retirées pendant l'étape en cours (surbrillance forte)
@@ -3103,21 +3185,59 @@ const GLOW = new THREE.Color(0xf2c230);
 function glow(obj, k) { for (const m of obj.userData.mats || (obj === plate ? plateMats : [])) if (m.emissive) { m.emissive.copy(GLOW); m.emissiveIntensity = k; } }
 const GRIP_L = new THREE.Vector3(0, u(11.1), -u(2.05)), SUPPORT_L = new THREE.Vector3(0, u(6.4), u(1.75));   // main droite sur la poignée arrière, main gauche sur le corps
 const REST_HANDS = [new THREE.Vector3(5.0, FLOOR + 8.3, -1.4), new THREE.Vector3(5.0, FLOOR + 8.3, 1.4)];
+const LEVER_GRIP = new THREE.Vector3(0, 1.52, 0), REACH_R = { jc: 1.25, cv: 1.6, plate: 1.45 };
+const wkV = new THREE.Vector3(), wkF = new THREE.Vector3(), wkL = new THREE.Vector3();
+// Cibles des mains (monde) pour un geste : manettes, cadenas, pièce tirée hors du mandrin
+function reachTargets(r) {
+  const out = [];
+  if (r.kind === 'lever') {
+    // paume droite sur la poignée de la manette CHUCK, paume gauche sur CLAM
+    for (const L of [levers[1], levers[0]]) out.push(L.localToWorld(LEVER_GRIP.clone()));
+  } else if (r.kind === 'lock') {
+    out.push(lockG.getWorldPosition(new THREE.Vector3()).add(wkV.set(0, .12, 0)));
+    out.push(consoleG.localToWorld(new THREE.Vector3(-.45, 4.5, .5)));   // l'autre main en appui sur le poste
+  } else {
+    const o = r.kind === 'jc' ? jawCover : r.kind === 'cv' ? cover : plate, c = o.getWorldPosition(new THREE.Vector3()), R0 = REACH_R[r.kind];
+    out.push(c.clone().addScaledVector(wkL, -R0).addScaledVector(wkF, -.2), c.clone().addScaledVector(wkL, R0).addScaledVector(wkF, -.2));
+  }
+  return out;
+}
 function animateWorker(S, fl) {
   const tt = performance.now() / 1000;
+  // place du travailleur : son groupe est tourné autour de ses pieds (repère d'origine : devant le mandrin, face à −x)
+  const sp = S.spot && !fl && !S.catchD ? S.spot : HOME;
+  worker.rotation.set(0, sp.yaw, 0);
+  worker.position.set(sp.x - 5.3 * Math.cos(sp.yaw), 0, sp.z + 5.3 * Math.sin(sp.yaw));
+  worker.updateMatrixWorld(true);
+  wkF.set(-Math.cos(sp.yaw), 0, Math.sin(sp.yaw)); wkL.set(Math.sin(sp.yaw), 0, Math.cos(sp.yaw));   // devant, côté gauche (monde)
+  const toL = v => worker.worldToLocal(v);
   const hip = new THREE.Vector3(5.3, BODY.hip, 0);
   let lean = .127 + .012 * Math.sin(tt * 1.4), tilt = .08;
-  let hands;
+  // marche : pas alternés (amplitude 2,4 = 24 cm), bassin un peu plus bas, bras ballants
+  const ph = sp.dist / 4.8 * Math.PI, mv = sp.mv;
+  const feet = mv > 0 ? [0, 1].map(k => new THREE.Vector3(-2.4 * Math.sin(ph + k * Math.PI) * mv, .55 * Math.max(0, Math.cos(ph + k * Math.PI)) * mv, 0)) : null;
+  if (mv > 0) hip.y -= (.45 + .12 * Math.abs(Math.cos(ph))) * mv;
+  let hands, palm = null;
+  const rk = S.reach && !fl ? S.reach.k : 0;
   if (wrench.visible) {
     wrench.updateMatrixWorld(true);
-    hands = [wrench.localToWorld(SUPPORT_L.clone()).add(new THREE.Vector3(0, .12, -.2)), wrench.localToWorld(GRIP_L.clone()).add(new THREE.Vector3(0, -.15, .2))];
+    hands = [wrench.localToWorld(SUPPORT_L.clone()).add(new THREE.Vector3(0, .12, -.2)), wrench.localToWorld(GRIP_L.clone()).add(new THREE.Vector3(0, -.15, .2))].map(toL);
+    hands[0] = toL(wrench.localToWorld(new THREE.Vector3(0, SUPPORT_L.y, 0)).add(new THREE.Vector3(0, -.05, -.42))); palm = [1, 0];   // main d'appui : paume contre le corps de la clé, côté droit
+  } else if (rk > 0) {
+    palm = [rk, rk];
+    // geste : les mains quittent le repos pour la manette, le cadenas ou la pièce
+    const tg = reachTargets(S.reach).map(toL);
+    hands = REST_HANDS.map((h, i) => h.clone().lerp(tg[i], rk));
+    if (S.reach.kind === 'lock') { lean += .42 * rk; tilt += .05 * rk; hip.y -= 1.5 * rk; hip.x += .5 * rk; }   // se penche vers le cadenas
+    else if (S.reach.kind === 'lever') lean += .1 * rk;
+    else lean += .12 * rk;
   } else if (S.shake > 0 || S.stuck) {
     // se penche et frappe le cône pour le décoincer
     const k = ease(Math.min(1, (S.shake || 0) * 3)), tap = S.shake > 0 && !fl ? Math.max(0, Math.sin(tt * 9)) * .35 : 0;
     lean += .28 * k; tilt += .1 * k;
     const fx = RIG_X + PLATE_TOP0 + .35 + tap;
     hands = [new THREE.Vector3(fx, AXIS_Y + .9, -.7), new THREE.Vector3(fx, AXIS_Y + .9, .7)].map((h, i) => REST_HANDS[i].clone().lerp(h, Math.max(k, S.stuck ? 1 : 0)));
-  } else hands = REST_HANDS.map(h => h.clone().add(new THREE.Vector3(0, .05 * Math.sin(tt * 1.4), 0)));
+  } else hands = REST_HANDS.map((h, i) => h.clone().add(new THREE.Vector3(mv * 1.1 * Math.sin(ph + i * Math.PI), .05 * Math.sin(tt * 1.4), 0)));
   bursts.forEach(b => { b.visible = false; });
   if (fl && S.flight) {
     const F = S.flight, lt = S.launchT;
@@ -3148,9 +3268,10 @@ function animateWorker(S, fl) {
     hands = hands.map((h, i) => h.add(new THREE.Vector3(1.6, .9, (i ? 1 : -1) * .4).multiplyScalar(r)));
     lean -= .14 * r; hip.x += .4 * r;
   }
-  poseWorker(hip, lean, tilt, hands);
-  // modèle GLB : recul et chute du corps entier, pivot aux pieds (le modèle n'a pas de squelette animé ici)
+  poseWorker(hip, lean, tilt, hands, feet, palm);
+  // modèle GLB : recul et chute du corps entier, pivot aux pieds (le modèle n'a pas de squelette animé ici) ; suit le trajet du travailleur
   if (workerModel) {
+    if (gizmo.object !== workerRoot) { workerRoot.position.copy(WORKER_GLB.position).add(wkV.set(sp.x - HOME.x, 0, sp.z - HOME.z)); workerRoot.rotation.set(0, WORKER_GLB.rotY + sp.yaw, 0); }
     const dLean = lean - .127 - .012 * Math.sin(tt * 1.4);
     workerBody.position.set(0, Math.min(0, hip.y - BODY.hip) * .45, 0);
     workerBody.rotation.set(dLean * .8, 0, 0);   // repère du modèle : +z = devant, pivot aux pieds
@@ -3210,6 +3331,7 @@ function applyScene(S) {
   S.jc.bolts.forEach((r, k) => {
     const b = jcBolts[k], base = b.userData.base, s = seg(r, 0, .6);
     const from = new THREE.Vector3(base.x, base.y + 0.3 * s, base.z);
+    b.userData.from = from;   // tête du boulon avant la pose sur la table (place de la douille)
     boltToTable(b, from, TABLE.jcBolt(k), seg(r, .6, 1), s * 6 * Math.PI * 2);
     setOpacity(b, 1); glow(b, r > 0 ? hiK(RC.jc) : 0);
     labels.numsJ[k].position.set(b.position.x, b.position.y + .45, b.position.z); labelOpacity(labels.numsJ[k], nextGrp === 'J' && r < .6 ? 1 : 0);
@@ -3220,6 +3342,7 @@ function applyScene(S) {
   S.cv.bolts.forEach((r, k) => {
     const b = cvBolts[k], base = b.userData.base, s = seg(r, 0, .6);
     const from = new THREE.Vector3(base.x, base.y + 0.25 * s, base.z);
+    b.userData.from = from;
     boltToTable(b, from, TABLE.cvBolt(k), seg(r, .6, 1), s * 5 * Math.PI * 2);
     setOpacity(b, 1); glow(b, r > 0 ? hiK(RC.cv) : 0);
     labels.numsC[k].position.set(b.position.x, b.position.y + .45, b.position.z); labelOpacity(labels.numsC[k], nextGrp === 'C' && r < .6 ? 1 : 0);
@@ -3314,6 +3437,7 @@ function applyScene(S) {
       const q = S.catchD ? S.catchP - CATCH_HIT : -1;
       const jolt = B.bushing && q > 0 ? 0.03 * Math.exp(-q * 14) * Math.sin(q * 90) : 0;
       const from = new THREE.Vector3(B.x, PLATE_TOP0 + bush + H(b.turns) + b.lift + jolt + hOff, B.z);
+      o.userData.from = from;
       boltToTable(o, from, TABLE.pBolt(i), b.gone, b.turns * Math.PI * 2);
       setOpacity(o, fl && S.ride === -1 && b.gone < 1 ? 0 : 1);
       glow(o, b.gone > 0 ? hiK(RC.pb && RC.pb[i]) : mvGlow);
@@ -3343,6 +3467,18 @@ function applyScene(S) {
     const B = BOLTS[S.ride];
     wrench.visible = true; activeRing.visible = false;
     wrench.position.set(B.x, PLATE_TOP0 - 0.02, B.z); wrench.rotation.set(0, 0, 0); toolSpin.rotation.y = 0;
+  } else if (S.tool && !fl) {
+    // clé à chocs du travailleur : sur le boulon a, dégagée et portée vers le boulon b (w), approchée dans l'axe (on)
+    const t = S.tool, list = t.set === 'jc' ? jcBolts : t.set === 'cv' ? cvBolts : pBolts;
+    const A = list[t.a].userData.from, B = list[t.b].userData.from;
+    if (A && B) {
+      const w = ease(t.w);
+      wrench.visible = true; activeRing.visible = t.set === 'pb' && S.active >= 0;
+      wrench.position.lerpVectors(A, B, w); wrench.position.y += -0.02 + .9 * Math.sin(Math.PI * w) + 1.6 * (1 - ease(t.on));
+      wrench.rotation.set(0, 0, 0);
+      toolSpin.rotation.y = (w < .5 ? list[t.a] : list[t.b]).rotation.y;
+      if (activeRing.visible) activeRing.position.set(BOLTS[S.active].x, pBolts[S.active].position.y + 0.05, BOLTS[S.active].z);
+    } else { wrench.visible = false; activeRing.visible = false; }
   } else if (S.active >= 0 && !fl) {
     const o = pBolts[S.active], B = BOLTS[S.active];
     wrench.visible = true; activeRing.visible = true;
@@ -3416,21 +3552,41 @@ const CAMS = {
   hexplode: { p: [-16.1, 13.1, 32.1], t: [-2.2, 3.6, 2.5] },
   catch: { p: [3.2, 7.4, 12], t: [0.8, 4.7, 0] },
   explode: { p: [-8.1, 12.5, 21.2], t: [-0.6, 4.6, 0] },
+  // plans de la mise en scène (caméra auto) : fixes, ou calculés à chaque image (fn) depuis la position monde de l'objet visé
+  walk: { p: [-3.0, 14.5, 29.5], t: [-3.0, 1.6, 3.2] },          // plan large : le travailleur va au poste ou revient au banc
+  jawsFront: { p: [4.6, 6.6, 4.4], t: [-0.9, 4.7, 0.3] },        // face avant : mâchoires fermées
+  plongee: { p: [6.2, 14.6, 5.8], t: [-0.3, 4.6, 0.2] },           // plongée de face, au-dessus du casque : C1 à C9
+  lever: { fn: () => camAt(gripMid(), [9.0, 3.8, 1.6], [0, 0, 1.8]) },                  // mains sur les manettes, de profil (côté droit du travailleur)
+  lockClose: { fn: () => camAt(lockG.getWorldPosition(camV), [5.0, 2.6, 4.8], [0, -.4, .4]) },   // cadenas et étiquette posés sur le poste
+  tool: { fn: () => camAt(toolSubject(.4), [4.0, 3.6, 6.2], [.8, 0, 0]) },                 // par-dessus l'épaule gauche : mains, clé, boulon
+  boltL: { fn: () => camAt(toolSubject(.15), [3.4, 2.0, 4.8], [.5, 0, 0]) },               // gros plan de côté sur le boulon travaillé
+  pull: { fn: () => camAt(FACE, [3.6, 3.4, 8.2], [1.4, 0, 0]) },                            // pièce tirée hors du mandrin, à deux mains
+  tableJC: { p: [-3.4, 4.6, 11.0], t: [-6.0, -0.3, 4.6] },      // couvert posé sur la table
+  tablePlate: { p: [3.4, 5.4, 11.6], t: [-0.2, -0.2, 4.6] },    // cône et mâchoires posés sur la table
 };
-let autoCam = true, camGoal = CAMS.intro;
+const camV = new THREE.Vector3(), camV2 = new THREE.Vector3();
+const FACE = new THREE.Vector3(RIG_X + PLATE_TOP0, AXIS_Y, 0);   // centre de la face avant du cône
+const camAt = (o, off, d) => ({ p: [o.x + d[0] + off[0], o.y + d[1] + off[1], o.z + d[2] + off[2]], t: [o.x + d[0], o.y + d[1], o.z + d[2]] });
+const gripMid = () => levers[0].localToWorld(camV.set(0, 1.52, 0)).add(levers[1].localToWorld(camV2.set(0, 1.52, 0))).multiplyScalar(.5);
+// sujet des gros plans : la douille, tirée vers le centre de la face (k) pour ne pas suivre chaque saut de boulon
+const toolSubject = k => (wrench.visible ? wrench.getWorldPosition(camV) : camV.copy(FACE)).lerp(FACE, k);
+let autoCam = true, camGoal = CAMS.intro, camSnap = false, procRefit = 0;
 controls.addEventListener('start', () => { autoCam = false; document.getElementById('camChip').hidden = false; });
 document.getElementById('camBtn').addEventListener('click', () => { autoCam = true; document.getElementById('camChip').hidden = true; });
 // Vue « Foreuse » : la caméra va sur la foreuse complète (posée derrière le banc) ; un second clic revient à l'étape
 camera.position.set(...CAMS.intro.p); controls.target.set(...CAMS.intro.t);
 const goalP = new THREE.Vector3(), goalT = new THREE.Vector3();
 function updateCamera(dt) {
-  if (!autoCam) return;
+  if (procRefit > 0 && (procRefit -= dt) <= 0) procAuto = null;   // nouveau plan : l'encadré « procédure » se replace une fois la caméra posée
+  if (!autoCam) { camSnap = false; return; }
   if (hexTarget && !explodeTarget) fitHexplode();
-  const g = explodeTarget ? CAMS.explode : hexTarget ? CAMS.hexplode : camGoal;
+  const g0 = explodeTarget ? CAMS.explode : hexTarget ? CAMS.hexplode : camGoal, g = g0.fn ? g0.fn() : g0;
   goalP.set(...g.p); goalT.set(...g.t);
   const aspect = camera.aspect;
-  if (aspect < 1.1 && g !== CAMS.hexplode) goalP.sub(goalT).multiplyScalar(1 + (1.1 - aspect) * 0.9).add(goalT);
-  const k = reduceMotion ? 1 : 1 - Math.exp(-dt * 2.2);
+  if (aspect < 1.1 && g0 !== CAMS.hexplode) goalP.sub(goalT).multiplyScalar(1 + (1.1 - aspect) * 0.9).add(goalT);
+  // plan qui suit l'action : rattrapage plus lent (pas de secousse quand la clé change de boulon) ; coupe franche : saut immédiat
+  const k = reduceMotion || camSnap ? 1 : 1 - Math.exp(-dt * (g0.fn ? 1.7 : 2.2));
+  camSnap = false;
   camera.position.lerp(goalP, k);
   controls.target.lerp(goalT, k);
 }
@@ -3502,6 +3658,12 @@ addEventListener('keydown', e => {
 // Paramètres des ressorts : valeurs internes fixes (DEFAULTS), non affichées
 
 let lastStep = -1, uiTick = 0, lastStepKey = '', lastCamKey = '';
+// Plan courant : case « Caméra auto (plans variés) » cochée → shots de l'étape ; sinon un seul cadrage (cam, puis cam2 dès cam2At)
+function pickShot(s, p) {
+  if (s.shots && $('optShots').checked) { let sh = s.shots[0]; for (const x of s.shots) if (p >= x.at) sh = x; return sh; }
+  return { cam: s.cam2 && p >= s.cam2At ? s.cam2 : s.cam };
+}
+$('optShots').addEventListener('change', () => { lastCamKey = ''; });
 function updateUI(S, force) {
   const s = steps[S.i];
   const D = S.D;
@@ -3530,12 +3692,14 @@ function updateUI(S, force) {
     $('dock').dataset.tone = s.tone || 'ok';
     $('capText').textContent = nb(s.summary ? summaryText(s.ev) : s.text);
     $('tmeta').textContent = `Étape ${S.i + 1}/${steps.length}`;
-    camGoal = CAMS[s.cam] || CAMS.overview; lastCamKey = s.cam;
   }
-  // Étape à deux cadrages : manettes au banc, puis gros plan sur le mécanisme dès cam2At (retour au 1er cadrage si on recule)
-  if (!explodeTarget && !hexTarget && s.cam2) {
-    const key = S.p >= s.cam2At ? s.cam2 : s.cam;
-    if (key !== lastCamKey) { lastCamKey = key; camGoal = CAMS[key] || CAMS.overview; }
+  // Cadrage : plan de la mise en scène selon l'étape et sa progression (rejouable, retour en arrière compris)
+  if (!explodeTarget && !hexTarget) {
+    const sh = pickShot(s, S.p);
+    if (sh.cam !== lastCamKey) {
+      if (lastCamKey && sh.cut) camSnap = true;
+      lastCamKey = sh.cam; camGoal = CAMS[sh.cam] || CAMS.overview; procRefit = .9;
+    }
   }
   // Étapes faites : marquées en permanence (✓ bonne méthode, ✗ méthode dangereuse) ; l'étape en cours l'est dès qu'elle est terminée
   const doneK = explodeTarget || hexTarget ? -1 : S.i + (S.p > .995 ? 1 : 0), stepKey = doneK + '|' + S.i;
