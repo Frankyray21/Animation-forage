@@ -101,6 +101,18 @@ Pour ajouter le fichier : `curl -L -o public/models/worker.glb https://cdn.3dass
 
 Le travailleur dévisse les boulons avec une clé à chocs électrique à fil (d'après la photo du chantier) : corps métallique usé, nez conique, douille longue 12 pans, poignée arrière fermée avec gâchette, anneau latéral et cordon. Seule la douille tourne avec le boulon.
 
+La clé n'apparaît plus dans les mains : elle est **accrochée à la ceinture** (étui sur la hanche droite, douille en bas, poignée vers l'extérieur) dès le début. Le travailleur la sort au début de l'étape 4 (la main droite va à la poignée, la porte au mandrin, la main gauche se pose sur le corps de la clé) et la range à la ceinture avant chaque transport de pièces ; à la fin de l'étape 8 il la range pour de bon (le cône de l'étape 9 se tire à deux mains). Le cordon est recalculé à chaque image : de la poignée, une boucle molle jusqu'au plancher, puis à plat jusqu'à une prise devant le banc (il suit le travailleur quand il marche).
+
+## Gestes : pièces portées à la table
+
+Les pièces retirées ne glissent plus seules vers la table : le travailleur les **porte**. Tout reste fonction de l'étape et de sa progression (rejouable, ligne de temps et retour en arrière compris) ; les places sur la table ne changent pas.
+
+- **Couvert des mâchoires (étape 4) et couvercle (étape 5)** : clé rangée, la pièce est tirée à deux mains hors du mandrin, ramenée devant le corps, portée jusqu'à la table (trajet par l'allée, face à la table), posée à plat en se penchant ; ses boulons dévissés restent dans leurs trous pendant le transport, puis la main gauche les range un à un en rangée.
+- **Boulons du cône et bushings** : sortis des filets à la clé, tirés à la main gauche et gardés en poignée (tenus en travers devant la ceinture) pendant que la clé passe au boulon suivant ; à la fin, clé rangée, la poignée est portée à deux mains jusqu'à la table et chaque pièce y est posée par la main. Étape 6 : les 3 bushings ; étape 7 : les 6 boulons ½ × 6 ½ (retrait depuis le boulon 6, où se trouve la clé) ; étape 8 : les 3 boulons longs.
+- **Cône et mâchoires (étape 9)** : tirés à deux mains, portés au bout de la table et posés face vers le bas.
+- **Scénarios B et D** : mêmes gestes à l'étape 6 (boulons longs et bushings portés à la table en B, bushings en D) ; à l'étape 7 non respectée, chaque boulon sorti au complet reste dans la main gauche pendant que la droite tient la clé. Lors de la projection (B), le travailleur lâche tout : la clé est arrachée, les boulons tombent au sol. Le résumé « Étapes 1 à 5 faites » pose les pièces d'un coup, sans transport.
+- Code : `S.wd` (clé sortie de l'étui), `S.spot` (place sur un trajet `TRIP`), `carryPose` (pièce à deux mains : tirée, portée, posée), `boltsWithPart` (boulons dans les trous d'une pièce portée), `handPose` (pièce tirée à la main, tenue, posée), `placeWrench` et `updateCord`.
+
 ## Mise en scène (caméra auto)
 
 On doit voir les gestes : chaque étape enchaîne plusieurs plans (`shots` : `{ at, cam, cut }`, `at` = fraction de l'étape). Le plan dépend seulement de l'étape et de sa progression : retour en arrière et ligne de temps donnent le même cadrage. Transitions douces ; une seule coupe franche (passage au cadenas). Plans fixes (`CAMS.walk`, `jawsFront`, `plongee`, `tableJC`, `tablePlate`…) et plans qui suivent l'action (`CAMS.x = { fn }`, recalculés à chaque image depuis la position de l'objet visé, rattrapage plus lent) : `lever` (mains sur les manettes), `lockClose` (cadenas), `tool` (par-dessus l'épaule : mains, clé, boulon ; cible tirée vers le centre de la face pour ne pas sauter d'un boulon à l'autre), `boltL` (boulon long de côté), `pull` (pièce tirée à deux mains).
@@ -110,14 +122,14 @@ On doit voir les gestes : chaque étape enchaîne plusieurs plans (`shots` : `{ 
 | 1 Manettes | large : le travailleur va au poste → profil sur les mains qui ferment CLAM et CHUCK → coupe du vérin quand la pression tombe |
 | 2 Mâchoires | face avant, gros plan sur les mâchoires |
 | 3 Cadenasser | coupe franche sur le poste : la main pose le cadenas et l'étiquette |
-| 4 Jaw cover | large (retour au banc) → par-dessus l'épaule : clé sur J1, J2, J3 → couvert tiré à deux mains → posé sur la table |
-| 5 Cap holder | plongée de face (C1 à C9) → suivi de la clé → couvercle tiré → face du cône |
-| 6 Boulons longs | gros plan de côté (dévissé, sorti, bushing posé, remis) → face, 3 boulons longs |
-| 7 1 tour à la fois | alternance : face (ordre 1 → 6) / clé au boulon actif / coupe (ressorts qui se détendent) |
-| 8 Boulons longs | gros plan sur la clé → face |
-| 9 Pièces | large (cône tiré à deux mains) → table |
+| 4 Jaw cover | large (retour au banc) → par-dessus l'épaule : clé sortie de l'étui, J1, J2, J3, rangée → couvert tiré à deux mains → large : porté à la table → bout de la table : posé, boulons rangés → large : retour |
+| 5 Cap holder | plongée de face → suivi de la clé (C1 à C9) → couvercle tiré → porté → posé, boulons rangés → face du cône |
+| 6 Boulons longs | gros plan de côté (dévissé, sorti, bushing dans la main, remis) → face → bushings posés au bout de la table → face, 3 boulons longs |
+| 7 1 tour à la fois | alternance : face (ordre 1 → 6) / clé au boulon actif / coupe (ressorts qui se détendent) → retrait (clé et main gauche) → boulons portés et posés sur la table → face |
+| 8 Boulons longs | gros plan sur la clé → face (clé rangée) → boulons posés au bout de la table → face |
+| 9 Pièces | cône tiré à deux mains → porté et posé au bout de la table → large |
 
-Scénarios B et D : mêmes plans pour les étapes communes ; gros plans sur la clé pendant les retraits au complet et sur le boulon 6 qui va céder, puis plans existants de la projection ou de l'arrêt. Le travailleur marche au poste (étape 1) et revient au banc (étape 4), en contournant la table ; ses mains tiennent les manettes, le cadenas, la clé (un boulon à la fois) et les pièces tirées. Case **Caméra auto (plans variés)** (cochée par défaut) : décochée, un seul cadrage par étape. Toucher la caméra coupe la mise en scène ; **Recentrer** la reprend.
+Scénarios B et D : mêmes plans pour les étapes communes ; gros plans sur la clé pendant les retraits au complet et sur le boulon 6 qui va céder, puis plans existants de la projection ou de l'arrêt. Le travailleur marche au poste (étape 1) et revient au banc (étape 4), en contournant la table ; ses mains tiennent les manettes, le cadenas, la clé (un boulon à la fois) et les pièces qu'il porte à la table (plans `tableJC`, `tableCV`, `tablePB`, `tableL`, `tablePlate`, vus du bout de la table pour voir ses mains). Case **Caméra auto (plans variés)** (cochée par défaut) : décochée, un seul cadrage par étape. Toucher la caméra coupe la mise en scène ; **Recentrer** la reprend.
 
 ## Ressorts
 
