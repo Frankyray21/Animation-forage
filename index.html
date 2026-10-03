@@ -4365,11 +4365,17 @@ async function capture() {
   const blob = await new Promise(r => out.toBlob(r, 'image/png'));
   if (!blob) return null;
   const url = URL.createObjectURL(blob);
-  // téléchargement quand il est permis (bloqué dans certains cadres intégrés) ; l'image s'ouvre aussi dans la visionneuse
-  try { const a = document.createElement('a'); a.href = url; a.download = name; document.body.appendChild(a); a.click(); a.remove(); } catch (e) {}
-  if (lbShow) lbShow(url, `${name} · Clic droit / appui long sur l'image pour l'enregistrer`);
+  // page claude.ai : enregistrement via la capacité « downloads » (le visiteur confirme) ; ailleurs (GitHub Pages) : lien de téléchargement
+  const dl = await capDownloads();
+  let saved = false;
+  if (dl) { try { await dl.save({ filename: name, data: blob }); saved = true; } catch (e) { saved = e && e.code === 'declined'; } }
+  else { try { const a = document.createElement('a'); a.href = url; a.download = name; document.body.appendChild(a); a.click(); a.remove(); } catch (e) {} }
+  if (lbShow) lbShow(url, saved ? name : `${name} · Clic droit / appui long sur l'image pour l'enregistrer`);
   return { name, url, w: out.width, h: out.height };
 }
+// capacité « downloads » de la page claude.ai (null ailleurs) ; demandée une seule fois
+let dlP = null;
+const capDownloads = () => dlP || (dlP = (window.claude && window.claude.use ? window.claude.use('downloads') : Promise.resolve(null)).catch(() => null));
 $('btnShot').addEventListener('click', () => { capture().catch(e => console.warn('Capture impossible : ' + e.message)); });
 // Pause à chaque étape : carte « fait » ancrée sur l'action dans la 3D
 let pauseStep = -1, pauseT = 0;
