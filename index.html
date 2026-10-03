@@ -4062,8 +4062,8 @@ function updateProcCard(S) {
     else if (S.cv.lift < .01) { html = '9 boulons ½ à dévisser avec une clé ¾<small>C1 à C9 · B500-2250 · porte-capuchon (cap holder) · étape 5</small>'; o = cvBolts; }
     else if (S.cv.lift > .99) {
       const n6 = ORDER.filter(i => S.pb[i].gone < .99).length, nL = BUSHED.filter(i => S.pb[i].gone < .99).length;
-      if (n6 > 0) { html = `${n6} boulons ½ × 6 ½ à dévisser 1 tour à la fois, ordre 1 → 6<small>B500-6500 · clé ¾ · étape 7${nL ? ' · 3 boulons longs L1–L3 (B500-8000) : retenue du cône' : ''}</small>`; o = ORDER.filter(i => S.pb[i].gone < .99).map(i => pBolts[i]); }
-      else if (nL > 0) { html = `${nL} boulons longs ½ × 8 à retirer<small>L1 à L3 · B500-8000 · ressorts détendus · étape 8</small>`; o = BUSHED.filter(i => S.pb[i].gone < .99).map(i => pBolts[i]); }
+      if (n6 > 0) { html = `${n6} boulon${n6 > 1 ? 's' : ''} ½ × 6 ½ à dévisser 1 tour à la fois, ordre 1 → 6<small>B500-6500 · clé ¾ · étape 7${nL ? ' · 3 boulons longs L1–L3 (B500-8000) : retenue du cône' : ''}</small>`; o = ORDER.filter(i => S.pb[i].gone < .99).map(i => pBolts[i]); }
+      else if (nL > 0) { html = `${nL} boulon${nL > 1 ? 's' : ''} long${nL > 1 ? 's' : ''} ½ × 8 à retirer<small>L1 à L3 · B500-8000 · ressorts détendus · étape 8</small>`; o = BUSHED.filter(i => S.pb[i].gone < .99).map(i => pBolts[i]); }
     }
   }
   if (!html || !o) { card.hidden = true; svg.style.display = 'none'; return; }
