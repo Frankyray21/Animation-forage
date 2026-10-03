@@ -3,7 +3,7 @@
 // 2) cartons (titre, légendes des rendus Blender, fin) rendus en PNG par chromium,
 // 3) montage et encodage H.264 par ffmpeg (fondus enchaînés, Ken Burns sur les rendus, fin d'étape figée).
 //
-// Usage : node video/make_video.mjs [--frames DIR] [--jobs 3] [--skip-capture] [--crf 23] [--out FICHIER]
+// Usage : node video/make_video.mjs [--frames DIR] [--jobs 3] [--skip-capture] [--crf 27] [--out FICHIER]
 // Variables : FFMPEG (défaut : ffmpeg), PLAYWRIGHT, CHROME, THREE_DIR, CDN_CACHE (voir capture.mjs).
 import fs from 'fs';
 import os from 'os';
@@ -16,7 +16,7 @@ const arg = (k, d) => { const i = process.argv.indexOf('--' + k); return i < 0 ?
 const FRAMES = path.resolve(arg('frames', path.join(os.tmpdir(), 'clam-video-frames')));
 const OUT = path.resolve(arg('out', path.join(ROOT, 'video', 'procedure_boyles_h.mp4')));
 const POSTER = path.join(path.dirname(OUT), 'procedure_poster.jpg');
-const JOBS = +arg('jobs', 3), CRF = +arg('crf', 23), FFMPEG = process.env.FFMPEG || 'ffmpeg';
+const JOBS = +arg('jobs', 3), CRF = +arg('crf', 27), FFMPEG = process.env.FFMPEG || 'ffmpeg';
 const FPS = 24, W = 1280, H = 720, HOLD = 1.5, XF = 0.5;   // i/s, taille, fin d'étape figée (s), fondu enchaîné (s)
 const WORK = path.join(FRAMES, 'montage');
 const run = (cmd, args) => new Promise((res, rej) => { const p = spawn(cmd, args, { stdio: 'inherit' }); p.on('exit', c => c ? rej(new Error(`${cmd} : code ${c}`)) : res()); });

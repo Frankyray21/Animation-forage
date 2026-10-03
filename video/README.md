@@ -1,6 +1,6 @@
 # Vidéo de la procédure
 
-`procedure_boyles_h.mp4` : scénario A « Procédure respectée » (étapes 1 à 9 de PRO-OP-DD-005) sur le mandrin Boyles H, pour la formation. H.264 (libx264, yuv420p, CRF 23, preset slow, `+faststart`), 1280 × 720, 24 i/s, sans son. `procedure_poster.jpg` : image d'aperçu (carton titre).
+`procedure_boyles_h.mp4` : scénario A « Procédure respectée » (étapes 1 à 9 de PRO-OP-DD-005) sur le mandrin Boyles H, pour la formation. H.264 (libx264, yuv420p, CRF 27, preset slow, `+faststart`), 1280 × 720, 24 i/s, sans son. `procedure_poster.jpg` : image d'aperçu (carton titre).
 
 ## Fichiers
 
@@ -11,10 +11,10 @@
 
 ```bash
 npm i playwright && npx playwright install chromium   # ou PLAYWRIGHT=/chemin/vers/playwright/index.mjs
-node video/make_video.mjs                             # capture + montage (WebGL logiciel : ~85 min sur 4 cœurs, 1 382 images)
+node video/make_video.mjs                             # capture + montage (WebGL logiciel : ~2 h 25 sur 4 cœurs, 1 646 images)
 node video/make_video.mjs --skip-capture              # remonter seulement, à partir des images déjà capturées
 ```
 
-Options : `--frames DIR` (images capturées ; défaut : `$TMPDIR/clam-video-frames`), `--jobs 3`, `--crf 23`, `--out FICHIER`. Variables : `FFMPEG` (défaut `ffmpeg`, avec libx264), `CHROME` (exécutable chromium), `THREE_DIR` (copie locale du paquet `three@0.160.0` au lieu du CDN), `CDN_CACHE` (cache des fichiers CDN et des polices, téléchargés par `curl`, qui suit le mandataire HTTPS).
+Options : `--frames DIR` (images capturées ; défaut : `$TMPDIR/clam-video-frames`), `--jobs 3`, `--crf 27`, `--out FICHIER`. Variables : `FFMPEG` (défaut `ffmpeg`, avec libx264), `CHROME` (exécutable chromium), `THREE_DIR` (copie locale du paquet `three@0.160.0` au lieu du CDN), `CDN_CACHE` (cache des fichiers CDN et des polices, téléchargés par `curl`, qui suit le mandataire HTTPS).
 
 Capture seule, pour contrôler quelques images : `node video/capture.mjs --out /tmp/f --from 800 --to 801` ; `--info` affiche les étapes et leur durée.
