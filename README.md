@@ -83,6 +83,14 @@ La tête de forage a été **retirée de la foreuse et posée sur un banc de tra
 | Erreur : boulons retirés un par un | Étapes 6 et 7 non respectées. Le dernier boulon porte toute la force, son filet cède et le cône est projeté. |
 | Erreur rattrapée : cône retenu | Même erreur, mais l'étape 6 a été faite. Les 3 boulons remis sans bushing arrêtent le cône après quelques millimètres. |
 
+**Bilan de fin** : à la dernière étape de chaque scénario (étape « Bilan » en B et D ; fin de l'étape 9 en A, une fois le cône posé sur la table), une carte au haut de la vue résume le résultat, avec ✓ / ✗ pour les étapes clés 6 et 7 (sans valeurs de force) :
+
+- A : « Procédure respectée : l'énergie des ressorts a été libérée lentement, le cône est resté retenu. » ✓ étape 6, ✓ étape 7.
+- B : « Étapes 6 et 7 non respectées : boulons retirés au complet sous charge → projection du cône. » ✗ étape 6, ✗ étape 7.
+- D : « Étape 7 non respectée mais étape 6 respectée : les 3 boulons longs ont retenu le cône. » ✓ étape 6, ✗ étape 7.
+
+Textes dans `SCEN[k].bilan` ; la carte (`#bilanCard`, `updateBilan`) est masquée dans les vues éclatées et remplace l'encadré « procédure ». En plein écran (ordinateur), elle passe à gauche pour laisser la liste des étapes.
+
 ## Travailleur (modèle 3D)
 
 Travailleur procédural (affiché tant que `worker.glb` est absent) : casque de mineur avec lampe, **lunettes de sécurité** (monture noire, verres teintés, écrans latéraux), coquilles, combinaison à bandes réfléchissantes, gants et bottes.

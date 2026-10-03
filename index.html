@@ -82,6 +82,18 @@ button, input, select { font: inherit; color: inherit; }
 .proccard .pin { position: absolute; top: -12px; right: -12px; width: 24px; height: 24px; border-radius: 50%; background: #e8853a; color: #fff; font-size: 13px; line-height: 24px; text-align: center; cursor: pointer; border: 2px solid #fff; }
 .proccard small { display: block; font-size: .62em; color: #444; margin-top: 4px; }
 .procline { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; z-index: 4; }
+/* Bilan de fin de scénario : carte au haut de la vue, ✓ / ✗ par étape clé */
+.bilan { position: absolute; left: 50%; top: 56px; transform: translateX(-50%); z-index: 5; width: min(440px, calc(100% - 24px)); display: grid; gap: 6px; padding: 10px 14px 12px; border-radius: 10px; background: color-mix(in srgb, var(--panel) 95%, transparent); border: 1px solid var(--line); border-top: 5px solid var(--ok); box-shadow: 0 8px 26px rgba(0,0,0,.2); pointer-events: none; }
+.bilan[data-tone="danger"] { border-top-color: var(--danger); }
+.bilan[data-tone="warn"] { border-top-color: var(--warn); }
+.bilan b { font-family: var(--display); font-size: 20px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; line-height: 1.1; }
+.bilan p { margin: 0; font-size: 14px; line-height: 1.35; }
+.bilan ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 3px; font-size: 13.5px; line-height: 1.3; }
+.bilan li { display: grid; grid-template-columns: 1.5em minmax(0, 1fr); }
+.bilan .ok { color: var(--ok); font-weight: 700; }
+.bilan .ko { color: var(--danger); font-weight: 700; }
+@media (min-width: 601px) { .stage.fs .bilan { left: 12px; transform: none; } }
+@media (max-width: 600px) { .bilan { top: 92px; padding: 7px 10px 9px; gap: 4px; } .bilan b { font-size: 16px; } .bilan p { font-size: 12.5px; } .bilan ul { font-size: 12px; } }
 .actcard b { font-size: 11px; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
 .actcard small { font-size: 11px; color: var(--muted); }
 .help { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); width: min(470px, calc(100% - 24px)); max-height: calc(100% - 24px); overflow: auto; padding: 14px 16px; border-radius: 10px; background: var(--panel); border: 1px solid var(--line); box-shadow: 0 10px 30px rgba(0,0,0,.25); z-index: 5; }
@@ -300,6 +312,7 @@ details.params summary { cursor: pointer; padding: 10px 14px; font-weight: 600; 
       <div class="actdot" id="actDot" hidden></div>
       <svg class="procline" id="procLine" style="display:none"><defs><marker id="procArrow" markerWidth="10" markerHeight="10" refX="9" refY="5" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#d81e1e"/></marker></defs><line id="procSeg" x1="0" y1="0" x2="0" y2="0" stroke="#d81e1e" stroke-width="3" marker-end="url(#procArrow)"/></svg>
       <div class="proccard" id="procCard" hidden></div>
+      <div class="bilan" id="bilanCard" hidden role="status"><b id="bilanTitle"></b><p id="bilanText"></p><ul id="bilanList"></ul></div>
       <div class="actcard" id="actCard" hidden><b id="actStep"></b><span id="actText"></span><small>Lecture pour continuer</small></div>
       <div class="help-veil" id="helpVeil" hidden></div>
       <div class="help" id="help" hidden role="dialog" aria-labelledby="helpTitle">
@@ -2949,6 +2962,8 @@ const A7 = (() => {
 const SCEN = {
   A: {
     label: 'Procédure respectée', sub: 'Étapes 1 à 9 de PRO-OP-DD-005', tone: 'ok',
+    bilan: { title: 'Bilan · procédure respectée', text: 'Procédure respectée : l\'énergie des ressorts a été libérée lentement, le cône est resté retenu.',
+      items: [[true, 'Étape 6 : 3 boulons longs remis sans bushing (retenue du cône)'], [true, 'Étape 7 : boulons dévissés 1 tour à la fois, ordre 1 à 6']] },
     make: () => [
       st.lever, st.jaws, st.lock, st.jawCover, st.cover,
       st.retain,
@@ -2998,6 +3013,8 @@ const SCEN = {
   },
   B: {
     label: 'Erreur : boulons retirés un par un', sub: 'Étapes 6 et 7 non respectées', tone: 'danger',
+    bilan: { title: 'Bilan · accident', text: 'Étapes 6 et 7 non respectées : boulons retirés au complet sous charge → projection du cône.',
+      items: [[false, 'Étape 6 : boulons longs enlevés, non remis'], [false, 'Étape 7 : chaque boulon sorti au complet au lieu d\'un tour à la fois']] },
     make: () => [
       first5, skip6, ...oneByOne(false),
       { n: '!', title: 'Le filet cède : cône projeté', cam: 'wide', flight: true, tone: 'danger', flag: 'Projection', dir: null, ride: byNum(6),
@@ -3007,6 +3024,8 @@ const SCEN = {
   },
   D: {
     label: 'Erreur rattrapée : cône retenu', sub: 'Étape 7 non respectée, étape 6 respectée', tone: 'warn',
+    bilan: { title: 'Bilan · quasi-accident', text: 'Étape 7 non respectée mais étape 6 respectée : les 3 boulons longs ont retenu le cône.',
+      items: [[true, 'Étape 6 : 3 boulons longs remis sans bushing'], [false, 'Étape 7 : chaque boulon sorti au complet au lieu d\'un tour à la fois']] },
     make: () => [
       first5, st.retain, ...oneByOne(true),
       { n: '!', title: 'Le filet cède : les 3 boulons arrêtent le cône', cam: 'catch', catch: true, tone: 'warn', flag: 'Retenu', ride: byNum(6),
@@ -4271,7 +4290,7 @@ let procPin = null, procDrag = null, procAuto = null;   // procAuto : position a
 function updateProcCard(S) {
   const card = $('procCard'), svg = $('procLine');
   const s = steps[S.i];
-  const on = $('optNums').checked && !S.D.flightS && explodeE === 0 && hexE === 0 && !s.catch && !s.summary;
+  const on = $('optNums').checked && !S.D.flightS && explodeE === 0 && hexE === 0 && !s.catch && !s.summary && !bilanOn(S);
   let html = '', o = null;
   // étapes sans boulons : consigne de PRO-OP-DD-005, flèche vers l'objet concerné
   const CONS = {
@@ -4323,6 +4342,16 @@ function updateProcCard(S) {
   const ex = Math.max(cx, Math.min(cx + cw, bx)), ey = Math.max(cy, Math.min(cy + ch, by));   // point du bord le plus proche
   const dx = bx - ex, dy = by - ey, L = Math.hypot(dx, dy) || 1;
   const seg = $('procSeg'); seg.setAttribute('x1', ex); seg.setAttribute('y1', ey); seg.setAttribute('x2', bx - dx / L * 14); seg.setAttribute('y2', by - dy / L * 14);
+}
+// Bilan : dernière étape du scénario (étape « Bilan », ou fin de l'étape 9 quand le cône est posé sur la table)
+const bilanOn = S => S.i === steps.length - 1 && (steps[S.i].summary || S.p >= .75) && explodeE === 0 && hexE === 0;
+function updateBilan(S) {
+  const card = $('bilanCard'), on = bilanOn(S), B = SCEN[scen].bilan;
+  card.hidden = !on || !B;
+  if (card.hidden || card.dataset.scen === scen) return;
+  card.dataset.scen = scen; card.dataset.tone = SCEN[scen].tone;
+  $('bilanTitle').textContent = B.title; $('bilanText').textContent = nb(B.text);
+  $('bilanList').innerHTML = B.items.map(([ok, t]) => `<li><span class="${ok ? 'ok' : 'ko'}" aria-label="${ok ? 'respectée' : 'non respectée'}">${ok ? '✓' : '✗'}</span><span>${nb(t)}</span></li>`).join('');
 }
 function updateActCard() {
   const card = $('actCard'), dot = $('actDot');
@@ -4497,7 +4526,7 @@ function frame(now) {
   updateCamera(dt);
   controls.update();
   gizmo.visible = !!gizmo.object;
-  updateActCard(); updateProcCard(S);
+  updateActCard(); updateProcCard(S); updateBilan(S);
   if (outline && outline.selectedObjects.length) {
     let cp = null; outline.selectedObjects[0].traverse(o => { if (!cp && o.isMesh) cp = [].concat(o.material)[0].clippingPlanes || []; });
     outline.prepareMaskMaterial.clippingPlanes = outline.depthMaterial.clippingPlanes = cp && cp.length ? cp : null;
