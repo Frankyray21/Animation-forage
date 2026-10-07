@@ -3930,7 +3930,7 @@ function setPlaying(v) {
   $('bPlay').setAttribute('aria-label', v ? 'Pause' : 'Lecture');
   $('playIcon').innerHTML = v ? '<path d="M3 2h4v12H3zM9 2h4v12H9z"/>' : '<path d="M4 2l10 6-10 6z"/>';
 }
-$('bPlay').addEventListener('click', () => { if (explodeTarget) setExplode(false); if (hexTarget) setHeadExplode(false); if (!playing && T >= total - 1e-3) T = 0; setPlaying(!playing); });
+$('bPlay').addEventListener('click', () => { if (explodeTarget) setExplode(false); if (hexTarget) setHeadExplode(false); if (!playing && pauseStep >= 0) { resumeFromPause(); return; } if (!playing && T >= total - 1e-3) T = 0; setPlaying(!playing); });
 $('bRestart').addEventListener('click', () => { T = 0; leverMan.on = false; resetLabels(); setPlaying(false); autoCam = true; setCutAuto(true); $('camChip').hidden = true; });
 // étape précédente / suivante : la lecture continue si elle était en cours
 $('bPrev').addEventListener('click', () => { const { i, p } = locate(T); T = starts[p < 0.05 && i > 0 ? i - 1 : i]; leverMan.on = false; });
@@ -4415,7 +4415,9 @@ function updateBilan(S) {
   $('bilanTitle').textContent = B.title; $('bilanText').textContent = nb(B.text);
   $('bilanList').innerHTML = B.items.map(([ok, t]) => `<li><span class="${ok ? 'ok' : 'ko'}" aria-label="${ok ? 'respectée' : 'non respectée'}">${ok ? '✓' : '✗'}</span><span>${nb(t)}</span></li>`).join('');
 }
-$('actNext').addEventListener('click', () => { pauseStep = -1; setPlaying(true); });   // pause à chaque étape : passer à l'étape suivante
+// pause à chaque étape : repartir au début de l'étape suivante (sinon la lecture repasse la fin de l'étape et se remet en pause)
+function resumeFromPause() { const k = pauseStep; pauseStep = -1; if (k >= 0 && k < steps.length - 1) T = starts[k + 1]; setPlaying(true); }
+$('actNext').addEventListener('click', resumeFromPause);
 function updateActCard() {
   const card = $('actCard'), dot = $('actDot');
   if (pauseStep >= 0 && (playing || Math.abs(T - pauseT) > 1e-6 || explodeE > 0 || hexE > 0)) pauseStep = -1;
