@@ -185,6 +185,7 @@ Tous les textes à l'écran sont courts et s'adressent aux travailleurs : une co
 - **?** : aide illustrée pour naviguer dans la 3D (souris, molette, tablette), affichée au premier passage ; se ferme avec ×, Compris, Échap ou un clic à côté.
 - **Plein écran** : la vue 3D et ses commandes occupent tout l'écran (Échap pour sortir).
 - **Présenter aux travailleurs** (bouton rouge sous le titre, ou **Présenter** dans la vue) : plein écran, gros caractères, lecture continue (Espace pour mettre en pause). Quatre chapitres : 1 · l'accident (« Boulons retirés un par un : cône retenu », reconstitution), 2 · la bonne méthode (procédure respectée), 3 · sans les boulons longs (pire cas : projection), 4 · comparaison des trois issues avec « Revoir ». Touches : Espace lecture, → / ← ou Page suivante / précédente (télécommande) étape suivante / précédente, 1 à 4 chapitres, Échap pour quitter.
+- **Pause à chaque étape** (case sous la ligne de temps, décochée par défaut) : à la fin de chaque étape, la lecture s'arrête sur une carte « Étape n · fait » ancrée sur l'action dans la 3D, avec un bouton **Suivant ▶** pour passer à l'étape suivante. Le mode Présentation ne l'active pas : la lecture y est continue.
 - **Pièces** : un clic (ou un toucher) sur une pièce de la 3D affiche son numéro, son nom (anglais par défaut, français au choix sous « Nom des pièces au clic ») et, pour les pièces de la procédure, une bulle santé-sécurité ; la pièce est mise en évidence. La liste complète des pièces est réservée au dépôt dédié aux modèles 3D.
 
 ## Physique utilisée (estimations)

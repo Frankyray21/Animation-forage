@@ -73,7 +73,9 @@ button, input, select { font: inherit; color: inherit; }
 .chip[data-tone="danger"] .dot { background: var(--danger); }
 .chip-row .spacer { flex: 1; }
 .chip button { border: 0; background: none; padding: 0; cursor: pointer; font-size: 12px; font-weight: 500; }
+.actdot { position: absolute; width: 14px; height: 14px; margin: -7px 0 0 -7px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 35%, transparent); pointer-events: none; animation: actpulse 1.4s ease-out infinite; }
 @keyframes actpulse { 0% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--accent) 70%, transparent); } 100% { box-shadow: 0 0 0 16px transparent; } }
+.actcard { position: absolute; max-width: min(270px, 60%); display: grid; gap: 2px; padding: 7px 10px 8px; border-radius: 8px; background: color-mix(in srgb, var(--panel) 92%, transparent); border: 1px solid var(--line); border-left: 4px solid var(--accent); font-size: 12.5px; pointer-events: none; box-shadow: 0 4px 14px rgba(0,0,0,.12); }
 /* Encadré « procédure » (option Numéros et consignes) : blanc, bordure orange, gros texte, flèche rouge vers le boulon */
 .proccard { position: absolute; z-index: 5; pointer-events: auto; cursor: grab; user-select: none; touch-action: none; background: #fff; color: #111; border: 4px solid #e8853a; padding: 7px 12px; font-family: 'Times New Roman', Georgia, serif; font-size: clamp(14px, 1.6vw, 19px); line-height: 1.2; text-align: center; max-width: min(250px, 42%); box-shadow: 0 6px 20px rgba(0,0,0,.18); }
 .proccard.drag { cursor: grabbing; box-shadow: 0 10px 28px rgba(0,0,0,.3); }
@@ -92,6 +94,10 @@ button, input, select { font: inherit; color: inherit; }
 .bilan .ko { color: var(--danger); font-weight: 700; }
 @media (min-width: 601px) { .stage.fs .bilan { left: 12px; transform: none; } }
 @media (max-width: 600px) { .bilan { top: 92px; padding: 7px 10px 9px; gap: 4px; } .bilan b { font-size: 16px; } .bilan p { font-size: 12.5px; } .bilan ul { font-size: 12px; } }
+.actcard b { font-size: 11px; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
+.act-next { justify-self: start; margin-top: 6px; pointer-events: auto; display: inline-flex; align-items: center; gap: 6px; border: 0; border-radius: 6px; padding: 6px 14px; background: var(--accent); color: var(--accent-ink); font: 600 14px/1.1 var(--body); cursor: pointer; }
+.act-next:hover, .act-next:focus-visible { filter: brightness(1.08); }
+.act-next:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
 .help { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); width: min(470px, calc(100% - 24px)); max-height: calc(100% - 24px); overflow: auto; padding: 14px 16px; border-radius: 10px; background: var(--panel); border: 1px solid var(--line); box-shadow: 0 10px 30px rgba(0,0,0,.25); z-index: 5; }
 .help h3 { margin: 0 0 8px; font-size: 15px; padding-right: 28px; }
 .help-veil { position: absolute; inset: 0; z-index: 4; background: color-mix(in srgb, var(--scene) 35%, transparent); }
@@ -118,6 +124,7 @@ button, input, select { font: inherit; color: inherit; }
 .fs-steps .n { font-size: 16px; }
 .stage.fs { position: fixed; inset: 0; z-index: 100; border-radius: 0; border: 0; height: 100%; }
 .stage.fs .view { height: auto; min-height: 0; }
+@media (prefers-reduced-motion: reduce) { .actdot { animation: none; } }
 .note { position: absolute; left: 12px; bottom: 10px; font-family: var(--mono); font-size: 11px; color: var(--muted); background: color-mix(in srgb, var(--scene) 80%, transparent); padding: 2px 6px; border-radius: 4px; pointer-events: none; }
 .flash { position: absolute; inset: 0; pointer-events: none; background: radial-gradient(ellipse at center, transparent 35%, var(--flash, var(--danger)) 120%); opacity: 0; }
 .banner { position: absolute; left: 50%; top: 56px; transform: translateX(-50%); pointer-events: none; text-align: center; font-family: var(--display); color: #fff; background: var(--danger); padding: 8px 18px 10px; border-radius: 6px; box-shadow: 0 8px 30px rgba(0,0,0,.25); max-width: calc(100% - 32px); }
@@ -240,6 +247,7 @@ details.params summary { cursor: pointer; padding: 10px 14px; font-weight: 600; 
   .vbtn:last-child { margin-right: 18px; }
   #btnFs .sm { font-size: 14px; line-height: 1; }
   .stage.fs .fs-steps { top: auto; bottom: 34px; right: 8px; width: min(300px, calc(100% - 16px)); max-height: 40%; }
+  .actcard { font-size: 12px; max-width: min(240px, 66%); }
 }
 .units { display: inline-flex; border: 1px solid var(--line); border-radius: 6px; overflow: hidden; margin-left: auto; }
 .units button { border: 0; background: none; padding: 2px 9px; font-size: 12px; font-weight: 600; cursor: pointer; color: var(--muted); }
@@ -363,9 +371,11 @@ body.pres .pres-cmp:not([hidden]) { display: grid; position: absolute; inset: 66
         <p class="pres-key">Cadenasser coupe l'hydraulique, <b>pas les ressorts</b>. Étape 6 : remettre les 3 boulons longs sans bushing. Étape 7 : ensuite seulement, dévisser les boulons du cône 1 tour à la fois, dans l'ordre 1 à 6.</p>
       </div>
       <details class="steps fs-steps" id="fsSteps" open><summary>Étapes de la procédure</summary><ol id="fsStepList"></ol></details>
+      <div class="actdot" id="actDot" hidden></div>
       <svg class="procline" id="procLine" style="display:none"><defs><marker id="procArrow" markerWidth="10" markerHeight="10" refX="9" refY="5" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#d81e1e"/></marker></defs><line id="procSeg" x1="0" y1="0" x2="0" y2="0" stroke="#d81e1e" stroke-width="3" marker-end="url(#procArrow)"/></svg>
       <div class="proccard" id="procCard" hidden></div>
       <div class="bilan" id="bilanCard" hidden role="status"><b id="bilanTitle"></b><p id="bilanText"></p><ul id="bilanList"></ul></div>
+      <div class="actcard" id="actCard" hidden><b id="actStep"></b><span id="actText"></span><button type="button" class="act-next" id="actNext">Suivant <span aria-hidden="true">▶</span></button></div>
       <div class="help-veil" id="helpVeil" hidden></div>
       <div class="help" id="help" hidden role="dialog" aria-labelledby="helpTitle">
         <button type="button" class="help-x" id="helpX" aria-label="Fermer">×</button>
@@ -396,6 +406,7 @@ body.pres .pres-cmp:not([hidden]) { display: grid; position: absolute; inset: 66
         <span class="tmeta" id="tmeta">Étape 1/9</span>
       </div>
       <div class="topt">
+        <label><input type="checkbox" id="optPause" autocomplete="off"> Pause à chaque étape</label>
         <label>Vitesse
           <select id="optSpeed"><option value="0.5">0,5×</option><option value="0.75" selected>0,75×</option><option value="1">1×</option><option value="2">2×</option></select>
         </label>
@@ -4264,7 +4275,7 @@ $('btnFs').addEventListener('click', async () => {
 document.addEventListener('fullscreenchange', () => { if (!document.fullscreenElement && stage.classList.contains('fs')) { setFs(false); if (presOn) setPres(false); } });
 document.addEventListener('keydown', e => { if (e.key === 'Escape' && stage.classList.contains('fs') && !document.fullscreenElement && !presOn) setFs(false); });
 // Mode présentation : plein écran + chapitres. L'accident (D, cône retenu) d'abord, puis la bonne méthode (A), le pire cas sans boulons longs (B) et la comparaison.
-// Lecture continue ; le présentateur met en pause avec Espace et change d'étape avec → / ← ou la télécommande.
+// Lecture continue (Espace : pause ; → / ← ou télécommande : étape suivante / précédente). « Pause à chaque étape » reste un choix de l'utilisateur.
 let presOn = false, presCh = 'D', presSaved = null;
 const PRES_OUT = { B: 'Sans les boulons longs : cône et mâchoires projetés vers le travailleur', D: 'Le filet du boulon 6 cède : le cône part vers le travailleur, les 3 boulons longs l\'arrêtent', A: 'Ressorts détendus lentement : pièces changées sans danger' };
 const PRES_TAG = { D: 'L\'accident (reconstitution)', B: 'Pire cas : projection', A: 'Procédure respectée' };
@@ -4321,6 +4332,9 @@ document.addEventListener('keydown', e => { if (e.key === 'Escape' && !$('help')
 { let seen = false; try { seen = !!localStorage.getItem(HELP_KEY); } catch (e) {} if (!seen) showHelp(true); }
 // Vidéo de la procédure : section cachée si le fichier ou l'aperçu manque (artefact sans fichiers) ou si le navigateur ne lit pas le H.264
 { const v = $('vid'), hide = () => { $('vidSec').hidden = true; }; v.addEventListener('error', hide); if (!v.canPlayType('video/mp4; codecs="avc1.64001f"')) hide(); const p = new Image(); p.onerror = hide; p.src = v.getAttribute('poster'); }
+// Pause à chaque étape : carte « fait » ancrée sur l'action dans la 3D
+let pauseStep = -1, pauseT = 0;
+const actV = new THREE.Vector3();
 // Encadré « procédure » : quel groupe de boulons, combien, quelle clé ; flèche vers un boulon du groupe
 // Déplaçable à la souris ou au doigt (position gardée tant qu'on ne clique pas ↺) ; sinon placé automatiquement à côté du groupe
 const procV = new THREE.Vector3();
@@ -4401,6 +4415,26 @@ function updateBilan(S) {
   $('bilanTitle').textContent = B.title; $('bilanText').textContent = nb(B.text);
   $('bilanList').innerHTML = B.items.map(([ok, t]) => `<li><span class="${ok ? 'ok' : 'ko'}" aria-label="${ok ? 'respectée' : 'non respectée'}">${ok ? '✓' : '✗'}</span><span>${nb(t)}</span></li>`).join('');
 }
+$('actNext').addEventListener('click', () => { pauseStep = -1; setPlaying(true); });   // pause à chaque étape : passer à l'étape suivante
+function updateActCard() {
+  const card = $('actCard'), dot = $('actDot');
+  if (pauseStep >= 0 && (playing || Math.abs(T - pauseT) > 1e-6 || explodeE > 0 || hexE > 0)) pauseStep = -1;
+  if (pauseStep < 0) { card.hidden = dot.hidden = true; return; }
+  const s = steps[pauseStep];
+  const o = s.at ? s.at() : plate;
+  o.getWorldPosition(actV); actV.project(camera);
+  const w = view.clientWidth, h = view.clientHeight;
+  const x = (actV.x * .5 + .5) * w, y = (-actV.y * .5 + .5) * h;
+  dot.hidden = actV.z > 1; dot.style.left = `${x}px`; dot.style.top = `${y}px`;
+  $('actStep').textContent = `Étape ${s.n} · fait`;
+  $('actText').textContent = nb(s.act || s.title);
+  card.hidden = false;
+  const cw = card.offsetWidth, ch = card.offsetHeight;
+  let cx = x + 18, cy = y - ch - 18;
+  if (cx + cw > w - 10) cx = x - cw - 18;
+  if (cy < 52) cy = y + 18;
+  card.style.left = `${Math.max(10, Math.min(cx, w - cw - 10))}px`; card.style.top = `${Math.max(52, Math.min(cy, h - ch - 34))}px`;
+}
 setQuality(quality);
 new ResizeObserver(resize).observe(view);
 
@@ -4410,7 +4444,11 @@ function frame(now) {
   const dt = Math.min(0.1, (now - last) / 1000);
   last = now;
   if (playing) {
+    const { i } = locate(T);
+    const end = starts[i] + steps[i].dur;
     T += dt * speed;
+    if ($('optPause').checked && T >= end && i < steps.length - 1) { T = end - 1e-4; setPlaying(false); pauseStep = i; pauseT = T; }   // reste sur la fin de l'étape faite
+    else if ($('optPause').checked && T >= total && !steps[i].flight) { pauseStep = i; pauseT = total - 1e-3; }
     if (T >= total) { T = total - 1e-3; setPlaying(false); }
   }
   explodeE = reduceMotion ? explodeTarget : explodeE + Math.sign(explodeTarget - explodeE) * Math.min(Math.abs(explodeTarget - explodeE), dt / 1.4);
@@ -4425,7 +4463,7 @@ function frame(now) {
   updateCamera(dt);
   controls.update();
   gizmo.visible = !!gizmo.object;
-  updateProcCard(S); updateBilan(S);
+  updateActCard(); updateProcCard(S); updateBilan(S);
   if (outline && outline.selectedObjects.length) {
     let cp = null; outline.selectedObjects[0].traverse(o => { if (!cp && o.isMesh) cp = [].concat(o.material)[0].clippingPlanes || []; });
     outline.prepareMaskMaterial.clippingPlanes = outline.depthMaterial.clippingPlanes = cp && cp.length ? cp : null;
