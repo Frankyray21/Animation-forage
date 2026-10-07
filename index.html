@@ -77,9 +77,10 @@ h2 { margin: 0 0 12px; font-family: var(--display); font-weight: 700; font-size:
 .steps .do b { color: var(--ink); font-weight: 600; }
 .steps .do ol { margin: 0; padding-left: 20px; display: grid; gap: 2px; }
 .steps .do p { font-size: 15px; }
-.flag { display: inline-block; margin-top: 2px; font-size: 12px; font-weight: 600; letter-spacing: .07em; text-transform: uppercase; }
-.flag.ok { color: var(--green); }
-.flag.ko { color: #ff6b5f; }
+.steps .flag { justify-self: start; margin: 2px 0 0; padding: 6px 12px 5px; border-radius: 6px; font-size: 15px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; line-height: 1.2; }
+.steps .flag.ok { background: color-mix(in srgb, var(--green) 20%, var(--bg)); color: #7ee0a6; border: 1px solid color-mix(in srgb, var(--green) 60%, var(--bg)); }
+.steps .flag.warn { background: color-mix(in srgb, var(--yellow) 18%, var(--bg)); color: #ffd866; border: 1px solid color-mix(in srgb, var(--yellow) 60%, var(--bg)); }
+.steps .flag.ko { background: color-mix(in srgb, var(--red) 22%, var(--bg)); color: #ff8a80; border: 1px solid color-mix(in srgb, var(--red) 65%, var(--bg)); }
 .alert { display: flex; gap: 16px; align-items: flex-start; margin-top: 28px; padding: 18px 22px; border-radius: 10px; background: color-mix(in srgb, var(--red) 16%, var(--bg)); border: 1px solid color-mix(in srgb, var(--red) 55%, var(--bg)); }
 .alert .ic { flex: none; display: grid; place-items: center; width: 40px; height: 40px; border-radius: 6px; background: var(--red); color: #fff; font: 800 28px/1 var(--display); }
 .alert p { margin: 0; font-size: clamp(17px, 1.6vw, 21px); line-height: 1.4; }
@@ -149,6 +150,7 @@ footer p { margin: 0; max-width: 80ch; }
       <ol class="steps">
         <li>
           <div class="ph"><img src="img/accident-1.jpg" width="1200" height="750" alt="Mandrin en coupe : les 3 boulons longs sont remis dans le cône, les ressorts verts sont comprimés."><span class="n">6</span></div>
+          <p class="flag ok">✓ Étape 6 respectée</p>
           <h3>Les 3 boulons longs sont remis sans bushing</h3>
           <div class="do">
             <b>Étape 6, avant de toucher aux boulons du cône&nbsp;:</b>
@@ -158,10 +160,10 @@ footer p { margin: 0; max-width: 80ch; }
             </ol>
             <p>Sans bushing, ils vissent 1 ½&nbsp;po plus loin&nbsp;: assez de filets en prise pour arrêter le cône s'il part.</p>
           </div>
-          <p><span class="flag ok">✓ Étape 6 respectée</span></p>
         </li>
         <li class="bad">
           <div class="ph"><img src="img/accident-2.jpg" width="1200" height="750" alt="Le travailleur retire au complet un boulon du cône avec la clé."><span class="n">7</span></div>
+          <p class="flag ko">✗ Étape 7 non respectée</p>
           <h3>Boulons retirés un par un</h3>
           <p>Chaque boulon du cône est sorti au complet, un après l'autre.</p>
           <div class="do ko">
@@ -172,15 +174,16 @@ footer p { margin: 0; max-width: 80ch; }
             </ol>
             <p>Les 6&nbsp;boulons partagent la charge pendant toute la détente.</p>
           </div>
-          <p><span class="flag ko">✗ Étape 7 non respectée</span></p>
         </li>
         <li class="bad">
           <div class="ph"><img src="img/accident-3.jpg" width="1200" height="750" alt="Gros plan sur le dernier boulon du cône, qui retient seul la poussée des ressorts."><span class="n">!</span></div>
+          <p class="flag ko">✗ Filet cédé</p>
           <h3>Le dernier boulon porte tout</h3>
           <p>Le boulon 6 retient seul la poussée des 18&nbsp;ressorts. Pendant qu'on le dévisse, son filet cède.</p>
         </li>
         <li class="stop">
           <div class="ph"><img src="img/accident-4.jpg" width="1200" height="750" alt="Le cône est parti vers le travailleur et se trouve arrêté par les têtes des 3 boulons longs."><span class="n" aria-hidden="true">■</span></div>
+          <p class="flag warn">■ Cône retenu</p>
           <h3>Les boulons longs arrêtent le cône</h3>
           <p>Le cône part vers le travailleur. Après quelques millimètres, les têtes des 3&nbsp;boulons longs l'arrêtent.</p>
         </li>
