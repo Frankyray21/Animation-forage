@@ -146,9 +146,9 @@ button, input, select { font: inherit; color: inherit; }
 .dock[data-tone="danger"] .cap-num { color: var(--danger); }
 .cap-title { font-family: var(--display); font-size: 24px; font-weight: 600; line-height: 1.1; }
 .cap-text { margin: 0; color: var(--ink); max-width: 72ch; min-height: 3em; }
-.cap-list { list-style: none; margin: 2px 0 6px; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 15em), 1fr)); gap: 4px 18px; max-width: 110ch; }
-.cap-list li { display: grid; grid-template-columns: 1.6em minmax(0, 1fr); align-items: baseline; }
-.cap-list b { font-family: var(--display); font-weight: 700; font-size: 1.2em; color: var(--accent); }
+.cap-list { list-style: none; margin: 4px 0 8px; padding: 0; display: flex; flex-wrap: wrap; gap: 6px; }
+.cap-list li { display: inline-flex; align-items: center; gap: 7px; padding: 3px 11px 3px 3px; border-radius: 999px; background: var(--shade); border: 1px solid var(--line); font-size: .92em; line-height: 1.25; }
+.cap-list b { flex: none; display: grid; place-items: center; width: 1.6em; height: 1.6em; border-radius: 50%; background: var(--accent); color: var(--accent-ink); font-family: var(--display); font-weight: 700; font-size: 1em; }
 .cap-after { margin: 0; font-weight: 600; }
 @media (min-width: 900px) { .cap-text { min-height: 6.2em; } }   /* hauteur stable : le canevas ne change pas de taille d'une étape à l'autre */
 .cap-tag { display: inline-block; font-family: var(--body); font-size: 11px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; padding: 1px 7px; border-radius: 3px; margin-left: 8px; vertical-align: 3px; color: #fff; background: var(--warn); }
