@@ -1,6 +1,6 @@
-// Capture image par image (déterministe) du scénario A d'index.html, pour la vidéo de formation.
+// Capture image par image (déterministe) du scénario A d'animation.html, pour la vidéo de formation.
 // La page est servie depuis le dépôt par un petit serveur local ; les crochets de capture sont
-// injectés dans la copie servie (index.html n'est jamais modifié).
+// injectés dans la copie servie (animation.html n'est jamais modifié).
 //
 // Usage : node video/capture.mjs [--out DIR] [--fps 24] [--ss 2] [--from K] [--to K] [--info]
 // --ss : suréchantillonnage (rendu à ss × la taille, réduit au montage) contre le crénelage et le scintillement des arêtes
@@ -23,9 +23,9 @@ const THREE_DIR = process.env.THREE_DIR || '';
 const CACHE = process.env.CDN_CACHE || path.join(os.tmpdir(), 'clam-cdn-cache');
 const { chromium } = await import(process.env.PLAYWRIGHT || 'playwright');
 
-// --- copie servie d'index.html, avec les crochets de capture ---
+// --- copie servie d'animation.html, avec les crochets de capture ---
 const sub = (s, a, b) => { if (!s.includes(a)) throw new Error('motif absent : ' + a); return s.replace(a, b); };
-let html = fs.readFileSync(path.join(ROOT, 'index.html'), 'utf8');
+let html = fs.readFileSync(path.join(ROOT, 'animation.html'), 'utf8');
 // boucle d'images pilotée : une image calculée par « __go », dt fixe, rendu sautable (préchauffage)
 html = sub(html, 'function frame(now) {\n  const dt = Math.min(0.1, (now - last) / 1000);',
   'function frame(now) {\n  if (window.__cap && !(window.__go > 0)) { last = now; requestAnimationFrame(frame); return; }\n  if (window.__cap) window.__go--;\n' +
@@ -56,13 +56,13 @@ html = sub(html, '<div class="flash" id="flash"></div>', '<div class="flash" id=
 const MIME = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript', '.mjs': 'text/javascript', '.json': 'application/json', '.jpg': 'image/jpeg', '.png': 'image/png', '.glb': 'model/gltf-binary', '.css': 'text/css', '.svg': 'image/svg+xml' };
 const server = http.createServer((req, res) => {
   const p = decodeURIComponent(new URL(req.url, 'http://x').pathname);
-  if (p === '/' || p === '/index.html') { res.writeHead(200, { 'content-type': MIME['.html'] }); return res.end(html); }
+  if (p === '/' || p === '/animation.html') { res.writeHead(200, { 'content-type': MIME['.html'] }); return res.end(html); }
   const f = path.join(ROOT, path.normalize(p));
   if (!f.startsWith(ROOT) || !fs.existsSync(f) || !fs.statSync(f).isFile()) { res.writeHead(404); return res.end(); }
   res.writeHead(200, { 'content-type': MIME[path.extname(f)] || 'application/octet-stream' }); fs.createReadStream(f).pipe(res);
 });
 await new Promise(r => server.listen(0, '127.0.0.1', r));
-const URL0 = `http://127.0.0.1:${server.address().port}/index.html`;
+const URL0 = `http://127.0.0.1:${server.address().port}/animation.html`;
 
 // --- fichiers CDN : copie locale de three si fournie, sinon curl (respecte le mandataire HTTPS) avec cache ---
 function cdn(url) {

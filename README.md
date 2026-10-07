@@ -4,7 +4,9 @@ Animation 3D de formation sur la **tête de forage Boyles UM-012-100UG** et son 
 
 Comme lors de l'accident, la tête est **à l'horizontale** : axe de broche à 1,25 m du plancher, face du mandrin vers le travailleur debout devant elle, boîte et moteur à côté du mandrin, chariot et mât dessous, le long de l'axe. Les vues éclatées ramènent la tête à la verticale, comme sur les planches.
 
-Ouvrir `index.html` dans un navigateur récent. Une connexion Internet est requise : Three.js et les polices sont chargés depuis un CDN.
+**Accueil** (`index.html`) : page d'ouverture d'une rencontre sécurité, projetable — « Ce qui s'est passé » (frise de 4 images tirées de la 3D, scénario de l'accident) et « Le danger caché » (ressorts comprimés même cadenassé), avec **Commencer la présentation** (ouvre `animation.html#presenter`, mode Présentation) et **Explorer la 3D** (`animation.html`). Un seul thème, sombre, rouge et jaune d'avertissement ; images dans `img/` et `renders/`.
+
+**Animation 3D** (`animation.html`) : ouvrir dans un navigateur récent ; lien « ← Accueil » en tête. Une connexion Internet est requise : Three.js et les polices sont chargés depuis un CDN.
 
 ## Modèle 3D
 
@@ -81,7 +83,7 @@ Travailleur procédural (affiché tant que `worker.glb` est absent) : casque de 
 Le travailleur est chargé depuis une **copie locale** : `public/models/worker.glb` (modèle CC0 1.0, 0,698 × 1,83 × 0,337 m, axe Y vertical, source : https://cdn.3dassets.dev/assets/36355/v1/model.glb). Il n'est jamais chargé depuis le CDN. Si le fichier est absent, le travailleur procédural articulé (avec ses ÉPI) est affiché.
 
 - Chargement : `GLTFLoader`, matériaux d'origine conservés, ombres projetées et reçues, mise à la hauteur réelle (1,83 m) et pieds au plancher.
-- Réglages par défaut dans `WORKER_GLB` (index.html) : `position`, `rotY` (orientation), `scale`.
+- Réglages par défaut dans `WORKER_GLB` (animation.html) : `position`, `rotY` (orientation), `scale`.
 - En direct : `__clam.worker.set({ x, y, z, rotYdeg, scale })` et `__clam.worker.get()`.
 - Sélection : clic sur le travailleur dans la vue 3D (raycaster). Sélectionné, une poignée apparaît : **T** déplacer, **R** tourner, **E** échelle. Les trajectoires et les zones d'impact suivent sa nouvelle position.
 - Animation : recul et chute du corps entier lors d'une projection (le modèle n'est pas animé membre par membre).
@@ -168,7 +170,7 @@ Retiré (option « Éclairage réaliste », dossier `lightmaps/`, scripts de cui
 
 La section repliable **Vidéo de la procédure** contient `video/procedure_boyles_h.mp4` : le scénario A « Procédure respectée », étapes 1 à 9, pour former les travailleurs (H.264, 1280 × 720, 24 i/s, 1 min 35 s, sans son ; aperçu `video/procedure_poster.jpg`). Plan : carton titre sur le rendu Blender de l'ensemble ; animation 3D à vitesse 1× avec la caméra auto à plans variés (coupe du mandrin, numéros des boulons et encadré procédure, travailleur), numéro et titre de l'étape en bandeau, fin de chaque étape figée 1,5 s ; rendus Blender intercalés avec léger zoom (face avant avant l'étape 4, coupe et couvercle retiré avant l'étape 6) ; carton « À retenir ». La vidéo a été produite avant la clé à la ceinture et le transport des pièces à la table : ces gestes n'y figurent pas encore (la refaire avec la même chaîne pour les montrer). Si la vidéo ou son aperçu ne se chargent pas (artefact sans fichiers), ou si le navigateur ne lit pas le H.264, la section est masquée.
 
-Elle est produite par `video/make_video.mjs` : capture image par image, déterministe, de l'animation (`video/capture.mjs`, chromium + Playwright ; dt fixe et horloge virtuelle injectés dans une copie servie de la page, `index.html` n'est pas modifié), cartons rendus en PNG, montage et encodage ffmpeg (fondus enchaînés). Voir `video/README.md` pour la refaire.
+Elle est produite par `video/make_video.mjs` : capture image par image, déterministe, de l'animation (`video/capture.mjs`, chromium + Playwright ; dt fixe et horloge virtuelle injectés dans une copie servie de la page, `animation.html` n'est pas modifié), cartons rendus en PNG, montage et encodage ffmpeg (fondus enchaînés). Voir `video/README.md` pour la refaire.
 
 ## Textes
 
