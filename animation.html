@@ -4416,7 +4416,7 @@ function updateBilan(S) {
   $('bilanList').innerHTML = B.items.map(([ok, t]) => `<li><span class="${ok ? 'ok' : 'ko'}" aria-label="${ok ? 'respectée' : 'non respectée'}">${ok ? '✓' : '✗'}</span><span>${nb(t)}</span></li>`).join('');
 }
 // pause à chaque étape : repartir au début de l'étape suivante (sinon la lecture repasse la fin de l'étape et se remet en pause)
-function resumeFromPause() { const k = pauseStep; pauseStep = -1; if (k >= 0 && k < steps.length - 1) T = starts[k + 1]; setPlaying(true); }
+function resumeFromPause() { const k = pauseStep; pauseStep = -1; $('actCard').hidden = $('actDot').hidden = true; if (k >= 0 && k < steps.length - 1) T = starts[k + 1]; setPlaying(true); }
 $('actNext').addEventListener('click', resumeFromPause);
 function updateActCard() {
   const card = $('actCard'), dot = $('actDot');
