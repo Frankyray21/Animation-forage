@@ -179,6 +179,8 @@ button, input, select { font: inherit; color: inherit; }
 .scen button[data-tone="danger"] .sw { background: var(--danger); }
 .scen button[data-tone="warn"] .sw { background: var(--warn); }
 .scen b { font-weight: 600; }
+.scen b, .scen small, .scen .scen-tag { grid-column: 2; }
+.scen button:has(.scen-tag) .sw { grid-row: 2 / span 2; }
 .scen small { color: var(--muted); font-size: 13px; }
 
 .kv { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
@@ -256,6 +258,7 @@ details.params summary { cursor: pointer; padding: 10px 14px; font-weight: 600; 
 .card button { justify-self: start; border: 1px solid var(--line); background: var(--bg); border-radius: 6px; padding: 4px 10px; cursor: pointer; font-size: 13px; }
 .xlink { margin: 0; font-size: 13.5px; }
 .xlink a { color: var(--accent); }
+.scen-tag { display: inline-block; justify-self: start; margin-bottom: 2px; padding: 1px 7px; border-radius: 3px; font-size: 11px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: #fff; background: var(--danger); }
 .langrow { display: flex; align-items: center; gap: 10px; font-size: 13px; color: var(--muted); margin-bottom: -6px; }
 .langrow .units { margin-left: 0; }
 .bom { border: 1px solid var(--line); border-radius: 8px; background: var(--panel); padding: 0 12px; }
@@ -3013,7 +3016,7 @@ const SCEN = {
     ],
   },
   B: {
-    label: 'Erreur : boulons retirés un par un', sub: 'Étapes 6 et 7 non respectées', tone: 'danger',
+    label: 'Erreur : boulons retirés un par un', sub: 'Étapes 6 et 7 non respectées', tone: 'danger', tag: 'Reconstitution de l\'accident',
     bilan: { title: 'Bilan · accident', text: 'Étapes 6 et 7 non respectées : boulons retirés au complet sous charge → projection du cône.',
       items: [[false, 'Étape 6 : boulons longs enlevés, non remis'], [false, 'Étape 7 : chaque boulon sorti au complet au lieu d\'un tour à la fois']] },
     make: () => [
@@ -3840,14 +3843,14 @@ const scenList = $('scenList');
 Object.entries(SCEN).forEach(([key, s]) => {
   const b = document.createElement('button');
   b.type = 'button'; b.role = 'tab'; b.dataset.key = key; b.dataset.tone = s.tone;
-  b.innerHTML = `<span class="sw"></span><b>${s.label}</b><small>${s.sub}</small>`;
+  b.innerHTML = `<span class="sw"></span>${s.tag ? `<span class="scen-tag">${s.tag}</span>` : ''}<b>${s.label}</b><small>${s.sub}</small>`;
   b.addEventListener('click', () => selectScen(key));
   scenList.appendChild(b);
 });
 function selectScen(key) {
   scen = key; T = 0; playing = false; leverMan.on = false; resetLabels(); autoCam = true; $('camChip').hidden = true;
   [...scenList.children].forEach(b => b.setAttribute('aria-selected', String(b.dataset.key === key)));
-  $('scenChipText').textContent = SCEN[key].label;
+  $('scenChipText').textContent = SCEN[key].label + (SCEN[key].tag ? ' · ' + SCEN[key].tag : '');
   $('scenChip').dataset.tone = SCEN[key].tone;
   try { localStorage.setItem('clam-scen', key); } catch (e) {}
   build();
