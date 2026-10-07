@@ -1,6 +1,6 @@
 # Vidéo de la procédure
 
-`procedure_boyles_h.mp4` : scénario A « Procédure respectée » (étapes 1 à 9 de PRO-OP-DD-005) sur le mandrin Boyles H, pour la formation. H.264 (libx264, yuv420p, CRF 27, preset slow, `+faststart`), 1280 × 720, 24 i/s, sans son. `procedure_poster.jpg` : image d'aperçu (carton titre).
+`procedure_boyles_h.mp4` : scénario A « Procédure respectée » (étapes 1 à 9 de PRO-OP-DD-005) sur le mandrin, pour la formation. H.264 (libx264, yuv420p, CRF 27, preset slow, `+faststart`), 1280 × 720, 24 i/s, sans son. `procedure_poster.jpg` : image d'aperçu (carton titre).
 
 ## Fichiers
 

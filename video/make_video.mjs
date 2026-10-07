@@ -48,7 +48,7 @@ const cards = {
   titre: `<div style="position:absolute;inset:0;background:linear-gradient(180deg,rgba(8,11,13,.45),rgba(8,11,13,.72) 55%,rgba(8,11,13,.86))"></div>
     <div style="position:absolute;left:72px;right:72px;bottom:96px">
       <div style="font-size:18px;letter-spacing:.12em;text-transform:uppercase;color:#f2c230;font-weight:600;margin-bottom:14px">Vidéo de formation · Tête UM-012-100UG</div>
-      <div style="font-family:'Barlow Condensed',sans-serif;font-size:72px;font-weight:700;line-height:1.02;text-wrap:balance">${nb("Démonter le cône d'un mandrin Boyles H — PRO-OP-DD-005")}</div>
+      <div style="font-family:'Barlow Condensed',sans-serif;font-size:72px;font-weight:700;line-height:1.02;text-wrap:balance">${nb("Démonter le cône d'un mandrin — PRO-OP-DD-005")}</div>
       <div style="margin-top:22px;font-size:28px;font-weight:500;color:#e3e8eb;border-left:5px solid #f2c230;padding-left:16px">${nb('Les ressorts (springs) restent comprimés : suivre chaque étape')}</div>
     </div>`,
   r02: `<div class="band"><span class="t">${nb('Face avant : couvert des mâchoires (jaw cover) et porte-capuchon (cap holder)')}</span><span class="tag">Rendu Blender</span></div>`,

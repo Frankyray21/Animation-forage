@@ -1,6 +1,6 @@
 # Vues réalistes (Blender)
 
-Rendus photoréalistes (Cycles, tracé de rayons, CPU) de la tête de forage UM-012 et du mandrin Boyles H, à partir du **même modèle 3D** que la page `index.html`.
+Rendus photoréalistes (Cycles, tracé de rayons, CPU) de la tête de forage UM-012 et du mandrin, à partir du **même modèle 3D** que la page `index.html`.
 
 - `tete_mandrin.glb` : export GLTFExporter de la scène three.js (tête, mandrin, banc, table des pièces retirées), état de l'étape 1 (manettes fermées, vérin relâché). Un maillage par pièce, nommé `référence + nom anglais` (ex. `5200517 Spring`). 1 unité = 10 cm.
 - `etat_s5.json` : positions des pièces retirées après l'étape 5 (couvercle, couvert des mâchoires et leurs boulons posés sur la table).

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Scène Blender (Cycles, CPU) de la tête de forage UM-012 et du mandrin Boyles H.
+"""Scène Blender (Cycles, CPU) de la tête de forage UM-012 et du mandrin.
 
 Rejouable : `python3 scene.py` (module bpy) ou `blender -b -P scene.py -- [options]`.
 Entrées : tete_mandrin.glb (export three.js du site, 1 unité = 10 cm) et etat_s5.json

@@ -1,6 +1,6 @@
 # Clam sous tension
 
-Animation 3D de formation sur la **tête de forage Boyles UM-012-100UG** et son **mandrin Boyles H** (UM-070-142AA / UM-012-142AA, Usinage Marcotte). Elle montre l'énergie emmagasinée dans les 18 ressorts du mandrin, et ce qui arrive quand la séquence de démontage de la procédure **PRO-OP-DD-005** n'est pas respectée.
+Animation 3D de formation sur la **tête de forage Boyles UM-012-100UG** et son **mandrin** (UM-070-142AA / UM-012-142AA, Usinage Marcotte). Elle montre l'énergie emmagasinée dans les 18 ressorts du mandrin, et ce qui arrive quand la séquence de démontage de la procédure **PRO-OP-DD-005** n'est pas respectée.
 
 Comme lors de l'accident, la tête est **à l'horizontale** : axe de broche à 1,25 m du plancher, face du mandrin vers le travailleur debout devant elle, boîte et moteur à côté du mandrin, chariot et mât dessous, le long de l'axe. Les vues éclatées ramènent la tête à la verticale, comme sur les planches.
 
@@ -8,7 +8,7 @@ Ouvrir `index.html` dans un navigateur récent. Une connexion Internet est requi
 
 ## Modèle 3D
 
-Sources : manuel de la foreuse STM-1500, pages 2.1 à 2.7 (planches de la tête de forage UM-012-100UG, puis liste de pièces, coupe A-A et vue éclatée du mandrin Boyles H). Toutes les pièces des listes sont modélisées avec leurs quantités. La tête est rouge, comme sur les planches ; les pièces usinées sont en acier, les ressorts en vert.
+Sources : manuel de la foreuse STM-1500, pages 2.1 à 2.7 (planches de la tête de forage UM-012-100UG, puis liste de pièces, coupe A-A et vue éclatée du mandrin). Toutes les pièces des listes sont modélisées avec leurs quantités. La tête est rouge, comme sur les planches ; les pièces usinées sont en acier, les ressorts en vert.
 
 Le bouton **Éclaté : tête** écarte les pièces de la tête autour de la boîte ; **Éclaté : mandrin** dispose les pièces du mandrin le long de son axe, comme sur le dessin. Dans les vues éclatées, les étiquettes donnent le numéro de la pièce ; son nom s'affiche dans une info-bulle quand on passe le curseur sur la pièce ou sur son étiquette (sur téléphone : quand on touche la pièce). La **nomenclature** de la page permet de cliquer une pièce pour l'identifier ; on peut aussi la cliquer dans la vue 3D.
 
@@ -22,9 +22,9 @@ Le bouton **Éclaté : tête** écarte les pièces de la tête autour de la boî
 | Lubrification | UM-012-111, pompe UM-012-139 + B250-750 (×6) + W250 (×6), tête de filtre UM-012-177 + cartouche UM-012-178, refroidisseur d'huile (visible sur les planches, hors liste), vanne 3 voies UM-10B-TR#6, régulateur NDV-10-N, reniflard A-1199-R-4048, 13 boyaux UM-012-H08C à H25C-UG et leurs raccords |
 | Montage | Axe de pivot UM-012-105A, UM-012-171 (×4), HP1000 |
 
-Les proportions transmission / moteur (carter de transmission de 13 po, corps du moteur raccourci) et la disposition générale (couvercle UM sur le dessus en pose horizontale, transmission et moteur du côté du mandrin, colonne blanche verticale au bout d'entraînement, régulateur et boyaux sur le couvercle) ont été vérifiées sur un rendu 3D de la tête Boyles H d'Usinage Marcotte. La broche est à 152 mm du centre de la boîte ; l'axe d'entraînement (transmission, pignon moteur, pompe) est à 13,6 po de la broche, décalé de 1,8 po vers le couvercle (vue du nez de la planche 2.1). Le tracé des boyaux (gris tressé, comme sur les planches) et l'emplacement des raccords sont approximatifs (longueurs et extrémités de la liste) ; le chariot et le mât derrière la tête sont schématiques. La coupe ne tranche que le mandrin.
+Les proportions transmission / moteur (carter de transmission de 13 po, corps du moteur raccourci) et la disposition générale (couvercle UM sur le dessus en pose horizontale, transmission et moteur du côté du mandrin, colonne blanche verticale au bout d'entraînement, régulateur et boyaux sur le couvercle) ont été vérifiées sur un rendu 3D de la tête d'Usinage Marcotte. La broche est à 152 mm du centre de la boîte ; l'axe d'entraînement (transmission, pignon moteur, pompe) est à 13,6 po de la broche, décalé de 1,8 po vers le couvercle (vue du nez de la planche 2.1). Le tracé des boyaux (gris tressé, comme sur les planches) et l'emplacement des raccords sont approximatifs (longueurs et extrémités de la liste) ; le chariot et le mât derrière la tête sont schématiques. La coupe ne tranche que le mandrin.
 
-### Mandrin Boyles H (pages 2.5 à 2.7)
+### Mandrin (pages 2.5 à 2.7)
 
 | Groupe | Pièces |
 | --- | --- |
@@ -71,7 +71,7 @@ La tête de forage a été **retirée de la foreuse et posée sur un banc de tra
 
 ## Clam et chuck
 
-- **Chuck (mandrin)** : sur la tête de forage, tourne avec la broche ; serre la tige pour la faire tourner et la pousser ou la tirer. C'est la pièce modélisée ici (Boyles H, UM-070-142AA, sur la tête UM-012-100UG).
+- **Chuck (mandrin)** : sur la tête de forage, tourne avec la broche ; serre la tige pour la faire tourner et la pousser ou la tirer. C'est la pièce modélisée ici (UM-070-142AA, sur la tête UM-012-100UG).
 - **Clam (rod clamp, foot clamp)** : fixé à l'avant du mât, près du trou, ne tourne pas ; retient le train de tiges quand le chuck s'ouvre (recul de la tête, ajout ou retrait de tiges) pour qu'il ne glisse pas dans le trou. Non modélisé (vue éclatée UM-079-100AA « rod clamp 12 HH »).
 - Les deux sont fermés par ressorts et ouverts par le vérin hydraulique : même danger d'énergie résiduelle, même procédure PRO-OP-DD-005.
 
