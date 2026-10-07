@@ -366,7 +366,7 @@ body.pres .pres-cmp:not([hidden]) { display: grid; position: absolute; inset: 66
       <div class="pres-cmp" id="presCmp" hidden role="region" aria-labelledby="presCmpTitle">
         <h3 id="presCmpTitle">Même démontage, trois issues</h3>
         <div class="pres-cols" id="presCols"></div>
-        <p class="pres-key">Cadenasser coupe l'hydraulique, <b>pas les ressorts</b>. Étape 6 : les 3 boulons longs, sans bushing. Étape 7 : 1 tour à la fois, ordre 1 à 6.</p>
+        <p class="pres-key">Cadenasser coupe l'hydraulique, <b>pas les ressorts</b>. Étape 6 : remettre les 3 boulons longs sans bushing. Étape 7 : ensuite seulement, dévisser les boulons du cône 1 tour à la fois, dans l'ordre 1 à 6.</p>
       </div>
       <details class="steps fs-steps" id="fsSteps" open><summary>Étapes de la procédure</summary><ol id="fsStepList"></ol></details>
       <div class="actdot" id="actDot" hidden></div>
@@ -448,7 +448,7 @@ body.pres .pres-cmp:not([hidden]) { display: grid; position: absolute; inset: 66
       <h3 class="sec-title">Au remontage</h3>
       <ul>
         <li>Nettoyer les deux faces du couvercle.</li>
-        <li>Remettre d'abord les 3 boulons longs, puis les autres 1 tour à la fois, ordre de l'étape 7.</li>
+        <li>Remettre d'abord les 3 boulons longs, puis les 6 autres, 1 tour à la fois, dans l'ordre 1 à 6 (même ordre qu'à l'étape 7).</li>
         <li>Boulons du couvercle : des neufs, serrés à <b>105 lb·pi</b> (142 N·m).</li>
       </ul>
     </section>
@@ -3006,7 +3006,7 @@ const SCEN = {
   A: {
     label: 'Procédure respectée', sub: 'Étapes 1 à 9 de PRO-OP-DD-005', tone: 'ok',
     bilan: { title: 'Bilan · procédure respectée', text: 'Procédure respectée : l\'énergie des ressorts a été libérée lentement, le cône est resté retenu.',
-      items: [[true, 'Étape 6 : 3 boulons longs remis sans bushing (retenue du cône)'], [true, 'Étape 7 : boulons dévissés 1 tour à la fois, ordre 1 à 6']] },
+      items: [[true, 'Étape 6 : 3 boulons longs remis sans bushing (retenue du cône)'], [true, 'Étape 7 : boulons du cône dévissés 1 tour à la fois, ordre 1 à 6']] },
     make: () => [
       st.lever, st.jaws, st.lock, st.jawCover, st.cover,
       st.retain,
@@ -3055,9 +3055,9 @@ const SCEN = {
     ],
   },
   B: {
-    label: 'Sans les boulons longs : cône projeté', sub: 'Étapes 6 et 7 non respectées', tone: 'danger',
-    bilan: { title: 'Bilan · projection', text: 'Étapes 6 et 7 non respectées : boulons retirés au complet sous charge → projection du cône.',
-      items: [[false, 'Étape 6 : boulons longs enlevés, non remis'], [false, 'Étape 7 : chaque boulon sorti au complet au lieu d\'un tour à la fois']] },
+    label: 'Sans les boulons longs : cône projeté', sub: 'Étape 6 omise (boulons longs non remis) · étape 7 non respectée (boulons du cône sortis au complet)', tone: 'danger',
+    bilan: { title: 'Bilan · projection', text: 'Boulons longs non remis (étape 6) et boulons du cône sortis au complet sous charge (étape 7) → projection du cône.',
+      items: [[false, 'Étape 6 : boulons longs enlevés, non remis'], [false, 'Étape 7 : chaque boulon du cône sorti au complet au lieu d\'un tour à la fois']] },
     make: () => [
       first5, skip6, ...oneByOne(false),
       { n: '!', title: 'Le filet cède : cône projeté', cam: 'wide', flight: true, tone: 'danger', flag: 'Projection', dir: null, ride: byNum(6),
@@ -3066,9 +3066,9 @@ const SCEN = {
     ],
   },
   D: {
-    label: 'Boulons retirés un par un : cône retenu', sub: 'Étape 7 non respectée, étape 6 respectée', tone: 'warn', tag: 'Reconstitution de l\'accident',
-    bilan: { title: 'Bilan · l\'accident', text: 'Étape 7 non respectée mais étape 6 respectée : les 3 boulons longs ont retenu le cône.',
-      items: [[true, 'Étape 6 : 3 boulons longs remis sans bushing'], [false, 'Étape 7 : chaque boulon sorti au complet au lieu d\'un tour à la fois']] },
+    label: 'Boulons retirés un par un : cône retenu', sub: 'Étape 6 faite (3 boulons longs remis sans bushing) · étape 7 non respectée (boulons du cône sortis au complet)', tone: 'warn', tag: 'Reconstitution de l\'accident',
+    bilan: { title: 'Bilan · l\'accident', text: 'Boulons du cône sortis au complet (étape 7 non respectée), mais les 3 boulons longs remis sans bushing (étape 6) ont retenu le cône.',
+      items: [[true, 'Étape 6 : 3 boulons longs remis sans bushing'], [false, 'Étape 7 : chaque boulon du cône sorti au complet au lieu d\'un tour à la fois']] },
     make: () => [
       first5, st.retain, ...oneByOne(true),
       { n: '!', title: 'Le filet cède : les 3 boulons arrêtent le cône', cam: 'catch', sec: true, catch: true, tone: 'warn', flag: 'Retenu', ride: byNum(6),
@@ -4032,13 +4032,13 @@ const IMPACT_TXT = { visage: 'IMPACT AU VISAGE', tronc: 'IMPACT AU TRONC', hanch
 const ZONE_TXT = { visage: 'le visage', tronc: 'le tronc', hanches: 'les hanches', jambes: 'les jambes' };
 function summaryText(ev) {
   if (ev.catch) {
-    return `Quasi-accident. Le filet du boulon 6 a cédé, le cône est parti vers le travailleur. Les 3 boulons longs remis sans bushing (étape 6) l'ont arrêté après quelques millimètres. Remplacer ces 3 boulons par des neufs avant de remonter.`;
+    return `L'accident (reconstitution). Les boulons du cône ont été sortis au complet un par un (étape 7 non respectée). Le filet du boulon 6 a cédé, le cône est parti vers le travailleur. Les 3 boulons longs remis sans bushing (étape 6) l'ont arrêté après quelques millimètres. Remplacer ces 3 boulons par des neufs avant de remonter.`;
   }
   const F = ev.F;
   const hands = F.hands ? `Il frappe d'abord les mains sur la clé. ` : '';
   const hit = F.impact ? `Puis ${ZONE_TXT[F.impact.zone]} du travailleur.` : F.feet ? `Il retombe aux pieds du travailleur.` : 'Il tombe au sol de façon imprévisible.';
   const spr = F.springs.length ? ` Des ressorts peuvent aussi être éjectés.` : '';
-  return `Accident. Le cône et les mâchoires sont projetés dans l'axe du mandrin. ${hands}${hit}${spr} La procédure (1 tour à la fois, retenue de l'étape 6) évite ce scénario.`;
+  return `Pire cas. Le cône et les mâchoires sont projetés dans l'axe du mandrin. ${hands}${hit}${spr} La procédure évite ce scénario : étape 6, remettre les 3 boulons longs sans bushing ; étape 7, dévisser les boulons du cône 1 tour à la fois, ordre 1 à 6.`;
 }
 
 /* ================= Nomenclature, fiche de pièce, vues ================= */
@@ -4135,20 +4135,20 @@ canvas.addEventListener('pointerup', e => {
 // Bulle santé-sécurité : rôle de la pièce dans la procédure PRO-OP-DD-005 (étapes 1 à 9), en mots de chantier
 const HYD = 'Vérin hydraulique : manettes fermées (étape 1) et cadenassage (étape 3) avant d\'intervenir. Ne jamais ouvrir sous pression.';
 const SST = {
-  '5200517': 'Énergie résiduelle : les 18 ressorts restent comprimés même foreuse cadenassée. Seuls les 3 boulons longs (étape 6) retiennent le cône.',
+  '5200517': 'Énergie résiduelle : les 18 ressorts restent comprimés tant que le cône est boulonné. Les 3 boulons longs remis sans bushing à l\'étape 6 retiennent le cône.',
   '2920390': 'Poussé par les ressorts. Ne jamais se placer devant ni le frapper pour le décoincer : risque de projection.',
-  'B500-6500': 'Étape 7 : dévisser 1 tour à la fois, ordre 1 à 6, seulement après l\'étape 6. Jamais un boulon retiré au complet sous charge.',
-  'B500-8000': 'Étape 6 : remettre les 3 boulons longs sans bushing AVANT de toucher aux boulons du cône. Les retirer seulement à l\'étape 8.',
+  'B500-6500': 'Étape 7 : dévisser 1 tour à la fois, ordre 1 à 6, seulement après l\'étape 6 (3 boulons longs remis sans bushing). Jamais un boulon retiré au complet sous charge.',
+  'B500-8000': 'Étape 6 : remettre les 3 boulons longs sans bushing AVANT de toucher aux boulons du cône. Les retirer seulement à l\'étape 8, une fois les ressorts détendus.',
   '3506878': 'Étape 6 : retirer les bushings pour que les boulons longs gardent assez de filets en prise pour retenir le cône.',
   '3506906': 'Étape 5 : manettes fermées et cadenassage faits avant de l\'enlever (9 boulons ½, clé ¾).',
   'B500-2250': 'Étape 5 : clé ¾, foreuse cadenassée. Au remontage : boulons neufs.',
   '3506907': 'Étape 4 : foreuse cadenassée avant de l\'enlever (boulons ¾, clé 1 1/8).',
   'B750-1500': 'Étape 4 : clé 1 1/8, foreuse cadenassée.',
-  'UM-021-01-01': 'Étape 2 : mâchoires fermées avant de cadenasser. Les changer seulement à l\'étape 9, ressorts détendus.',
-  'RING-WH500': 'Se change avec les mâchoires, à l\'étape 9 seulement, ressorts détendus.',
-  '3506870': 'Contient les 18 ressorts comprimés. Ne rien démonter tant que le cône n\'est pas retenu (étape 6).',
+  'UM-021-01-01': 'Étape 2 : vérifier que les mâchoires sont fermées avant de cadenasser. Les changer seulement à l\'étape 9 (changer les pièces), ressorts détendus.',
+  'RING-WH500': 'Se change avec les mâchoires, à l\'étape 9 seulement (changer les pièces), ressorts détendus.',
+  '3506870': 'Contient les 18 ressorts comprimés. Ne rien démonter tant que le cône n\'est pas retenu (étape 6 : 3 boulons longs remis sans bushing).',
   '3506928': 'Les boulons du cône s\'y vissent : filets usés = filet qui cède et cône projeté. Vérifier les filets.',
-  '3506880': 'Sous l\'appui des ressorts : ne pas démonter tant que les ressorts ne sont pas détendus (étape 8).',
+  '3506880': 'Sous l\'appui des ressorts : ne pas démonter tant que les ressorts ne sont pas détendus (étape 8 : boulons longs retirés en dernier, ressorts détendus).',
   '3506909': HYD, '3506908': HYD, '5035016': HYD, '5035018': HYD, '5035015': HYD, '5035017': HYD, '3506882': HYD, '5054078': HYD,
   '2501-8-6': 'Raccord hydraulique : manettes fermées (étape 1) et cadenassage (étape 3) avant de débrancher.',
   'TRAVAILLEUR': 'Casque, lunettes de sécurité, gants et bottes. Se tenir hors de l\'axe du mandrin pendant le dévissage.',
@@ -4500,8 +4500,8 @@ async function start() {
   layoutExplode();
   nbDom(document.body);
   applyCut();
-  let saved = 'A';
-  try { saved = localStorage.getItem('clam-scen') || 'A'; } catch (e) {}
+  let saved = 'D';
+  try { saved = localStorage.getItem('clam-scen') || 'D'; } catch (e) {}
   selectScen(SCEN[saved] ? saved : 'D');   // par défaut : la reconstitution de l'accident (cône retenu)
   if (location.hash === '#presenter') setPres(true);   // lien « Commencer la présentation » de l'accueil
   resize();
