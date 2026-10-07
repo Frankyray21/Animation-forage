@@ -347,7 +347,7 @@ details.params summary { cursor: pointer; padding: 10px 14px; font-weight: 600; 
       <div class="topt">
         <label><input type="checkbox" id="optPause" autocomplete="off"> Pause à chaque étape</label>
         <label>Vitesse
-          <select id="optSpeed"><option value="0.5">0,5×</option><option value="1" selected>1×</option><option value="2">2×</option></select>
+          <select id="optSpeed"><option value="0.5">0,5×</option><option value="0.75" selected>0,75×</option><option value="1">1×</option><option value="2">2×</option></select>
         </label>
         <label><input type="checkbox" id="optWorker" checked> Travailleur</label>
         <label title="Numéros des boulons et encadré « procédure » : consigne de l'étape, flèche vers l'objet concerné"><input type="checkbox" id="optNums" autocomplete="off"> Numéros et consignes</label>
@@ -3184,7 +3184,7 @@ function sampleAt(arr, dt, t) {
 function sampleFlight(F, t) { return { plate: sampleAt(F.samples, F.dt, t), springs: F.springs.map(s => ({ j: s.j, v: sampleAt(s.sm, F.dt, t) })) }; }
 
 /* ================= Timeline ================= */
-let scen = 'A', steps = [], starts = [], total = 0, T = 0, playing = false, speed = 1;
+let scen = 'A', steps = [], starts = [], total = 0, T = 0, playing = false, speed = 0.75;   // vitesse par défaut ralentie : présentation aux travailleurs
 function build(keep = false) {
   const prev = keep ? locate(T) : null;
   steps = SCEN[scen].make().map(s => ({ ...s }));
