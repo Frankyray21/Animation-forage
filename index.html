@@ -251,14 +251,6 @@ details.params summary { cursor: pointer; padding: 10px 14px; font-weight: 600; 
 .units button { border: 0; background: none; padding: 2px 9px; font-size: 12px; font-weight: 600; cursor: pointer; color: var(--muted); }
 .units button[aria-pressed="true"] { background: var(--ink); color: var(--bg); }
 .alt { font-family: var(--mono); font-size: 13px; color: var(--muted); }
-.card { border: 1px solid var(--line); border-radius: 8px; background: var(--panel); padding: 12px 14px; display: grid; gap: 6px; }
-.card .ref { font-family: var(--mono); font-size: 13px; color: var(--muted); }
-.card h4 { margin: 0; font-family: var(--display); font-size: 22px; font-weight: 600; line-height: 1.1; }
-.card p { margin: 0; font-size: 13.5px; }
-.card .meta { font-size: 12.5px; color: var(--muted); }
-.card button { justify-self: start; border: 1px solid var(--line); background: var(--bg); border-radius: 6px; padding: 4px 10px; cursor: pointer; font-size: 13px; }
-.xlink { margin: 0; font-size: 13.5px; }
-.xlink a { color: var(--accent); }
 .scen-tag { display: inline-block; justify-self: start; margin-bottom: 2px; padding: 1px 7px; border-radius: 3px; font-size: 11px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: #fff; background: var(--danger); }
 .langrow { display: flex; align-items: center; gap: 10px; font-size: 13px; color: var(--muted); margin-bottom: -6px; }
 .langrow .units { margin-left: 0; }
@@ -268,11 +260,6 @@ details.params summary { cursor: pointer; padding: 10px 14px; font-weight: 600; 
 .bom[open] { padding-bottom: 12px; }
 .bom h5 { margin: 12px 0 4px; font-size: 12px; font-weight: 600; letter-spacing: .05em; text-transform: uppercase; color: var(--muted); }
 .bom h5:first-of-type { margin-top: 0; }
-.bom-row { width: 100%; display: grid; grid-template-columns: minmax(0, 9.5em) minmax(0, 1fr) 3.2em; gap: 8px; align-items: baseline; text-align: left; border: 0; background: none; padding: 4px 6px; border-radius: 5px; cursor: pointer; font-size: 13px; }
-.bom-row:hover { background: var(--shade); }
-.bom-row[aria-pressed="true"] { background: var(--shade); box-shadow: inset 3px 0 0 var(--accent); }
-.bom-row .r { font-family: var(--mono); font-size: 12px; overflow-wrap: anywhere; }
-.bom-row .q { font-family: var(--mono); font-size: 12px; color: var(--muted); text-align: right; }
 /* Galerie « Vues réalistes » (rendus Blender) : vignettes et visionneuse plein écran */
 .gal { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
 .gal figure { margin: 0; display: grid; gap: 4px; min-width: 0; }
@@ -362,7 +349,7 @@ body.pres .pres-cmp:not([hidden]) { display: grid; position: absolute; inset: 66
         <span class="spacer"></span>
         <span class="chip" id="camChip" hidden><button type="button" id="camBtn"><span class="lg">Recentrer la caméra</span><span class="sm">Recentrer</span></button></span>
         <div class="vbar" id="vbar">
-          <button type="button" class="vbtn" id="btnCut" aria-pressed="true"><span class="lg">Coupe du mandrin (chuck)</span><span class="sm">Coupe</span></button>
+          <button type="button" class="vbtn" id="btnCut" aria-pressed="false"><span class="lg">Coupe du mandrin (chuck)</span><span class="sm">Coupe</span></button>
           <button type="button" class="vbtn" id="btnHeadExplode" aria-pressed="false"><span class="lg">Éclaté : tête (drill head)</span><span class="sm">Éclaté tête</span></button>
           <button type="button" class="vbtn" id="btnExplode" aria-pressed="false"><span class="lg">Éclaté : mandrin (chuck)</span><span class="sm">Éclaté chuck</span></button>
           <button type="button" class="vbtn" id="btnShot" aria-label="Capture : image PNG de la vue 3D" title="Image PNG de la vue, avec l'encadré procédure et le titre de l'étape"><span class="lg">Capture</span><span class="sm" aria-hidden="true">📷</span></button>
@@ -376,9 +363,9 @@ body.pres .pres-cmp:not([hidden]) { display: grid; position: absolute; inset: 66
       <div class="pres-bar" id="presBar">
         <span class="pres-kicker" id="presKicker">Reconstitution de l'accident</span>
         <div class="pres-ch" role="tablist" aria-label="Chapitres de la présentation">
-          <button type="button" role="tab" data-ch="B" data-tone="danger"><b>1</b><span>L'accident<small>Boulons retirés un par un</small></span></button>
+          <button type="button" role="tab" data-ch="D" data-tone="warn"><b>1</b><span>L'accident<small>Cône retenu par les boulons longs</small></span></button>
           <button type="button" role="tab" data-ch="A" data-tone="ok"><b>2</b><span>La bonne méthode<small>Procédure respectée</small></span></button>
-          <button type="button" role="tab" data-ch="D" data-tone="warn"><b>3</b><span>Erreur rattrapée<small>Cône retenu</small></span></button>
+          <button type="button" role="tab" data-ch="B" data-tone="danger"><b>3</b><span>Sans les boulons longs<small>Projection du cône</small></span></button>
           <button type="button" role="tab" data-ch="cmp" data-tone="info"><b>4</b><span>Comparaison<small>Les 3 situations</small></span></button>
         </div>
         <button type="button" class="pres-x" id="presExit" aria-label="Quitter la présentation">Quitter <span aria-hidden="true">×</span></button>
@@ -431,7 +418,6 @@ body.pres .pres-cmp:not([hidden]) { display: grid; position: absolute; inset: 66
         <label><input type="checkbox" id="optWorker" checked> Travailleur</label>
         <label title="Numéros des boulons et encadré « procédure » : consigne de l'étape, flèche vers l'objet concerné"><input type="checkbox" id="optNums" autocomplete="off"> Numéros et consignes</label>
         <label title="Plusieurs plans par étape : plan large, gros plans sur les mains, l'outil et le boulon, coupe du mécanisme"><input type="checkbox" id="optShots" checked autocomplete="off"> Caméra auto (plans variés)</label>
-        <label id="optLMw" hidden title="Occlusion ambiante cuite dans Blender (Cycles) sur les pièces fixes de la tête et du banc"><input type="checkbox" id="optLM" checked autocomplete="off"> Éclairage réaliste (Blender)</label>
       </div>
     </div>
   </section>
@@ -442,7 +428,6 @@ body.pres .pres-cmp:not([hidden]) { display: grid; position: absolute; inset: 66
       <h1>Clam sous tension</h1>
       <p class="lede">Les 18 ressorts (springs) du mandrin (chuck), monté sur la tête de forage, restent comprimés tant que le cône (bowl) est boulonné. Le clam (rod clamp), à l'avant du mât, fonctionne de la même façon. Démonter dans l'ordre : l'énergie se libère lentement. Sauter une étape : le cône est projeté.</p>
       <button type="button" class="pres-cta" id="btnPresCta"><span aria-hidden="true">▶</span> Présenter aux travailleurs<small>Plein écran : l'accident, la bonne méthode, la comparaison</small></button>
-      <p class="xlink"><a href="foreuse.html">Foreuse STM-1500, console et groupe hydraulique →</a></p>
     </header>
 
     <section>
@@ -457,12 +442,7 @@ body.pres .pres-cmp:not([hidden]) { display: grid; position: absolute; inset: 66
     </section>
 
 
-    <div class="langrow" role="group" aria-label="Langue des noms de pièces"><span>Noms des pièces</span><div class="units"><button type="button" data-lang="en" aria-pressed="true">EN</button><button type="button" data-lang="fr" aria-pressed="false">FR</button></div></div>
-    <details class="bom" id="bomSec">
-      <summary class="bom-toggle">Liste des pièces</summary>
-      <div class="card" id="partCard"></div>
-      <div id="bomList" style="margin-top:10px"></div>
-    </details>
+    <div class="langrow" role="group" aria-label="Langue des noms de pièces"><span>Nom des pièces au clic</span><div class="units"><button type="button" data-lang="en" aria-pressed="true">EN</button><button type="button" data-lang="fr" aria-pressed="false">FR</button></div></div>
     <details class="bom" id="vidSec">
       <summary class="bom-toggle">Vidéo de la procédure</summary>
       <video class="vid" id="vid" controls preload="none" playsinline poster="video/procedure_poster.jpg" src="video/procedure_boyles_h.mp4" aria-label="Vidéo de formation : procédure respectée, étapes 1 à 9" onerror="this.closest('details').hidden = true"></video>
@@ -2047,7 +2027,7 @@ const plateTex = (lines, { w = 256, h = 128, bg = '#e9ecee', fg = '#111518', fon
   lines.forEach(([t, size, y]) => { x.font = `700 ${size}px "${font}", sans-serif`; x.fillText(t, w / 2, y); });
   const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; return t;
 };
-/* Foreuse STM-1500, console et groupe hydraulique : page séparée foreuse.html. Les matériaux du banc ne sont jamais coupés. */
+/* Les matériaux du banc ne sont jamais coupés. */
 const drillMats = new Set();
 carriage.traverse(o => { if (o.isMesh) [].concat(o.material).forEach(mm => drillMats.add(mm)); });
 
@@ -2713,7 +2693,7 @@ function applyHeadExplode(h) {
 /* ================= Sélection d'une pièce et vue en coupe ================= */
 const CUT = new THREE.Plane(new THREE.Vector3(0, 0, -1), 0);   // garde la moitié arrière (z ≤ 0)
 const CUT_DEEP = new THREE.Plane(new THREE.Vector3(0, 0, -1), -u(2.0));   // bloc des ressorts : ouvert 2 po plus loin, une rangée de ressorts apparaît
-let cutOn = true, selected = null;
+let cutOn = false, selected = null;   // vue entière au départ ; coupe automatique selon le plan
 const ghostMat = new THREE.MeshStandardMaterial({ color: 0x9aa4ab, transparent: true, opacity: 0.12, depthWrite: false, roughness: 1 });
 // La tête garde ses propres matériaux : la coupe ne tranche que le mandrin.
 const headMats = new Set(), ghostHead = ghostMat.clone();
@@ -2794,8 +2774,6 @@ function select(p) {
     m.material = m.userData.part === selected ? hiMat(m.userData.orig) : ghost;
   });
   applyCut();
-  renderCard();
-  document.querySelectorAll('.bom-row').forEach(r => r.setAttribute('aria-pressed', String(r.dataset.id === (selected && selected.id))));
   if (selected === workerPart && workerModel) gizmo.attach(workerRoot); else gizmo.detach();
   if (outline) outline.selectedObjects = selected ? selected.objs.filter(Boolean) : [];
 }
@@ -2904,7 +2882,7 @@ const st = {
     // la main pose le cadenas et l'étiquette sur le poste, puis se retire
     apply(S, p) { S.lock = ease(seg(p, .18, .68)); S.reach = { kind: 'lock', k: ease(seg(p, 0, .18)) * (1 - ease(seg(p, .74, .92))) }; } },
   jawCover: { n: '4', title: 'Retirer le couvert des mâchoires (jaw cover)', cam: 'overview', dur: 15, act: 'Boulons ¾ dévissés (clé 1 1/8), couvert des mâchoires retiré',
-    shots: [{ at: 0, cam: 'walk' }, { at: .15, cam: 'tool' }, { at: .47, cam: 'pull' }, { at: .58, cam: 'walk' }, { at: .71, cam: 'tableJC' }, { at: .87, cam: 'walk' }], sec: false,   // couvert extérieur : pas de coupe
+    shots: [{ at: 0, cam: 'walk' }, { at: .15, cam: 'tool' }, { at: .47, cam: 'pull' }, { at: .58, cam: 'walk' }, { at: .71, cam: 'tableJC' }, { at: .87, cam: 'walk' }],
     text: 'Dévisser ses boulons ¾ (clé 1 1/8) et retirer le couvert.',
     // retour au banc (0–2,3 s), clé sortie de l'étui, J1, J2 puis J3, clé rangée ; couvert tiré à deux mains (boulons dans ses trous),
     // porté à la table, posé, boulons rangés ; retour au banc
@@ -2919,7 +2897,7 @@ const st = {
       S.bend = ease(seg(p, .71, .75)) * (1 - ease(seg(p, .86, .89)));
     } },
   cover: { n: '5', title: 'Retirer le couvercle (cap holder, 9 boulons ½)', cam: 'overview', dur: 17, act: '9 boulons ½ enlevés (clé ¾), couvercle retiré',
-    shots: [{ at: 0, cam: 'plongee' }, { at: .07, cam: 'tool' }, { at: .5, cam: 'pull' }, { at: .59, cam: 'walk' }, { at: .72, cam: 'tableCV' }, { at: .88, cam: 'bolts', sec: true }], sec: false,   // coupe à la fin : ressorts toujours comprimés
+    shots: [{ at: 0, cam: 'plongee' }, { at: .07, cam: 'tool' }, { at: .5, cam: 'pull' }, { at: .59, cam: 'walk' }, { at: .72, cam: 'tableCV' }, { at: .88, cam: 'bolts', sec: true }],   // coupe à la fin : ressorts toujours comprimés
     text: 'Enlever les 9 boulons ½ (clé ¾) et le couvercle. Le cône et ses 9 boulons apparaissent. Les ressorts sont toujours comprimés.',
     // clé sortie de l'étui, C1 à C9 un à la fois, clé rangée ; couvercle tiré à deux mains (boulons dans ses trous), porté à la table, posé, boulons rangés
     apply(S, p) {
@@ -2933,6 +2911,7 @@ const st = {
     } },
 };
 const first5 = { n: '1–5', title: 'Étapes 1 à 5 faites', cam: 'overview', dur: 8,
+  shots: [{ at: 0, cam: 'overview' }, { at: .8, cam: 'hyd' }],   // fin : mandrin coupé, ressorts comprimés
   text: 'Manettes et mâchoires fermées, foreuse cadenassée, couvert et couvercle retirés. Les ressorts sont comprimés.',
   apply(S, p) {
     st.lever.apply(S, seg(p, 0, .15)); st.jaws.apply(S, seg(p, .1, .25)); st.lock.apply(S, seg(p, .2, .35));
@@ -2940,7 +2919,7 @@ const first5 = { n: '1–5', title: 'Étapes 1 à 5 faites', cam: 'overview', du
     S.spot = S.reach = S.tool = null; S.wd = S.bend = 0; S.recap = p < 1;   // résumé : le travailleur reste au banc, les pièces sont posées sans transport
   } };
 const skip6 = { n: '6', title: 'Boulons de retenue non remis', cam: 'bolts', dur: 12, tone: 'warn', flag: 'Omise', act: 'Boulons longs enlevés, non remis : aucune retenue',
-  shots: [{ at: 0, cam: 'boltL' }, { at: .58, cam: 'tableL' }, { at: .84, cam: 'bolts' }],
+  shots: [{ at: 0, cam: 'boltL' }, { at: .58, cam: 'tableL' }, { at: .84, cam: 'bolts', sec: true }],   // coupe : ressorts comprimés, plus rien ne retient le cône
   text: 'Les 3 boulons longs sont enlevés et ne sont pas remis. Plus rien ne retient le cône.',
   // clé sortie de l'étui, L1 à L3 dévissés au complet ; chaque boulon et son bushing tirés à la main gauche ; clé rangée, pièces portées à la table
   apply(S, p) {
@@ -2954,7 +2933,7 @@ const skip6 = { n: '6', title: 'Boulons de retenue non remis', cam: 'bolts', dur
   } };
 
 st.retain = { n: '6', title: 'Remettre les 3 boulons longs (bolts) sans bushing', cam: 'bolts', dur: 13, act: '3 boulons ½ × 8 remis sans bushing : retenue en place', at: () => pBolts[BUSHED[0]],
-  shots: [{ at: 0, cam: 'boltL' }, { at: .69, cam: 'bolts' }, { at: .76, cam: 'tableL' }, { at: .92, cam: 'bolts' }],
+  shots: [{ at: 0, cam: 'boltL' }, { at: .69, cam: 'bolts' }, { at: .76, cam: 'tableL' }, { at: .92, cam: 'bolts', sec: true }],   // coupe : ressorts comprimés, retenus par les boulons longs
   text: 'Enlever les 3 boulons longs (½ × 8) et leurs bushings. Les revisser sans bushing : ils retiennent le cône s\'il part.',
   // un boulon long à la fois : dévissé, sorti, bushing gardé dans la main gauche, boulon remis et revissé ; clé rangée, bushings portés à la table
   apply(S, p) {
@@ -3093,8 +3072,8 @@ const SCEN = {
     ],
   },
   B: {
-    label: 'Erreur : boulons retirés un par un', sub: 'Étapes 6 et 7 non respectées', tone: 'danger', tag: 'Reconstitution de l\'accident',
-    bilan: { title: 'Bilan · accident', text: 'Étapes 6 et 7 non respectées : boulons retirés au complet sous charge → projection du cône.',
+    label: 'Erreur : boulons retirés un par un', sub: 'Étapes 6 et 7 non respectées', tone: 'danger',
+    bilan: { title: 'Bilan · projection', text: 'Étapes 6 et 7 non respectées : boulons retirés au complet sous charge → projection du cône.',
       items: [[false, 'Étape 6 : boulons longs enlevés, non remis'], [false, 'Étape 7 : chaque boulon sorti au complet au lieu d\'un tour à la fois']] },
     make: () => [
       first5, skip6, ...oneByOne(false),
@@ -3104,12 +3083,12 @@ const SCEN = {
     ],
   },
   D: {
-    label: 'Erreur rattrapée : cône retenu', sub: 'Étape 7 non respectée, étape 6 respectée', tone: 'warn',
-    bilan: { title: 'Bilan · quasi-accident', text: 'Étape 7 non respectée mais étape 6 respectée : les 3 boulons longs ont retenu le cône.',
+    label: 'Erreur rattrapée : cône retenu', sub: 'Étape 7 non respectée, étape 6 respectée', tone: 'warn', tag: 'Reconstitution de l\'accident',
+    bilan: { title: 'Bilan · l\'accident', text: 'Étape 7 non respectée mais étape 6 respectée : les 3 boulons longs ont retenu le cône.',
       items: [[true, 'Étape 6 : 3 boulons longs remis sans bushing'], [false, 'Étape 7 : chaque boulon sorti au complet au lieu d\'un tour à la fois']] },
     make: () => [
       first5, st.retain, ...oneByOne(true),
-      { n: '!', title: 'Le filet cède : les 3 boulons arrêtent le cône', cam: 'catch', catch: true, tone: 'warn', flag: 'Retenu', ride: byNum(6),
+      { n: '!', title: 'Le filet cède : les 3 boulons arrêtent le cône', cam: 'catch', sec: true, catch: true, tone: 'warn', flag: 'Retenu', ride: byNum(6),
         text: 'Le filet du boulon 6 cède, le cône part vers le travailleur. Après quelques millimètres, les 3 boulons longs l\'arrêtent.' },
       { n: '✓', title: 'Bilan', cam: 'catch', dur: 6, tone: 'warn', summary: true, text: '' },
     ],
@@ -3888,7 +3867,6 @@ const toolSubject = k => (wrench.visible && wrench.userData.k > .5 ? wrench.getW
 let autoCam = true, cutAuto = true, camGoal = CAMS.intro, camSnap = false, procRefit = 0;
 controls.addEventListener('start', () => { autoCam = false; document.getElementById('camChip').hidden = false; });
 document.getElementById('camBtn').addEventListener('click', () => { autoCam = true; setCutAuto(true); document.getElementById('camChip').hidden = true; });
-// Vue « Foreuse » : la caméra va sur la foreuse complète (posée derrière le banc) ; un second clic revient à l'étape
 camera.position.set(...CAMS.intro.p); controls.target.set(...CAMS.intro.t);
 const goalP = new THREE.Vector3(), goalT = new THREE.Vector3();
 function updateCamera(dt) {
@@ -3984,9 +3962,8 @@ addEventListener('keydown', e => {
 
 let lastStep = -1, uiTick = 0, lastStepKey = '', lastCamKey = '';
 // déplacement de caméra plus grand que 35 % de la distance de visée (position ou cible) : plan trop éloigné pour un panoramique
-// plans extérieurs (gestes, déplacements, table, poste) : la coupe n'apporte rien ; sinon coupe (ressorts, cône, boulons, huile)
-const EXT_CAMS = new Set(['walk', 'lever', 'lockClose', 'plongee', 'pull', 'tableJC', 'tableCV', 'tablePB', 'tableL', 'tablePlate', 'overview', 'intro', 'mech']);
-const secOf = (s, sh) => sh.sec ?? s.sec ?? !EXT_CAMS.has(sh.cam);
+// Coupe seulement pour montrer les ressorts comprimés : gros plan « hyd » (mandrin coupé) et plans marqués sec ; sinon vue entière
+const secOf = (s, sh) => sh.sec ?? s.sec ?? sh.cam === 'hyd';
 const camFar = g => { const d = camera.position.distanceTo(controls.target); return camera.position.distanceTo(camV.set(...g.p)) > .35 * d || controls.target.distanceTo(camV.set(...g.t)) > .35 * d; };
 // Plan courant : case « Caméra auto (plans variés) » cochée → shots de l'étape ; sinon un seul cadrage (cam, puis cam2 dès cam2At)
 function pickShot(s, p) {
@@ -4082,54 +4059,19 @@ function summaryText(ev) {
 }
 
 /* ================= Nomenclature, fiche de pièce, vues ================= */
-const GRP = { hbox: 'Tête : boîte et couvercle', hspindle: 'Tête : broche, roulements, joints', hdrive: 'Tête : entraînement (pignons, chaîne, transmission, moteur)', hlube: 'Tête : lubrification (pompe, filtre, boyaux, raccords)', hmount: 'Tête : montage sur la foreuse', rear: 'Mandrin : arrière (vérin, roulement, adaptateur)', body: 'Mandrin : boîtier', front: 'Mandrin : avant (ressorts, cône, boulons, couvercles, mâchoires)', opt: 'Mandrin : options (adaptateur UM-070, bagues de guidage B, anneau WH-500)' };
 const qtyOf = p => p.qty === 'n' ? P.n : p.qty;
 /* Noms des pièces en anglais (désignations des listes de pièces), affichés par défaut ; le français reste disponible */
 const NAME_EN = {"3506881": "Drive key Boyles 12HH (UM-012-189)", "3506879": "Key retaining spring", "3506910": "Chuck adapter (option 2, UM-012 head)", "B500-1500": "Bolt ½ × 1 ½ in", "B500-4500": "Bolt ½ × 4 ½ in", "NC500": "Nut ½-13 UNC", "3506909": "Hydraulic cylinder", "5035016": "U-cup seal", "5035018": "Wear ring", "3506908": "Piston", "5035015": "Piston U-cup seal", "5035017": "Piston wear ring", "5222624": "Roll pin", "5000199": "Bearing", "3506882": "Back-up ring", "5054078": "Retaining ring", "3506928": "Actuating sleeve (RR 50)", "2501-8-6": "90° elbow MJIC 6 × MP 8", "ZNPT250": "Grease fitting 1/8 NPT", "5041022": "V-ring seal", "3506870": "Chuck body", "3506880": "Lower spacer", "5040192": "Oil seal", "5200517": "Spring", "2920390": "Chuck bowl 12 ½ L (cone)", "UM-021-01-01": "Jaw set, size B", "B500-6500": "Bolt ½ × 6 ½ in", "3506878": "Upper spacer (1 ½ in bushing)", "B500-8000": "Bolt ½ × 8 in (with bushing)", "3506906": "Cap holder (cover)", "B500-2250": "Bolt ½ × 2 ¼ in", "3506907": "Cap adapter (jaw cover)", "B750-1500": "Bolt ¾ × 1 ½ in", "UM-070-608A": "Chuck adapter (option 1, UM-070 head)", "RING-WH500": "Jaw ring WH-500", "06-02": "Guide bushing, B rod", "06-22": "Guide bushing, B casing", "UM-012-104A": "Drill head housing", "UM-012-113A": "Housing cover (UM logo)", "B375-1000": "Bolt 3/8 × 1 in", "W375": "Flat washer 3/8", "UM-012-131": "Plug 1 in NPT", "UM-102-132": "Plug 3/8 in NPT", "UM-1214-121P": "Blidder cover (vent cover)", "UM-012-167": "Vent cover O-ring", "B312-1000": "Bolt 5/16 × 1 in", "W312": "Flat washer 5/16", "UM-012-101": "Boyles spindle", "UM-012-122": "Spindle key", "UM-012-128": "Upper bearing", "UM-012-129": "Lower bearing", "UM-012-121": "Spindle cover, transmission side (upper bearing housing)", "UM-012-124": "Upper seal", "UM-012-120": "Chuck adapter cover", "SHC500-4000": "Socket head cap screw ½-UNC × 4 in", "UM-012-107": "Heat-treated sleeve", "UM-012-106": "Chuck adjusting sleeve", "UM-012-126": "Lower seal", "UM-012-114": "Lower spindle cover (lower bearing housing)", "B500-1750": "Bolt ½-13 × 1 ¾ in", "W500": "Flat washer ½ in", "W500-M": "Flat washer ½ in (chuck adapter)", "UM-012-119": "Seal sleeve", "UM-012-117": "Spindle nut thrust washer", "UM-012-118": "Spindle clamp nut", "UM-012-115": "Spindle jam nut", "UM-012-108": "BQ guide sleeve", "UM-012-116": "Wear sleeve cover", "SS75-1250": "Set screw ¾-10 × 1 ¼ in", "SHCS312-1500": "Socket head cap screw 5/16 × 2 ½ in", "UM-012-102": "Driven sprocket (triple)", "UM-012-103": "Drive sprocket (triple) and shaft", "UM-012-169": "Hydraulic pump key", "UM-012-127": "Drive sprocket bearing", "UM-012-130": "Roller chain (one per strand)", "UM-012-125": "Transmission seal", "UM-012-123": "Seal seat", "UM-012-143": "4-speed transmission (Funk)", "B437-1500": "Bolt 7/16-UNC × 1 ½ in", "W437": "Lock washer 7/16", "UM-012-170": "Transmission / hydraulic motor coupling", "UM-012-192": "Internal retaining ring 1 ½ in", "AA6VM": "Hydraulic motor AA6VM160HD2-63W-VSD520B", "B750-2000": "Bolt ¾-10 × 2 in", "W750": "Flat washer ¾", "UM-063-290T": "90° flange elbow 1704-16-20", "UM-063-289T": "Split flange", "UM-012-208": "Flange O-ring", "UM-012-111": "Hydraulic pump cover", "UM-012-139": "Lubrication pump", "B250-750": "Bolt ¼-NC × ¾ in", "W250": "Flat washer ¼", "COOLER": "Oil cooler (not in parts list)", "UM-012-177": "Filter head", "UM-012-178": "Filter cartridge", "UM-10B-TR#6": "3-way valve BKH 3/8 NPT", "NDV-10-N": "Flow regulator", "A-1199-R-4048": "Breather", "UM-012-H08C": "Hose 3/8 in, breather (24 in)", "UM-012-H10C": "Hose 3/8 in, housing / transmission (3 ¾ in)", "UM-012-H11C": "Hose ½ in, transmission / sump (5 in)", "UM-012-H15C-UG": "Hose 3/8 in, sump / suction (9 ¾ in)", "UM-012-H16C-UG": "Hose 3/8 in, sump / suction (21 in)", "UM-012-H17C-UG": "Hose 3/8 in, filter outlet / cooler bottom (10 in)", "UM-012-H18C-UG": "Hose 3/8 in, cooler top / regulator (12 in)", "UM-012-H20C-UG": "Hose 3/8 in, pressure / filter (6 ¾ in)", "UM-012-H21C-UG": "Hose 3/8 in, regulator / transmission inlet (5 in)", "UM-012-H22C-UG": "Hose 3/8 in, transmission / housing (8 in)", "UM-012-H23C-UG": "Hose 3/8 in, transmission / cover (10 in)", "UM-012-H24C-UG": "Hose 3/8 in, regulator / lower bearing (9 in)", "UM-012-H25C-UG": "Hose 3/8 in, regulator / upper bearing (7 in)", "2404-6-4": "Adapter MJIC × MP", "2404-8-6": "Adapter MJIC × MP", "2501-06-04": "90° elbow MJIC × MP", "2501-6-6": "90° elbow MJIC × MP", "2501-6-8": "90° elbow MJIC × MP", "2501-8-8": "90° elbow MJIC × MP", "2501LL-8-8": "90° long elbow MJIC × MP", "2601-06-06-08": "Tee MJIC × MJIC × MP", "5000-6-6": "Coupling FP × FP", "6402-8-8": "Swivel adapter ORB × FJIC", "6500-06-06": "Swivel adapter MJIC × FJIC", "6600-06-06-06": "Swivel branch tee", "6600-8-8-8": "Swivel branch tee", "6602-06-06-06": "Swivel run tee", "6801-6-8": "90° elbow MJIC × MORB", "UM-012-105A": "Pivot pin", "UM-012-171": "Pivot pin hardened bushing", "HP1000": "Hitch pin (R-clip) 1 in", "TRAVAILLEUR": "Worker (3D model)"};
 let LANG = 'en';
 try { LANG = localStorage.getItem('clam-lang') === 'fr' ? 'fr' : 'en'; } catch (e) {}
 const pname = p => LANG === 'en' ? (p.en || NAME_EN[p.id] || p.name) : p.name;
-function renderBOM() {
-  const el = $('bomList'); el.innerHTML = '';
-  for (const [g, title] of Object.entries(GRP)) {
-    const h = document.createElement('h5'); h.textContent = nb(title); el.appendChild(h);
-    PARTS.filter(p => p.grp === g).forEach(p => {
-      const b = document.createElement('button');
-      b.type = 'button'; b.className = 'bom-row'; b.dataset.id = p.id;
-      b.setAttribute('aria-pressed', String(selected === p));
-      b.innerHTML = `<span class="r"></span><span class="n"></span><span class="q"></span>`;
-      b.querySelector('.r').textContent = p.ref;
-      b.querySelector('.n').textContent = LANG === 'en' ? pname(p) : nb(pname(p));
-      b.querySelector('.q').textContent = `${p.qtyEst ? '≈' : ''}${qtyOf(p)}`;
-      b.addEventListener('click', () => { if (p.head && explodeTarget) setExplode(false); select(selected === p ? null : p); if (p.opt && !explodeTarget) setExplode(true); });
-      el.appendChild(b);
-    });
-  }
-}
 function setLang(l) {
   LANG = l; try { localStorage.setItem('clam-lang', l); } catch (e) {}
   document.querySelectorAll('.langrow button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.lang === l)));
-  renderBOM(); renderCard(); hideTip();
+  hideTip();
 }
 document.querySelectorAll('.langrow button').forEach(b => b.addEventListener('click', () => setLang(b.dataset.lang)));
 document.querySelectorAll('.langrow button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.lang === LANG)));
-function renderCard() {
-  const c = $('partCard');
-  if (!selected) {
-    c.innerHTML = `<p class="meta">${PARTS.length} repères : toutes les pièces des listes de la tête UM-012-100UG (planches 2.2 et 2.3), du mandrin UM-070-142AA et de la foreuse STM-1500 (FBRA-002-100AS, planches 1.00 à 1.12), plus les options du mandrin. Cliquez sur une pièce dans la vue 3D ou dans la liste pour l'identifier. « Éclaté : tête » écarte les pièces de la tête (le mandrin monte d'un bloc) ; « Éclaté : mandrin » sépare les pièces du mandrin le long de son axe ; « Coupe du mandrin » ouvre le mandrin en deux (la tête reste entière).</p>`;
-    nbDom(c);
-    return;
-  }
-  const p = selected;
-  c.innerHTML = `<span class="ref"></span><h4></h4><p class="role"></p><p class="step"></p><p class="meta"></p><button type="button">Afficher toutes les pièces</button>`;
-  c.querySelector('.ref').textContent = `${p.ref} · quantité ${p.qtyEst ? '≈ ' : ''}${qtyOf(p)}${p.qtyEst ? ' (compte estimé d\'après le dessin)' : ''}`;
-  c.querySelector('h4').textContent = LANG === 'en' ? pname(p) : nb(pname(p));
-  c.querySelector('.role').textContent = nb(p.role || '');
-  c.querySelector('.step').textContent = nb(p.step || '');
-  c.querySelector('.meta').textContent = nb(p.note || (p.opt ? 'Pièce optionnelle : non montée sur le mandrin animé.' : ''));
-  c.querySelectorAll('p').forEach(e => { e.hidden = !e.textContent; });
-  c.querySelector('button').addEventListener('click', () => select(null));
-}
 let cutBeforeExplode = null;
 function setCut(v) { if (v === cutOn) return; cutOn = v; $('btnCut').setAttribute('aria-pressed', String(cutOn)); applyCut(); }
 // Coupe automatique : chaque plan dit s'il montre l'intérieur du mandrin ; un clic sur « Coupe » la force (jusqu'au prochain recentrage ou retour au début)
@@ -4346,13 +4288,13 @@ $('btnFs').addEventListener('click', async () => {
 });
 document.addEventListener('fullscreenchange', () => { if (!document.fullscreenElement && stage.classList.contains('fs')) { setFs(false); if (presOn) setPres(false); } });
 document.addEventListener('keydown', e => { if (e.key === 'Escape' && stage.classList.contains('fs') && !document.fullscreenElement && !presOn) setFs(false); });
-// Mode présentation : plein écran + chapitres. L'accident (B) d'abord, puis la bonne méthode (A), l'erreur rattrapée (D) et la comparaison.
+// Mode présentation : plein écran + chapitres. L'accident (D, cône retenu) d'abord, puis la bonne méthode (A), le pire cas sans boulons longs (B) et la comparaison.
 // Pause à chaque étape (le présentateur relance avec Espace, → ou la télécommande) ; options rétablies en sortant.
-let presOn = false, presCh = 'B', presSaved = null;
-const PRES_OUT = { B: 'Projection du cône et des mâchoires vers le travailleur', D: 'Quasi-accident : le cône part, les 3 boulons longs l\'arrêtent', A: 'Ressorts détendus lentement : pièces changées sans danger' };
-const PRES_TAG = { B: 'Accident', D: 'Quasi-accident', A: 'Procédure respectée' };
+let presOn = false, presCh = 'D', presSaved = null;
+const PRES_OUT = { B: 'Sans les boulons longs : cône et mâchoires projetés vers le travailleur', D: 'Le filet du boulon 6 cède : le cône part vers le travailleur, les 3 boulons longs l\'arrêtent', A: 'Ressorts détendus lentement : pièces changées sans danger' };
+const PRES_TAG = { D: 'L\'accident (reconstitution)', B: 'Pire cas : projection', A: 'Procédure respectée' };
 function renderPresCmp() {
-  $('presCols').innerHTML = ['B', 'D', 'A'].map(k => { const c = SCEN[k];
+  $('presCols').innerHTML = ['D', 'B', 'A'].map(k => { const c = SCEN[k];
     return `<section class="pres-col" data-tone="${c.tone}"><span class="tag">${PRES_TAG[k]}</span><h4>${nb(c.label)}</h4>
       <ul>${c.bilan.items.map(([ok, t]) => `<li><i class="${ok ? 'ok' : 'ko'}">${ok ? '✓' : '✗'}</i><span>${nb(t)}</span></li>`).join('')}</ul>
       <p class="out">${nb(PRES_OUT[k])}</p><button type="button" data-replay="${k}">Revoir ▶</button></section>`; }).join('');
@@ -4362,7 +4304,7 @@ function presGo(ch) {
   presCh = ch;
   document.querySelectorAll('.pres-ch button').forEach(b => b.setAttribute('aria-selected', String(b.dataset.ch === ch)));
   $('presCmp').hidden = ch !== 'cmp';
-  $('presKicker').hidden = ch !== 'B';
+  $('presKicker').hidden = ch !== 'D';
   document.body.classList.toggle('pres-cmp-on', ch === 'cmp'); requestAnimationFrame(resize);   // comparaison : toute la hauteur, sans le bandeau d'étape
   if (ch === 'cmp') { setPlaying(false); return; }
   if (scen !== ch) selectScen(ch); else $('bRestart').click();
@@ -4375,7 +4317,7 @@ async function setPres(on) {
     $('optPause').checked = true;
     renderPresCmp();
     if (!stage.classList.contains('fs')) { try { if (stage.requestFullscreen) await stage.requestFullscreen(); } catch (e) {} setFs(true); }
-    presGo('B');
+    presGo('D');
   } else {
     $('presCmp').hidden = true; document.body.classList.remove('pres-cmp-on');
     if (presSaved) $('optPause').checked = presSaved.pause;
@@ -4389,7 +4331,7 @@ $('presExit').addEventListener('click', () => setPres(false));
 document.querySelectorAll('.pres-ch button').forEach(b => b.addEventListener('click', () => presGo(b.dataset.ch)));
 addEventListener('keydown', e => {
   if (!presOn || e.target.closest('input, select, textarea')) return;
-  const ch = { 1: 'B', 2: 'A', 3: 'D', 4: 'cmp' }[e.key];
+  const ch = { 1: 'D', 2: 'A', 3: 'B', 4: 'cmp' }[e.key];
   if (ch) { e.preventDefault(); presGo(ch); }
   else if (e.key === 'PageDown') { e.preventDefault(); $('bNext').click(); }   // télécommande de présentation
   else if (e.key === 'PageUp') { e.preventDefault(); $('bPrev').click(); }
@@ -4630,131 +4572,6 @@ function updateActCard() {
 setQuality(quality);
 new ResizeObserver(resize).observe(view);
 
-/* ================= Éclairage cuit (Blender) : pièces fixes de la tête et du banc =================
-   Occlusion ambiante douce cuite dans Cycles (blender/bake_lightmaps.py) : lightmaps/head_lm.glb (géométrie + 2e UV « LM »)
-   et 3 atlas (tête assemblée, tête éclatée, banc). Appliquée en aoMap (uv1) : seule la lumière d'ambiance est atténuée
-   dans les creux ; les lumières directes restent, sans ombre portée. Sans ces fichiers : rendu temps réel inchangé. */
-const LM = { snap: null, ok: false, done: false, on: true, I: .8, head: new Set(), bench: new Set(), A: null, E: null, B: null, k: -1, n: 0, skip: 0, miss: 0 };
-// Instantané au démarrage : maillages de la tête (h) et du banc (c), ordre de traverse(), repère relatif au rig
-function lmSnap() {
-  rig.updateWorldMatrix(true, true);
-  const inv = rig.matrixWorld.clone().invert();
-  LM.snap = {};
-  for (const [g, G] of [['h', headG], ['c', carriage]]) { const l = []; G.traverse(o => { if (o.isMesh) l.push([o, inv.clone().multiply(o.matrixWorld)]); }); LM.snap[g] = l; }
-}
-// Matériaux cuits et leurs clones de surbrillance (sélection)
-const lmMats = set => [...set].flatMap(m => hiCache.has(m) ? [m, hiCache.get(m)] : [m]);
-// Tête éclatée : fondu de l'atlas « assemblée » vers l'atlas « éclatée » (pièces séparées)
-function lmUpdate(force) {
-  if (!LM.ok) return;
-  const k = ease(hexE);
-  if (!force && k === LM.k) return;
-  LM.k = k;
-  const go = (set, tex, I) => { for (const m of lmMats(set)) { const t = LM.on ? tex : null; if (!m.aoMap !== !t) m.needsUpdate = true; m.aoMap = t; m.aoMapIntensity = I; } };
-  go(LM.head, k < .5 ? LM.A : LM.E, LM.I * Math.abs(1 - 2 * k));
-  go(LM.bench, LM.B, LM.I);
-}
-// Géométrie du GLB (repère du rig) → repère local du maillage du site ; attributs en Float32
-function lmGeo(prims, rel, Rinv) {
-  const back = rel.clone().invert().multiply(Rinv), AT = [['position', 3], ['normal', 3], ['uv', 2], ['uv1', 2], ['color', 3]];
-  const has = a => prims.every(p => p.geometry.attributes[a]);
-  if (!has('position') || !has('normal') || !has('uv1')) return null;
-  const used = AT.filter(([a]) => has(a)), n = prims.reduce((s, p) => s + p.geometry.attributes.position.count, 0);
-  const out = new THREE.BufferGeometry(), arr = used.map(([, k]) => new Float32Array(n * k)), idx = [];
-  let base = 0;
-  for (const p of prims) {
-    const g = p.geometry, c = g.attributes.position.count;
-    used.forEach(([a, k], j) => { const s = g.attributes[a]; for (let i = 0; i < c; i++) { arr[j][(base + i) * k] = s.getX(i); arr[j][(base + i) * k + 1] = s.getY(i); if (k > 2) arr[j][(base + i) * k + 2] = s.getZ(i); } });
-    const start = idx.length;
-    if (g.index) for (let i = 0; i < g.index.count; i++) idx.push(base + g.index.getX(i)); else for (let i = 0; i < c; i++) idx.push(base + i);
-    const mi = /^m(\d+)_/.exec(p.material && p.material.name || '');
-    if (prims.length > 1) out.addGroup(start, idx.length - start, mi ? +mi[1] : 0);
-    base += c;
-  }
-  used.forEach(([a, k], j) => out.setAttribute(a, new THREE.BufferAttribute(arr[j], k)));
-  out.setIndex(idx);
-  out.applyMatrix4(back.multiply(prims[0].matrixWorld));
-  return out;
-}
-// Reprend position, normale, uv et couleur exactes du sommet d'origine confondu (le GLB est quantifié et
-// ses normales recalculées par Blender) ; seule la 2e couche UV vient du GLB
-function lmRestore(ng, og) {
-  const op = og.attributes.position, on = og.attributes.normal, ou = og.attributes.uv, oc = og.attributes.color;
-  if (!op || !on) return 0;
-  const Q = 1e3, key = (x, y, z) => x + ',' + y + ',' + z, map = new Map();
-  for (let i = 0; i < op.count; i++) { const k = key(Math.round(op.getX(i) * Q), Math.round(op.getY(i) * Q), Math.round(op.getZ(i) * Q)); if (!map.has(k)) map.set(k, []); map.get(k).push(i); }
-  const P = ng.attributes.position, N = ng.attributes.normal, U = ng.attributes.uv, C = ng.attributes.color;
-  let miss = 0;
-  for (let i = 0; i < P.count; i++) {
-    const x = P.getX(i), y = P.getY(i), z = P.getZ(i), kx = Math.round(x * Q), ky = Math.round(y * Q), kz = Math.round(z * Q);
-    let best = -1, bs = 1e9;
-    for (let a = -1; a <= 1; a++) for (let b = -1; b <= 1; b++) for (let c = -1; c <= 1; c++) {
-      const l = map.get(key(kx + a, ky + b, kz + c)); if (!l) continue;
-      for (const j of l) {
-        const dp = Math.hypot(op.getX(j) - x, op.getY(j) - y, op.getZ(j) - z);
-        if (dp > 2e-3) continue;
-        let sc = dp / 1e-3 + (1 - (on.getX(j) * N.getX(i) + on.getY(j) * N.getY(i) + on.getZ(j) * N.getZ(i))) * 10;
-        if (ou && U) sc += (Math.abs(ou.getX(j) - U.getX(i)) + Math.abs(ou.getY(j) - U.getY(i))) * 100;
-        if (sc < bs) { bs = sc; best = j; }
-      }
-    }
-    if (best < 0) { miss++; continue; }
-    P.setXYZ(i, op.getX(best), op.getY(best), op.getZ(best)); N.setXYZ(i, on.getX(best), on.getY(best), on.getZ(best));
-    if (ou && U) U.setXY(i, ou.getX(best), ou.getY(best));
-    if (oc && C) C.setXYZ(i, oc.getX(best), oc.getY(best), oc.getZ(best));
-  }
-  return miss;
-}
-function lmApply(root) {
-  root.updateMatrixWorld(true);
-  const R = root.getObjectByName('LM_root');
-  if (!R) throw new Error('LM_root absent');
-  const Rinv = R.matrixWorld.clone().invert(), own = new Map(), b0 = new THREE.Box3(), b1 = new THREE.Box3();
-  const mine = (m, g) => {
-    if (!own.has(m)) { const c = m.clone(); (g === 'h' ? headMats : drillMats).add(c); (g === 'h' ? LM.head : LM.bench).add(c); own.set(m, c); }
-    return own.get(m);
-  };
-  for (const node of [...R.children]) {
-    const mm = /^LM_([hc])_(\d+)$/.exec(node.name), e = mm && LM.snap[mm[1]] && LM.snap[mm[1]][+mm[2]];
-    if (!e) continue;
-    const [o, rel] = e, g = mm[1], cur = o.userData.orig || o.material;
-    const prims = node.isMesh ? [node] : node.children.filter(c => c.isMesh);
-    const ng = prims.length ? lmGeo(prims, rel, Rinv) : null;
-    // contrôle : même boîte englobante que la pièce du site, même nombre de matériaux
-    if (ng) { o.geometry.computeBoundingBox(); ng.computeBoundingBox(); b0.copy(o.geometry.boundingBox); b1.copy(ng.boundingBox); }
-    const tol = ng ? b0.getSize(new THREE.Vector3()).length() * .01 + 1e-3 : 0;
-    if (!ng || b0.min.distanceTo(b1.min) > tol || b0.max.distanceTo(b1.max) > tol || Array.isArray(cur) !== ng.groups.length > 0) { LM.skip++; continue; }
-    if ([].concat(cur).some(m => m.vertexColors) && !ng.attributes.color) ng.setAttribute('color', new THREE.BufferAttribute(new Float32Array(ng.attributes.position.count * 3).fill(1), 3));
-    LM.miss += lmRestore(ng, o.geometry);
-    ng.computeBoundingSphere();
-    o.geometry = ng;
-    const nm = Array.isArray(cur) ? cur.map(m => mine(m, g)) : mine(cur, g);
-    if (o.material === cur) o.material = nm;
-    if (o.userData.orig) o.userData.orig = nm;
-    LM.n++;
-  }
-  LM.ok = LM.n > 0;
-  if (!LM.ok) return;
-  $('optLMw').hidden = false;
-  lmUpdate(true);
-  if (selected) select(selected);   // sélection en cours : couleurs d'origine recalculées
-}
-function lmLoad() {
-  let base;
-  try { base = new URL('lightmaps/', document.baseURI).href; if (!/^https?:|^file:/.test(base)) throw 0; }
-  catch (e) { LM.done = true; return; }   // page sans adresse (aperçu intégré) : éclairage temps réel seul
-  const tl = new THREE.TextureLoader();
-  const tex = f => new Promise((ok, ko) => tl.load(base + f, t => { t.channel = 1; t.flipY = false; t.anisotropy = 4; ok(t); }, undefined, ko));
-  const glb = import('three/addons/loaders/DRACOLoader.js').then(({ DRACOLoader }) => new Promise((ok, ko) => {   // géométrie compressée (Draco)
-    const d = new DRACOLoader().setDecoderPath('https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/libs/draco/gltf/'), l = new GLTFLoader().setDRACOLoader(d);
-    l.load(base + 'head_lm.glb', g => { d.dispose(); ok(g); }, undefined, e => { d.dispose(); ko(e); });
-  }));
-  Promise.all([glb, tex('head_a.jpg'), tex('head_e.jpg'), tex('bench.jpg')]).then(([gltf, A, E, B]) => {
-    Object.assign(LM, { A, E, B });
-    try { lmApply(gltf.scene); } catch (e) { console.info('Éclairage cuit : non appliqué (' + e.message + ').'); }
-  }).catch(() => console.info('Éclairage cuit : fichiers lightmaps/ absents, éclairage temps réel seul.')).finally(() => { LM.done = true; });
-}
-$('optLM').addEventListener('change', e => { LM.on = e.target.checked; lmUpdate(true); });
 
 let last = performance.now();
 function frame(now) {
@@ -4776,7 +4593,6 @@ function frame(now) {
   applyScene(S);
   applyExplode(explodeE);
   applyHeadExplode(hexE);
-  lmUpdate();
   updateUI(S);
   updateCamera(dt);
   controls.update();
@@ -4809,7 +4625,6 @@ async function start() {
   // ombres de contact sous le banc (avec la tête) et sous la table, d'après leur emprise au sol
   rig.updateWorldMatrix(true, true);
   for (const o of [carriage, tableG]) { const b = new THREE.Box3().setFromObject(o), c = b.getCenter(new THREE.Vector3()), sz = b.getSize(new THREE.Vector3()); contactShadow(c.x, c.z, sz.x * .62, sz.z * .62); }
-  lmSnap();
   // priorité de profondeur par matériau : surfaces confondues toujours départagées de la même façon
   {
     const seen = new Set();
@@ -4819,16 +4634,15 @@ async function start() {
   buildLabels();
   headCenters();
   layoutExplode();
-  renderBOM(); renderCard(); nbDom(document.body);
+  nbDom(document.body);
   applyCut();
   let saved = 'A';
   try { saved = localStorage.getItem('clam-scen') || 'A'; } catch (e) {}
-  selectScen(SCEN[saved] ? saved : 'A');
+  selectScen(SCEN[saved] ? saved : 'D');   // par défaut : la reconstitution de l'accident (cône retenu)
   resize();
   const S = stateAt(T); applyScene(S); updateUI(S, true);
   requestAnimationFrame(frame);
-  lmLoad();
-  window.__clam = { stateAt, steps: () => steps, starts: () => starts, total: () => total, setT: v => { T = v; }, P, setExplode, setHeadExplode, headExplodeNow: v => { setHeadExplode(v); hexE = v ? 1 : 0; }, setCutUI: setCut, cutState: () => ({ cutOn, cutAuto, cam: lastCamKey }), explodeNow: v => { setExplode(v); explodeE = v ? 1 : 0; }, select: id => select(byId(id)), PARTS, camera, setQuality, worker: { set: setWorker, get: () => ({ x: WORKER_GLB.position.x, y: WORKER_GLB.position.y, z: WORKER_GLB.position.z, rotYdeg: WORKER_GLB.rotY * 180 / Math.PI, scale: WORKER_GLB.scale, loaded: !!workerModel }), root: workerRoot }, setCut: v => { cutOn = v; applyCut(); }, levers, THREE, state: () => stateAt(T), capture, leverMan: () => ({ ...leverMan }), oilG, labels: () => labels, STROKE, JAW_OPEN, lm: LM };
+  window.__clam = { stateAt, steps: () => steps, starts: () => starts, total: () => total, setT: v => { T = v; }, P, setExplode, setHeadExplode, headExplodeNow: v => { setHeadExplode(v); hexE = v ? 1 : 0; }, setCutUI: setCut, cutState: () => ({ cutOn, cutAuto, cam: lastCamKey }), explodeNow: v => { setExplode(v); explodeE = v ? 1 : 0; }, select: id => select(byId(id)), PARTS, camera, setQuality, worker: { set: setWorker, get: () => ({ x: WORKER_GLB.position.x, y: WORKER_GLB.position.y, z: WORKER_GLB.position.z, rotYdeg: WORKER_GLB.rotY * 180 / Math.PI, scale: WORKER_GLB.scale, loaded: !!workerModel }), root: workerRoot }, setCut: v => { cutOn = v; applyCut(); }, levers, THREE, state: () => stateAt(T), capture, leverMan: () => ({ ...leverMan }), oilG, labels: () => labels, STROKE, JAW_OPEN };
 }
 start();
 </script>

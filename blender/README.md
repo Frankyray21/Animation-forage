@@ -31,4 +31,4 @@ node export_static.mjs lm_work            # PLAYWRIGHT=… CHROME=… si besoin
 python3 bake_lightmaps.py --src lm_work   # environ 5 min (CPU 4 cœurs, 256 échantillons)
 ```
 
-Voir la section « Éclairage cuit (Blender) » du README principal.
+Le résultat n'est plus chargé par la page (option retirée) ; voir la section « Éclairage cuit (Blender) » du README principal.
