@@ -283,17 +283,24 @@ details.params summary { cursor: pointer; padding: 10px 14px; font-weight: 600; 
 .pres-bar, .pres-cmp { display: none; }
 body.pres .pres-bar { display: flex; position: absolute; top: 10px; left: 12px; right: 12px; z-index: 6; gap: 8px 12px; align-items: center; flex-wrap: wrap; pointer-events: none; }
 body.pres .pres-bar > * { pointer-events: auto; }
-.pres-kicker { padding: 5px 10px; border-radius: 4px; background: var(--danger); color: #fff; font-size: 13px; font-weight: 700; letter-spacing: .07em; text-transform: uppercase; }
-.pres-kicker[hidden] { display: none; }
-.pres-ch { display: flex; gap: 6px; min-width: 0; overflow-x: auto; flex: 1; }
+.pres-menu { position: relative; }
+.pres-pick { display: inline-flex; align-items: center; gap: 8px; padding: 8px 14px; border: 1px solid var(--line); border-radius: 999px; background: color-mix(in srgb, var(--panel) 94%, transparent); color: var(--ink); font: 500 15px/1.1 var(--body); cursor: pointer; box-shadow: 0 4px 14px rgba(0,0,0,.15); }
+.pres-pick .lb { color: var(--muted); }
+.pres-pick b { font-weight: 700; }
+.pres-pick .sw { width: 10px; height: 10px; border-radius: 50%; background: var(--tone, var(--ink)); }
+.pres-pick[data-tone="danger"] { --tone: var(--danger); }
+.pres-pick[data-tone="ok"] { --tone: var(--ok); }
+.pres-pick[data-tone="warn"] { --tone: var(--warn); }
+.pres-ch { position: absolute; top: calc(100% + 6px); left: 0; z-index: 8; display: flex; flex-direction: column; gap: 4px; width: max-content; max-width: calc(100vw - 24px); padding: 6px; border-radius: 10px; background: var(--panel); border: 1px solid var(--line); box-shadow: 0 10px 30px rgba(0,0,0,.25); }
+.pres-ch[hidden] { display: none; }
 .pres-ch button { flex: none; display: flex; align-items: center; gap: 8px; padding: 6px 12px 6px 8px; border: 1px solid var(--line); border-radius: 8px; background: color-mix(in srgb, var(--panel) 92%, transparent); color: var(--ink); cursor: pointer; text-align: left; font: 600 15px/1.1 var(--body); }
 .pres-ch button b { display: grid; place-items: center; width: 26px; height: 26px; border-radius: 50%; background: var(--shade); font-family: var(--display); font-size: 17px; }
 .pres-ch button small { display: block; font-size: 12px; font-weight: 400; color: var(--muted); }
-.pres-ch button[aria-selected="true"] { border-color: var(--ink); box-shadow: inset 0 -4px 0 var(--tone, var(--ink)); }
+.pres-ch button[aria-checked="true"] { border-color: var(--ink); box-shadow: inset 4px 0 0 var(--tone, var(--ink)); }
 .pres-ch button[data-tone="danger"] { --tone: var(--danger); }
 .pres-ch button[data-tone="ok"] { --tone: var(--ok); }
 .pres-ch button[data-tone="warn"] { --tone: var(--warn); }
-.pres-ch button[aria-selected="true"] b { background: var(--tone, var(--ink)); color: #fff; }
+.pres-ch button[aria-checked="true"] b { background: var(--tone, var(--ink)); color: #fff; }
 .pres-x { margin-left: auto; border: 1px solid var(--line); border-radius: 999px; background: var(--panel); color: var(--ink); padding: 6px 14px; font: 600 14px/1 var(--body); cursor: pointer; }
 body.pres .chip-row { top: 66px; }
 body.pres .vbar, body.pres #scenChip, body.pres .fs-steps, body.pres .note, body.pres .topt { display: none !important; }
@@ -327,10 +334,7 @@ body.pres .pres-cmp:not([hidden]) { display: grid; position: absolute; inset: 66
 .pres-col button { justify-self: start; border: 1px solid var(--line); background: var(--panel); color: var(--ink); border-radius: 6px; padding: 6px 12px; font: 600 14px/1 var(--body); cursor: pointer; }
 .pres-key { margin: 0; padding: 12px 16px; border-left: 6px solid var(--accent); background: var(--shade); font-size: clamp(17px, 1.7vw, 22px); line-height: 1.4; max-width: 90ch; }
 @media (max-width: 600px) {
-  .pres-ch button small { display: none; }
-  body.pres .chip-row { top: 104px; }
-  body.pres .pres-cmp:not([hidden]) { inset: 104px 8px 8px; padding: 16px; }
-  body.pres.pres-cmp-on .pres-cmp:not([hidden]) { bottom: auto; max-height: calc(100% - 112px); }
+  .pres-pick .lb { display: none; }
   body.pres .cap-num { font-size: 44px; }
 }
 
@@ -360,12 +364,14 @@ body.pres .pres-cmp:not([hidden]) { display: grid; position: absolute; inset: 66
       <div class="banner" id="banner" hidden><strong id="bannerTitle">PROJECTION</strong></div>
       <div class="note" id="note">Courses exagérées ×6 : ressorts, ouverture des jaws</div>
       <div class="pres-bar" id="presBar">
-        <span class="pres-kicker" id="presKicker">Reconstitution de l'accident</span>
-        <div class="pres-ch" role="tablist" aria-label="Chapitres de la présentation">
-          <button type="button" role="tab" data-ch="D" data-tone="warn"><b>1</b><span>L'accident<small>Cône retenu par les boulons longs</small></span></button>
-          <button type="button" role="tab" data-ch="A" data-tone="ok"><b>2</b><span>La bonne méthode<small>Procédure respectée</small></span></button>
-          <button type="button" role="tab" data-ch="B" data-tone="danger"><b>3</b><span>Sans les boulons longs<small>Projection du cône</small></span></button>
-          <button type="button" role="tab" data-ch="cmp" data-tone="info"><b>4</b><span>Comparaison<small>Les 3 situations</small></span></button>
+        <div class="pres-menu">
+          <button type="button" class="pres-pick" id="presPick" aria-haspopup="menu" aria-expanded="false" aria-controls="presList"><span class="sw" id="presPickSw"></span><span class="lb">Scénario&nbsp;:</span> <b id="presPickText">L'accident</b> <span aria-hidden="true">▾</span></button>
+          <div class="pres-ch" id="presList" role="menu" aria-label="Scénarios de la présentation" hidden>
+            <button type="button" role="menuitemradio" data-ch="D" data-tone="warn" data-name="L'accident (reconstitution)"><b>1</b><span>L'accident (reconstitution)<small>Boulons retirés un par un : cône retenu</small></span></button>
+            <button type="button" role="menuitemradio" data-ch="A" data-tone="ok" data-name="La bonne méthode"><b>2</b><span>La bonne méthode<small>Procédure respectée</small></span></button>
+            <button type="button" role="menuitemradio" data-ch="B" data-tone="danger" data-name="Sans les boulons longs"><b>3</b><span>Sans les boulons longs<small>Projection du cône</small></span></button>
+            <button type="button" role="menuitemradio" data-ch="cmp" data-tone="info" data-name="Comparaison"><b>4</b><span>Comparaison<small>Les 3 situations</small></span></button>
+          </div>
         </div>
         <button type="button" class="pres-x" id="presExit" aria-label="Quitter la présentation">Quitter <span aria-hidden="true">×</span></button>
       </div>
@@ -4298,9 +4304,11 @@ function renderPresCmp() {
 }
 function presGo(ch) {
   presCh = ch;
-  document.querySelectorAll('.pres-ch button').forEach(b => b.setAttribute('aria-selected', String(b.dataset.ch === ch)));
+  document.querySelectorAll('.pres-ch button').forEach(b => b.setAttribute('aria-checked', String(b.dataset.ch === ch)));
+  const cur = document.querySelector(`.pres-ch button[data-ch="${ch}"]`);
+  $('presPickText').textContent = cur.dataset.name; $('presPick').dataset.tone = cur.dataset.tone;
+  presMenu(false);
   $('presCmp').hidden = ch !== 'cmp';
-  $('presKicker').hidden = ch !== 'D';
   document.body.classList.toggle('pres-cmp-on', ch === 'cmp'); requestAnimationFrame(resize);   // comparaison : toute la hauteur, sans le bandeau d'étape
   if (ch === 'cmp') { setPlaying(false); return; }
   if (scen !== ch) selectScen(ch); else $('bRestart').click();
@@ -4323,12 +4331,17 @@ $('btnPres').addEventListener('click', () => setPres(true));
 $('btnPresCta').addEventListener('click', () => { stage.scrollIntoView({ block: 'start' }); setPres(true); });
 $('presExit').addEventListener('click', () => setPres(false));
 document.querySelectorAll('.pres-ch button').forEach(b => b.addEventListener('click', () => presGo(b.dataset.ch)));
+// Bouton « Scénario » : ouvre la liste des 4 choix ; clic à côté ou Échap pour la fermer
+function presMenu(open) { $('presList').hidden = !open; $('presPick').setAttribute('aria-expanded', String(open)); if (open) ($('presList').querySelector('[aria-checked="true"]') || $('presList').querySelector('button')).focus(); }
+$('presPick').addEventListener('click', e => { e.stopPropagation(); presMenu($('presList').hidden); });
+document.addEventListener('click', e => { if (!$('presList').hidden && !e.target.closest('.pres-menu')) presMenu(false); });
 addEventListener('keydown', e => {
   if (!presOn || e.target.closest('input, select, textarea')) return;
   const ch = { 1: 'D', 2: 'A', 3: 'B', 4: 'cmp' }[e.key];
   if (ch) { e.preventDefault(); presGo(ch); }
   else if (e.key === 'PageDown') { e.preventDefault(); $('bNext').click(); }   // télécommande de présentation
   else if (e.key === 'PageUp') { e.preventDefault(); $('bPrev').click(); }
+  else if (e.key === 'Escape' && !$('presList').hidden) { e.preventDefault(); presMenu(false); $('presPick').focus(); }
   else if (e.key === 'Escape' && !document.fullscreenElement && $('help').hidden) setPres(false);
 });
 // Aide à la navigation : au premier passage, puis avec le bouton « ? »
