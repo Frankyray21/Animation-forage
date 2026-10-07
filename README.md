@@ -65,8 +65,8 @@ La foreuse complète, sa console UM-051 et son groupe hydraulique FMX-005 (page 
 | Scénario | Ce qui est montré |
 | --- | --- |
 | Procédure respectée | Étapes 1 à 9. L'énergie des ressorts descend graduellement à 0. |
-| Sans les boulons longs : cône projeté | Pire cas, pour comparaison : étapes 6 et 7 non respectées. Le dernier boulon porte toute la force, son filet cède et le cône est projeté. |
-| Boulons retirés un par un : cône retenu — **reconstitution de l'accident** (étiquette rouge, scénario affiché par défaut) | Même erreur, mais l'étape 6 a été faite. Les 3 boulons remis sans bushing arrêtent le cône après quelques millimètres. |
+| Sans les boulons longs : cône projeté | Pire cas, pour comparaison : étapes 6 et 7 non respectées. Le dernier boulon porte toute la force, il casse et le cône est projeté. |
+| Boulons retirés un par un : cône retenu — **reconstitution de l'accident** (étiquette rouge, scénario affiché par défaut) | Même erreur, mais l'étape 6 a été faite. Le dernier boulon, desserré à l'impact drill, casse : l'outil est projeté au thorax du travailleur ; les 3 boulons remis sans bushing arrêtent le cône après quelques millimètres. |
 
 **Bilan de fin** : à la dernière étape de chaque scénario (étape « Bilan » en B et D ; fin de l'étape 9 en A, une fois le cône posé sur la table), une carte au haut de la vue résume le résultat, avec ✓ / ✗ pour les étapes clés 6 et 7 (sans valeurs de force) :
 

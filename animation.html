@@ -2980,9 +2980,9 @@ function oneByOne(withRet) {
       shots: [{ at: 0, cam: 'tool' }, { at: .62, cam: 'bolts' }],
       text: 'Le boulon 6 porte seul toute la force des ressorts.',
       apply(S, p) { base(S); one(S, p, B(5), B(2), B(6)); } },
-    { n: '7', title: 'Dévissage du boulon 6 sous pleine charge', cam: 'bolts', dur: 3.5, tone: 'danger', flag: 'Danger',
-      shots: [{ at: 0, cam: 'boltL' }],   // gros plan sur le boulon qui va céder
-      text: 'Le travailleur se penche pour dévisser le dernier boulon. Le filet commence à céder.',
+    { n: '7', title: 'Dernier boulon desserré à l\'impact drill, sous pleine charge', cam: 'bolts', dur: 3.5, tone: 'danger', flag: 'Danger',
+      shots: [{ at: 0, cam: 'boltL' }],   // gros plan sur le boulon qui va casser
+      text: 'Le dernier boulon ne veut pas se défaire : il retient seul la poussée des 18 ressorts. Le travailleur insiste avec l\'impact drill, plusieurs essais.',
       apply(S, p) {
         base(S); S.wd = 1;
         const w = seg(p, 0, .2);
@@ -3073,19 +3073,19 @@ const SCEN = {
       items: [[false, 'Étape 6 : boulons longs enlevés, non remis'], [false, 'Étape 7 : chaque boulon du cône sorti au complet au lieu d\'un tour à la fois']] },
     make: () => [
       first5, skip6, ...oneByOne(false),
-      { n: '!', title: 'Le filet cède : cône projeté', cam: 'wide', flight: true, tone: 'danger', flag: 'Projection', dir: null, ride: byNum(6),
+      { n: '!', title: 'Le boulon casse : cône projeté', cam: 'wide', flight: true, tone: 'danger', flag: 'Projection', dir: null, ride: byNum(6),
         text: 'Toute l\'énergie des ressorts part d\'un coup. Le cône et les mâchoires sont projetés dans l\'axe, vers les mains et le corps du travailleur.' },
       { n: '⚠', title: 'Bilan', cam: 'wide', dur: 6, tone: 'danger', summary: true, text: '' },
     ],
   },
   D: {
     label: 'Boulons retirés un par un : cône retenu', sub: 'Étape 6 faite (3 boulons longs remis sans bushing) · étape 7 non respectée (boulons du cône sortis au complet)', tone: 'warn', tag: 'Reconstitution de l\'accident',
-    bilan: { title: 'Bilan · l\'accident', text: 'Boulons du cône sortis au complet (étape 7 non respectée), mais les 3 boulons longs remis sans bushing (étape 6) ont retenu le cône.',
+    bilan: { title: 'Bilan · l\'accident', text: 'Boulons du cône sortis au complet (étape 7 non respectée) : le dernier boulon a cassé à l\'impact drill et l\'outil a frappé le travailleur au thorax. Les 3 boulons longs remis sans bushing (étape 6) ont retenu le cône.',
       items: [[true, 'Étape 6 : 3 boulons longs remis sans bushing'], [false, 'Étape 7 : chaque boulon du cône sorti au complet au lieu d\'un tour à la fois']] },
     make: () => [
       first5, st.retain, ...oneByOne(true),
-      { n: '!', title: 'Le filet cède : les 3 boulons arrêtent le cône', cam: 'catch', sec: true, catch: true, tone: 'warn', flag: 'Retenu', ride: byNum(6),
-        text: 'Le filet du boulon 6 cède, le cône part vers le travailleur. Après quelques millimètres, les 3 boulons longs l\'arrêtent.' },
+      { n: '!', title: 'Le boulon casse : outil projeté, cône retenu', cam: 'catch', sec: true, catch: true, tone: 'warn', flag: 'Retenu', ride: byNum(6),
+        text: 'Après plusieurs essais, le dernier boulon casse. L\'impact drill est projeté vers le travailleur et le frappe au thorax. Le cône avance de quelques millimètres : les 3 boulons longs l\'arrêtent.' },
       { n: '✓', title: 'Bilan', cam: 'catch', dur: 6, tone: 'warn', summary: true, text: '' },
     ],
   },
@@ -4051,7 +4051,7 @@ const IMPACT_TXT = { visage: 'IMPACT AU VISAGE', tronc: 'IMPACT AU TRONC', hanch
 const ZONE_TXT = { visage: 'le visage', tronc: 'le tronc', hanches: 'les hanches', jambes: 'les jambes' };
 function summaryText(ev) {
   if (ev.catch) {
-    return `L'accident (reconstitution). Les boulons du cône ont été sortis au complet un par un (étape 7 non respectée). Le filet du boulon 6 a cédé, le cône est parti vers le travailleur. Les 3 boulons longs remis sans bushing (étape 6) l'ont arrêté après quelques millimètres. Remplacer ces 3 boulons par des neufs avant de remonter.`;
+    return `L'accident (reconstitution). Le travailleur a démonté le mandrin parce qu'un anneau de jaws était pris dans les ressorts. Les boulons du cône ont été sortis au complet un par un (étape 7 non respectée). Le dernier boulon ne voulait pas se défaire : desserré à l'impact drill, il a cassé après plusieurs essais. L'outil a été projeté et a frappé le travailleur au thorax ; sa main droite était enflée. Les 3 boulons longs remis sans bushing (étape 6) ont retenu le cône. Remplacer ces 3 boulons par des neufs avant de remonter.`;
   }
   const F = ev.F;
   const hands = F.hands ? `Il frappe d'abord les mains sur la clé. ` : '';
@@ -4293,7 +4293,7 @@ document.addEventListener('keydown', e => { if (e.key === 'Escape' && stage.clas
 // Mode présentation : plein écran + chapitres. L'accident (D, cône retenu) d'abord, puis la bonne méthode (A), le pire cas sans boulons longs (B) et la comparaison.
 // Lecture continue (Espace : pause ; → / ← ou télécommande : étape suivante / précédente). « Pause à chaque étape » reste un choix de l'utilisateur.
 let presOn = false, presCh = 'D', presSaved = null;
-const PRES_OUT = { B: 'Sans les boulons longs : cône et mâchoires projetés vers le travailleur', D: 'Le filet du boulon 6 cède : le cône part vers le travailleur, les 3 boulons longs l\'arrêtent', A: 'Ressorts détendus lentement : pièces changées sans danger' };
+const PRES_OUT = { B: 'Sans les boulons longs : cône et mâchoires projetés vers le travailleur', D: 'Le dernier boulon casse à l\'impact drill : l\'outil frappe le travailleur au thorax. Les 3 boulons longs retiennent le cône', A: 'Ressorts détendus lentement : pièces changées sans danger' };
 const PRES_TAG = { D: 'L\'accident (reconstitution)', B: 'Pire cas : projection', A: 'Procédure respectée' };
 function renderPresCmp() {
   $('presCols').innerHTML = ['D', 'B', 'A'].map(k => { const c = SCEN[k];
