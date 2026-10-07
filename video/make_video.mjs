@@ -104,7 +104,7 @@ function still(jpg, png, dur, extra = '') {
 }
 function proc(s) {
   const a = input('-framerate', String(FPS), '-i', path.join(s.dir, '%05d.jpg')), l = `s${segs.length}`;
-  chains.push(`[${a}:v]${norm}[${l}]`); segs.push({ l, dur: s.dur });
+  chains.push(`[${a}:v]scale=${W}:${H}:flags=area,${norm}[${l}]`); segs.push({ l, dur: s.dur });   // images suréchantillonnées : réduction par moyenne de zone
 }
 const TITLE = 3.5, INS = 3, END = 4;
 still(R('01_ensemble.jpg'), path.join(WORK, 'titre.png'), TITLE, ',fade=t=in:st=0:d=0.6');

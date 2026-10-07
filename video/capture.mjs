@@ -2,7 +2,8 @@
 // La page est servie depuis le dépôt par un petit serveur local ; les crochets de capture sont
 // injectés dans la copie servie (index.html n'est jamais modifié).
 //
-// Usage : node video/capture.mjs [--out DIR] [--fps 24] [--from K] [--to K] [--info]
+// Usage : node video/capture.mjs [--out DIR] [--fps 24] [--ss 2] [--from K] [--to K] [--info]
+// --ss : suréchantillonnage (rendu à ss × la taille, réduit au montage) contre le crénelage et le scintillement des arêtes
 // Variables : PLAYWRIGHT (chemin du module playwright si non installé localement),
 //             CHROME (exécutable chromium), THREE_DIR (copie locale du paquet three@0.160.0),
 //             CDN_CACHE (cache des fichiers CDN téléchargés par curl ; défaut : dossier temporaire).
@@ -15,7 +16,7 @@ import { fileURLToPath } from 'url';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const arg = (k, d) => { const i = process.argv.indexOf('--' + k); return i < 0 ? d : process.argv[i + 1]; };
-const FPS = +arg('fps', 24), W = +arg('w', 1280), H = +arg('h', 720);
+const FPS = +arg('fps', 24), W = +arg('w', 1280), H = +arg('h', 720), SS = +arg('ss', 2);
 const OUT = path.resolve(arg('out', path.join(ROOT, 'video', 'frames')));
 const INFO = process.argv.includes('--info');
 const THREE_DIR = process.env.THREE_DIR || '';
@@ -70,7 +71,7 @@ function cdn(url) {
   return f;
 }
 const browser = await chromium.launch({ ...(process.env.CHROME ? { executablePath: process.env.CHROME } : {}), args: ['--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader'] });
-const page = await browser.newPage({ viewport: { width: W, height: H }, deviceScaleFactor: 1, colorScheme: 'light' });
+const page = await browser.newPage({ viewport: { width: W, height: H }, deviceScaleFactor: SS, colorScheme: 'light' });
 page.setDefaultTimeout(0);
 page.on('pageerror', e => console.log('[pageerror]', e.message));
 await page.route(/^https:\/\/(cdn\.jsdelivr\.net|fonts\.googleapis\.com|fonts\.gstatic\.com)\//, r => {
@@ -100,13 +101,13 @@ info.steps.forEach((s, i) => {
   plan.push({ k: plan.length, t: t1 - 1e-3, step: i, end: true });
 });
 fs.mkdirSync(OUT, { recursive: true });
-fs.writeFileSync(path.join(OUT, 'plan.json'), JSON.stringify({ fps: FPS, w: W, h: H, ...info, frames: plan }, null, 1));
+fs.writeFileSync(path.join(OUT, 'plan.json'), JSON.stringify({ fps: FPS, w: W, h: H, ss: SS, ...info, frames: plan }, null, 1));
 console.log(`scénario ${info.scen} : ${info.steps.length} étapes, ${info.total.toFixed(2)} s, ${plan.length} images`);
 if (INFO) { console.log(info.steps.map((s, i) => `${s.n} ${s.title} (${info.starts[i].toFixed(2)} s, ${s.dur.toFixed(2)} s)`).join('\n')); await browser.close(); server.close(); process.exit(0); }
 
 const FROM = +arg('from', 0), TO = Math.min(+arg('to', plan.length), plan.length);
 const view = await page.evaluate(() => { const b = document.getElementById('view').getBoundingClientRect(); return { x: b.left, y: b.top, width: b.width, height: b.height }; });
-await page.evaluate(([fps, pad]) => { window.__cap = true; window.__fixedDt = 1 / fps; window.__go = 0; window.__padB = pad; }, [FPS, +(process.env.PAD_B || 104)]);
+await page.evaluate(([fps, pad]) => { window.__cap = true; window.__fixedDt = 1 / fps; window.__go = 0; window.__padB = pad; window.__cutFar = true; }, [FPS, +(process.env.PAD_B || 104)]);
 // une image calculée (rendu facultatif) à l'instant t ; l'horloge virtuelle avance avec l'indice k
 async function step(fr, render) {
   const n = await page.evaluate(([fr, render, fps]) => {

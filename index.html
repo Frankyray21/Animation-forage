@@ -228,6 +228,7 @@ details.params summary { cursor: pointer; padding: 10px 14px; font-weight: 600; 
 .remontage b { font-family: var(--mono); font-weight: 500; }
 .vbtn { pointer-events: auto; border: 1px solid var(--line); background: var(--panel); border-radius: 999px; padding: 4px 11px; font-size: 12px; font-weight: 600; cursor: pointer; }
 .vbtn[aria-pressed="true"] { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+#btnCut.auto .lg::after, #btnCut.auto .sm::after { content: " · auto"; font-weight: 500; opacity: .72; }
 .vbar { display: contents; }
 .chip-row .sm { display: none; }
 /* Téléphone : boutons de vue sur une seule ligne défilante, libellés courts → la scène reste visible */
@@ -287,6 +288,65 @@ details.params summary { cursor: pointer; padding: 10px 14px; font-weight: 600; 
 .lb .help-x { position: fixed; top: 12px; right: 12px; }
 .src { font-size: 12px; color: var(--muted); margin: 0; border-top: 1px solid var(--line); padding-top: 12px; }
 
+/* Mode présentation : plein écran, gros caractères, chapitres (accident au premier plan, puis comparaisons) */
+.pres-cta { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 0 10px; align-items: center; justify-items: start; text-align: left; width: 100%; padding: 10px 14px; border: 0; border-radius: 8px; background: var(--danger); color: #fff; font: 600 16px/1.2 var(--body); cursor: pointer; }
+.pres-cta span { grid-row: span 2; font-size: 20px; }
+.pres-cta small { font-size: 12.5px; font-weight: 400; opacity: .9; }
+.vbtn.pres-go { background: var(--danger); color: #fff; border-color: var(--danger); }
+.pres-bar, .pres-cmp { display: none; }
+body.pres .pres-bar { display: flex; position: absolute; top: 10px; left: 12px; right: 12px; z-index: 6; gap: 8px 12px; align-items: center; flex-wrap: wrap; pointer-events: none; }
+body.pres .pres-bar > * { pointer-events: auto; }
+.pres-kicker { padding: 5px 10px; border-radius: 4px; background: var(--danger); color: #fff; font-size: 13px; font-weight: 700; letter-spacing: .07em; text-transform: uppercase; }
+.pres-kicker[hidden] { display: none; }
+.pres-ch { display: flex; gap: 6px; min-width: 0; overflow-x: auto; flex: 1; }
+.pres-ch button { flex: none; display: flex; align-items: center; gap: 8px; padding: 6px 12px 6px 8px; border: 1px solid var(--line); border-radius: 8px; background: color-mix(in srgb, var(--panel) 92%, transparent); color: var(--ink); cursor: pointer; text-align: left; font: 600 15px/1.1 var(--body); }
+.pres-ch button b { display: grid; place-items: center; width: 26px; height: 26px; border-radius: 50%; background: var(--shade); font-family: var(--display); font-size: 17px; }
+.pres-ch button small { display: block; font-size: 12px; font-weight: 400; color: var(--muted); }
+.pres-ch button[aria-selected="true"] { border-color: var(--ink); box-shadow: inset 0 -4px 0 var(--tone, var(--ink)); }
+.pres-ch button[data-tone="danger"] { --tone: var(--danger); }
+.pres-ch button[data-tone="ok"] { --tone: var(--ok); }
+.pres-ch button[data-tone="warn"] { --tone: var(--warn); }
+.pres-ch button[aria-selected="true"] b { background: var(--tone, var(--ink)); color: #fff; }
+.pres-x { margin-left: auto; border: 1px solid var(--line); border-radius: 999px; background: var(--panel); color: var(--ink); padding: 6px 14px; font: 600 14px/1 var(--body); cursor: pointer; }
+body.pres .chip-row { top: 66px; }
+body.pres .vbar, body.pres #scenChip, body.pres .fs-steps, body.pres .note, body.pres .topt { display: none !important; }
+body.pres .bilan { top: 72px; width: min(620px, calc(100% - 24px)); padding: 14px 20px 16px; }
+body.pres .bilan b { font-size: 28px; }
+body.pres .bilan p { font-size: 19px; }
+body.pres .bilan ul { font-size: 18px; gap: 6px; }
+body.pres .banner { top: 72px; }
+body.pres .dock { padding: 14px 24px 16px; }
+body.pres .cap-num { font-size: 64px; }
+body.pres .cap-title { font-size: clamp(26px, 3vw, 38px); }
+body.pres .cap-text { font-size: clamp(16px, 1.6vw, 21px); line-height: 1.4; max-width: 80ch; min-height: 0; }
+body.pres-cmp-on .dock { display: none; }
+body.pres-cmp-on .pres-cmp:not([hidden]) { bottom: auto; max-height: calc(100% - 78px); }
+body.pres .tbtn { transform: scale(1.15); }
+body.pres .pres-cmp:not([hidden]) { display: grid; position: absolute; inset: 66px 12px 12px; z-index: 7; align-content: start; gap: 16px; overflow: auto; padding: 22px 24px; border-radius: 12px; background: color-mix(in srgb, var(--panel) 96%, transparent); border: 1px solid var(--line); box-shadow: 0 10px 34px rgba(0,0,0,.22); }
+.pres-cmp h3 { margin: 0; font-family: var(--display); font-size: clamp(28px, 3.4vw, 42px); font-weight: 700; line-height: 1.05; text-wrap: balance; }
+.pres-cols { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 14px; }
+.pres-col { display: grid; align-content: start; gap: 10px; min-width: 0; padding: 14px 16px 16px; border-radius: 10px; border: 1px solid var(--line); border-top: 7px solid var(--tone); background: var(--bg); }
+.pres-col[data-tone="danger"] { --tone: var(--danger); }
+.pres-col[data-tone="warn"] { --tone: var(--warn); }
+.pres-col[data-tone="ok"] { --tone: var(--ok); }
+.pres-col .tag { justify-self: start; padding: 2px 8px; border-radius: 3px; background: var(--tone); color: #fff; font-size: 12px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; }
+.pres-col h4 { margin: 0; font-family: var(--display); font-size: 26px; font-weight: 600; line-height: 1.1; }
+.pres-col ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; font-size: 16.5px; line-height: 1.35; }
+.pres-col li { display: grid; grid-template-columns: 1.4em minmax(0, 1fr); }
+.pres-col li i { font-style: normal; font-weight: 700; }
+.pres-col li i.ok { color: var(--ok); }
+.pres-col li i.ko { color: var(--danger); }
+.pres-col .out { margin: 0; padding-top: 10px; border-top: 1px solid var(--line); font-size: 17px; font-weight: 600; }
+.pres-col button { justify-self: start; border: 1px solid var(--line); background: var(--panel); color: var(--ink); border-radius: 6px; padding: 6px 12px; font: 600 14px/1 var(--body); cursor: pointer; }
+.pres-key { margin: 0; padding: 12px 16px; border-left: 6px solid var(--accent); background: var(--shade); font-size: clamp(17px, 1.7vw, 22px); line-height: 1.4; max-width: 90ch; }
+@media (max-width: 600px) {
+  .pres-ch button small { display: none; }
+  body.pres .chip-row { top: 104px; }
+  body.pres .pres-cmp:not([hidden]) { inset: 104px 8px 8px; padding: 16px; }
+  body.pres-cmp-on .pres-cmp:not([hidden]) { bottom: auto; max-height: calc(100% - 112px); }
+  body.pres .cap-num { font-size: 44px; }
+}
+
 @media (prefers-reduced-motion: reduce) { .dock::before { transition: none; } }
 </style>
 </head>
@@ -306,12 +366,28 @@ details.params summary { cursor: pointer; padding: 10px 14px; font-weight: 600; 
           <button type="button" class="vbtn" id="btnHeadExplode" aria-pressed="false"><span class="lg">Éclaté : tête (drill head)</span><span class="sm">Éclaté tête</span></button>
           <button type="button" class="vbtn" id="btnExplode" aria-pressed="false"><span class="lg">Éclaté : mandrin (chuck)</span><span class="sm">Éclaté chuck</span></button>
           <button type="button" class="vbtn" id="btnShot" aria-label="Capture : image PNG de la vue 3D" title="Image PNG de la vue, avec l'encadré procédure et le titre de l'étape"><span class="lg">Capture</span><span class="sm" aria-hidden="true">📷</span></button>
+          <button type="button" class="vbtn pres-go" id="btnPres" title="Plein écran, gros caractères, chapitres : accident, bonne méthode, erreur rattrapée, comparaison"><span class="lg">Présenter</span><span class="sm">Présenter</span></button>
           <button type="button" class="vbtn" id="btnHelp" aria-label="Aide : naviguer dans la 3D">?</button>
           <button type="button" class="vbtn" id="btnFs" aria-pressed="false" aria-label="Plein écran"><span class="lg" id="fsLabel">Plein écran</span><span class="sm" aria-hidden="true">⛶</span></button>
         </div>
       </div>
       <div class="banner" id="banner" hidden><strong id="bannerTitle">PROJECTION</strong></div>
       <div class="note" id="note">Courses exagérées ×6 : ressorts, ouverture des jaws</div>
+      <div class="pres-bar" id="presBar">
+        <span class="pres-kicker" id="presKicker">Reconstitution de l'accident</span>
+        <div class="pres-ch" role="tablist" aria-label="Chapitres de la présentation">
+          <button type="button" role="tab" data-ch="B" data-tone="danger"><b>1</b><span>L'accident<small>Boulons retirés un par un</small></span></button>
+          <button type="button" role="tab" data-ch="A" data-tone="ok"><b>2</b><span>La bonne méthode<small>Procédure respectée</small></span></button>
+          <button type="button" role="tab" data-ch="D" data-tone="warn"><b>3</b><span>Erreur rattrapée<small>Cône retenu</small></span></button>
+          <button type="button" role="tab" data-ch="cmp" data-tone="info"><b>4</b><span>Comparaison<small>Les 3 situations</small></span></button>
+        </div>
+        <button type="button" class="pres-x" id="presExit" aria-label="Quitter la présentation">Quitter <span aria-hidden="true">×</span></button>
+      </div>
+      <div class="pres-cmp" id="presCmp" hidden role="region" aria-labelledby="presCmpTitle">
+        <h3 id="presCmpTitle">Même démontage, trois issues</h3>
+        <div class="pres-cols" id="presCols"></div>
+        <p class="pres-key">Cadenasser coupe l'hydraulique, <b>pas les ressorts</b>. Étape 6 : les 3 boulons longs, sans bushing. Étape 7 : 1 tour à la fois, ordre 1 à 6.</p>
+      </div>
       <details class="steps fs-steps" id="fsSteps" open><summary>Étapes de la procédure</summary><ol id="fsStepList"></ol></details>
       <div class="actdot" id="actDot" hidden></div>
       <svg class="procline" id="procLine" style="display:none"><defs><marker id="procArrow" markerWidth="10" markerHeight="10" refX="9" refY="5" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#d81e1e"/></marker></defs><line id="procSeg" x1="0" y1="0" x2="0" y2="0" stroke="#d81e1e" stroke-width="3" marker-end="url(#procArrow)"/></svg>
@@ -365,6 +441,7 @@ details.params summary { cursor: pointer; padding: 10px 14px; font-weight: 600; 
       <p class="eyebrow">PRO-OP-DD-005 · Tête UM-012-100UG · Mandrin UM-070-142AA</p>
       <h1>Clam sous tension</h1>
       <p class="lede">Les 18 ressorts (springs) du mandrin (chuck), monté sur la tête de forage, restent comprimés tant que le cône (bowl) est boulonné. Le clam (rod clamp), à l'avant du mât, fonctionne de la même façon. Démonter dans l'ordre : l'énergie se libère lentement. Sauter une étape : le cône est projeté.</p>
+      <button type="button" class="pres-cta" id="btnPresCta"><span aria-hidden="true">▶</span> Présenter aux travailleurs<small>Plein écran : l'accident, la bonne méthode, la comparaison</small></button>
       <p class="xlink"><a href="foreuse.html">Foreuse STM-1500, console et groupe hydraulique →</a></p>
     </header>
 
@@ -2827,7 +2904,7 @@ const st = {
     // la main pose le cadenas et l'étiquette sur le poste, puis se retire
     apply(S, p) { S.lock = ease(seg(p, .18, .68)); S.reach = { kind: 'lock', k: ease(seg(p, 0, .18)) * (1 - ease(seg(p, .74, .92))) }; } },
   jawCover: { n: '4', title: 'Retirer le couvert des mâchoires (jaw cover)', cam: 'overview', dur: 15, act: 'Boulons ¾ dévissés (clé 1 1/8), couvert des mâchoires retiré',
-    shots: [{ at: 0, cam: 'walk' }, { at: .15, cam: 'tool' }, { at: .47, cam: 'pull' }, { at: .58, cam: 'walk' }, { at: .71, cam: 'tableJC' }, { at: .87, cam: 'walk' }],
+    shots: [{ at: 0, cam: 'walk' }, { at: .15, cam: 'tool' }, { at: .47, cam: 'pull' }, { at: .58, cam: 'walk' }, { at: .71, cam: 'tableJC' }, { at: .87, cam: 'walk' }], sec: false,   // couvert extérieur : pas de coupe
     text: 'Dévisser ses boulons ¾ (clé 1 1/8) et retirer le couvert.',
     // retour au banc (0–2,3 s), clé sortie de l'étui, J1, J2 puis J3, clé rangée ; couvert tiré à deux mains (boulons dans ses trous),
     // porté à la table, posé, boulons rangés ; retour au banc
@@ -2842,7 +2919,7 @@ const st = {
       S.bend = ease(seg(p, .71, .75)) * (1 - ease(seg(p, .86, .89)));
     } },
   cover: { n: '5', title: 'Retirer le couvercle (cap holder, 9 boulons ½)', cam: 'overview', dur: 17, act: '9 boulons ½ enlevés (clé ¾), couvercle retiré',
-    shots: [{ at: 0, cam: 'plongee' }, { at: .07, cam: 'tool' }, { at: .5, cam: 'pull' }, { at: .59, cam: 'walk' }, { at: .72, cam: 'tableCV' }, { at: .88, cam: 'bolts' }],
+    shots: [{ at: 0, cam: 'plongee' }, { at: .07, cam: 'tool' }, { at: .5, cam: 'pull' }, { at: .59, cam: 'walk' }, { at: .72, cam: 'tableCV' }, { at: .88, cam: 'bolts', sec: true }], sec: false,   // coupe à la fin : ressorts toujours comprimés
     text: 'Enlever les 9 boulons ½ (clé ¾) et le couvercle. Le cône et ses 9 boulons apparaissent. Les ressorts sont toujours comprimés.',
     // clé sortie de l'étui, C1 à C9 un à la fois, clé rangée ; couvercle tiré à deux mains (boulons dans ses trous), porté à la table, posé, boulons rangés
     apply(S, p) {
@@ -3808,26 +3885,35 @@ const camAt = (o, off, d) => ({ p: [o.x + d[0] + off[0], o.y + d[1] + off[1], o.
 const gripMid = () => levers[0].localToWorld(camV.set(0, 1.52, 0)).add(levers[1].localToWorld(camV2.set(0, 1.52, 0))).multiplyScalar(.5);
 // sujet des gros plans : la douille, tirée vers le centre de la face (k) pour ne pas suivre chaque saut de boulon
 const toolSubject = k => (wrench.visible && wrench.userData.k > .5 ? wrench.getWorldPosition(camV) : camV.copy(FACE)).lerp(FACE, k);   // clé à la ceinture : la face du mandrin
-let autoCam = true, camGoal = CAMS.intro, camSnap = false, procRefit = 0;
+let autoCam = true, cutAuto = true, camGoal = CAMS.intro, camSnap = false, procRefit = 0;
 controls.addEventListener('start', () => { autoCam = false; document.getElementById('camChip').hidden = false; });
-document.getElementById('camBtn').addEventListener('click', () => { autoCam = true; document.getElementById('camChip').hidden = true; });
+document.getElementById('camBtn').addEventListener('click', () => { autoCam = true; setCutAuto(true); document.getElementById('camChip').hidden = true; });
 // Vue « Foreuse » : la caméra va sur la foreuse complète (posée derrière le banc) ; un second clic revient à l'étape
 camera.position.set(...CAMS.intro.p); controls.target.set(...CAMS.intro.t);
 const goalP = new THREE.Vector3(), goalT = new THREE.Vector3();
 function updateCamera(dt) {
   if (procRefit > 0 && (procRefit -= dt) <= 0) procAuto = null;   // nouveau plan : l'encadré « procédure » se replace une fois la caméra posée
-  if (!autoCam) { camSnap = false; return; }
+  if (!autoCam) { camSnap = false; camVelP.set(0, 0, 0); camVelT.set(0, 0, 0); return; }
   if (hexTarget && !explodeTarget) fitHexplode();
   const g0 = explodeTarget ? CAMS.explode : hexTarget ? CAMS.hexplode : camGoal, g = g0.fn ? g0.fn() : g0;
   goalP.set(...g.p); goalT.set(...g.t);
   const aspect = camera.aspect;
   if (aspect < 1.1 && g0 !== CAMS.hexplode) goalP.sub(goalT).multiplyScalar(1 + (1.1 - aspect) * 0.9).add(goalT);
+  // amorti critique (départ et arrivée en douceur, vitesse continue) : pas de balayage brusque au changement de plan ;
   // plan qui suit l'action : rattrapage plus lent (pas de secousse quand la clé change de boulon) ; coupe franche : saut immédiat
-  // dt ≥ 0 : la 1re image peut avoir un horodatage antérieur à `last` (k < 0 enverrait la caméra très loin)
-  const k = reduceMotion || camSnap ? 1 : 1 - Math.exp(-Math.max(0, dt) * (g0.fn ? 1.7 : 2.2));
+  // dt ≥ 0 : la 1re image peut avoir un horodatage antérieur à `last`
+  if (reduceMotion || camSnap) { camera.position.copy(goalP); controls.target.copy(goalT); camVelP.set(0, 0, 0); camVelT.set(0, 0, 0); }
+  else { const st = g0.fn ? .75 : .6; smoothDamp(camera.position, goalP, camVelP, st, dt); smoothDamp(controls.target, goalT, camVelT, st, dt); }
   camSnap = false;
-  camera.position.lerp(goalP, k);
-  controls.target.lerp(goalT, k);
+}
+// SmoothDamp (ressort critique) : `cur` rejoint `goal` en `st` s environ, `vel` garde la vitesse d'une image à l'autre
+const camVelP = new THREE.Vector3(), camVelT = new THREE.Vector3(), sdTmp = new THREE.Vector3(), sdTmp2 = new THREE.Vector3();
+function smoothDamp(cur, goal, vel, st, dt) {
+  dt = Math.max(0, Math.min(dt, .1));
+  const w = 2 / st, x = w * dt, e = 1 / (1 + x + .48 * x * x + .235 * x * x * x);
+  const ch = sdTmp.subVectors(cur, goal), tmp = sdTmp2.copy(vel).addScaledVector(ch, w).multiplyScalar(dt);
+  vel.addScaledVector(tmp, -w).multiplyScalar(e);
+  cur.copy(goal).add(ch.add(tmp).multiplyScalar(e));
 }
 
 /* ================= Interface ================= */
@@ -3848,7 +3934,7 @@ Object.entries(SCEN).forEach(([key, s]) => {
   scenList.appendChild(b);
 });
 function selectScen(key) {
-  scen = key; T = 0; playing = false; leverMan.on = false; resetLabels(); autoCam = true; $('camChip').hidden = true;
+  scen = key; T = 0; playing = false; leverMan.on = false; resetLabels(); autoCam = true; setCutAuto(true); $('camChip').hidden = true;
   [...scenList.children].forEach(b => b.setAttribute('aria-selected', String(b.dataset.key === key)));
   $('scenChipText').textContent = SCEN[key].label + (SCEN[key].tag ? ' · ' + SCEN[key].tag : '');
   $('scenChip').dataset.tone = SCEN[key].tone;
@@ -3866,7 +3952,7 @@ function renderStepList() {
     b.innerHTML = `<span class="n">${s.n}</span><span class="t">${nb(s.title)}${s.flag ? `<span class="flag" data-tone="${s.tone}">${s.flag}</span>` : ''}</span><span class="mk" aria-hidden="true"></span>`;
     li.dataset.kind = s.summary ? 'sum' : s.tone === 'danger' || s.tone === 'warn' ? 'bad' : 'ok';
     li.dataset.tone = s.tone || 'ok';
-    b.addEventListener('click', () => { T = starts[i]; playing = false; autoCam = true; $('camChip').hidden = true; });
+    b.addEventListener('click', () => { T = starts[i]; playing = false; autoCam = true; setCutAuto(true); $('camChip').hidden = true; });
     li.appendChild(b); ol.appendChild(li);
   });
   }
@@ -3882,7 +3968,7 @@ function setPlaying(v) {
   $('playIcon').innerHTML = v ? '<path d="M3 2h4v12H3zM9 2h4v12H9z"/>' : '<path d="M4 2l10 6-10 6z"/>';
 }
 $('bPlay').addEventListener('click', () => { if (explodeTarget) setExplode(false); if (hexTarget) setHeadExplode(false); if (!playing && T >= total - 1e-3) T = 0; setPlaying(!playing); });
-$('bRestart').addEventListener('click', () => { T = 0; leverMan.on = false; resetLabels(); setPlaying(false); autoCam = true; $('camChip').hidden = true; });
+$('bRestart').addEventListener('click', () => { T = 0; leverMan.on = false; resetLabels(); setPlaying(false); autoCam = true; setCutAuto(true); $('camChip').hidden = true; });
 $('bPrev').addEventListener('click', () => { const { i, p } = locate(T); T = starts[p < 0.05 && i > 0 ? i - 1 : i]; leverMan.on = false; setPlaying(false); });
 $('bNext').addEventListener('click', () => { const { i } = locate(T); T = i < steps.length - 1 ? starts[i + 1] : total - 1e-3; leverMan.on = false; setPlaying(false); });
 $('scrub').addEventListener('input', e => { T = e.target.value / 1000 * total; leverMan.on = false; setPlaying(false); });
@@ -3897,6 +3983,11 @@ addEventListener('keydown', e => {
 // Paramètres des ressorts : valeurs internes fixes (DEFAULTS), non affichées
 
 let lastStep = -1, uiTick = 0, lastStepKey = '', lastCamKey = '';
+// déplacement de caméra plus grand que 35 % de la distance de visée (position ou cible) : plan trop éloigné pour un panoramique
+// plans extérieurs (gestes, déplacements, table, poste) : la coupe n'apporte rien ; sinon coupe (ressorts, cône, boulons, huile)
+const EXT_CAMS = new Set(['walk', 'lever', 'lockClose', 'plongee', 'pull', 'tableJC', 'tableCV', 'tablePB', 'tableL', 'tablePlate', 'overview', 'intro', 'mech']);
+const secOf = (s, sh) => sh.sec ?? s.sec ?? !EXT_CAMS.has(sh.cam);
+const camFar = g => { const d = camera.position.distanceTo(controls.target); return camera.position.distanceTo(camV.set(...g.p)) > .35 * d || controls.target.distanceTo(camV.set(...g.t)) > .35 * d; };
 // Plan courant : case « Caméra auto (plans variés) » cochée → shots de l'étape ; sinon un seul cadrage (cam, puis cam2 dès cam2At)
 function pickShot(s, p) {
   if (s.shots && $('optShots').checked) { let sh = s.shots[0]; for (const x of s.shots) if (p >= x.at) sh = x; return sh; }
@@ -3936,9 +4027,11 @@ function updateUI(S, force) {
   if (!explodeTarget && !hexTarget) {
     const sh = pickShot(s, S.p);
     if (sh.cam !== lastCamKey) {
-      if (lastCamKey && sh.cut) camSnap = true;
-      lastCamKey = sh.cam; camGoal = CAMS[sh.cam] || CAMS.overview; procRefit = .9;
+      const g1 = CAMS[sh.cam] || CAMS.overview;
+      if (lastCamKey && (sh.cut || window.__cutFar && camFar(g1.fn ? g1.fn() : g1))) camSnap = true;   // vidéo : grand déplacement → coupe franche
+      lastCamKey = sh.cam; camGoal = g1; procRefit = camSnap ? .2 : .9;
     }
+    if (cutAuto) setCut(secOf(s, sh));
   }
   // Étapes faites : marquées en permanence (✓ bonne méthode, ✗ méthode dangereuse) ; l'étape en cours l'est dès qu'elle est terminée
   const doneK = explodeTarget || hexTarget ? -1 : S.i + (S.p > .995 ? 1 : 0), stepKey = doneK + '|' + S.i;
@@ -4038,7 +4131,10 @@ function renderCard() {
   c.querySelector('button').addEventListener('click', () => select(null));
 }
 let cutBeforeExplode = null;
-function setCut(v) { cutOn = v; $('btnCut').setAttribute('aria-pressed', String(cutOn)); applyCut(); }
+function setCut(v) { if (v === cutOn) return; cutOn = v; $('btnCut').setAttribute('aria-pressed', String(cutOn)); applyCut(); }
+// Coupe automatique : chaque plan dit s'il montre l'intérieur du mandrin ; un clic sur « Coupe » la force (jusqu'au prochain recentrage ou retour au début)
+function setCutAuto(v) { cutAuto = v; $('btnCut').classList.toggle('auto', v); $('btnCut').title = v ? 'Coupe automatique : affichée seulement quand l\'intérieur du mandrin compte. Cliquer pour la forcer.' : 'Coupe forcée. « Recentrer la caméra » ou « Recommencer » rétablit la coupe automatique.'; }
+setCutAuto(true);
 function setHeadExplode(on) {
   if (on && explodeTarget) setExplode(false);
   hexTarget = on ? 1 : 0;
@@ -4060,7 +4156,7 @@ function setExplode(on) {
   lastStep = -1;
 }
 $('btnExplode').addEventListener('click', () => setExplode(!explodeTarget));
-$('btnCut').addEventListener('click', () => { setCut(!cutOn); if (explodeTarget) cutBeforeExplode = null; });
+$('btnCut').addEventListener('click', () => { setCut(!cutOn); setCutAuto(false); if (explodeTarget) cutBeforeExplode = null; });
 // Clic sur une pièce dans la vue 3D
 const ray = new THREE.Raycaster(), ptr = new THREE.Vector2();
 let downAt = null;
@@ -4248,8 +4344,57 @@ $('btnFs').addEventListener('click', async () => {
   try { if (stage.requestFullscreen) await stage.requestFullscreen(); } catch (e) {}
   setFs(true);
 });
-document.addEventListener('fullscreenchange', () => { if (!document.fullscreenElement && stage.classList.contains('fs')) setFs(false); });
-document.addEventListener('keydown', e => { if (e.key === 'Escape' && stage.classList.contains('fs') && !document.fullscreenElement) setFs(false); });
+document.addEventListener('fullscreenchange', () => { if (!document.fullscreenElement && stage.classList.contains('fs')) { setFs(false); if (presOn) setPres(false); } });
+document.addEventListener('keydown', e => { if (e.key === 'Escape' && stage.classList.contains('fs') && !document.fullscreenElement && !presOn) setFs(false); });
+// Mode présentation : plein écran + chapitres. L'accident (B) d'abord, puis la bonne méthode (A), l'erreur rattrapée (D) et la comparaison.
+// Pause à chaque étape (le présentateur relance avec Espace, → ou la télécommande) ; options rétablies en sortant.
+let presOn = false, presCh = 'B', presSaved = null;
+const PRES_OUT = { B: 'Projection du cône et des mâchoires vers le travailleur', D: 'Quasi-accident : le cône part, les 3 boulons longs l\'arrêtent', A: 'Ressorts détendus lentement : pièces changées sans danger' };
+const PRES_TAG = { B: 'Accident', D: 'Quasi-accident', A: 'Procédure respectée' };
+function renderPresCmp() {
+  $('presCols').innerHTML = ['B', 'D', 'A'].map(k => { const c = SCEN[k];
+    return `<section class="pres-col" data-tone="${c.tone}"><span class="tag">${PRES_TAG[k]}</span><h4>${nb(c.label)}</h4>
+      <ul>${c.bilan.items.map(([ok, t]) => `<li><i class="${ok ? 'ok' : 'ko'}">${ok ? '✓' : '✗'}</i><span>${nb(t)}</span></li>`).join('')}</ul>
+      <p class="out">${nb(PRES_OUT[k])}</p><button type="button" data-replay="${k}">Revoir ▶</button></section>`; }).join('');
+  $('presCols').querySelectorAll('[data-replay]').forEach(b => b.addEventListener('click', () => presGo(b.dataset.replay)));
+}
+function presGo(ch) {
+  presCh = ch;
+  document.querySelectorAll('.pres-ch button').forEach(b => b.setAttribute('aria-selected', String(b.dataset.ch === ch)));
+  $('presCmp').hidden = ch !== 'cmp';
+  $('presKicker').hidden = ch !== 'B';
+  document.body.classList.toggle('pres-cmp-on', ch === 'cmp'); requestAnimationFrame(resize);   // comparaison : toute la hauteur, sans le bandeau d'étape
+  if (ch === 'cmp') { setPlaying(false); return; }
+  if (scen !== ch) selectScen(ch); else $('bRestart').click();
+}
+async function setPres(on) {
+  if (on === presOn) return;
+  presOn = on; document.body.classList.toggle('pres', on);
+  if (on) {
+    presSaved = { pause: $('optPause').checked, scen };
+    $('optPause').checked = true;
+    renderPresCmp();
+    if (!stage.classList.contains('fs')) { try { if (stage.requestFullscreen) await stage.requestFullscreen(); } catch (e) {} setFs(true); }
+    presGo('B');
+  } else {
+    $('presCmp').hidden = true; document.body.classList.remove('pres-cmp-on');
+    if (presSaved) $('optPause').checked = presSaved.pause;
+    if (stage.classList.contains('fs')) { if (document.fullscreenElement) { try { await document.exitFullscreen(); } catch (e) {} } setFs(false); }
+  }
+  requestAnimationFrame(resize);
+}
+$('btnPres').addEventListener('click', () => setPres(true));
+$('btnPresCta').addEventListener('click', () => { stage.scrollIntoView({ block: 'start' }); setPres(true); });
+$('presExit').addEventListener('click', () => setPres(false));
+document.querySelectorAll('.pres-ch button').forEach(b => b.addEventListener('click', () => presGo(b.dataset.ch)));
+addEventListener('keydown', e => {
+  if (!presOn || e.target.closest('input, select, textarea')) return;
+  const ch = { 1: 'B', 2: 'A', 3: 'D', 4: 'cmp' }[e.key];
+  if (ch) { e.preventDefault(); presGo(ch); }
+  else if (e.key === 'PageDown') { e.preventDefault(); $('bNext').click(); }   // télécommande de présentation
+  else if (e.key === 'PageUp') { e.preventDefault(); $('bPrev').click(); }
+  else if (e.key === 'Escape' && !document.fullscreenElement && $('help').hidden) setPres(false);
+});
 // Aide à la navigation : au premier passage, puis avec le bouton « ? »
 const HELP_KEY = 'clam-help-seen';
 const showHelp = v => { $('help').hidden = $('helpVeil').hidden = !v; if (!v) try { localStorage.setItem(HELP_KEY, '1'); } catch (e) {} };
@@ -4683,7 +4828,7 @@ async function start() {
   const S = stateAt(T); applyScene(S); updateUI(S, true);
   requestAnimationFrame(frame);
   lmLoad();
-  window.__clam = { stateAt, steps: () => steps, starts: () => starts, total: () => total, setT: v => { T = v; }, P, setExplode, setHeadExplode, headExplodeNow: v => { setHeadExplode(v); hexE = v ? 1 : 0; }, setCutUI: setCut, explodeNow: v => { setExplode(v); explodeE = v ? 1 : 0; }, select: id => select(byId(id)), PARTS, camera, setQuality, worker: { set: setWorker, get: () => ({ x: WORKER_GLB.position.x, y: WORKER_GLB.position.y, z: WORKER_GLB.position.z, rotYdeg: WORKER_GLB.rotY * 180 / Math.PI, scale: WORKER_GLB.scale, loaded: !!workerModel }), root: workerRoot }, setCut: v => { cutOn = v; applyCut(); }, levers, THREE, state: () => stateAt(T), capture, leverMan: () => ({ ...leverMan }), oilG, labels: () => labels, STROKE, JAW_OPEN, lm: LM };
+  window.__clam = { stateAt, steps: () => steps, starts: () => starts, total: () => total, setT: v => { T = v; }, P, setExplode, setHeadExplode, headExplodeNow: v => { setHeadExplode(v); hexE = v ? 1 : 0; }, setCutUI: setCut, cutState: () => ({ cutOn, cutAuto, cam: lastCamKey }), explodeNow: v => { setExplode(v); explodeE = v ? 1 : 0; }, select: id => select(byId(id)), PARTS, camera, setQuality, worker: { set: setWorker, get: () => ({ x: WORKER_GLB.position.x, y: WORKER_GLB.position.y, z: WORKER_GLB.position.z, rotYdeg: WORKER_GLB.rotY * 180 / Math.PI, scale: WORKER_GLB.scale, loaded: !!workerModel }), root: workerRoot }, setCut: v => { cutOn = v; applyCut(); }, levers, THREE, state: () => stateAt(T), capture, leverMan: () => ({ ...leverMan }), oilG, labels: () => labels, STROKE, JAW_OPEN, lm: LM };
 }
 start();
 </script>
