@@ -264,10 +264,6 @@ details.params summary { cursor: pointer; padding: 10px 14px; font-weight: 600; 
 .gal-note { margin: 0 0 10px; font-size: 12.5px; color: var(--muted); }
 .vid { display: block; width: 100%; aspect-ratio: 16 / 9; border: 1px solid var(--line); border-radius: 6px; background: #000; }
 .vid-note { margin: 8px 0 0; }
-.lb { position: fixed; inset: 0; z-index: 50; background: rgba(10, 14, 17, .9); display: grid; place-items: center; align-content: center; padding: 20px; cursor: zoom-out; }
-.lb img { max-width: 100%; max-height: calc(100vh - 100px); border-radius: 6px; box-shadow: 0 12px 40px rgba(0, 0, 0, .5); cursor: default; }
-.lb p { margin: 10px 0 0; max-width: 60ch; color: #e3e8eb; font-size: 13.5px; text-align: center; }
-.lb .help-x { position: fixed; top: 12px; right: 12px; }
 .src { font-size: 12px; color: var(--muted); margin: 0; border-top: 1px solid var(--line); padding-top: 12px; }
 
 /* Mode présentation : plein écran, gros caractères, chapitres (accident au premier plan, puis comparaisons) */
@@ -347,7 +343,6 @@ body.pres .pres-cmp:not([hidden]) { display: grid; position: absolute; inset: 66
           <button type="button" class="vbtn" id="btnCut" aria-pressed="false"><span class="lg">Coupe du mandrin (chuck)</span><span class="sm">Coupe</span></button>
           <button type="button" class="vbtn" id="btnHeadExplode" aria-pressed="false"><span class="lg">Éclaté : tête (drill head)</span><span class="sm">Éclaté tête</span></button>
           <button type="button" class="vbtn" id="btnExplode" aria-pressed="false"><span class="lg">Éclaté : mandrin (chuck)</span><span class="sm">Éclaté chuck</span></button>
-          <button type="button" class="vbtn" id="btnShot" aria-label="Capture : image PNG de la vue 3D" title="Image PNG de la vue, avec l'encadré procédure et le titre de l'étape"><span class="lg">Capture</span><span class="sm" aria-hidden="true">📷</span></button>
           <button type="button" class="vbtn pres-go" id="btnPres" title="Plein écran, gros caractères, chapitres : accident, bonne méthode, erreur rattrapée, comparaison"><span class="lg">Présenter</span><span class="sm">Présenter</span></button>
           <button type="button" class="vbtn" id="btnHelp" aria-label="Aide : naviguer dans la 3D">?</button>
           <button type="button" class="vbtn" id="btnFs" aria-pressed="false" aria-label="Plein écran"><span class="lg" id="fsLabel">Plein écran</span><span class="sm" aria-hidden="true">⛶</span></button>
@@ -443,7 +438,6 @@ body.pres .pres-cmp:not([hidden]) { display: grid; position: absolute; inset: 66
       <video class="vid" id="vid" controls preload="none" playsinline poster="video/procedure_poster.jpg" src="video/procedure_boyles_h.mp4" aria-label="Vidéo de formation : procédure respectée, étapes 1 à 9" onerror="this.closest('details').hidden = true"></video>
       <p class="gal-note vid-note">Scénario A « Procédure respectée », étapes 1 à 9 (1&nbsp;min&nbsp;35&nbsp;s, sans son) : l'animation 3D de cette page, avec trois rendus Blender. Pour former les travailleurs.</p>
     </details>
-    <div class="lb" id="lb" hidden role="dialog" aria-label="Image agrandie"><button type="button" class="help-x" id="lbX" aria-label="Fermer">×</button><img id="lbImg" alt=""><p id="lbCap"></p></div>
 
 
     <section class="remontage">
@@ -3965,7 +3959,7 @@ function updateUI(S, force) {
     $('capTitle').textContent = nb('Vue éclatée : mandrin (chuck) UM-070-142AA');
     $('capTag').hidden = true;
     $('dock').dataset.tone = 'ok';
-    $('capText').textContent = nb('Toutes les pièces du mandrin. Survolez une pièce pour son numéro, cliquez pour sa fiche. Lecture ramène à l\'animation.');
+    $('capText').textContent = nb('Toutes les pièces du mandrin. Survolez une pièce pour son numéro, cliquez pour son nom. Lecture ramène à l\'animation.');
   }
   if (hexTarget && lastStep !== 'h') {
     lastStep = 'h';
@@ -3973,7 +3967,7 @@ function updateUI(S, force) {
     $('capTitle').textContent = nb('Vue éclatée : tête de forage (drill head)');
     $('capTag').hidden = true;
     $('dock').dataset.tone = 'ok';
-    $('capText').textContent = nb('Pièces de la tête écartées, mandrin soulevé. Survolez une pièce pour son numéro, cliquez pour sa fiche. Lecture ramène à l\'animation.');
+    $('capText').textContent = nb('Pièces de la tête écartées, mandrin soulevé. Survolez une pièce pour son numéro, cliquez pour son nom. Lecture ramène à l\'animation.');
   }
   if (!explodeTarget && !hexTarget && S.i !== lastStep) {
     lastStep = S.i;
@@ -4333,120 +4327,6 @@ document.addEventListener('keydown', e => { if (e.key === 'Escape' && !$('help')
 { let seen = false; try { seen = !!localStorage.getItem(HELP_KEY); } catch (e) {} if (!seen) showHelp(true); }
 // Vidéo de la procédure : section cachée si le fichier ou l'aperçu manque (artefact sans fichiers) ou si le navigateur ne lit pas le H.264
 { const v = $('vid'), hide = () => { $('vidSec').hidden = true; }; v.addEventListener('error', hide); if (!v.canPlayType('video/mp4; codecs="avc1.64001f"')) hide(); const p = new Image(); p.onerror = hide; p.src = v.getAttribute('poster'); }
-// Visionneuse plein écran (image de la capture)
-let lbShow = null;
-{
-  const lb = $('lb');
-  const showLb = (src, cap) => {
-    const host = document.fullscreenElement || document.body; if (lb.parentElement !== host) host.appendChild(lb);   // plein écran : visionneuse dans la scène
-    $('lbImg').src = src; $('lbImg').alt = cap; $('lbCap').textContent = cap; lb.hidden = false;
-  };
-  const hideLb = () => { lb.hidden = true; const s = $('lbImg').src; if (s.startsWith('blob:')) URL.revokeObjectURL(s); $('lbImg').src = ''; };
-  lbShow = showLb;
-  $('lbX').addEventListener('click', hideLb);
-  lb.addEventListener('click', e => { if (e.target === lb || e.target === $('lbCap')) hideLb(); });   // clic en dehors de l'image : fermer
-  document.addEventListener('keydown', e => { if (e.key === 'Escape' && !lb.hidden) hideLb(); });
-}
-/* ================= Capture : image PNG de la vue 3D, avec l'encadré « procédure » et sa flèche, le bilan, le scénario et l'étape =================
-   preserveDrawingBuffer est désactivé : la scène est rendue puis copiée dans la même tâche. Les éléments HTML superposés
-   sont redessinés sur un canevas 2D d'après leur position et leur style à l'écran (fond, bordures, texte mot à mot). */
-function capBox(x, el, vr, sc) {
-  const cs = getComputedStyle(el), r = el.getBoundingClientRect();
-  const X = (r.left - vr.left) * sc, Y = (r.top - vr.top) * sc, W = r.width * sc, H = r.height * sc;
-  const br = cs.borderTopLeftRadius, rad = br.endsWith('%') ? Math.min(W, H) * parseFloat(br) / 100 : (parseFloat(br) || 0) * sc;
-  x.save();
-  if (cs.boxShadow && cs.boxShadow !== 'none') { x.shadowColor = 'rgba(0,0,0,.25)'; x.shadowBlur = 14 * sc; x.shadowOffsetY = 4 * sc; }
-  x.fillStyle = cs.backgroundColor; x.beginPath(); x.roundRect(X, Y, W, H, rad); x.fill();
-  x.restore();
-  // bordures : largeur et couleur de chaque côté, dans le contour arrondi
-  x.save(); x.beginPath(); x.roundRect(X, Y, W, H, rad); x.clip();
-  for (const [s, bx, by, bw, bh] of [['Top', 0, 0, 1, 0], ['Bottom', 0, 1, 1, 0], ['Left', 0, 0, 0, 1], ['Right', 1, 0, 0, 1]]) {
-    const b = parseFloat(cs[`border${s}Width`]) * sc; if (!b || cs[`border${s}Style`] === 'none') continue;
-    x.fillStyle = cs[`border${s}Color`];
-    x.fillRect(X + bx * (W - b), Y + by * (H - b), bw ? W : b, bh ? H : b);
-  }
-  x.restore();
-}
-function capText(x, el, vr, sc) {
-  const tw = document.createTreeWalker(el, NodeFilter.SHOW_TEXT), rg = document.createRange();
-  for (let n = tw.nextNode(); n; n = tw.nextNode()) {
-    const pe = n.parentElement; if (!pe || pe.closest('[hidden]') || pe.id === 'procPinBtn') continue;
-    const cs = getComputedStyle(pe); if (cs.display === 'none' || cs.visibility === 'hidden') continue;
-    x.font = `${cs.fontStyle} ${cs.fontWeight} ${parseFloat(cs.fontSize) * sc}px ${cs.fontFamily}`;
-    x.fillStyle = cs.color; x.textBaseline = 'middle'; x.textAlign = 'left';
-    if ('letterSpacing' in x) x.letterSpacing = `${(parseFloat(cs.letterSpacing) || 0) * sc}px`;
-    for (const m of n.nodeValue.matchAll(/\S+/g)) {
-      rg.setStart(n, m.index); rg.setEnd(n, m.index + m[0].length);
-      const r = rg.getBoundingClientRect(); if (!r.width) continue;
-      x.fillText(cs.textTransform === 'uppercase' ? m[0].toUpperCase() : m[0], (r.left - vr.left) * sc, (r.top + r.height / 2 - vr.top) * sc);
-    }
-  }
-  if ('letterSpacing' in x) x.letterSpacing = '0px';
-}
-const capShown = el => el && !el.hidden && !el.closest('[hidden]') && getComputedStyle(el).display !== 'none' && el.getBoundingClientRect().width > 0;
-function captureName() {
-  if (explodeTarget || hexTarget) return 'vue-eclatee.png';
-  const s = steps[locate(T).i];
-  return `etape-${s.summary ? 'bilan' : s.flight ? 'projection' : s.catch ? 'retenue' : s.n.replace(/[^0-9]+/g, '-')}.png`;
-}
-async function capture() {
-  if (composer && quality === 'high') composer.render(); else renderer.render(scene, camera);   // rendu de la vue courante
-  const vr = view.getBoundingClientRect(), sc = canvas.width / Math.max(1, view.clientWidth);
-  const narrow = view.clientWidth < 560, band = Math.round((narrow ? 78 : 66) * sc), out = document.createElement('canvas');   // téléphone : bande sur deux lignes
-  out.width = canvas.width; out.height = canvas.height + band;
-  const x = out.getContext('2d');
-  x.drawImage(canvas, 0, 0);   // même tâche que le rendu : le tampon WebGL est encore valide
-  // flèche de l'encadré (ligne SVG + pointe)
-  const card = $('procCard');
-  if (capShown(card) && $('procLine').style.display !== 'none') {
-    const g = $('procSeg'), a = ['x1', 'y1', 'x2', 'y2'].map(k => parseFloat(g.getAttribute(k)) * sc);
-    const dx = a[2] - a[0], dy = a[3] - a[1], L = Math.hypot(dx, dy) || 1, ux = dx / L, uy = dy / L, tip = [a[2] + ux * 3 * sc, a[3] + uy * 3 * sc];
-    x.strokeStyle = x.fillStyle = '#d81e1e'; x.lineWidth = 3 * sc;
-    x.beginPath(); x.moveTo(a[0], a[1]); x.lineTo(a[2], a[3]); x.stroke();
-    x.beginPath(); x.moveTo(...tip); x.lineTo(tip[0] - ux * 30 * sc - uy * 15 * sc, tip[1] - uy * 30 * sc + ux * 15 * sc); x.lineTo(tip[0] - ux * 30 * sc + uy * 15 * sc, tip[1] - uy * 30 * sc - ux * 15 * sc); x.closePath(); x.fill();
-  }
-  // éléments superposés utiles : scénario, bandeau d'impact, encadré « procédure », carte « fait », bilan
-  for (const el of [$('scenChip'), $('banner'), card, $('actCard'), $('bilanCard')]) {
-    if (!capShown(el)) continue;
-    capBox(x, el, vr, sc);
-    el.querySelectorAll('.dot').forEach(d => capBox(x, d, vr, sc));
-    capText(x, el, vr, sc);
-  }
-  // bande de titre : « Étape n · titre » et « PRO-OP-DD-005 »
-  const H0 = canvas.height, num = $('capNum').textContent.trim(), title = $('capTitle').textContent.trim();
-  x.fillStyle = '#1b2125'; x.fillRect(0, H0, out.width, band);
-  x.fillStyle = '#e8b21c'; x.fillRect(0, H0, out.width, Math.max(2, Math.round(4 * sc)));
-  const pad = (narrow ? 12 : 16) * sc, head = /^\d/.test(num) ? `Étape ${num} · ${title}` : title;
-  const ref = narrow ? `PRO-OP-DD-005 · ${SCEN[scen].label}` : 'PRO-OP-DD-005';
-  x.textBaseline = 'middle';
-  x.font = `500 ${(narrow ? 11 : 13) * sc}px "IBM Plex Mono", ui-monospace, monospace`;
-  const rw = narrow ? 0 : x.measureText(ref).width;
-  x.fillStyle = '#c4ccd2'; x.textAlign = narrow ? 'left' : 'right';
-  if (narrow) x.fillText(ref, pad, H0 + band * .72, out.width - pad * 2);
-  else {
-    x.fillText(ref, out.width - pad, H0 + band * .38);
-    x.font = `400 ${11 * sc}px "IBM Plex Sans", system-ui, sans-serif`; x.fillStyle = '#93a0a8'; x.fillText(SCEN[scen].label, out.width - pad, H0 + band * .7);
-  }
-  const avail = out.width - rw - pad * (narrow ? 2 : 3);
-  let fs = (narrow ? 21 : 26) * sc; x.font = `700 ${fs}px "Barlow Condensed", "Arial Narrow", sans-serif`;
-  const tw0 = x.measureText(head).width; if (tw0 > avail) { fs = Math.max(fs * avail / tw0, 13 * sc); x.font = `700 ${fs}px "Barlow Condensed", "Arial Narrow", sans-serif`; }
-  x.fillStyle = '#ffffff'; x.textAlign = 'left'; x.fillText(head, pad, H0 + (narrow ? band * .36 : band / 2 + sc), avail);
-  const name = captureName();
-  const blob = await new Promise(r => out.toBlob(r, 'image/png'));
-  if (!blob) return null;
-  const url = URL.createObjectURL(blob);
-  // page claude.ai : enregistrement via la capacité « downloads » (le visiteur confirme) ; ailleurs (GitHub Pages) : lien de téléchargement
-  const dl = await capDownloads();
-  let saved = false;
-  if (dl) { try { await dl.save({ filename: name, data: blob }); saved = true; } catch (e) { saved = e && e.code === 'declined'; } }
-  else { try { const a = document.createElement('a'); a.href = url; a.download = name; document.body.appendChild(a); a.click(); a.remove(); } catch (e) {} }
-  if (lbShow) lbShow(url, saved ? name : `${name} · Clic droit / appui long sur l'image pour l'enregistrer`);
-  return { name, url, w: out.width, h: out.height };
-}
-// capacité « downloads » de la page claude.ai (null ailleurs) ; demandée une seule fois
-let dlP = null;
-const capDownloads = () => dlP || (dlP = (window.claude && window.claude.use ? window.claude.use('downloads') : Promise.resolve(null)).catch(() => null));
-$('btnShot').addEventListener('click', () => { capture().catch(e => console.warn('Capture impossible : ' + e.message)); });
 // Pause à chaque étape : carte « fait » ancrée sur l'action dans la 3D
 let pauseStep = -1, pauseT = 0;
 const actV = new THREE.Vector3();
@@ -4622,7 +4502,7 @@ async function start() {
   resize();
   const S = stateAt(T); applyScene(S); updateUI(S, true);
   requestAnimationFrame(frame);
-  window.__clam = { stateAt, steps: () => steps, starts: () => starts, total: () => total, setT: v => { T = v; }, P, setExplode, setHeadExplode, headExplodeNow: v => { setHeadExplode(v); hexE = v ? 1 : 0; }, setCutUI: setCut, cutState: () => ({ cutOn, cutAuto, cam: lastCamKey }), explodeNow: v => { setExplode(v); explodeE = v ? 1 : 0; }, select: id => select(byId(id)), PARTS, camera, setQuality, worker: { set: setWorker, get: () => ({ x: WORKER_GLB.position.x, y: WORKER_GLB.position.y, z: WORKER_GLB.position.z, rotYdeg: WORKER_GLB.rotY * 180 / Math.PI, scale: WORKER_GLB.scale, loaded: !!workerModel }), root: workerRoot }, setCut: v => { cutOn = v; applyCut(); }, levers, THREE, state: () => stateAt(T), capture, leverMan: () => ({ ...leverMan }), oilG, labels: () => labels, STROKE, JAW_OPEN };
+  window.__clam = { stateAt, steps: () => steps, starts: () => starts, total: () => total, setT: v => { T = v; }, P, setExplode, setHeadExplode, headExplodeNow: v => { setHeadExplode(v); hexE = v ? 1 : 0; }, setCutUI: setCut, cutState: () => ({ cutOn, cutAuto, cam: lastCamKey }), explodeNow: v => { setExplode(v); explodeE = v ? 1 : 0; }, select: id => select(byId(id)), PARTS, camera, setQuality, worker: { set: setWorker, get: () => ({ x: WORKER_GLB.position.x, y: WORKER_GLB.position.y, z: WORKER_GLB.position.z, rotYdeg: WORKER_GLB.rotY * 180 / Math.PI, scale: WORKER_GLB.scale, loaded: !!workerModel }), root: workerRoot }, setCut: v => { cutOn = v; applyCut(); }, levers, THREE, state: () => stateAt(T), leverMan: () => ({ ...leverMan }), oilG, labels: () => labels, STROKE, JAW_OPEN };
 }
 start();
 </script>
