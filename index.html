@@ -261,11 +261,6 @@ details.params summary { cursor: pointer; padding: 10px 14px; font-weight: 600; 
 .bom h5 { margin: 12px 0 4px; font-size: 12px; font-weight: 600; letter-spacing: .05em; text-transform: uppercase; color: var(--muted); }
 .bom h5:first-of-type { margin-top: 0; }
 /* Galerie « Vues réalistes » (rendus Blender) : vignettes et visionneuse plein écran */
-.gal { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
-.gal figure { margin: 0; display: grid; gap: 4px; min-width: 0; }
-.gal button { display: block; width: 100%; padding: 0; border: 1px solid var(--line); border-radius: 6px; background: var(--bg); cursor: zoom-in; overflow: hidden; }
-.gal img { display: block; width: 100%; aspect-ratio: 16 / 10; object-fit: cover; }
-.gal figcaption { font-size: 12px; line-height: 1.3; color: var(--muted); }
 .gal-note { margin: 0 0 10px; font-size: 12.5px; color: var(--muted); }
 .vid { display: block; width: 100%; aspect-ratio: 16 / 9; border: 1px solid var(--line); border-radius: 6px; background: #000; }
 .vid-note { margin: 8px 0 0; }
@@ -307,7 +302,7 @@ body.pres .cap-num { font-size: 64px; }
 body.pres .cap-title { font-size: clamp(26px, 3vw, 38px); }
 body.pres .cap-text { font-size: clamp(16px, 1.6vw, 21px); line-height: 1.4; max-width: 80ch; min-height: 0; }
 body.pres-cmp-on .dock { display: none; }
-body.pres-cmp-on .pres-cmp:not([hidden]) { bottom: auto; max-height: calc(100% - 78px); }
+body.pres.pres-cmp-on .pres-cmp:not([hidden]) { bottom: auto; max-height: calc(100% - 78px); }
 body.pres .tbtn { transform: scale(1.15); }
 body.pres .pres-cmp:not([hidden]) { display: grid; position: absolute; inset: 66px 12px 12px; z-index: 7; align-content: start; gap: 16px; overflow: auto; padding: 22px 24px; border-radius: 12px; background: color-mix(in srgb, var(--panel) 96%, transparent); border: 1px solid var(--line); box-shadow: 0 10px 34px rgba(0,0,0,.22); }
 .pres-cmp h3 { margin: 0; font-family: var(--display); font-size: clamp(28px, 3.4vw, 42px); font-weight: 700; line-height: 1.05; text-wrap: balance; }
@@ -330,7 +325,7 @@ body.pres .pres-cmp:not([hidden]) { display: grid; position: absolute; inset: 66
   .pres-ch button small { display: none; }
   body.pres .chip-row { top: 104px; }
   body.pres .pres-cmp:not([hidden]) { inset: 104px 8px 8px; padding: 16px; }
-  body.pres-cmp-on .pres-cmp:not([hidden]) { bottom: auto; max-height: calc(100% - 112px); }
+  body.pres.pres-cmp-on .pres-cmp:not([hidden]) { bottom: auto; max-height: calc(100% - 112px); }
   body.pres .cap-num { font-size: 44px; }
 }
 
@@ -447,16 +442,6 @@ body.pres .pres-cmp:not([hidden]) { display: grid; position: absolute; inset: 66
       <summary class="bom-toggle">Vidéo de la procédure</summary>
       <video class="vid" id="vid" controls preload="none" playsinline poster="video/procedure_poster.jpg" src="video/procedure_boyles_h.mp4" aria-label="Vidéo de formation : procédure respectée, étapes 1 à 9" onerror="this.closest('details').hidden = true"></video>
       <p class="gal-note vid-note">Scénario A « Procédure respectée », étapes 1 à 9 (1&nbsp;min&nbsp;35&nbsp;s, sans son) : l'animation 3D de cette page, avec trois rendus Blender. Pour former les travailleurs.</p>
-    </details>
-    <details class="bom" id="galSec">
-      <summary class="bom-toggle">Vues réalistes (rendu Blender)</summary>
-      <p class="gal-note">Images fixes tracées en rayons (Cycles) à partir du même modèle 3D ; cliquer pour agrandir.</p>
-      <div class="gal" id="gal">
-        <figure><button type="button" data-full="renders/01_ensemble.jpg"><img src="renders/01_ensemble.jpg" alt="Rendu Blender : tête de forage et mandrin posés sur le banc, vue trois-quarts avant" onerror="this.closest('figure').hidden = true"></button><figcaption>Tête et mandrin sur le banc (drill head and chuck on the bench)</figcaption></figure>
-        <figure><button type="button" data-full="renders/02_face_mandrin.jpg"><img src="renders/02_face_mandrin.jpg" alt="Rendu Blender : gros plan de la face avant du mandrin" onerror="this.closest('figure').hidden = true"></button><figcaption>Face avant du mandrin : couvercle (cap holder), couvert des mâchoires (jaw cover), boulons</figcaption></figure>
-        <figure><button type="button" data-full="renders/03_coupe.jpg"><img src="renders/03_coupe.jpg" alt="Rendu Blender : mandrin coupé en deux, ressorts verts, piston, cône et mâchoires visibles" onerror="this.closest('figure').hidden = true"></button><figcaption>Mandrin en coupe (cutaway) : ressorts (springs), piston, cône (bowl), mâchoires (jaws)</figcaption></figure>
-        <figure><button type="button" data-full="renders/04_couvercle_retire.jpg"><img src="renders/04_couvercle_retire.jpg" alt="Rendu Blender : couvercle retiré, 9 boulons du cône visibles, couvercle et couvert sur la table" onerror="this.closest('figure').hidden = true"></button><figcaption>Couvercle retiré (cover removed) : les 9 boulons du cône (bowl bolts)</figcaption></figure>
-      </div>
     </details>
     <div class="lb" id="lb" hidden role="dialog" aria-label="Image agrandie"><button type="button" class="help-x" id="lbX" aria-label="Fermer">×</button><img id="lbImg" alt=""><p id="lbCap"></p></div>
 
@@ -3072,7 +3057,7 @@ const SCEN = {
     ],
   },
   B: {
-    label: 'Erreur : boulons retirés un par un', sub: 'Étapes 6 et 7 non respectées', tone: 'danger',
+    label: 'Sans les boulons longs : cône projeté', sub: 'Étapes 6 et 7 non respectées', tone: 'danger',
     bilan: { title: 'Bilan · projection', text: 'Étapes 6 et 7 non respectées : boulons retirés au complet sous charge → projection du cône.',
       items: [[false, 'Étape 6 : boulons longs enlevés, non remis'], [false, 'Étape 7 : chaque boulon sorti au complet au lieu d\'un tour à la fois']] },
     make: () => [
@@ -3083,7 +3068,7 @@ const SCEN = {
     ],
   },
   D: {
-    label: 'Erreur rattrapée : cône retenu', sub: 'Étape 7 non respectée, étape 6 respectée', tone: 'warn', tag: 'Reconstitution de l\'accident',
+    label: 'Boulons retirés un par un : cône retenu', sub: 'Étape 7 non respectée, étape 6 respectée', tone: 'warn', tag: 'Reconstitution de l\'accident',
     bilan: { title: 'Bilan · l\'accident', text: 'Étape 7 non respectée mais étape 6 respectée : les 3 boulons longs ont retenu le cône.',
       items: [[true, 'Étape 6 : 3 boulons longs remis sans bushing'], [false, 'Étape 7 : chaque boulon sorti au complet au lieu d\'un tour à la fois']] },
     make: () => [
@@ -4348,21 +4333,16 @@ document.addEventListener('keydown', e => { if (e.key === 'Escape' && !$('help')
 { let seen = false; try { seen = !!localStorage.getItem(HELP_KEY); } catch (e) {} if (!seen) showHelp(true); }
 // Vidéo de la procédure : section cachée si le fichier ou l'aperçu manque (artefact sans fichiers) ou si le navigateur ne lit pas le H.264
 { const v = $('vid'), hide = () => { $('vidSec').hidden = true; }; v.addEventListener('error', hide); if (!v.canPlayType('video/mp4; codecs="avc1.64001f"')) hide(); const p = new Image(); p.onerror = hide; p.src = v.getAttribute('poster'); }
-// Galerie des rendus Blender : vignettes cachées si l'image manque (artefact sans fichiers), visionneuse plein écran (aussi pour la capture)
+// Visionneuse plein écran (image de la capture)
 let lbShow = null;
 {
-  const lb = $('lb'), gal = $('gal');
+  const lb = $('lb');
   const showLb = (src, cap) => {
     const host = document.fullscreenElement || document.body; if (lb.parentElement !== host) host.appendChild(lb);   // plein écran : visionneuse dans la scène
     $('lbImg').src = src; $('lbImg').alt = cap; $('lbCap').textContent = cap; lb.hidden = false;
   };
   const hideLb = () => { lb.hidden = true; const s = $('lbImg').src; if (s.startsWith('blob:')) URL.revokeObjectURL(s); $('lbImg').src = ''; };
   lbShow = showLb;
-  gal.querySelectorAll('img').forEach(im => { if (im.complete && !im.naturalWidth) im.closest('figure').hidden = true; });
-  const check = () => { $('galSec').hidden = [...gal.querySelectorAll('figure')].every(f => f.hidden); };
-  gal.querySelectorAll('img').forEach(im => { im.addEventListener('error', check); im.addEventListener('load', check); });
-  check();
-  gal.addEventListener('click', e => { const b = e.target.closest('button[data-full]'); if (b) showLb(b.dataset.full, b.closest('figure').querySelector('figcaption').textContent); });
   $('lbX').addEventListener('click', hideLb);
   lb.addEventListener('click', e => { if (e.target === lb || e.target === $('lbCap')) hideLb(); });   // clic en dehors de l'image : fermer
   document.addEventListener('keydown', e => { if (e.key === 'Escape' && !lb.hidden) hideLb(); });
