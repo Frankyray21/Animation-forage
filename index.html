@@ -64,14 +64,19 @@ h2 { margin: 0 0 12px; font-family: var(--display); font-weight: 700; font-size:
 
 /* frise de l'accident */
 .steps { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px; counter-reset: s; }
-.steps li { display: grid; grid-template-rows: auto auto 1fr; gap: 10px; min-width: 0; padding-bottom: 4px; }
+.steps > li { display: grid; align-content: start; gap: 10px; min-width: 0; padding-bottom: 4px; }
 .steps .ph { position: relative; border-radius: 8px; overflow: hidden; border: 1px solid var(--line); background: var(--bg2); }
 .steps .ph img { width: 100%; aspect-ratio: 16 / 10; object-fit: cover; }
 .steps .n { position: absolute; left: 10px; top: 10px; display: grid; place-items: center; width: 38px; height: 38px; border-radius: 50%; background: var(--ink); color: var(--bg); font: 700 22px/1 var(--display); }
-.steps li.bad .n { background: var(--red); color: var(--red-ink); }
-.steps li.stop .n { background: var(--yellow); color: var(--yellow-ink); }
+.steps > li.bad .n { background: var(--red); color: var(--red-ink); }
+.steps > li.stop .n { background: var(--yellow); color: var(--yellow-ink); }
 .steps h3 { margin: 0; font-family: var(--display); font-weight: 700; font-size: 26px; line-height: 1.05; text-wrap: balance; }
 .steps p { margin: 0; font-size: 16px; color: #ccd3d8; }
+.steps .do { display: grid; gap: 6px; padding: 10px 12px; border-radius: 8px; background: var(--panel); border-left: 4px solid var(--green); font-size: 15px; line-height: 1.4; color: #ccd3d8; }
+.steps .do.ko { border-left-color: var(--red); }
+.steps .do b { color: var(--ink); font-weight: 600; }
+.steps .do ol { margin: 0; padding-left: 20px; display: grid; gap: 2px; }
+.steps .do p { font-size: 15px; }
 .flag { display: inline-block; margin-top: 2px; font-size: 12px; font-weight: 600; letter-spacing: .07em; text-transform: uppercase; }
 .flag.ok { color: var(--green); }
 .flag.ko { color: #ff6b5f; }
@@ -144,13 +149,30 @@ footer p { margin: 0; max-width: 80ch; }
       <ol class="steps">
         <li>
           <div class="ph"><img src="img/accident-1.jpg" width="1200" height="750" alt="Mandrin en coupe : les 3 boulons longs sont remis dans le cône, les ressorts verts sont comprimés."><span class="n">6</span></div>
-          <h3>Les 3 boulons longs sont remis</h3>
-          <p>Sans bushing, comme le demande l'étape 6. Ils retiennent le cône si quelque chose lâche.<br><span class="flag ok">✓ Étape 6 respectée</span></p>
+          <h3>Les 3 boulons longs sont remis sans bushing</h3>
+          <div class="do">
+            <b>Étape 6, avant de toucher aux boulons du cône&nbsp;:</b>
+            <ol>
+              <li>enlever les 3&nbsp;boulons longs <span class="nw">(½ × 8 po)</span> et leurs bushings <span class="nw">(1 ½ po)</span>&nbsp;;</li>
+              <li>revisser les boulons longs sans bushing.</li>
+            </ol>
+            <p>Sans bushing, ils vissent 1 ½&nbsp;po plus loin&nbsp;: assez de filets en prise pour arrêter le cône s'il part.</p>
+          </div>
+          <p><span class="flag ok">✓ Étape 6 respectée</span></p>
         </li>
         <li class="bad">
           <div class="ph"><img src="img/accident-2.jpg" width="1200" height="750" alt="Le travailleur retire au complet un boulon du cône avec la clé."><span class="n">7</span></div>
           <h3>Boulons retirés un par un</h3>
-          <p>Chaque boulon du cône est sorti au complet, au lieu de dévisser 1&nbsp;tour à la fois, dans l'ordre 1 à 6.<br><span class="flag ko">✗ Étape 7 non respectée</span></p>
+          <p>Chaque boulon du cône est sorti au complet, un après l'autre.</p>
+          <div class="do ko">
+            <b>Étape 7, ce qu'il fallait faire&nbsp;:</b>
+            <ol>
+              <li>dévisser chaque boulon du cône d'1&nbsp;tour seulement, dans l'ordre 1 à 6&nbsp;;</li>
+              <li>refaire le tour de l'ordre 1 à 6 jusqu'à ce que les ressorts soient détendus.</li>
+            </ol>
+            <p>Les 6&nbsp;boulons partagent la charge pendant toute la détente.</p>
+          </div>
+          <p><span class="flag ko">✗ Étape 7 non respectée</span></p>
         </li>
         <li class="bad">
           <div class="ph"><img src="img/accident-3.jpg" width="1200" height="750" alt="Gros plan sur le dernier boulon du cône, qui retient seul la poussée des ressorts."><span class="n">!</span></div>
