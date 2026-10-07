@@ -21,7 +21,7 @@
 * { box-sizing: border-box; }
 html { -webkit-text-size-adjust: 100%; }
 body { margin: 0; background: var(--bg); color: var(--ink); font: 400 17px/1.55 var(--body); }
-img { max-width: 100%; display: block; }
+img { max-width: 100%; height: auto; display: block; }
 a { color: inherit; }
 .wrap { width: min(1180px, 100%); margin: 0 auto; padding-inline: clamp(16px, 4vw, 40px); }
 .hazard { height: 8px; background: repeating-linear-gradient(-45deg, var(--yellow) 0 14px, #15191c 14px 28px); }
@@ -45,6 +45,13 @@ h1 em { font-style: normal; color: var(--yellow); }
 .btn:focus-visible { outline: 3px solid var(--ink); outline-offset: 3px; }
 .hint { margin: 12px 0 0; font-size: 14px; color: var(--muted); }
 .hint kbd { font-family: var(--mono); font-size: 12px; padding: 1px 6px; border: 1px solid var(--line); border-radius: 4px; color: var(--ink); }
+.stat { position: relative; display: grid; gap: 12px; align-content: center; padding: clamp(20px, 3vw, 36px); border-radius: 12px; background: var(--bg2); border: 1px solid var(--line); overflow: hidden; }
+.stat::after { content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 10px; background: repeating-linear-gradient(-45deg, var(--yellow) 0 12px, #15191c 12px 24px); opacity: .9; }
+.stat .big { font-family: var(--display); font-weight: 800; font-size: clamp(150px, 20vw, 290px); line-height: .8; color: var(--yellow); letter-spacing: -.02em; }
+.stat p { margin: 0; font-size: clamp(20px, 2vw, 26px); line-height: 1.25; }
+.stat b { font-family: var(--display); font-weight: 700; font-size: 1.25em; text-transform: uppercase; letter-spacing: .01em; }
+.stat ul { list-style: none; margin: 4px 0 14px; padding: 0; display: grid; gap: 6px; font-size: 16px; color: #ccd3d8; }
+.stat li::before { content: "■"; color: var(--red); margin-right: 10px; font-size: 12px; vertical-align: 2px; }
 .shot { margin: 0; position: relative; border-radius: 10px; overflow: hidden; border: 1px solid var(--line); background: var(--bg2); }
 .shot img { width: 100%; aspect-ratio: 16 / 10; object-fit: cover; }
 .shot figcaption { position: absolute; left: 12px; bottom: 12px; padding: 4px 9px; border-radius: 4px; background: rgba(16, 20, 23, .82); font-size: 13px; color: var(--ink); }
@@ -89,7 +96,6 @@ footer p { margin: 0; max-width: 80ch; }
 
 @media (max-width: 960px) {
   .hero, .danger { grid-template-columns: minmax(0, 1fr); }
-  .hero .shot { order: -1; }
   .steps { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
 @media (max-width: 560px) {
@@ -111,7 +117,7 @@ footer p { margin: 0; max-width: 80ch; }
   <div class="wrap hero">
     <div>
       <span class="tag">Reconstitution de l'accident</span>
-      <h1>18 ressorts comprimés. <em>Même cadenassé.</em></h1>
+      <h1>Cadenassé. <em>Toujours chargé.</em></h1>
       <p class="lede">Au démontage du cône (bowl) d'un mandrin de tête de forage, les boulons ont été retirés un par un. Le filet du dernier boulon a cédé&nbsp;: le cône est parti vers le travailleur. Les 3&nbsp;boulons longs l'ont arrêté.</p>
       <div class="cta">
         <a class="btn btn-main" href="animation.html#presenter"><span aria-hidden="true">▶</span> Commencer la présentation</a>
@@ -119,10 +125,15 @@ footer p { margin: 0; max-width: 80ch; }
       </div>
       <p class="hint">Plein écran. <kbd>Espace</kbd> ou <kbd>→</kbd> pour avancer, <kbd>Échap</kbd> pour quitter.</p>
     </div>
-    <figure class="shot">
-      <img src="renders/03_coupe.jpg" width="1600" height="1000" alt="Mandrin coupé en deux sur la tête de forage rouge : les ressorts verts, comprimés, poussent le cône vers l'avant.">
-      <figcaption>Mandrin en coupe : les ressorts poussent le cône</figcaption>
-    </figure>
+    <div class="stat" aria-label="18 ressorts comprimés derrière le cône, même foreuse cadenassée">
+      <span class="big" aria-hidden="true">18</span>
+      <p><b>ressorts (springs) comprimés</b> derrière le cône (bowl) du mandrin</p>
+      <ul>
+        <li>Manettes fermées&nbsp;: toujours chargés</li>
+        <li>Foreuse cadenassée&nbsp;: toujours chargés</li>
+        <li>Couvercle retiré&nbsp;: toujours chargés</li>
+      </ul>
+    </div>
   </div>
 
   <section aria-labelledby="h-passe">
@@ -132,22 +143,22 @@ footer p { margin: 0; max-width: 80ch; }
       <p class="intro">La tête de forage était retirée de la foreuse et posée à l'horizontale sur un banc. Les manettes étaient fermées et la foreuse cadenassée.</p>
       <ol class="steps">
         <li>
-          <div class="ph"><img src="img/accident-1.jpg" width="1200" height="750" loading="lazy" alt="Mandrin en coupe : les 3 boulons longs sont remis dans le cône, les ressorts verts sont comprimés."><span class="n">6</span></div>
+          <div class="ph"><img src="img/accident-1.jpg" width="1200" height="750" alt="Mandrin en coupe : les 3 boulons longs sont remis dans le cône, les ressorts verts sont comprimés."><span class="n">6</span></div>
           <h3>Les 3 boulons longs sont remis</h3>
           <p>Sans bushing, comme le demande l'étape 6. Ils retiennent le cône si quelque chose lâche.<br><span class="flag ok">✓ Étape 6 respectée</span></p>
         </li>
         <li class="bad">
-          <div class="ph"><img src="img/accident-2.jpg" width="1200" height="750" loading="lazy" alt="Le travailleur retire au complet un boulon du cône avec la clé."><span class="n">7</span></div>
+          <div class="ph"><img src="img/accident-2.jpg" width="1200" height="750" alt="Le travailleur retire au complet un boulon du cône avec la clé."><span class="n">7</span></div>
           <h3>Boulons retirés un par un</h3>
           <p>Chaque boulon du cône est sorti au complet, au lieu de dévisser 1&nbsp;tour à la fois, dans l'ordre 1 à 6.<br><span class="flag ko">✗ Étape 7 non respectée</span></p>
         </li>
         <li class="bad">
-          <div class="ph"><img src="img/accident-3.jpg" width="1200" height="750" loading="lazy" alt="Gros plan sur le dernier boulon du cône, qui retient seul la poussée des ressorts."><span class="n">!</span></div>
+          <div class="ph"><img src="img/accident-3.jpg" width="1200" height="750" alt="Gros plan sur le dernier boulon du cône, qui retient seul la poussée des ressorts."><span class="n">!</span></div>
           <h3>Le dernier boulon porte tout</h3>
           <p>Le boulon 6 retient seul la poussée des 18&nbsp;ressorts. Pendant qu'on le dévisse, son filet cède.</p>
         </li>
         <li class="stop">
-          <div class="ph"><img src="img/accident-4.jpg" width="1200" height="750" loading="lazy" alt="Le cône est parti vers le travailleur et se trouve arrêté par les têtes des 3 boulons longs."><span class="n">⛔</span></div>
+          <div class="ph"><img src="img/accident-4.jpg" width="1200" height="750" alt="Le cône est parti vers le travailleur et se trouve arrêté par les têtes des 3 boulons longs."><span class="n" aria-hidden="true">■</span></div>
           <h3>Les boulons longs arrêtent le cône</h3>
           <p>Le cône part vers le travailleur. Après quelques millimètres, les têtes des 3&nbsp;boulons longs l'arrêtent.</p>
         </li>
@@ -163,11 +174,11 @@ footer p { margin: 0; max-width: 80ch; }
     <div class="wrap danger">
       <div class="pair">
         <figure class="shot">
-          <img src="renders/04_couvercle_retire.jpg" width="1600" height="1000" loading="lazy" alt="Face avant du mandrin, couvercle retiré : le cône et ses 9 boulons, rien d'autre de visible.">
+          <img src="renders/04_couvercle_retire.jpg" width="1600" height="1000" alt="Face avant du mandrin, couvercle retiré : le cône et ses 9 boulons, rien d'autre de visible.">
           <figcaption>Ce qu'on voit : le cône et ses boulons</figcaption>
         </figure>
         <figure class="shot">
-          <img src="renders/03_coupe.jpg" width="1600" height="1000" loading="lazy" alt="Le même mandrin en coupe : 18 ressorts verts comprimés derrière le cône.">
+          <img src="renders/03_coupe.jpg" width="1600" height="1000" alt="Le même mandrin en coupe : 18 ressorts verts comprimés derrière le cône.">
           <figcaption>Derrière : 18 ressorts comprimés</figcaption>
         </figure>
       </div>
