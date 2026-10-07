@@ -4,6 +4,14 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Clam sous tension</title>
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#101417">
+<link rel="icon" href="icons/favicon-32.png" sizes="32x32" type="image/png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Clam sous tension">
+<script src="pwa.js" defer></script>
 <meta name="description" content="Animation 3D de la tête de forage UM-012-100UG et de son mandrin : l'énergie des 18 ressorts du mandrin quand la séquence de démontage PRO-OP-DD-005 n'est pas respectée.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -272,7 +280,10 @@ details.params summary { cursor: pointer; padding: 10px 14px; font-weight: 600; 
 .vid-note { margin: 8px 0 0; }
 .src { font-size: 12px; color: var(--muted); margin: 0; border-top: 1px solid var(--line); padding-top: 12px; }
 
-.home { margin: 0 0 6px; font-size: 13.5px; }
+.home { margin: 0 0 6px; font-size: 13.5px; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px; }
+.install { display: inline-flex; align-items: center; gap: 6px; padding: 5px 11px; border: 1px solid var(--line); border-radius: 999px; background: var(--panel); color: var(--ink); font: 600 13px/1.1 var(--body); cursor: pointer; }
+.install:hover, .install:focus-visible { border-color: var(--ink); }
+.install[hidden] { display: none; }
 .home a { color: var(--muted); text-decoration: none; font-weight: 500; }
 .home a:hover { color: var(--ink); text-decoration: underline; }
 /* Mode présentation : plein écran, gros caractères, chapitres (accident au premier plan, puis comparaisons) */
@@ -429,7 +440,7 @@ body.pres .pres-cmp:not([hidden]) { display: grid; position: absolute; inset: 66
 
   <aside class="rail">
     <header class="brand">
-      <p class="home"><a href="index.html">← Accueil</a></p>
+      <p class="home"><a href="index.html">← Accueil</a><button type="button" class="install" data-install hidden><span aria-hidden="true">⤓</span> Installer l'application</button></p>
       <p class="eyebrow">PRO-OP-DD-005 · Tête UM-012-100UG · Mandrin UM-070-142AA</p>
       <h1>Clam sous tension</h1>
       <p class="lede">Les 18 ressorts (springs) du mandrin (chuck), monté sur la tête de forage, restent comprimés tant que le cône (bowl) est boulonné. Le clam (rod clamp), à l'avant du mât, fonctionne de la même façon. Démonter dans l'ordre : l'énergie se libère lentement. Sauter une étape : le cône est projeté.</p>

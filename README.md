@@ -6,6 +6,8 @@ Comme lors de l'accident, la tête est **à l'horizontale** : axe de broche à 1
 
 **Accueil** (`index.html`) : page d'ouverture d'une rencontre sécurité, projetable — « Ce qui s'est passé » (frise de 4 images tirées de la 3D, scénario de l'accident) et « Le danger caché » (ressorts comprimés même cadenassé), avec **Commencer la présentation** (ouvre `animation.html#presenter`, mode Présentation) et **Explorer la 3D** (`animation.html`). Un seul thème, sombre, rouge et jaune d'avertissement ; images dans `img/` et `renders/`.
 
+**Application installable et hors ligne** : bouton **Installer l'application** (accueil, en haut à droite ; animation, à côté de « ← Accueil ») sur Android, Chrome et Edge ; sur iPhone et iPad, le bouton rappelle « Partager → Sur l'écran d'accueil ». Le service worker `sw.js` (enregistré par `pwa.js`, manifeste `manifest.webmanifest`, icônes dans `icons/`) garde une copie locale des pages, des images, de three.js (version figée sur le CDN), des polices et de la vidéo : après une première visite en ligne, le site fonctionne sans réseau. Pages : réseau d'abord, copie locale hors ligne ; changer `VERSION` dans `sw.js` pour forcer le renouvellement des copies. Rien n'est enregistré dans l'aperçu intégré (artefact) ni pendant la capture vidéo.
+
 **Animation 3D** (`animation.html`) : ouvrir dans un navigateur récent ; lien « ← Accueil » en tête. Une connexion Internet est requise : Three.js et les polices sont chargés depuis un CDN.
 
 ## Modèle 3D

@@ -4,6 +4,14 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Clam sous tension</title>
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#101417">
+<link rel="icon" href="icons/favicon-32.png" sizes="32x32" type="image/png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Clam sous tension">
+<script src="pwa.js" defer></script>
 <meta name="description" content="Reconstitution d'un accident au démontage du cône d'un mandrin de tête de forage (PRO-OP-DD-005) : ce qui s'est passé et le danger caché des ressorts comprimés.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -30,6 +38,10 @@ a { color: inherit; }
 /* barre du haut */
 .top { display: flex; flex-wrap: wrap; gap: 6px 16px; align-items: center; justify-content: space-between; padding-block: 14px; font-family: var(--mono); font-size: 13px; color: var(--muted); letter-spacing: .02em; }
 .top b { color: var(--ink); font-weight: 500; }
+.top-r { display: inline-flex; flex-wrap: wrap; align-items: center; gap: 8px 16px; }
+.install { display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; border: 1px solid var(--yellow); border-radius: 999px; background: transparent; color: var(--yellow); font: 600 14px/1.1 var(--body); cursor: pointer; }
+.install:hover, .install:focus-visible { background: var(--yellow); color: var(--yellow-ink); }
+.install[hidden] { display: none; }
 
 /* ouverture */
 .hero { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.15fr); gap: clamp(24px, 4vw, 56px); align-items: center; padding-block: clamp(20px, 5vh, 56px) clamp(36px, 7vh, 80px); }
@@ -118,7 +130,7 @@ footer p { margin: 0; max-width: 80ch; }
 <div class="hazard" aria-hidden="true"></div>
 <header class="wrap top">
   <span><b>Rencontre sécurité</b></span>
-  <span>Procédure PRO-OP-DD-005</span>
+  <span class="top-r"><button type="button" class="install" data-install hidden><span aria-hidden="true">⤓</span> Installer l'application</button><span>Procédure PRO-OP-DD-005</span></span>
 </header>
 
 <main>
