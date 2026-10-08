@@ -1,7 +1,8 @@
 // Service worker : l'application fonctionne hors ligne après la première visite.
 // Pages : réseau d'abord (mises à jour), copie locale si hors ligne. Images et scripts du site : copie locale, rafraîchie en arrière-plan.
 // three.js (version figée sur le CDN) et polices : copie locale d'abord. Vidéo : lectures partielles (Range) servies depuis la copie locale hors ligne.
-const VERSION = 'clam-v2';   // nouvelle vidéo : renouvelle les copies locales
+// Bouton « Télécharger pour le hors ligne » (pwa.js) : messages offline-status (ce qui manque) et offline-download (télécharge ce qui manque, avec la progression).
+const VERSION = 'clam-v3';   // bouton de téléchargement hors ligne : renouvelle les copies locales
 const LOCAL = [
   './', 'index.html', 'animation.html', 'manifest.webmanifest', 'pwa.js',
   'icons/icon-192.png', 'icons/icon-512.png', 'icons/icon-maskable-512.png', 'icons/apple-touch-icon.png', 'icons/favicon-32.png',
@@ -33,6 +34,7 @@ const CDN = [
   "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/utils/BufferGeometryUtils.js"
 ];
 const VIDEO = 'video/procedure_boyles_h.mp4';
+let videoJob = null;   // téléchargement de la vidéo lancé à l'installation (repris par le bouton au lieu d'un second téléchargement)
 
 self.addEventListener('install', e => {
   e.waitUntil((async () => {
@@ -40,7 +42,7 @@ self.addEventListener('install', e => {
     await c.addAll(LOCAL);
     await Promise.all(CDN.map(u => c.add(new Request(u, { mode: 'cors' })).catch(() => {})));
     await Promise.all(FONTS.map(u => cacheFontCss(c, u).catch(() => {})));
-    c.add(VIDEO).catch(() => {});   // vidéo (12 Mo) : en arrière-plan, sans bloquer l'installation
+    videoJob = c.add(VIDEO).catch(() => {}).finally(() => { videoJob = null; });   // vidéo (10 Mo) : en arrière-plan, sans bloquer l'installation
     await self.skipWaiting();
   })());
 });
@@ -54,10 +56,51 @@ self.addEventListener('activate', e => {
 async function cacheFontCss(c, url) {
   const r = await fetch(url, { mode: 'cors' }); if (!r.ok) return;
   await c.put(url, r.clone());
-  const css = await r.text();
-  const files = [...css.matchAll(/url\((https:[^)]+)\)/g)].map(m => m[1]);
-  await Promise.all(files.map(f => c.add(new Request(f, { mode: 'cors' })).catch(() => {})));
+  await Promise.all(woffs(await r.text()).map(f => c.add(new Request(f, { mode: 'cors' })).catch(() => {})));
 }
+// --- téléchargement complet pour le hors ligne (bouton des pages) ---
+const woffs = css => [...css.matchAll(/url\((https:[^)]+)\)/g)].map(m => m[1]);
+// fichiers absents de la copie locale ; polices : feuille de styles et fichiers woff2 qu'elle référence
+async function offlineMissing(c) {
+  const miss = [];
+  for (const u of [...LOCAL, ...CDN, VIDEO]) if (!(await c.match(u))) miss.push(u);
+  for (const u of FONTS) {
+    const r = await c.match(u);
+    if (!r) { miss.push(u); continue; }
+    for (const w of woffs(await r.text())) if (!(await c.match(w))) { miss.push(u); break; }
+  }
+  return miss;
+}
+async function offlineStatus() {
+  const miss = await offlineMissing(await caches.open(VERSION));
+  return { type: 'status', ready: miss.length === 0, missing: miss.length, list: miss.slice(0, 8) };
+}
+// télécharge un à un les fichiers manquants (la vidéo en dernier), en signalant la progression
+async function offlineDownload(report) {
+  const c = await caches.open(VERSION), miss = await offlineMissing(c);
+  miss.sort((a, b) => (a === VIDEO) - (b === VIDEO));
+  let done = 0;
+  report({ type: 'progress', done, total: miss.length, video: false });
+  for (const u of miss) {
+    report({ type: 'progress', done, total: miss.length, video: u === VIDEO });
+    try {
+      if (FONTS.includes(u)) await cacheFontCss(c, u);
+      else if (CDN.includes(u)) await c.add(new Request(u, { mode: 'cors' }));
+      else if (u === VIDEO && videoJob) { await videoJob; if (!(await c.match(VIDEO))) await c.add(VIDEO); }
+      else await c.add(u);
+    } catch (err) { /* compté comme manquant au bilan */ }
+    done++;
+    report({ type: 'progress', done, total: miss.length, video: false });
+  }
+  return offlineStatus();
+}
+self.addEventListener('message', e => {
+  const port = e.ports && e.ports[0], t = e.data && e.data.type;
+  if (!port) return;
+  if (t === 'offline-status') e.waitUntil(offlineStatus().then(s => port.postMessage(s), () => port.postMessage({ type: 'status', ready: false, missing: -1 })));
+  if (t === 'offline-download') e.waitUntil(offlineDownload(p => port.postMessage(p)).then(s => port.postMessage(s), () => port.postMessage({ type: 'status', ready: false, missing: -1 })));
+});
+
 // lecture partielle de la vidéo depuis la copie locale
 async function rangeFromCache(req) {
   const c = await caches.open(VERSION), full = await c.match(VIDEO);
