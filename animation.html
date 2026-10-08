@@ -3641,7 +3641,7 @@ function leverToggle(S, name, e) {
 function step6Grp(S) {
   const i6 = steps.findIndex(x => x.n === '6');
   if (i6 < 0 || S.i > i6 || S.cv.lift < .99 || (S.i === i6 && S.p > .995)) return null;
-  return steps[i6] === st.retain ? 'L' : '';
+  return steps[i6].apply === st.retain.apply ? 'L' : '';   // (steps contient des copies des étapes)
 }
 // repère d'un boulon de la moitié retirée par la coupe : masqué (son boulon n'est plus dessiné)
 const cutHalfV = new THREE.Vector3();

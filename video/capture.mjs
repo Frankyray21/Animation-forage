@@ -37,6 +37,10 @@ html = sub(html, "if (quality === 'high' && composer) composer.render(); else re
   "if (!window.__noRender) { if (quality === 'high' && composer) composer.render(); else renderer.render(scene, camera); }\n  window.__frames = (window.__frames || 0) + 1;");
 // horloge virtuelle (respiration du travailleur, tremblement de la clé) : même résultat à chaque capture
 html = sub(html, '<script type="importmap">', '<script>{ const r = performance.now.bind(performance); performance.now = () => window.__vt != null ? window.__vt : r(); }</script>\n<script type="importmap">');
+// repères 3D sans le × de fermeture (inutile dans la vidéo)
+html = sub(html, "closable = true } = {}) {", "closable = true } = {}) {\n  closable = false;");
+// gros plans des pièces : étiquettes 3D masquées
+html = sub(html, 'const labelOpacity = (s, a) => { if (!s) return;', 'const labelOpacity = (s, a) => { if (!s) return; if (window.__noLabels) a = 0;');
 // mise en page de capture : la 3D seule (le bandeau et la consigne sont ajoutés au montage), sans encadré ni puces
 html = sub(html, '</head>', `<style>
 .rail, .dock, .vbar, #camChip, .chip-row, #procCard, #procLine, .bilan, .actcard, .actdot, .fs-steps, .pres-bar { display: none !important; }
@@ -131,35 +135,44 @@ if (process.argv.includes('--scan')) {   // relevé sans rendu : plan, consigne 
   console.log(`relevé : ${rows.filter(r => r.keep).length} images gardées sur ${rows.length}`);
   await browser.close(); server.close(); process.exit(0);
 }
-if (process.argv.includes('--inserts')) {   // pièce retirée : gros plan tournant, travailleur masqué, vue entière
-  const SPEC = [['4', ['3506907', 'B750-1500'], 'tableJC'], ['5', ['3506906', 'B500-2250'], 'tableCV'], ['6', ['3506878'], 'tableL'],
-    ['7', ['B500-6500'], 'tablePB'], ['8', ['B500-8000'], 'tableL'], ['9', ['2920390', 'UM-021-01-01'], 'tablePlate']];
+if (process.argv.includes('--inserts')) {   // pièce retirée : gros plan tournant, à la place des plans de table coupés
+  // la pièce est montrée une fois posée sur la table, en surbrillance (--insat table, défaut) ou au moment où elle vient d'être retirée (--insat pull) ;
+  // travailleur et étiquettes masqués, vue entière (sans coupe)
+  const SPEC = { '4': ['3506907', 'B750-1500'], '5': ['3506906', 'B500-2250'], '6': ['3506878'], '7': ['B500-6500'], '8': ['B500-8000'], '9': ['2920390', 'UM-021-01-01'] };
+  const AT = arg('insat', 'table'), ONLY = arg('insonly', '');
+  const scan = JSON.parse(fs.readFileSync(path.join(OUT, 'scan.json'), 'utf8'));
   const N = Math.round(+arg('inslen', 2.5) * FPS), out = [];
-  for (const [n, ids, cam] of SPEC) {
-    const i = info.steps.findIndex(s => s.n === n); if (i < 0) continue;
-    const tEnd = (i + 1 < info.steps.length ? info.starts[i + 1] : info.total) - 0.02;
-    await page.evaluate(() => { const w = document.getElementById('optWorker'); w.checked = false; w.dispatchEvent(new Event('change')); window.__clam.setCutAuto(false); window.__clam.setCutUI(false); });
-    for (let j = 0; j < 6; j++) await step({ k: 100000 + j, t: tEnd, step: i }, false);
+  for (let i = 0; i < info.steps.length; i++) {
+    const n = info.steps[i].n, ids = SPEC[n]; if (!ids || (ONLY && !ONLY.split(',').includes(n))) continue;
+    // premier plan coupé de l'étape précédé d'un plan gardé : c'est là que le gros plan est inséré
+    const rows = scan.filter(r => r.step === i);
+    const d0 = rows.findIndex((r, j) => !r.keep && j > 0 && rows[j - 1].keep); if (d0 < 0) continue;
+    let tb = d0; while (tb < rows.length && !rows[tb].keep && !DROP.has(rows[tb].cam)) tb++;   // marche jusqu'à la table
+    let te = tb; while (te + 1 < rows.length && rows[te + 1].cam === rows[tb].cam && !rows[te + 1].keep) te++;
+    const kAt = AT === 'table' ? rows[te].k : rows[d0 - 1].k, cam = AT === 'table' ? rows[tb].cam : rows[d0 - 1].cam;
+    await page.evaluate(() => { const w = document.getElementById('optWorker'); w.checked = false; w.dispatchEvent(new Event('change')); window.__clam.setCutAuto(false); window.__clam.setCutUI(false); window.__noLabels = true; document.querySelectorAll('.note').forEach(n => { n.style.visibility = 'hidden'; }); });
+    for (let j = 0; j < 6; j++) await step({ k: 100000 + j, t: plan[kAt].t, step: i }, false);
     const geo = await page.evaluate(([ids, cam]) => {
       const c = window.__clam, T = c.THREE, box = new T.Box3();
-      for (const id of ids) { const p = c.PARTS.find(p => p.id === id); if (p) p.objs.filter(Boolean).forEach(o => { if (o.visible) box.expandByObject(o); }); }
-      const ctr = box.getCenter(new T.Vector3()), r = Math.max(.6, box.getSize(new T.Vector3()).length() / 2), C = c.CAMS[cam];
+      for (const id of ids) { const p = c.PARTS.find(p => p.id === id); if (p) p.objs.filter(Boolean).forEach(o => { let v = o.visible; o.traverseAncestors(a => { v = v && a.visible; }); if (v) box.expandByObject(o); }); }
+      const ctr = box.getCenter(new T.Vector3()), r = Math.max(.6, box.getSize(new T.Vector3()).length() / 2), C = c.CAMS[cam].fn ? c.CAMS[cam].fn() : c.CAMS[cam];
       const d = new T.Vector3(C.p[0] - C.t[0], C.p[1] - C.t[1], C.p[2] - C.t[2]).normalize();
       return { ctr: ctr.toArray(), r, d: d.toArray() };
     }, [ids, cam]);
-    const dist = Math.min(9, Math.max(2.6, geo.r * 3.4));
+    const dist = Math.min(9, Math.max(+arg('insmin', 2.2), geo.r * +arg('insk', 3.0)));
     for (let f = 0; f < N; f++) {
       const name = `ins_${n}_${String(f).padStart(3, '0')}.jpg`, file = path.join(OUT, name);
-      const a = (-22 + 44 * f / (N - 1)) * Math.PI / 180, [dx, dy, dz] = geo.d;
+      const a = (-20 + 40 * f / Math.max(1, N - 1)) * Math.PI / 180, [dx, dy, dz] = geo.d;
       const rx = dx * Math.cos(a) + dz * Math.sin(a), rz = -dx * Math.sin(a) + dz * Math.cos(a);
-      const p = [geo.ctr[0] + rx * dist, geo.ctr[1] + Math.max(dy, .45) * dist, geo.ctr[2] + rz * dist];
+      const z = dist * (1.08 - .14 * f / Math.max(1, N - 1));   // léger travelling avant
+      const p = [geo.ctr[0] + rx * z, geo.ctr[1] + Math.max(dy, .35) * z, geo.ctr[2] + rz * z];
       await page.evaluate(([p, t]) => { window.__camOverride = { p, t }; }, [p, geo.ctr]);
-      if (!(SKIP0 && fs.existsSync(file) && fs.statSync(file).size > 10000)) { await step({ k: 100010 + f, t: tEnd, step: i }, true); await page.screenshot({ path: file, type: 'jpeg', quality: 93, clip: view }); }
-      out.push({ file: name, n, step: i });
+      if (!(SKIP0 && fs.existsSync(file) && fs.statSync(file).size > 10000)) { await step({ k: 100010 + f, t: plan[kAt].t, step: i }, true); await page.screenshot({ path: file, type: 'jpeg', quality: 93, clip: view }); }
+      out.push({ file: name, n, step: i, at: rows[d0].k, ids });
     }
-    console.log(`pièce retirée, étape ${n} : ${N} images`);
+    console.log(`pièce retirée, étape ${n} (${AT}, t = ${plan[kAt].t.toFixed(2)} s, plan ${cam}) : ${N} images`);
   }
-  await page.evaluate(() => { window.__camOverride = null; });
+  await page.evaluate(() => { window.__camOverride = null; window.__noLabels = false; });
   fs.writeFileSync(path.join(OUT, 'inserts.json'), JSON.stringify(out));
   await browser.close(); server.close(); process.exit(0);
 }
