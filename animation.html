@@ -3636,6 +3636,16 @@ function leverToggle(S, name, e) {
     ? 'Le vérin relâche : les ressorts avancent le cône, les mâchoires se ferment. Les ressorts restent comprimés.'
     : 'Le vérin recule le cône, les mâchoires s\'ouvrent. Avant de démonter : manettes fermées (étape 1), puis cadenassage (étape 3).', e);
 }
+// Étape 6 (boulons longs remis sans bushing) pas encore terminée : c'est elle la prochaine action, pas l'étape 7
+// 'L' si l'étape 6 est la remise des boulons longs, '' si elle est omise (scénario « sans les boulons longs »), null après l'étape 6
+function step6Grp(S) {
+  const i6 = steps.findIndex(x => x.n === '6');
+  if (i6 < 0 || S.i > i6 || S.cv.lift < .99 || (S.i === i6 && S.p > .995)) return null;
+  return steps[i6] === st.retain ? 'L' : '';
+}
+// repère d'un boulon de la moitié retirée par la coupe : masqué (son boulon n'est plus dessiné)
+const cutHalfV = new THREE.Vector3();
+const inCutHalf = L => cutOn && explodeE === 0 && hexE === 0 && L.parent.localToWorld(cutHalfV.copy(L.position)).z > .05;
 function applyScene(S) {
   rig.updateMatrixWorld(true);
   HOLD.bundle = false; HOLD.item = null; HOLD.h = 0;
@@ -3660,13 +3670,14 @@ function applyScene(S) {
   const RC = S.recent || {}, hiK = k => k ? .55 : .14;
   // option « Numéros et consignes » : seulement le groupe de la prochaine action (J → C → 1-6 → L), comme l'encadré « procédure »
   const numsOn = $('optNums').checked && !D.flightS && explodeE === 0 && hexE === 0;
-  const nextGrp = !numsOn ? '' : S.jc.lift < .01 ? 'J' : S.cv.lift < .01 ? 'C' : S.cv.lift > .99 && ORDER.some(i => S.pb[i].gone < .25) ? 'P' : S.cv.lift > .99 && BUSHED.some(i => S.pb[i].gone < .25) ? 'L' : '';
+  const g6 = step6Grp(S);   // étape 6 à venir ou en cours : boulons longs (ou rien si l'étape 6 est omise)
+  const nextGrp = !numsOn ? '' : S.jc.lift < .01 ? 'J' : S.cv.lift < .01 ? 'C' : g6 !== null ? g6 : S.cv.lift > .99 && ORDER.some(i => S.pb[i].gone < .25) ? 'P' : S.cv.lift > .99 && BUSHED.some(i => S.pb[i].gone < .25) ? 'L' : '';
   // pièces portées : couvert et couvercle tirés, portés et posés par le travailleur, leurs boulons dans leurs trous puis rangés
   carryPose(jawCover, S, 'jc', JC_BASE, 1.8, TABLE.jc, S.jc.lift, Math.PI / 2);
   boltsWithPart(jcBolts, jawCover, JC_BASE, S.jc.bolts, S.jc.lift, S.jc.sort, TABLE.jcBolt, 6, S);
   S.jc.bolts.forEach((r, k) => {
     const b = jcBolts[k]; setOpacity(b, 1); glow(b, r > 0 ? hiK(RC.jc) : 0);
-    labels.numsJ[k].position.set(b.position.x, b.position.y + .45, b.position.z); labelOpacity(labels.numsJ[k], nextGrp === 'J' && r < 1 ? 1 : 0);
+    labels.numsJ[k].position.set(b.position.x, b.position.y + .45, b.position.z); labelOpacity(labels.numsJ[k], nextGrp === 'J' && r < 1 && !inCutHalf(labels.numsJ[k]) ? 1 : 0);
   });
   glow(jawCover, S.jc.lift > 0 || S.jc.bolts[0] > 0 ? hiK(RC.jc) : 0);
   // Couvercle + boulons ½
@@ -3674,7 +3685,7 @@ function applyScene(S) {
   boltsWithPart(cvBolts, cover, CV_BASE, S.cv.bolts, S.cv.lift, S.cv.sort, TABLE.cvBolt, 5, S);
   S.cv.bolts.forEach((r, k) => {
     const b = cvBolts[k]; setOpacity(b, 1); glow(b, r > 0 ? hiK(RC.cv) : 0);
-    labels.numsC[k].position.set(b.position.x, b.position.y + .45, b.position.z); labelOpacity(labels.numsC[k], nextGrp === 'C' && r < 1 ? 1 : 0);
+    labels.numsC[k].position.set(b.position.x, b.position.y + .45, b.position.z); labelOpacity(labels.numsC[k], nextGrp === 'C' && r < 1 && !inCutHalf(labels.numsC[k]) ? 1 : 0);
   });
   glow(cover, S.cv.lift > 0 || S.cv.bolts[0] > 0 ? hiK(RC.cv) : 0);
 
@@ -3779,14 +3790,14 @@ function applyScene(S) {
     }
     if (labels.nums[i]) {
       labels.nums[i].position.set(o.position.x, o.position.y + 0.55, o.position.z);
-      labelOpacity(labels.nums[i], fl ? 0 : Math.max(S.nums, nextGrp === 'P' ? 1 : 0) * (1 - seg(b.gone, 0, .1)));
+      labelOpacity(labels.nums[i], fl || inCutHalf(labels.nums[i]) ? 0 : Math.max(S.nums, nextGrp === 'P' ? 1 : 0) * (1 - seg(b.gone, 0, .1)));
     }
     if (B.bushing) {
       const L = labels.ret[BUSHED.indexOf(i)];
       L.position.set(o.position.x, o.position.y + 0.55, o.position.z);
       const hide = S.catchD && steps[S.i] && steps[S.i].catch ? seg(S.catchP, CATCH_T0 - .04, CATCH_T0) * (1 - seg(S.catchP, .6, .7)) : 0;
       labelOpacity(L, 0);   // pastilles « R » retirées
-      const NL = labels.numsL[BUSHED.indexOf(i)]; NL.position.copy(L.position); labelOpacity(NL, (nextGrp === 'L' ? 1 : 0) * (1 - seg(b.gone, 0, .1)));
+      const NL = labels.numsL[BUSHED.indexOf(i)]; NL.position.copy(L.position); labelOpacity(NL, (nextGrp === 'L' && !inCutHalf(NL) ? 1 : 0) * (1 - seg(b.gone, 0, .1)));
     }
   });
 
@@ -3878,6 +3889,7 @@ camera.position.set(...CAMS.intro.p); controls.target.set(...CAMS.intro.t);
 const goalP = new THREE.Vector3(), goalT = new THREE.Vector3();
 function updateCamera(dt) {
   if (procRefit > 0 && (procRefit -= dt) <= 0) procAuto = null;   // nouveau plan : l'encadré « procédure » se replace une fois la caméra posée
+  if (window.__camOverride) { const o = window.__camOverride; camera.position.set(...o.p); controls.target.set(...o.t); camVelP.set(0, 0, 0); camVelT.set(0, 0, 0); return; }   // capture vidéo : plan imposé
   if (!autoCam) { camSnap = false; camVelP.set(0, 0, 0); camVelT.set(0, 0, 0); return; }
   if (hexTarget && !explodeTarget) fitHexplode();
   const g0 = explodeTarget ? CAMS.explode : hexTarget ? CAMS.hexplode : camGoal, g = g0.fn ? g0.fn() : g0;
@@ -4399,6 +4411,8 @@ function updateProcCard(S) {
   else if (on) {
     if (S.jc.lift < .01) { html = '3 boulons ¾ à dévisser avec une clé 1 1/8<small>J1 à J3 · B750-1500 · couvert des mâchoires (jaw cover) · étape 4</small>'; o = jcBolts; }
     else if (S.cv.lift < .01) { html = '9 boulons ½ à dévisser avec une clé ¾<small>C1 à C9 · B500-2250 · porte-capuchon (cap holder) · étape 5</small>'; o = cvBolts; }
+    else if (step6Grp(S) === 'L') { html = 'Remettre les 3 boulons longs (bolts) sans bushing<small>L1 à L3 · B500-8000 · étape 6</small>'; o = BUSHED.map(i => pBolts[i]); }
+    else if (step6Grp(S) === '') { html = ''; }
     else if (S.cv.lift > .99) {
       const n6 = ORDER.filter(i => S.pb[i].gone < .25).length, nL = BUSHED.filter(i => S.pb[i].gone < .25).length;   // encore dans le mandrin
       if (n6 > 0) { html = `${n6} boulon${n6 > 1 ? 's' : ''} ½ × 6 ½ à dévisser 1 tour à la fois, ordre 1 → 6<small>B500-6500 · clé ¾ · étape 7${nL ? ' · 3 boulons longs L1–L3 (B500-8000) : retenue du cône' : ''}</small>`; o = ORDER.filter(i => S.pb[i].gone < .25).map(i => pBolts[i]); }
@@ -4495,7 +4509,9 @@ function frame(now) {
   applyScene(S);
   applyExplode(explodeE);
   applyHeadExplode(hexE);
+  const cut0 = cutOn;
   updateUI(S);
+  if (cutOn !== cut0) applyScene(S);   // coupe changée par le plan : ressorts et repères recalculés dans la même image (pas d'image parasite)
   updateCamera(dt);
   controls.update();
   gizmo.visible = !!gizmo.object;
@@ -4545,7 +4561,7 @@ async function start() {
   resize();
   const S = stateAt(T); applyScene(S); updateUI(S, true);
   requestAnimationFrame(frame);
-  window.__clam = { stateAt, steps: () => steps, starts: () => starts, total: () => total, setT: v => { T = v; }, P, setExplode, setHeadExplode, headExplodeNow: v => { setHeadExplode(v); hexE = v ? 1 : 0; }, setCutUI: setCut, cutState: () => ({ cutOn, cutAuto, cam: lastCamKey }), explodeNow: v => { setExplode(v); explodeE = v ? 1 : 0; }, select: id => select(byId(id)), PARTS, camera, setQuality, worker: { set: setWorker, get: () => ({ x: WORKER_GLB.position.x, y: WORKER_GLB.position.y, z: WORKER_GLB.position.z, rotYdeg: WORKER_GLB.rotY * 180 / Math.PI, scale: WORKER_GLB.scale, loaded: !!workerModel }), root: workerRoot }, setCut: v => { cutOn = v; applyCut(); }, levers, THREE, state: () => stateAt(T), leverMan: () => ({ ...leverMan }), oilG, labels: () => labels, STROKE, JAW_OPEN };
+  window.__clam = { stateAt, steps: () => steps, starts: () => starts, total: () => total, setT: v => { T = v; }, P, setExplode, setHeadExplode, headExplodeNow: v => { setHeadExplode(v); hexE = v ? 1 : 0; }, setCutUI: setCut, setCutAuto, CAMS, cutState: () => ({ cutOn, cutAuto, cam: lastCamKey }), explodeNow: v => { setExplode(v); explodeE = v ? 1 : 0; }, select: id => select(byId(id)), PARTS, camera, setQuality, worker: { set: setWorker, get: () => ({ x: WORKER_GLB.position.x, y: WORKER_GLB.position.y, z: WORKER_GLB.position.z, rotYdeg: WORKER_GLB.rotY * 180 / Math.PI, scale: WORKER_GLB.scale, loaded: !!workerModel }), root: workerRoot }, setCut: v => { cutOn = v; applyCut(); }, levers, THREE, state: () => stateAt(T), leverMan: () => ({ ...leverMan }), oilG, labels: () => labels, STROKE, JAW_OPEN };
 }
 start();
 </script>
