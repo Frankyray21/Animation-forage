@@ -1,7 +1,7 @@
 // Service worker : l'application fonctionne hors ligne après la première visite.
 // Pages : réseau d'abord (mises à jour), copie locale si hors ligne. Images et scripts du site : copie locale, rafraîchie en arrière-plan.
 // three.js (version figée sur le CDN) et polices : copie locale d'abord. Vidéo : lectures partielles (Range) servies depuis la copie locale hors ligne.
-const VERSION = 'clam-v1';
+const VERSION = 'clam-v2';   // nouvelle vidéo : renouvelle les copies locales
 const LOCAL = [
   './', 'index.html', 'animation.html', 'manifest.webmanifest', 'pwa.js',
   'icons/icon-192.png', 'icons/icon-512.png', 'icons/icon-maskable-512.png', 'icons/apple-touch-icon.png', 'icons/favicon-32.png',
