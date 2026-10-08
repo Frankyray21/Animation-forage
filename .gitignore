@@ -1,1 +1,5 @@
 blender/lm_work/
+# outils de la vidéo installés localement (npm i --no-save playwright)
+node_modules/
+package.json
+package-lock.json

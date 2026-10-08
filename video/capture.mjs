@@ -69,10 +69,11 @@ function cdn(url) {
   if (!fs.existsSync(f)) { fs.mkdirSync(CACHE, { recursive: true }); execFileSync('curl', ['-sSfL', '-m', '60', '-A', 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/130.0 Safari/537.36', '-o', f, url]); }
   return f;
 }
-// --gpu : carte graphique de l'ordinateur (fenêtre chromium visible, beaucoup plus rapide) au lieu du WebGL logiciel (swiftshader)
+// --gpu : carte graphique de l'ordinateur (fenêtre chromium visible, beaucoup plus rapide) au lieu du WebGL logiciel (swiftshader) ;
+// fenêtre cachée ou réduite : animation non suspendue (sinon la capture attendrait indéfiniment)
 const GPU = process.argv.includes('--gpu');
 const browser = await chromium.launch({ ...(process.env.CHROME ? { executablePath: process.env.CHROME } : {}), headless: !GPU,
-  args: GPU ? ['--ignore-gpu-blocklist', '--enable-gpu-rasterization'] : ['--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader'] });
+  args: GPU ? ['--ignore-gpu-blocklist', '--enable-gpu-rasterization', '--disable-backgrounding-occluded-windows', '--disable-renderer-backgrounding', '--disable-background-timer-throttling'] : ['--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader'] });
 const page = await browser.newPage({ viewport: { width: W, height: H }, deviceScaleFactor: SS, colorScheme: 'light' });
 page.setDefaultTimeout(0);
 page.on('pageerror', e => console.log('[pageerror]', e.message));
