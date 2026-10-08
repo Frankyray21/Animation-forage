@@ -5,7 +5,8 @@
 // 3) composition image par image (compose.py : 3D réduite + bandeau en dessous, fondus vers et depuis les gros plans) ;
 // 4) montage et encodage H.264 par ffmpeg (rendus Blender en Ken Burns, fondus enchaînés).
 //
-// Usage : node video/make_video.mjs [--frames DIR] [--jobs 3] [--skip-capture] [--crf 27] [--out FICHIER]
+// Usage : node video/make_video.mjs [--frames DIR] [--jobs 3] [--gpu] [--skip-capture] [--crf 27] [--out FICHIER]
+// --gpu : capture avec la carte graphique de l'ordinateur (fenêtre chromium visible) ; quelques minutes au lieu de plusieurs heures
 // Variables : FFMPEG (défaut : ffmpeg), PYTHON (défaut : python3, avec Pillow), PLAYWRIGHT, CHROME, THREE_DIR, CDN_CACHE (voir capture.mjs).
 import fs from 'fs';
 import os from 'os';
@@ -24,17 +25,18 @@ const HOLD_END = Math.round(.6 * FPS), HOLD_PRE = Math.round(.4 * FPS), XFN = 8;
 const WORK = path.join(FRAMES, 'montage');
 const CAP = path.join(ROOT, 'video', 'capture.mjs');
 const run = (cmd, args) => new Promise((res, rej) => { const p = spawn(cmd, args.map(String), { stdio: 'inherit' }); p.on('exit', c => c ? rej(new Error(`${cmd} : code ${c}`)) : res()); });
+const GPU = process.argv.includes('--gpu') ? ['--gpu'] : [];
 const readJ = f => JSON.parse(fs.readFileSync(path.join(FRAMES, f), 'utf8'));
 
 // --- 1) capture ---
 if (!process.argv.includes('--skip-capture')) {
-  if (!fs.existsSync(path.join(FRAMES, 'scan.json'))) await run('node', [CAP, '--out', FRAMES, '--fps', FPS, '--scan']);
+  if (!fs.existsSync(path.join(FRAMES, 'scan.json'))) await run('node', [CAP, '--out', FRAMES, '--fps', FPS, '--scan', ...GPU]);
   // tranches équilibrées sur le nombre d'images gardées
   const keep = readJ('scan.json').map(r => r.keep), tot = keep.filter(Boolean).length, cuts = [0];
   let acc = 0; keep.forEach((v, k) => { acc += v; if (cuts.length < JOBS && acc >= tot * cuts.length / JOBS) cuts.push(k + 1); }); cuts.push(keep.length);
   const t0 = Date.now();
-  await Promise.all(cuts.slice(0, -1).map((a, j) => run('node', [CAP, '--out', FRAMES, '--fps', FPS, '--from', a, '--to', cuts[j + 1], '--skip-existing'])));
-  await run('node', [CAP, '--out', FRAMES, '--fps', FPS, '--inserts', '--skip-existing']);
+  await Promise.all(cuts.slice(0, -1).map((a, j) => run('node', [CAP, '--out', FRAMES, '--fps', FPS, '--from', a, '--to', cuts[j + 1], '--skip-existing', ...GPU])));
+  await run('node', [CAP, '--out', FRAMES, '--fps', FPS, '--inserts', '--skip-existing', ...GPU]);
   console.log(`capture : ${((Date.now() - t0) / 60000).toFixed(1)} min`);
 }
 const plan = readJ('plan.json'), scan = readJ('scan.json'), ins = readJ('inserts.json');

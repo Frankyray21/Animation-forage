@@ -5,7 +5,7 @@
 // La page est servie depuis le dépôt par un petit serveur local ; les crochets de capture sont
 // injectés dans la copie servie (animation.html n'est jamais modifié).
 //
-// Usage : node video/capture.mjs [--out DIR] [--fps 24] [--ss 2] [--band 100] [--from K] [--to K] [--skip-existing] [--scan | --inserts | --info]
+// Usage : node video/capture.mjs [--out DIR] [--fps 24] [--ss 2] [--band 100] [--from K] [--to K] [--skip-existing] [--gpu] [--scan | --inserts | --info]
 // --ss : suréchantillonnage (rendu à ss × la taille, réduit au montage) contre le crénelage et le scintillement des arêtes
 // Variables : PLAYWRIGHT (chemin du module playwright si non installé localement),
 //             CHROME (exécutable chromium), THREE_DIR (copie locale du paquet three@0.160.0),
@@ -69,7 +69,10 @@ function cdn(url) {
   if (!fs.existsSync(f)) { fs.mkdirSync(CACHE, { recursive: true }); execFileSync('curl', ['-sSfL', '-m', '60', '-A', 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/130.0 Safari/537.36', '-o', f, url]); }
   return f;
 }
-const browser = await chromium.launch({ ...(process.env.CHROME ? { executablePath: process.env.CHROME } : {}), args: ['--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader'] });
+// --gpu : carte graphique de l'ordinateur (fenêtre chromium visible, beaucoup plus rapide) au lieu du WebGL logiciel (swiftshader)
+const GPU = process.argv.includes('--gpu');
+const browser = await chromium.launch({ ...(process.env.CHROME ? { executablePath: process.env.CHROME } : {}), headless: !GPU,
+  args: GPU ? ['--ignore-gpu-blocklist', '--enable-gpu-rasterization'] : ['--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader'] });
 const page = await browser.newPage({ viewport: { width: W, height: H }, deviceScaleFactor: SS, colorScheme: 'light' });
 page.setDefaultTimeout(0);
 page.on('pageerror', e => console.log('[pageerror]', e.message));
@@ -84,6 +87,7 @@ await page.route(/^https:\/\/(cdn\.jsdelivr\.net|fonts\.googleapis\.com|fonts\.g
 await page.addInitScript(() => { try { localStorage.setItem('clam-scen', 'A'); } catch (e) {} });
 await page.goto(URL0, { waitUntil: 'load' });
 await page.waitForFunction(() => window.__clam, null, { timeout: 180000 });
+console.log('WebGL : ' + await page.evaluate(() => { const g = document.createElement('canvas').getContext('webgl2'), e = g && g.getExtension('WEBGL_debug_renderer_info'); return e ? g.getParameter(e.UNMASKED_RENDERER_WEBGL) : '?'; }));
 await page.evaluate(async () => {
   await document.fonts.ready;
   const c = window.__clam; c.setQuality('high');

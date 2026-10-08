@@ -33,7 +33,9 @@ node video/make_video.mjs --skip-capture              # remonter seulement, à p
 node video/make_video.mjs --skip-capture --bands-only # bandeaux et cartons seulement (dossier montage/), pour les vérifier
 ```
 
-Options : `--frames DIR` (images capturées ; défaut : `$TMPDIR/clam-video-frames`), `--jobs 3`, `--crf 27`, `--out FICHIER`.
+Avec une carte graphique : `node video/make_video.mjs --gpu --jobs 1`. Chromium s'ouvre alors dans une fenêtre visible et calcule les images sur la carte graphique au lieu du WebGL logiciel (environ 35 s par image sur 4 cœurs). La capture prend alors quelques minutes au lieu de plusieurs heures. La ligne « WebGL : … » du journal nomme la carte utilisée. Sous Windows, ajouter `PYTHON=python` si `python3` n'existe pas.
+
+Options : `--frames DIR` (images capturées ; défaut : `$TMPDIR/clam-video-frames`), `--jobs 3`, `--gpu`, `--crf 27`, `--out FICHIER`.
 
 Variables :
 - `FFMPEG` (défaut `ffmpeg`, avec libx264) ;
