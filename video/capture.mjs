@@ -2,7 +2,7 @@
 // La page est servie depuis le dépôt par un petit serveur local ; les crochets de capture sont
 // injectés dans la copie servie (animation.html n'est jamais modifié).
 //
-// Usage : node video/capture.mjs [--out DIR] [--fps 24] [--ss 2] [--from K] [--to K] [--info]
+// Usage : node video/capture.mjs [--out DIR] [--fps 24] [--ss 2] [--from K] [--to K] [--skip-existing] [--info]
 // --ss : suréchantillonnage (rendu à ss × la taille, réduit au montage) contre le crénelage et le scintillement des arêtes
 // Variables : PLAYWRIGHT (chemin du module playwright si non installé localement),
 //             CHROME (exécutable chromium), THREE_DIR (copie locale du paquet three@0.160.0),
@@ -127,8 +127,10 @@ if (process.argv.includes('--scan')) {   // contrôle : position de l'encadré p
   fs.writeFileSync(path.join(OUT, `scan_${process.env.PAD_B || 104}.json`), JSON.stringify(rows)); await browser.close(); server.close(); process.exit(0);
 }
 const t0 = Date.now();
+const SKIP = process.argv.includes('--skip-existing');   // reprise après interruption : images déjà faites rejouées sans rendu (continuité de la caméra)
 for (let k = FROM; k < TO; k++) {
   const f = path.join(OUT, `f_${String(k).padStart(5, '0')}.jpg`);
+  if (SKIP && fs.existsSync(f) && fs.statSync(f).size > 10000) { await step(plan[k], false); continue; }
   await step(plan[k], true);
   await page.screenshot({ path: f, type: 'jpeg', quality: 93, clip: view });
   if (k % 24 === 0 || k === TO - 1) console.log(`image ${k + 1}/${plan.length} (étape ${info.steps[plan[k].step].n}, t = ${plan[k].t.toFixed(2)} s) · ${((Date.now() - t0) / 1000 / (k - FROM + 1)).toFixed(2)} s/image`);
