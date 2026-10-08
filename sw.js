@@ -1,8 +1,11 @@
 // Service worker : l'application fonctionne hors ligne après la première visite.
 // Pages : réseau d'abord (mises à jour), copie locale si hors ligne. Images et scripts du site : copie locale, rafraîchie en arrière-plan.
 // three.js (version figée sur le CDN) et polices : copie locale d'abord. Vidéo : lectures partielles (Range) servies depuis la copie locale hors ligne.
-// Bouton « Télécharger pour le hors ligne » (pwa.js) : messages offline-status (ce qui manque) et offline-download (télécharge ce qui manque, avec la progression).
-const VERSION = 'clam-v3';   // bouton de téléchargement hors ligne : renouvelle les copies locales
+// Bouton « Télécharger pour le hors ligne » (pwa.js) : le message offline-status donne la liste de ce qui manque ; la page le télécharge
+// elle-même (requêtes cache: 'reload' + credentials: 'omit', laissées au réseau ici) et l'écrit dans la copie VERSION.
+// Le site partage l'origine frankyray21.github.io avec d'autres applications : seules les copies « clam-… » sont gérées ici.
+const VERSION = 'clam-v4';   // copies locales renouvelées (téléchargement depuis la page, vidéo reprise si inchangée)
+const PREFIX = 'clam-';
 const LOCAL = [
   './', 'index.html', 'animation.html', 'manifest.webmanifest', 'pwa.js',
   'icons/icon-192.png', 'icons/icon-512.png', 'icons/icon-maskable-512.png', 'icons/apple-touch-icon.png', 'icons/favicon-32.png',
@@ -34,7 +37,8 @@ const CDN = [
   "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/utils/BufferGeometryUtils.js"
 ];
 const VIDEO = 'video/procedure_boyles_h.mp4';
-let videoJob = null;   // téléchargement de la vidéo lancé à l'installation (repris par le bouton au lieu d'un second téléchargement)
+let videoJob = null, videoStop = null;   // première visite : vidéo téléchargée en arrière-plan après l'installation (arrêtable par la page)
+const abs = u => new URL(u, self.location).href;
 
 self.addEventListener('install', e => {
   e.waitUntil((async () => {
@@ -42,63 +46,71 @@ self.addEventListener('install', e => {
     await c.addAll(LOCAL);
     await Promise.all(CDN.map(u => c.add(new Request(u, { mode: 'cors' })).catch(() => {})));
     await Promise.all(FONTS.map(u => cacheFontCss(c, u).catch(() => {})));
-    videoJob = c.add(VIDEO).catch(() => {}).finally(() => { videoJob = null; });   // vidéo (10 Mo) : en arrière-plan, sans bloquer l'installation
+    // vidéo (10 Mo) : mise à jour du site → copie précédente reprise si la vidéo n'a pas changé, sinon nouvelle vidéo téléchargée
+    // AVANT l'activation (l'ancienne copie reste servie d'ici là) ; première visite → en arrière-plan, sans bloquer l'installation
+    const old = await previousVideo();
+    if (old && await sameVideo(old)) await c.put(VIDEO, old);
+    else if (old) await c.add(VIDEO).catch(() => {});
+    else videoInBackground(c);
     await self.skipWaiting();
   })());
 });
 self.addEventListener('activate', e => {
   e.waitUntil((async () => {
-    for (const k of await caches.keys()) if (k !== VERSION) await caches.delete(k);
+    for (const k of await caches.keys()) if (k.startsWith(PREFIX) && k !== VERSION) await caches.delete(k);   // jamais les copies des autres applications
     await self.clients.claim();
   })());
 });
-// feuille de styles des polices + fichiers woff2 qu'elle référence
+function videoInBackground(c) {
+  const ac = new AbortController(); videoStop = ac;
+  videoJob = fetch(VIDEO, { signal: ac.signal }).then(r => { if (r.ok) return c.put(VIDEO, r); }).catch(() => {})
+    .finally(() => { videoJob = null; videoStop = null; });
+}
+async function previousVideo() {
+  for (const k of await caches.keys()) if (k.startsWith(PREFIX) && k !== VERSION) { const r = await (await caches.open(k)).match(VIDEO); if (r) return r; }
+  return null;
+}
+// même vidéo en ligne que dans la copie : même taille en octets (deux encodages H.264 différents n'ont pas la même taille)
+async function sameVideo(old) {
+  try {
+    const h = await fetch(VIDEO, { method: 'HEAD', cache: 'no-store' });
+    const n = h.headers.get('content-length'), m = old.headers.get('content-length');
+    return h.ok && !!n && n === m;
+  } catch (err) { return false; }
+}
+// feuille de styles des polices (en mode cors, jamais opaque) + fichiers woff2 qu'elle référence
+const woffs = css => [...css.matchAll(/url\((https:[^)]+)\)/g)].map(m => m[1]);
 async function cacheFontCss(c, url) {
   const r = await fetch(url, { mode: 'cors' }); if (!r.ok) return;
   await c.put(url, r.clone());
   await Promise.all(woffs(await r.text()).map(f => c.add(new Request(f, { mode: 'cors' })).catch(() => {})));
 }
-// --- téléchargement complet pour le hors ligne (bouton des pages) ---
-const woffs = css => [...css.matchAll(/url\((https:[^)]+)\)/g)].map(m => m[1]);
-// fichiers absents de la copie locale ; polices : feuille de styles et fichiers woff2 qu'elle référence
+
+// --- état de la copie hors ligne (bouton des pages) ---
+// fichiers absents ; polices : feuille de styles opaque ou absente, ou fichier woff2 manquant → la feuille est à refaire
 async function offlineMissing(c) {
   const miss = [];
   for (const u of [...LOCAL, ...CDN, VIDEO]) if (!(await c.match(u))) miss.push(u);
   for (const u of FONTS) {
     const r = await c.match(u);
-    if (!r) { miss.push(u); continue; }
+    if (!r || r.type === 'opaque') { miss.push(u); continue; }
     for (const w of woffs(await r.text())) if (!(await c.match(w))) { miss.push(u); break; }
   }
   return miss;
 }
-async function offlineStatus() {
-  const miss = await offlineMissing(await caches.open(VERSION));
-  return { type: 'status', ready: miss.length === 0, missing: miss.length, list: miss.slice(0, 8) };
-}
-// télécharge un à un les fichiers manquants (la vidéo en dernier), en signalant la progression
-async function offlineDownload(report) {
-  const c = await caches.open(VERSION), miss = await offlineMissing(c);
-  miss.sort((a, b) => (a === VIDEO) - (b === VIDEO));
-  let done = 0;
-  report({ type: 'progress', done, total: miss.length, video: false });
-  for (const u of miss) {
-    report({ type: 'progress', done, total: miss.length, video: u === VIDEO });
-    try {
-      if (FONTS.includes(u)) await cacheFontCss(c, u);
-      else if (CDN.includes(u)) await c.add(new Request(u, { mode: 'cors' }));
-      else if (u === VIDEO && videoJob) { await videoJob; if (!(await c.match(VIDEO))) await c.add(VIDEO); }
-      else await c.add(u);
-    } catch (err) { /* compté comme manquant au bilan */ }
-    done++;
-    report({ type: 'progress', done, total: miss.length, video: false });
-  }
-  return offlineStatus();
-}
 self.addEventListener('message', e => {
   const port = e.ports && e.ports[0], t = e.data && e.data.type;
   if (!port) return;
-  if (t === 'offline-status') e.waitUntil(offlineStatus().then(s => port.postMessage(s), () => port.postMessage({ type: 'status', ready: false, missing: -1 })));
-  if (t === 'offline-download') e.waitUntil(offlineDownload(p => port.postMessage(p)).then(s => port.postMessage(s), () => port.postMessage({ type: 'status', ready: false, missing: -1 })));
+  // état : prêt seulement si rien ne manque et que la vidéo d'arrière-plan est terminée
+  if (t === 'offline-status') e.waitUntil(caches.open(VERSION).then(offlineMissing).then(
+    miss => port.postMessage({ type: 'status', version: VERSION, ready: miss.length === 0 && !videoJob, list: miss.map(abs), fonts: FONTS.map(abs), video: abs(VIDEO), videoPending: !!videoJob }),
+    () => port.postMessage({ type: 'status', version: VERSION, ready: false, list: null })));
+  // la page prend la vidéo à son compte (progression visible) : arrêt du téléchargement d'arrière-plan
+  if (t === 'offline-take-video') e.waitUntil((async () => {
+    if (videoStop) videoStop.abort();
+    if (videoJob) await videoJob;
+    port.postMessage({ type: 'taken' });
+  })());
 });
 
 // lecture partielle de la vidéo depuis la copie locale
@@ -114,6 +126,7 @@ async function rangeFromCache(req) {
 self.addEventListener('fetch', e => {
   const req = e.request;
   if (req.method !== 'GET') return;
+  if (req.cache === 'reload' && req.credentials === 'omit') return;   // téléchargement hors ligne fait par la page : directement au réseau
   const url = new URL(req.url);
   if (url.origin === location.origin && url.pathname.endsWith('.mp4')) {
     e.respondWith(fetch(req).catch(() => rangeFromCache(req)));
@@ -121,8 +134,9 @@ self.addEventListener('fetch', e => {
   }
   if (req.mode === 'navigate') {
     e.respondWith((async () => {
-      try { const r = await fetch(req); const c = await caches.open(VERSION); c.put(req, r.clone()); return r; }
-      catch (err) { return (await caches.match(req, { ignoreSearch: true })) || (await caches.match('index.html')); }
+      const c = await caches.open(VERSION);
+      try { const r = await fetch(req); c.put(req, r.clone()); return r; }
+      catch (err) { return (await c.match(req, { ignoreSearch: true })) || (await c.match('index.html')) || Response.error(); }
     })());
     return;
   }
@@ -137,8 +151,11 @@ self.addEventListener('fetch', e => {
   if (/^(cdn\.jsdelivr\.net|fonts\.googleapis\.com|fonts\.gstatic\.com)$/.test(url.hostname)) {
     e.respondWith((async () => {
       const c = await caches.open(VERSION), hit = await c.match(req);
-      if (hit) return hit;
-      const r = await fetch(req); if (r.ok || r.type === 'opaque') c.put(req, r.clone()); return r;
+      if (hit && hit.type !== 'opaque') return hit;
+      // polices et modules : toujours en mode cors (une copie opaque ne peut pas être vérifiée)
+      const r = await fetch(new Request(req.url, { mode: 'cors', credentials: 'omit' })).catch(() => null);
+      if (r && r.ok) { c.put(req.url, r.clone()); return r; }
+      return hit || r || fetch(req);
     })());
   }
 });
