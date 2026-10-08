@@ -4,7 +4,7 @@
 // Bouton « Télécharger pour le hors ligne » (pwa.js) : le message offline-status donne la liste de ce qui manque ; la page le télécharge
 // elle-même (requêtes cache: 'reload' + credentials: 'omit', laissées au réseau ici) et l'écrit dans la copie VERSION.
 // Le site partage l'origine frankyray21.github.io avec d'autres applications : seules les copies « clam-… » sont gérées ici.
-const VERSION = 'clam-v4';   // copies locales renouvelées (téléchargement depuis la page, vidéo reprise si inchangée)
+const VERSION = 'clam-v5';   // vidéo v3 (bandeau de consigne, gros plans des pièces retirées) : copies locales renouvelées
 const PREFIX = 'clam-';
 const LOCAL = [
   './', 'index.html', 'animation.html', 'manifest.webmanifest', 'pwa.js',
