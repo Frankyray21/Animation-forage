@@ -22,6 +22,7 @@ const POSTER = path.join(path.dirname(OUT), 'procedure_poster.jpg');
 const JOBS = +arg('jobs', 3), CRF = +arg('crf', 27), FFMPEG = process.env.FFMPEG || 'ffmpeg', PYTHON = process.env.PYTHON || 'python3';
 const FPS = 24, W = 1280, H = 720, BAND = 100, H3 = H - BAND, XF = 0.5;   // i/s, taille, bandeau sous la 3D, fondu entre parties (s)
 const HOLD_END = Math.round(.6 * FPS), HOLD_PRE = Math.round(.4 * FPS), XFN = 8;   // fin d'étape figée, arrêt avant le gros plan, fondu (images)
+const AFTER_KEEP = Math.round(.75 * FPS), AFTER_MIN = 40;   // retour du gros plan : dernières images gardées ; plan plus court : coupé
 const WORK = path.join(FRAMES, 'montage');
 const CAP = path.join(ROOT, 'video', 'capture.mjs');
 const run = (cmd, args) => new Promise((res, rej) => { const p = spawn(cmd, args.map(String), { stdio: 'inherit' }); p.on('exit', c => c ? rej(new Error(`${cmd} : code ${c}`)) : res()); });
@@ -137,7 +138,11 @@ const seqs = parts.map(([a, b], p) => {
   for (let i = a; i <= b; i++) {
     const sb = png(`s${i}`), ib = png(`i${i}`), rows = scan.filter(r => r.step === i && r.keep);
     const gp = ins.filter(x => x.step === i), at = gp.length ? gp[0].at : Infinity;
-    const before = rows.filter(r => r.k < at).map(r => [img(r.k), sb]), after = rows.filter(r => r.k >= at).map(r => [img(r.k), sb]);
+    const before = rows.filter(r => r.k < at).map(r => [img(r.k), sb]);
+    let after = rows.filter(r => r.k >= at).map(r => [img(r.k), sb]);
+    // retour du gros plan : le travailleur revient de la table et pivote en arrivant ; seule la fin du plan (travailleur immobile) est gardée,
+    // ou rien si le plan est trop court (sauf la dernière étape, dont le plan large final reste entier)
+    if (gp.length && i < steps.length - 1) after = after.length < AFTER_MIN ? [] : after.slice(-AFTER_KEEP);
     const fade = clips.length > 0 && !!clips[clips.length - 1].ins;   // l'étape précédente finit sur un gros plan
     if (before.length) clips.push({ frames: before, hold: gp.length ? HOLD_PRE : HOLD_END, fade });
     if (gp.length) clips.push({ frames: gp.map(x => [path.join(FRAMES, x.file), ib]), hold: 0, fade: true, ins: true });

@@ -184,12 +184,12 @@ Retiré (option « Éclairage réaliste », dossier `lightmaps/`, scripts de cui
 
 ## Vidéo de la procédure
 
-La section repliable **Vidéo de la procédure** contient `video/procedure_boyles_h.mp4` : le scénario A « Procédure respectée », étapes 1 à 9, pour former les travailleurs. Fichier : H.264, 1280 × 720, 24 i/s, 1 min 59 s, 9,3 Mo, sans son ; aperçu `video/procedure_poster.jpg`.
+La section repliable **Vidéo de la procédure** contient `video/procedure_boyles_h.mp4` : le scénario A « Procédure respectée », étapes 1 à 9, pour former les travailleurs. Fichier : H.264, 1280 × 720, 24 i/s, 1 min 52 s, 9,0 Mo, sans son ; aperçu `video/procedure_poster.jpg`.
 
 Plan :
 - carton titre sur le rendu Blender de l'ensemble ;
 - animation 3D à vitesse 1×, caméra auto à plans variés (gestes du travailleur, coupe du mandrin seulement quand elle montre les ressorts comprimés, numéros des boulons) ;
-- les plans où le travailleur porte les pièces à la table sont coupés et remplacés par un gros plan tournant des pièces retirées, en surbrillance ;
+- les plans où le travailleur porte les pièces à la table sont coupés et remplacés par un gros plan tournant des pièces retirées, en surbrillance ; au retour, seule la fin du plan est gardée (travailleur immobile, sans pivot brusque) ;
 - sous la 3D, un bandeau de 100 px : barre des 9 étapes, numéro et titre de l'étape, consigne de la procédure au mot près (texte de l'encadré de l'animation) ; rien ne couvre la 3D ;
 - rendus Blender intercalés avec léger zoom (face avant avant l'étape 4, coupe et couvercle retiré avant l'étape 6) ;
 - carton « À retenir ».

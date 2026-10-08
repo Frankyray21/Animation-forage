@@ -11,7 +11,7 @@ Mise en page : la 3D occupe le haut de l'image (1280 × 620) et un bandeau de 10
   - (par défaut) : rendu des seules images gardées → `f_00000.jpg…`. Une tranche (`--from`, `--to`) rejoue d'abord les images précédentes sans rendu, si bien que le résultat est identique à une capture d'un seul tenant ;
   - `--inserts` : gros plans des pièces retirées → `ins_<étape>_<n>.jpg` et `inserts.json`. Chaque gros plan est placé là où commence le plan coupé, avec la pièce montrée à la fin du plan de table (`--insat pull` : au moment où elle sort du mandrin).
 - `make_video.mjs` : capture en tranches parallèles équilibrées (`--jobs`), puis bandeaux et cartons rendus en PNG par chromium (titre, rendus Blender, « À retenir »). Le texte trop long est réduit, jamais coupé.
-- `compose.py` (Pillow) : composition image par image. La 3D est réduite par moyenne de zone, le bandeau collé en dessous ; fondus de 8 images vers et depuis chaque gros plan ; fin d'étape figée 0,6 s.
+- `compose.py` (Pillow) : composition image par image. La 3D est réduite par moyenne de zone, le bandeau collé en dessous ; fondus de 8 images vers et depuis chaque gros plan ; au retour d'un gros plan, seules les 18 dernières images du plan sont gardées (travailleur immobile), ou aucune si le plan fait moins de 40 images (sauf l'étape 9) ; fin d'étape figée 0,6 s.
 - Montage et encodage ffmpeg (fait par `make_video.mjs`) :
   - titre sur `renders/01_ensemble.jpg` (3,5 s) ;
   - étapes 1–3 ;

@@ -5,7 +5,7 @@
 // elle-même les petits fichiers (requêtes cache: 'reload' + credentials: 'omit', laissées au réseau ici) ; la vidéo est téléchargée
 // ici (message offline-video), avec la progression envoyée aux pages, et continue quand on change de page.
 // Le site partage l'origine frankyray21.github.io avec d'autres applications : seules les copies « clam-… » sont gérées ici.
-const VERSION = 'clam-v6';   // vidéo v3 ; vidéo téléchargée par le service worker, installation sans attente de la vidéo
+const VERSION = 'clam-v7';   // vidéo v3.1 (retours de gros plans sans pivot brusque) ; vidéo téléchargée par le service worker
 const PREFIX = 'clam-';
 const LOCAL = [
   './', 'index.html', 'animation.html', 'manifest.webmanifest', 'pwa.js',
