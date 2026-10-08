@@ -8,11 +8,16 @@ Comme lors de l'accident, la tête est **à l'horizontale** : axe de broche à 1
 
 **Application installable et hors ligne** : bouton **Installer l'application** (accueil, en haut à droite ; animation, à côté de « ← Accueil ») sur Android, Chrome et Edge ; sur iPhone et iPad, le bouton rappelle « Partager → Sur l'écran d'accueil ». Le service worker `sw.js` (enregistré par `pwa.js`, manifeste `manifest.webmanifest`, icônes dans `icons/`) garde une copie locale des pages, des images, de three.js (version figée sur le CDN), des polices et de la vidéo : après une première visite en ligne, le site fonctionne sans réseau. Pages : réseau d'abord, copie locale hors ligne ; changer `VERSION` dans `sw.js` pour forcer le renouvellement des copies. Bouton **Télécharger pour le hors ligne** (accueil, en haut ; animation, à côté de « ← Accueil »).
 - **Ce qu'il fait** : il enregistre d'un coup tout ce qui manque sur l'appareil (pages, images, three.js, polices et vidéo, environ 13 Mo). Il affiche la progression en pourcentage des octets, puis **✓ Prêt hors ligne**, ou **Réessayer le téléchargement** en cas d'échec. Il demande aussi au navigateur de ne pas effacer cette copie (stockage persistant).
-- **Fonctionnement** : la page télécharge elle-même, sans limite de durée sur une liaison lente, la liste que le service worker lui donne (message `offline-status`). Ces requêtes, marquées `cache: 'reload'` et `credentials: 'omit'`, ne passent pas par le service worker.
-- **Plusieurs onglets** : un seul téléchargement à la fois pour tous les onglets (Web Locks). Les autres affichent « Téléchargement dans un autre onglet… ». Quitter la page pendant le téléchargement demande une confirmation.
+- **Fonctionnement** : le service worker donne la liste de ce qui manque (message `offline-status`).
+  - Petits fichiers : la page les télécharge elle-même. Ses requêtes, marquées `cache: 'reload'` et `credentials: 'omit'`, ne passent pas par le service worker.
+  - Vidéo : le service worker la télécharge (message `offline-video`) et les pages suivent sa progression, un message par seconde, ce qui le garde actif sans événement long. Le téléchargement continue quand on change de page.
+- **Plusieurs onglets** : un seul téléchargement à la fois pour tous les onglets (Web Locks). Les autres affichent « Téléchargement dans un autre onglet… ». Quitter la page pendant les petits fichiers demande une confirmation.
 - **Au chargement**, et après une mise à jour du site, le bouton indique déjà « Prêt hors ligne » si tout est enregistré.
 - **iPhone et iPad** : l'application ajoutée à l'écran d'accueil a son propre stockage. Il faut l'ouvrir une fois en ligne et toucher aussi ce bouton ; le message de fin le rappelle.
-- **Mise à jour du site** (nouvelle `VERSION`) : la vidéo déjà enregistrée est reprise si sa taille n'a pas changé. Sinon, la nouvelle vidéo est téléchargée avant l'activation, et l'ancienne copie reste servie jusque-là.
+- **Mise à jour du site** (nouvelle `VERSION`) : l'installation n'attend jamais la vidéo, car un événement du service worker est arrêté au bout de 5 min.
+  - La vidéo déjà enregistrée est toujours reprise ; une vidéo périmée vaut mieux qu'aucune, y compris si le réseau coupe pendant la mise à jour.
+  - Si sa taille diffère de celle en ligne (relevée par une requête HEAD), elle est signalée comme périmée et la nouvelle est téléchargée en arrière-plan après l'activation. La copie n'est remplacée qu'une fois la nouvelle vidéo complète.
+  - Une ancienne version de `pwa.js` reçoit une réponse immédiate et propose de réessayer.
 - **Origine partagée** : le site partage l'origine frankyray21.github.io avec d'autres applications. Le service worker ne supprime donc que ses propres copies (`clam-…`).
 
 Rien n'est enregistré dans l'aperçu intégré (artefact, où les boutons restent cachés) ni pendant la capture vidéo.

@@ -1,7 +1,7 @@
 // Application installable et utilisable hors ligne : enregistre sw.js, affiche les boutons [data-install] et [data-offline].
 // [data-offline] « Télécharger pour le hors ligne » : enregistre sur l'appareil tout ce qui manque (pages, 3D, polices, vidéo).
-// Le service worker donne la liste de ce qui manque ; la page télécharge elle-même (pas de limite de durée, progression en octets)
-// et écrit dans la copie du service worker. Un seul téléchargement à la fois pour tous les onglets (Web Locks).
+// Le service worker donne la liste de ce qui manque ; la page télécharge elle-même les petits fichiers (progression en octets)
+// et suit la vidéo, téléchargée par le service worker (elle continue quand on change de page). Un seul téléchargement à la fois (Web Locks).
 // Rien dans un aperçu intégré (cadre) ni sous automatisation (capture vidéo).
 (() => {
   if (window.self !== window.top || !('serviceWorker' in navigator) || !window.isSecureContext || navigator.webdriver) return;
@@ -49,8 +49,8 @@
     if (i) i.textContent = ICON[state]; if (l) l.textContent = text || TEXT[state][0];
     b.title = title || (TEXT[state] ? TEXT[state][1] : '');
   });
-  let busy = false, lastStatus = null;
-  // état demandé au service worker actif (par canal privé)
+  let busy = false, phase = '';   // phase 'files' : petits fichiers téléchargés par la page ; 'video' : vidéo suivie dans le service worker
+  // état demandé au service worker actif (par canal privé) ; réponse d'une autre version ignorée
   async function ask(type, wait = 20000) {
     const reg = await navigator.serviceWorker.ready, sw = navigator.serviceWorker.controller || reg.active;
     if (!sw) return null;
@@ -60,15 +60,34 @@
       sw.postMessage({ type }, [ch.port2]);
     });
   }
+  const valid = s => !!s && s.type === 'status' && typeof s.version === 'string' && s.version.startsWith('clam-') && Array.isArray(s.list) && Array.isArray(s.fonts);
   const status = () => ask('offline-status');
+  const sleep = ms => new Promise(r => setTimeout(r, ms));
+  // suit la vidéo téléchargée par le service worker jusqu'à la fin ; un message par seconde le garde actif
+  async function follow(show) {
+    for (;;) {
+      const s = await status().catch(() => null);
+      if (!valid(s) || !s.videoPending) return s;
+      const p = s.videoProg || { n: 0, len: 0 };
+      show(p.n, p.len || 10e6);
+      await sleep(1000);
+    }
+  }
+  let following = false;
   async function refresh() {
     if (busy) return;
     if (navigator.locks && navigator.locks.query) {   // téléchargement en cours dans un autre onglet
       try { const q = await navigator.locks.query(); if (q.held.some(l => l.name === LOCK)) return waitOther(); } catch (err) {}
     }
     const s = await status().catch(() => null);
-    if (busy || !s || !s.list) return;
-    lastStatus = s;
+    if (busy || !valid(s)) return;
+    if (s.videoPending) {   // vidéo en cours dans le service worker (première visite, mise à jour, page précédente)
+      if (following) return; following = true;
+      const f = await follow((n, len) => { if (!busy) setOff('busy', `Téléchargement… ${Math.min(99, Math.floor(100 * n / len))} %`, 'Vidéo en cours d’enregistrement sur cet appareil.'); });
+      following = false;
+      if (!busy && valid(f)) setOff(f.ready ? 'ready' : 'idle');
+      return;
+    }
     setOff(s.ready ? 'ready' : 'idle');
   }
   let waiting = false;
@@ -82,7 +101,7 @@
   navigator.serviceWorker.addEventListener('controllerchange', refresh);   // nouvelle version du site : nouvel état
   document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') refresh(); });
 
-  // téléchargement d'un fichier dans la copie, en comptant les octets ; requêtes marquées pour ne pas passer par le service worker
+  // petits fichiers : téléchargés par la page, en comptant les octets ; requêtes marquées pour ne pas passer par le service worker
   const sameOrigin = u => new URL(u).origin === location.origin;
   async function grab(cache, u, onBytes) {
     const r = await fetch(u, { cache: 'reload', credentials: 'omit', mode: sameOrigin(u) ? 'same-origin' : 'cors' });
@@ -97,57 +116,60 @@
   }
   async function download(s) {
     const cache = await caches.open(s.version);
-    const items = s.list.slice().sort((a, b) => (a === s.video) - (b === s.video));   // la vidéo en dernier
-    // progression en octets : taille estimée (vidéo 10 Mo, autres 150 ko) remplacée par la vraie dès qu'elle est connue
-    const size = new Map(items.map(u => [u, u === s.video ? 10e6 : 150e3])), got = new Map(items.map(u => [u, 0]));
-    let shown = -1, said = 0;
+    const files = s.list.filter(u => u !== s.video), needVideo = s.list.includes(s.video) || s.videoPending;
+    // progression en octets : taille estimée (autres fichiers 150 ko, vidéo 10 Mo) remplacée par la vraie dès qu'elle est connue
+    const size = new Map(files.map(u => [u, 150e3])), got = new Map(files.map(u => [u, 0]));
+    let vid = { n: 0, len: needVideo ? 10e6 : 0 }, shown = -1, said = 0;
     const report = () => {
-      let T = 0, D = 0; size.forEach(v => { T += v; }); got.forEach(v => { D += v; });
-      const pc = Math.min(99, Math.floor(100 * D / T));
-      if (pc !== shown) { shown = pc; setOff('busy', `Téléchargement… ${pc} %`, 'Restez sur cette page jusqu’à « Prêt hors ligne ».'); }
+      let T = vid.len, D = vid.n; size.forEach(v => { T += v; }); got.forEach(v => { D += v; });
+      const pc = T ? Math.min(99, Math.floor(100 * D / T)) : 99;
+      if (pc !== shown) { shown = pc; setOff('busy', `Téléchargement… ${pc} %`, 'Le téléchargement de la vidéo continue si vous changez de page.'); }
       if (pc >= said + 25) { said = pc - pc % 25; announce(`Téléchargement : ${said} %`); }
     };
     report();
-    let failed = 0, quota = false;
-    for (const u of items) {
-      if (u === s.video && s.videoPending) await ask('offline-take-video', 30000);   // vidéo d'arrière-plan arrêtée : la page la reprend avec la progression
+    // vidéo : demandée au service worker, suivie pendant les petits fichiers (les messages le gardent actif)
+    let vp = null;
+    if (needVideo) { await ask('offline-video'); vp = follow((n, len) => { vid = { n, len }; report(); }); }
+    phase = 'files';
+    for (const u of files) {
       if (!s.fonts.includes(u) && await cache.match(u)) { got.set(u, size.get(u)); report(); continue; }
       try {
         if (s.fonts.includes(u)) {   // feuille de styles des polices puis ses fichiers woff2
           const r = await fetch(u, { cache: 'reload', credentials: 'omit', mode: 'cors' });
           if (!r.ok) throw new Error(`HTTP ${r.status} ${u}`);
           await cache.put(u, r.clone());
-          const files = [...(await r.text()).matchAll(/url\((https:[^)]+)\)/g)].map(m => m[1]);
-          for (const f of files) if (!(await cache.match(f))) await grab(cache, f, () => {});
+          const fonts = [...(await r.text()).matchAll(/url\((https:[^)]+)\)/g)].map(m => m[1]);
+          for (const f of fonts) if (!(await cache.match(f))) await grab(cache, f, () => {});
         } else {
           await grab(cache, u, (n, len) => { if (len) size.set(u, len); got.set(u, Math.min(n, size.get(u))); report(); });
         }
-      } catch (err) { failed++; if (err && err.name === 'QuotaExceededError') quota = true; }
+      } catch (err) { if (err && err.name === 'QuotaExceededError') quota = true; }
       got.set(u, size.get(u)); report();
     }
-    return { failed, quota };
+    phase = 'video';
+    if (vp) await vp;
   }
+  let quota = false;
   async function start() {
-    busy = true;
+    busy = true; quota = false;
     try { if (navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(() => {}); } catch (err) {}   // éviter que le navigateur efface la copie
     setOff('busy', 'Téléchargement… 0 %');
-    toast('Téléchargement pour le hors ligne : restez sur cette page jusqu’à « Prêt hors ligne ».');
-    let r = { failed: 1, quota: false };
     try {
       const s = await status();
-      if (!s || !s.list) throw new Error('service worker indisponible');
-      r = s.ready ? { failed: 0 } : await download(s);
+      if (!valid(s)) throw new Error('service worker indisponible ou d’une autre version');
+      if (!s.ready) await download(s);
     } catch (err) {}
-    busy = false;
+    busy = false; phase = '';
     const s = await status().catch(() => null);   // bilan établi par le service worker (copie de la version active)
-    if (s && s.ready) {
+    if (valid(s) && s.ready) {
       setOff('ready');
       toast('Tout est enregistré sur cet appareil. L’accueil, l’animation 3D et la vidéo fonctionnent maintenant sans réseau.' +
         (ios && !standalone ? ' Sur iPhone et iPad, l’application ajoutée à l’écran d’accueil a son propre stockage : ouvrez-la une fois en ligne et touchez aussi ce bouton.' : ''));
     } else {
       setOff('error');
-      const n = s && s.list ? s.list.length : 0;
-      toast(r.quota ? 'Espace de stockage insuffisant sur l’appareil : libérez de l’espace, puis réessayez.'
+      const n = valid(s) ? s.list.length : 0;
+      toast(quota ? 'Espace de stockage insuffisant sur l’appareil : libérez de l’espace, puis réessayez.'
+        : !valid(s) ? 'Le site vient d’être mis à jour : rechargez la page, puis réessayez.'
         : `Téléchargement incomplet${n ? ` (${n} fichier${n > 1 ? 's' : ''} manquant${n > 1 ? 's' : ''})` : ''}. Vérifiez la connexion et réessayez.`);
     }
   }
@@ -158,7 +180,8 @@
       navigator.locks.request(LOCK, { ifAvailable: true }, async lock => { if (!lock) return waitOther(); await start(); }).catch(() => { busy = false; refresh(); });
     } else start().catch(() => { busy = false; refresh(); });
   });
-  addEventListener('beforeunload', e => { if (busy) { e.preventDefault(); e.returnValue = ''; } });   // quitter la page interrompt le téléchargement
+  // quitter la page pendant les petits fichiers les interrompt (la vidéo, elle, continue dans le service worker)
+  addEventListener('beforeunload', e => { if (busy && phase === 'files') { e.preventDefault(); e.returnValue = ''; } });
 
   // --- installation ---
   if (standalone) return;   // déjà installée

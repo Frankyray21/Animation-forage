@@ -1,10 +1,11 @@
 // Service worker : l'application fonctionne hors ligne après la première visite.
 // Pages : réseau d'abord (mises à jour), copie locale si hors ligne. Images et scripts du site : copie locale, rafraîchie en arrière-plan.
 // three.js (version figée sur le CDN) et polices : copie locale d'abord. Vidéo : lectures partielles (Range) servies depuis la copie locale hors ligne.
-// Bouton « Télécharger pour le hors ligne » (pwa.js) : le message offline-status donne la liste de ce qui manque ; la page le télécharge
-// elle-même (requêtes cache: 'reload' + credentials: 'omit', laissées au réseau ici) et l'écrit dans la copie VERSION.
+// Bouton « Télécharger pour le hors ligne » (pwa.js) : le message offline-status donne la liste de ce qui manque. La page télécharge
+// elle-même les petits fichiers (requêtes cache: 'reload' + credentials: 'omit', laissées au réseau ici) ; la vidéo est téléchargée
+// ici (message offline-video), avec la progression envoyée aux pages, et continue quand on change de page.
 // Le site partage l'origine frankyray21.github.io avec d'autres applications : seules les copies « clam-… » sont gérées ici.
-const VERSION = 'clam-v5';   // vidéo v3 (bandeau de consigne, gros plans des pièces retirées) : copies locales renouvelées
+const VERSION = 'clam-v6';   // vidéo v3 ; vidéo téléchargée par le service worker, installation sans attente de la vidéo
 const PREFIX = 'clam-';
 const LOCAL = [
   './', 'index.html', 'animation.html', 'manifest.webmanifest', 'pwa.js',
@@ -37,21 +38,24 @@ const CDN = [
   "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/utils/BufferGeometryUtils.js"
 ];
 const VIDEO = 'video/procedure_boyles_h.mp4';
-let videoJob = null, videoStop = null;   // première visite : vidéo téléchargée en arrière-plan après l'installation (arrêtable par la page)
+const META = 'clam-meta/video-size';   // taille de la vidéo en ligne, relevée à l'installation (repère une copie périmée)
+let videoJob = null, videoProg = null;   // vidéo téléchargée par le service worker, progression { n, len } suivie par les pages
 const abs = u => new URL(u, self.location).href;
 
+// L'installation n'attend jamais la vidéo (10 Mo) : sur une liaison lente, le navigateur arrête un événement après 5 min.
+// La copie précédente est toujours reprise (une vidéo périmée vaut mieux qu'aucune) ; la nouvelle arrive ensuite en arrière-plan.
 self.addEventListener('install', e => {
   e.waitUntil((async () => {
     const c = await caches.open(VERSION);
     await c.addAll(LOCAL);
     await Promise.all(CDN.map(u => c.add(new Request(u, { mode: 'cors' })).catch(() => {})));
     await Promise.all(FONTS.map(u => cacheFontCss(c, u).catch(() => {})));
-    // vidéo (10 Mo) : mise à jour du site → copie précédente reprise si la vidéo n'a pas changé, sinon nouvelle vidéo téléchargée
-    // AVANT l'activation (l'ancienne copie reste servie d'ici là) ; première visite → en arrière-plan, sans bloquer l'installation
-    const old = await previousVideo();
-    if (old && await sameVideo(old)) await c.put(VIDEO, old);
-    else if (old) await c.add(VIDEO).catch(() => {});
-    else videoInBackground(c);
+    try {
+      const old = await previousVideo();
+      if (old) await c.put(VIDEO, old);
+      const h = await fetch(VIDEO, { method: 'HEAD', cache: 'no-store' });
+      if (h.ok && h.headers.get('content-length')) await c.put(META, new Response(h.headers.get('content-length')));
+    } catch (err) { /* hors ligne ou espace insuffisant : la vidéo sera (re)prise par le bouton */ }
     await self.skipWaiting();
   })());
 });
@@ -60,23 +64,35 @@ self.addEventListener('activate', e => {
     for (const k of await caches.keys()) if (k.startsWith(PREFIX) && k !== VERSION) await caches.delete(k);   // jamais les copies des autres applications
     await self.clients.claim();
   })());
+  // vidéo absente (première visite) ou périmée (mise à jour) : en arrière-plan, sans bloquer
+  e.waitUntil(caches.open(VERSION).then(async c => { if (await videoMissing(c)) startVideo(c); }).catch(() => {}));
 });
-function videoInBackground(c) {
-  const ac = new AbortController(); videoStop = ac;
-  videoJob = fetch(VIDEO, { signal: ac.signal }).then(r => { if (r.ok) return c.put(VIDEO, r); }).catch(() => {})
-    .finally(() => { videoJob = null; videoStop = null; });
-}
 async function previousVideo() {
   for (const k of await caches.keys()) if (k.startsWith(PREFIX) && k !== VERSION) { const r = await (await caches.open(k)).match(VIDEO); if (r) return r; }
   return null;
 }
-// même vidéo en ligne que dans la copie : même taille en octets (deux encodages H.264 différents n'ont pas la même taille)
-async function sameVideo(old) {
-  try {
-    const h = await fetch(VIDEO, { method: 'HEAD', cache: 'no-store' });
-    const n = h.headers.get('content-length'), m = old.headers.get('content-length');
-    return h.ok && !!n && n === m;
-  } catch (err) { return false; }
+// vidéo absente, ou de taille différente de celle en ligne (relevée à l'installation)
+async function videoMissing(c) {
+  const v = await c.match(VIDEO); if (!v) return true;
+  const m = await c.match(META); if (!m) return false;
+  const want = (await m.text()).trim(), got = v.headers.get('content-length');
+  return !!want && !!got && want !== got;
+}
+// téléchargement de la vidéo par le service worker : un seul à la fois ; la copie (même périmée) n'est remplacée qu'une fois la nouvelle complète.
+// Les pages qui suivent la progression envoient un message par seconde, ce qui garde le service worker actif (aucun événement long).
+function startVideo(c) {
+  if (videoJob) return videoJob;
+  videoProg = { n: 0, len: 0 };
+  videoJob = (async () => {
+    const r = await fetch(VIDEO, { cache: 'no-store' });
+    if (!r.ok || !r.body) throw new Error('HTTP ' + r.status);
+    videoProg.len = +r.headers.get('content-length') || 0;
+    const rd = r.body.getReader(), parts = [];
+    for (;;) { const { done, value } = await rd.read(); if (done) break; parts.push(value); videoProg.n += value.byteLength; }
+    const h = new Headers(r.headers); h.set('content-length', String(videoProg.n));
+    await c.put(VIDEO, new Response(new Blob(parts, { type: 'video/mp4' }), { status: 200, headers: h }));
+  })().catch(() => {}).finally(() => { videoJob = null; videoProg = null; });
+  return videoJob;
 }
 // feuille de styles des polices (en mode cors, jamais opaque) + fichiers woff2 qu'elle référence
 const woffs = css => [...css.matchAll(/url\((https:[^)]+)\)/g)].map(m => m[1]);
@@ -87,10 +103,11 @@ async function cacheFontCss(c, url) {
 }
 
 // --- état de la copie hors ligne (bouton des pages) ---
-// fichiers absents ; polices : feuille de styles opaque ou absente, ou fichier woff2 manquant → la feuille est à refaire
+// fichiers absents ; vidéo absente ou périmée ; polices : feuille de styles opaque ou absente, ou fichier woff2 manquant → la feuille est à refaire
 async function offlineMissing(c) {
   const miss = [];
-  for (const u of [...LOCAL, ...CDN, VIDEO]) if (!(await c.match(u))) miss.push(u);
+  for (const u of [...LOCAL, ...CDN]) if (!(await c.match(u))) miss.push(u);
+  if (await videoMissing(c)) miss.push(VIDEO);
   for (const u of FONTS) {
     const r = await c.match(u);
     if (!r || r.type === 'opaque') { miss.push(u); continue; }
@@ -98,19 +115,18 @@ async function offlineMissing(c) {
   }
   return miss;
 }
+async function statusMsg() {
+  const miss = await offlineMissing(await caches.open(VERSION));
+  return { type: 'status', version: VERSION, ready: miss.length === 0 && !videoJob, list: miss.map(abs), fonts: FONTS.map(abs), video: abs(VIDEO),
+    videoPending: !!videoJob, videoProg: videoProg && { n: videoProg.n, len: videoProg.len } };
+}
 self.addEventListener('message', e => {
   const port = e.ports && e.ports[0], t = e.data && e.data.type;
   if (!port) return;
-  // état : prêt seulement si rien ne manque et que la vidéo d'arrière-plan est terminée
-  if (t === 'offline-status') e.waitUntil(caches.open(VERSION).then(offlineMissing).then(
-    miss => port.postMessage({ type: 'status', version: VERSION, ready: miss.length === 0 && !videoJob, list: miss.map(abs), fonts: FONTS.map(abs), video: abs(VIDEO), videoPending: !!videoJob }),
-    () => port.postMessage({ type: 'status', version: VERSION, ready: false, list: null })));
-  // la page prend la vidéo à son compte (progression visible) : arrêt du téléchargement d'arrière-plan
-  if (t === 'offline-take-video') e.waitUntil((async () => {
-    if (videoStop) videoStop.abort();
-    if (videoJob) await videoJob;
-    port.postMessage({ type: 'taken' });
-  })());
+  const reply = p => e.waitUntil(p.then(m => port.postMessage(m), () => port.postMessage({ type: 'status', version: VERSION, ready: false, missing: -1, list: null })));
+  if (t === 'offline-status') reply(statusMsg());
+  else if (t === 'offline-video') reply(caches.open(VERSION).then(async c => { if (await videoMissing(c)) startVideo(c); return statusMsg(); }));   // la page demande la vidéo
+  else reply(Promise.resolve({ type: 'status', version: VERSION, ready: false, missing: -1, list: null }));   // message d'une ancienne version de pwa.js : réponse immédiate (« Réessayer »)
 });
 
 // lecture partielle de la vidéo depuis la copie locale
