@@ -5,7 +5,7 @@
 // La page est servie depuis le dépôt par un petit serveur local ; les crochets de capture sont
 // injectés dans la copie servie (animation.html n'est jamais modifié).
 //
-// Usage : node video/capture.mjs [--out DIR] [--fps 24] [--ss 2] [--band 100] [--from K] [--to K] [--skip-existing] [--gpu] [--scan | --inserts | --info]
+// Usage : node video/capture.mjs [--out DIR] [--scen A|D] [--fps 24] [--ss 2] [--band 100] [--from K] [--to K] [--skip-existing] [--gpu] [--scan | --inserts | --info | --at T1,T2]
 // --ss : suréchantillonnage (rendu à ss × la taille, réduit au montage) contre le crénelage et le scintillement des arêtes
 // Variables : PLAYWRIGHT (chemin du module playwright si non installé localement),
 //             CHROME (exécutable chromium), THREE_DIR (copie locale du paquet three@0.160.0),
@@ -85,7 +85,8 @@ await page.route(/^https:\/\/(cdn\.jsdelivr\.net|fonts\.googleapis\.com|fonts\.g
     return r.fulfill({ path: cdn(url), contentType: ct, headers: { 'access-control-allow-origin': '*' } });
   } catch (e) { console.log('[cdn] échec', url); return url.includes('fonts.') ? r.fulfill({ body: '', contentType: 'text/css' }) : r.abort(); }
 });
-await page.addInitScript(() => { try { localStorage.setItem('clam-scen', 'A'); } catch (e) {} });
+const SCEN = arg('scen', 'A');   // A : procédure respectée ; D : reconstitution de l'accident (boulons retirés un par un)
+await page.addInitScript(sc => { try { localStorage.setItem('clam-scen', sc); } catch (e) {} }, SCEN);
 await page.goto(URL0, { waitUntil: 'load' });
 await page.waitForFunction(() => window.__clam, null, { timeout: 180000 });
 console.log('WebGL : ' + await page.evaluate(() => { const g = document.createElement('canvas').getContext('webgl2'), e = g && g.getExtension('WEBGL_debug_renderer_info'); return e ? g.getParameter(e.UNMASKED_RENDERER_WEBGL) : '?'; }));
@@ -123,6 +124,17 @@ async function step(fr, render) {
 }
 // préchauffage : 24 images à T = 0 (la caméra quitte la vue d'accueil), puis les images avant FROM, sans rendu
 for (let i = 0; i < 24; i++) await step({ k: i - 24, t: 0, step: 0 }, false);
+// --at 25.9,39.3 : aperçus rapides à ces instants (s), après 1,5 s rejouées sans rendu (caméra posée) → at_<t>.jpg
+if (arg('at', '')) {
+  for (const t of arg('at', '').split(',').map(Number)) {
+    const k0 = Math.max(0, Math.round((t - 1.5) * FPS)), k1 = Math.round(t * FPS);
+    for (let k = k0; k < k1; k++) await step({ k, t: k / FPS, step: 0 }, false);
+    await step({ k: k1, t, step: 0 }, true);
+    await page.screenshot({ path: path.join(OUT, `at_${t.toFixed(2)}.jpg`), type: 'jpeg', quality: 90, clip: view });
+    console.log(`aperçu ${t.toFixed(2)} s`);
+  }
+  await browser.close(); server.close(); process.exit(0);
+}
 for (let k = 0; k < FROM; k++) await step(plan[k], false);
 // plans coupés au montage : transport des pièces à la table et marches (sauf l'aller au poste de commande, étape 1)
 const DROP = new Set(['tableJC', 'tableCV', 'tablePB', 'tableL', 'tablePlate']);
