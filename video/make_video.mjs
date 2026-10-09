@@ -24,7 +24,7 @@ const SCEN = arg('scen', 'A');
 // réglages par scénario : ralentis (temps de l'animation), étapes avec la fenêtre « ressorts en coupe », parties séparées par les rendus Blender
 const CONF = {
   A: { out: 'procedure_boyles_h.mp4', poster: 'procedure_poster.jpg', slow: '60.8-64.52:2', inset: ['7'], inserts: true, ref: 'Procédure', accent: '#f2c230' },
-  D: { out: 'accident_boyles_h.mp4', poster: 'accident_poster.jpg', slow: '41-47.5:2', inset: ['7', '!'], inserts: false, ref: 'Reconstitution', accent: '#e5372b' },
+  D: { out: 'accident_boyles_h.mp4', poster: 'accident_poster.jpg', slow: '', inset: ['7', '!'], inserts: false, ref: 'Reconstitution', accent: '#e5372b' },
 }[SCEN];
 const FRAMES = path.resolve(arg('frames', path.join(os.tmpdir(), `clam-video-frames-${SCEN}`)));
 const INSETS = path.join(FRAMES, 'inset');
