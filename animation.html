@@ -3060,11 +3060,11 @@ const SCEN = {
       { n: '8', title: 'Retirer les 3 boulons longs', cam: 'bolts', dur: 11, act: 'Ressorts détendus : 3 boulons longs retirés',
         shots: [{ at: 0, cam: 'boltL' }, { at: .52, cam: 'bolts' }, { at: .6, cam: 'tableL' }, { at: .82, cam: 'bolts' }],
         text: 'Les ressorts sont détendus : les 3 boulons de retenue ne portent plus rien. Les enlever.',
-        // clé sortie de l'étui, un boulon long à la fois, tiré à la main gauche ; clé rangée à la ceinture, boulons portés à la table
+        // clé sortie de l'étui, un boulon long à la fois, tiré à la main gauche une fois la clé passée au suivant (ou rangée) ; boulons portés à la table
         apply(S, p) {
           S.springLbl = 1; S.ret = 1 - seg(p, .45, .55);
           const at = toolSeq(S, 'pb', BUSHED, p, .08, .1, .06, .02, .05);
-          BUSHED.forEach((i, k) => { const b = S.pb[i]; b.turns = lerp(retainTurns(), ENG, ease(seg(p, at(k), at(k) + .1))); b.gone = G_HAND * seg(p, at(k) + .1, at(k) + .15); });
+          BUSHED.forEach((i, k) => { const b = S.pb[i]; b.turns = lerp(retainTurns(), ENG, ease(seg(p, at(k), at(k) + .1))); b.gone = G_HAND * seg(p, at(k) + .14, at(k) + .19); });
           if (p >= .6) trip(S, 'lb', p, .6, .7, .82, .92);
           if (p >= .7) putDown(BUSHED.map(i => [S.pb[i], 'gone']), p, .7, .8);
           S.bend = ease(seg(p, .68, .71)) * (1 - ease(seg(p, .8, .83)));
@@ -3385,8 +3385,8 @@ function carryPose(obj, S, key, base, up, dest, L, rotX) {
   }
 }
 // Pièce en mouvement dans la main gauche (à suivre par la main) et poignée de pièces tenue : recalculés à chaque image
-const HOLD = { bundle: false, item: null, h: 0 };
-const holdItem = (o, h) => { if (h > HOLD.h) { HOLD.h = h; HOLD.item = clampG.localToWorld(o.position.clone()); } };
+const HOLD = { bundle: false, item: null, h: 0, pull: false, pieces: [] };   // pull : la pièce suivie est tirée du mandrin ; pieces : celles déjà en main
+const holdItem = (o, h, pull = false) => { if (h > HOLD.h) { HOLD.h = h; HOLD.item = clampG.localToWorld(o.position.clone()); HOLD.pull = pull; } };
 // Boulons dans les trous d'une pièce portée (couvert, couvercle) : dévissés (s), suivent la pièce, puis rangés un à un sur la table (sort)
 function boltsWithPart(list, part, partBase, bolts, lift, sort, destFn, turns, S) {
   const n = list.length;
@@ -3414,14 +3414,14 @@ function handPose(o, S, g, from, pull, slot, len, dest, spin, holeSpin) {
   const hand = toRig(cpW), hq = cpQ.setFromUnitVectors(YAX, dirToRig(cpV.set(sn, 0, c), cpV2));
   if (g < .2) {   // tirée dans l'axe
     o.position.copy(from); o.position.y += pull * ease(seg(g, .08, .2)); o.rotation.set(0, holeSpin, 0);
-    holdItem(o, ease(seg(g, 0, .08)));
+    holdItem(o, ease(seg(g, 0, .08)), true);
   } else if (g < G_HAND) {   // ramenée dans la main
     const t = ease(seg(g, .2, G_HAND));
     cpV.copy(from); cpV.y += pull;
     o.position.lerpVectors(cpV, hand, t); o.quaternion.slerpQuaternions(cpQ2.setFromEuler(cpE.set(0, holeSpin, 0)), hq, t);
-    holdItem(o, 1); HOLD.bundle = true;
+    holdItem(o, 1, true); HOLD.bundle = true;
   } else if (g <= G_TBL) {
-    o.position.copy(hand); o.quaternion.copy(hq); HOLD.bundle = true;
+    o.position.copy(hand); o.quaternion.copy(hq); HOLD.bundle = true; HOLD.pieces.push(o);
     if (S.flight) {   // projection : le travailleur lâche tout, les pièces tombent au sol
       const F = S.flight, t0 = F.hands ? F.hands.t : 0, d = seg(S.launchT, t0, t0 + .45);
       o.position.x += (slot - 3) * .12 * d; o.position.y += .6 * d; o.position.z = lerp(hand.z, Z_FLOOR + .08, d * d);
@@ -3431,7 +3431,7 @@ function handPose(o, S, g, from, pull, slot, len, dest, spin, holeSpin) {
     const t = ease(seg(g, .72, .94));
     o.position.lerpVectors(hand, dest, t); o.position.z += Math.sin(t * Math.PI) * .45;
     o.quaternion.slerpQuaternions(hq, cpQ2.setFromEuler(cpE.set(0, spin, 0)), t);
-    HOLD.bundle = true; if (g < 1) holdItem(o, 1 - ease(seg(g, .94, 1)));
+    if (g < 1) { HOLD.bundle = true; holdItem(o, 1 - ease(seg(g, .94, 1))); }   // posée : les mains sont libres (sinon la main gauche garde une poignée vide)
   }
 }
 const tmpFrom = new THREE.Vector3();
@@ -3459,7 +3459,7 @@ function reachTargets(r) {
 }
 /* ---------- Clé à chocs : à la ceinture (étui, hanche droite), sortie et portée au mandrin (S.wd), sur un boulon (S.tool, S.active) ---------- */
 const QX90 = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(1, 0, 0), Math.PI / 2);
-const wrP = new THREE.Vector3(), wrP2 = new THREE.Vector3(), wrQ = new THREE.Quaternion(), wrQ2 = new THREE.Quaternion();
+const wrP = new THREE.Vector3(), wrP2 = new THREE.Vector3(), wrP3 = new THREE.Vector3(), wrP4 = new THREE.Vector3(), wrM = new THREE.Vector3(), wrQ = new THREE.Quaternion(), wrQ2 = new THREE.Quaternion();
 const wrCord = wrench.userData.cord;
 rig.add(wrCord);   // cordon recalculé dans le repère du mandrin : de la poignée au sol, puis jusqu'à la prise
 function placeWrench(S, fl, sp, hip) {
@@ -3472,25 +3472,33 @@ function placeWrench(S, fl, sp, hip) {
   } else {
     // étui : la clé pend, douille en bas, poignée vers l'extérieur
     toRig(wPt(sp, hip.x - .3, hip.y - 2.35, -1.55, wrP)); wrQ.setFromAxisAngle(ZAX, sp.yaw + Math.PI / 2).multiply(QX90);
-    let spin = 0, ring = false;
-    wrQ2.setFromAxisAngle(ZAX, sp.yaw);
+    // out : clé écartée du boulon, poignée tournée de 45° vers la droite du corps (couchée dans l'axe, l'arrière entrerait dans le torse)
+    let spin = 0, ring = false, out = 1;
+    const idle = (v = wrP2) => toRig(wPt(sp, hip.x - 3.5, hip.y + 1.4, -.6, v));   // tenue devant le corps, un peu à droite (poignée hors du torse)
+    const jolt = !!S.catchD;   // outil projeté sur le boulon cassé : il recule droit vers le thorax, reste sur son boulon même en coupe
     if (S.tool) {   // sur le boulon a, dégagée et portée vers le boulon b (w), approchée dans l'axe (on)
-      const t = S.tool, list = t.set === 'jc' ? jcBolts : t.set === 'cv' ? cvBolts : pBolts;
-      const A = list[t.a].userData.from, B = list[t.b].userData.from, w = ease(t.w);
-      wrP2.lerpVectors(A, B, w); wrP2.y += -0.02 + .9 * Math.sin(Math.PI * w) + 1.6 * (1 - ease(t.on));
-      wrQ2.identity(); spin = (w < .5 ? list[t.a] : list[t.b]).rotation.y;
-      ring = t.set === 'pb' && S.active >= 0;
-    } else if (S.active >= 0) {   // corps immobile (léger tremblement quand le boulon tourne), la douille tourne
+      const t = S.tool, list = t.set === 'jc' ? jcBolts : t.set === 'cv' ? cvBolts : pBolts, w = ease(t.w);
+      // en coupe, boulon de la moitié retirée : la clé n'y travaille pas dans le vide, elle attend devant le corps
+      const hA = !jolt && holeHidden(list[t.a]), hB = !jolt && holeHidden(list[t.b]);
+      const A = hA ? idle(wrP3) : list[t.a].userData.from, B = hB ? idle(wrP4) : list[t.b].userData.from;
+      out = jolt ? 0 : Math.max(1 - ease(t.on), lerp(hA ? 1 : 0, hB ? 1 : 0, w));
+      wrP2.lerpVectors(A, B, w); wrP2.y += -0.02 + .9 * Math.sin(Math.PI * w) * (hA || hB ? 0 : 1) + (jolt ? 1.6 : 1.1) * (1 - ease(t.on));
+      const c = w < .5 ? t.a : t.b; spin = (w < .5 ? hA : hB) ? 0 : list[c].rotation.y;
+      ring = t.set === 'pb' && S.active >= 0 && (jolt || !holeHidden(pBolts[S.active]));
+    } else if (S.active >= 0 && (jolt || !holeHidden(pBolts[S.active]))) {   // corps immobile (léger tremblement quand le boulon tourne), la douille tourne
       const o = pBolts[S.active], B = BOLTS[S.active];
       const turning = Math.abs(o.rotation.y - (wrench.userData.lastRot ?? o.rotation.y)) > 1e-4;
       wrench.userData.lastRot = o.rotation.y;
       const jit = turning && !reduceMotion ? .012 : 0, tt = performance.now();
       wrP2.set(B.x + jit * Math.sin(tt * .9), o.position.y - 0.02, B.z + jit * Math.cos(tt * 1.3));
-      wrQ2.identity(); spin = o.rotation.y; ring = true;
-    } else toRig(wPt(sp, 5.3 - 3.1, AXIS_Y - .6, -.5, wrP2));   // tenue devant le corps, pointée vers le mandrin
+      spin = o.rotation.y; ring = true; out = 0;
+    } else idle();
+    wrQ2.setFromAxisAngle(ZAX, sp.yaw + Math.PI / 4 * out);
     const k = R.k = wrench.userData.k = ease(seg(R.wd, .25, 1));
-    wrench.position.lerpVectors(wrP, wrP2, k); wrench.position.z += .5 * Math.sin(Math.PI * k);
-    wrench.quaternion.slerpQuaternions(wrQ, wrQ2, k);
+    // sortie et rangement hors du corps : la clé passe à droite de la hanche, douille en bas, et ne se couche qu'une fois devant le corps
+    toRig(wPt(sp, hip.x - 3.1, hip.y - 1.5, -3.0, wrM));
+    wrench.position.copy(wrP).multiplyScalar((1 - k) * (1 - k)).addScaledVector(wrM, 2 * k * (1 - k)).addScaledVector(wrP2, k * k);
+    wrench.quaternion.slerpQuaternions(wrQ, wrQ2, ease(seg(k, .3, .85)));
     toolSpin.rotation.y = k > .5 ? spin : 0;
     wrench.visible = R.wd > 0 || $('optWorker').checked;   // à la ceinture : cachée avec le travailleur
     activeRing.visible = ring && k > .9;
@@ -3570,7 +3578,11 @@ function animateWorker(S, fl) {
     else if (bA) { Rh = bA.clone().add(wkV.set(.05, -.1, -.5)); palm[0] = .7; }
     if (bA) { Lh = bA.clone().add(wkV.set(.05, -.1, .5)); palm[1] = .7; }
     else if (WR.k > 0) { Lh = rest[1].lerp(toL(WR.support.clone()), ease(seg(WR.wd, .55, 1))); palm[1] = 1; }
-    if (HOLD.item && !fl) { Lh = Lh.clone().lerp(toL(HOLD.item.clone()), HOLD.h); palm[1] = Math.max(palm[1], HOLD.h); }
+    if (HOLD.item && !fl) {
+      const L0 = Lh; Lh = Lh.clone().lerp(toL(HOLD.item.clone()), HOLD.h); palm[1] = Math.max(palm[1], HOLD.h);
+      // les pièces déjà en main suivent la main gauche qui va en tirer une autre (sinon elles flottent devant le corps)
+      if (HOLD.pull && HOLD.pieces.length) { dirToRig(worker.localToWorld(wkV.copy(Lh)).sub(worker.localToWorld(cpW.copy(L0))), wkV); for (const o of HOLD.pieces) o.position.add(wkV); }
+    }
     hands = [Rh, Lh];
   }
   bursts.forEach(b => { b.visible = false; });
@@ -3650,9 +3662,11 @@ function step6Grp(S) {
 // repère d'un boulon de la moitié retirée par la coupe : masqué (son boulon n'est plus dessiné)
 const cutHalfV = new THREE.Vector3();
 const inCutHalf = L => cutOn && explodeE === 0 && hexE === 0 && L.parent.localToWorld(cutHalfV.copy(L.position)).z > .05;
+// boulon dont le trou est dans la moitié retirée (d'après sa place dans le mandrin, même tiré) : la clé ne peut pas y travailler
+const holeHidden = o => cutOn && explodeE === 0 && hexE === 0 && o.parent.localToWorld(cutHalfV.copy(o.userData.from)).z > .05;
 function applyScene(S) {
   rig.updateMatrixWorld(true);
-  HOLD.bundle = false; HOLD.item = null; HOLD.h = 0;
+  HOLD.bundle = false; HOLD.item = null; HOLD.h = 0; HOLD.pull = false; HOLD.pieces.length = 0;
   const vis = 1 - ease(Math.max(explodeE, hexE));   // repères du mécanisme éteints en vue éclatée
   hydVis = S.hyd * vis;
   const hOff = -u(STROKE) * hydVis;                 // < 0 : bloc mobile reculé vers la tête
