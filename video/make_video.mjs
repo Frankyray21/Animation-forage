@@ -167,7 +167,7 @@ if (SCEN === 'A') {
   bands.fin = { h: H, html: FIN('À retenir · PRO-OP-DD-005', [LINE('Ne jamais retirer les boulons du cône au complet sous charge', '#ff5d52'), LINE("Remettre les 3 boulons longs sans bushing (étape 6) avant l'étape 7", '#57c486')]) };
 } else {
   bands.titre = { h: H, html: CARD('Rencontre sécurité · Reconstitution', "Accident au démontage du cône d'un mandrin", 'Boulons du cône retirés un par un, dernier boulon desserré à l’impact drill', '#ff5d52') };
-  bands.fin = { h: H, html: FIN('Ce qu’il fallait faire · PRO-OP-DD-005', [LINE('Étape 6 : remettre les 3 boulons longs sans bushing', '#57c486'), LINE('Étape 7 : dévisser les boulons du cône 1 tour à la fois, ordre 1 à 6', '#57c486'), LINE('Jamais un boulon retiré au complet sous charge', '#ff5d52')]) };
+  bands.fin = { h: H, html: FIN('Ce qu’il fallait faire · PRO-OP-DD-005', [LINE('Étape 6 : Remettre les 3 boulons longs (bolts) sans bushing', '#57c486'), LINE('Étape 7 : 6 boulons ½ × 6 ½ à dévisser 1 tour à la fois, ordre 1 → 6', '#57c486'), LINE('Jamais un boulon retiré au complet sous charge', '#ff5d52')]) };
 }
 const png = name => path.join(WORK, name + '.png');
 const layerSize = {};
