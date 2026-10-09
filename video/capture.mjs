@@ -39,6 +39,8 @@ html = sub(html, "if (quality === 'high' && composer) composer.render(); else re
 html = sub(html, '<script type="importmap">', '<script>{ const r = performance.now.bind(performance); performance.now = () => window.__vt != null ? window.__vt : r(); }</script>\n<script type="importmap">');
 // repères 3D sans le × de fermeture (inutile dans la vidéo)
 html = sub(html, "closable = true } = {}) {", "closable = true } = {}) {\n  closable = false;");
+// desserrage en étoile : ordre des boulons et nombre de tours, pour le compteur « tour n · boulon k » du montage
+html = sub(html, 'function starLoosen(S, p) {', 'window.__star = () => ({ order: ORDER, R: rounds() });\nfunction starLoosen(S, p) {');
 // gros plans des pièces : étiquettes 3D masquées
 html = sub(html, 'const labelOpacity = (s, a) => { if (!s) return;', 'const labelOpacity = (s, a) => { if (!s) return; if (window.__noLabels) a = 0;');
 // mise en page de capture : la 3D seule (le bandeau et la consigne sont ajoutés au montage), sans encadré ni puces
@@ -98,15 +100,18 @@ await page.evaluate(async () => {
 });
 
 // --- plan : chaque étape à 1×, plus une image exacte de fin d'étape (figée ensuite au montage) ---
-const info = await page.evaluate(() => { const c = window.__clam; return { steps: c.steps().map(s => ({ n: s.n, title: s.title, dur: s.dur })), starts: c.starts(), total: c.total(), scen: document.getElementById('scenChipText').textContent }; });
+const info = await page.evaluate(() => { const c = window.__clam; return { steps: c.steps().map(s => ({ n: s.n, title: s.title, dur: s.dur, act: s.act || '' })), starts: c.starts(), total: c.total(), scen: document.getElementById('scenChipText').textContent }; });
+// --slow 60.8-64.5:2,… : plages de temps au ralenti (f fois plus d'images, donc f fois plus lent à la lecture)
+const SLOW = arg('slow', '').split(',').filter(Boolean).map(z => { const [r, f] = z.split(':'), [a, b] = r.split('-').map(Number); return { a, b, f: +f || 2 }; });
+const rate = t => (SLOW.find(z => t >= z.a && t < z.b) || { f: 1 }).f;
 const plan = [];
 info.steps.forEach((s, i) => {
   const t0 = info.starts[i], t1 = i + 1 < info.steps.length ? info.starts[i + 1] : info.total;
-  for (let j = 0; t0 + j / FPS < t1 - 0.5 / FPS; j++) plan.push({ k: plan.length, t: t0 + j / FPS, step: i });
+  for (let t = t0; t < t1 - 0.5 / FPS; t += 1 / (FPS * rate(t))) plan.push({ k: plan.length, t, step: i, ...(rate(t) > 1 ? { slow: rate(t) } : {}) });
   plan.push({ k: plan.length, t: t1 - 1e-3, step: i, end: true });
 });
 fs.mkdirSync(OUT, { recursive: true });
-fs.writeFileSync(path.join(OUT, 'plan.json'), JSON.stringify({ fps: FPS, w: W, h: H, band: BAND, ss: SS, ...info, frames: plan }, null, 1));
+fs.writeFileSync(path.join(OUT, 'plan.json'), JSON.stringify({ fps: FPS, w: W, h: H, band: BAND, ss: SS, scenario: SCEN, slow: SLOW, ...info, frames: plan }, null, 1));
 console.log(`scénario ${info.scen} : ${info.steps.length} étapes, ${info.total.toFixed(2)} s, ${plan.length} images`);
 if (INFO) { console.log(info.steps.map((s, i) => `${s.n} ${s.title} (${info.starts[i].toFixed(2)} s, ${s.dur.toFixed(2)} s)`).join('\n')); await browser.close(); server.close(); process.exit(0); }
 
@@ -143,7 +148,12 @@ if (process.argv.includes('--scan')) {   // relevé sans rendu : plan, consigne 
   const rows = [];
   for (let k = 0; k < plan.length; k++) {
     await step(plan[k], false);
-    const m = await page.evaluate(() => { const c = document.getElementById('procCard'), st = window.__clam.cutState(); return { cam: st.cam, cut: st.cutOn, cons: c.hidden ? '' : (c.dataset.html || '') }; });
+    const m = await page.evaluate(() => {
+      const c = document.getElementById('procCard'), st = window.__clam.cutState(), S = window.__clam.state(), z = window.__star ? window.__star() : null;
+      // desserrage en étoile en cours : boulon actif (numéro 1–6) et tour en cours
+      const count = z && S.active >= 0 && S.pb && S.pb[S.active] ? { num: z.order.indexOf(S.active) + 1, pass: Math.min(z.R, Math.max(1, Math.floor(S.pb[S.active].turns - 1e-3) + 1)), R: z.R } : null;
+      return { cam: st.cam, cut: st.cutOn, cons: c.hidden ? '' : (c.dataset.html || ''), count };
+    });
     const s = info.steps[plan[k].step];
     rows.push({ k, step: plan[k].step, n: s.n, title: s.title, end: !!plan[k].end, ...m, keep: keepOf(m.cam, s.n) });
     if (k % 240 === 0) console.log(`relevé ${k}/${plan.length}`);
@@ -195,9 +205,15 @@ if (process.argv.includes('--inserts')) {   // pièce retirée : gros plan tourn
 }
 const t0 = Date.now();
 const SKIP = SKIP0;
-const scanF = path.join(OUT, 'scan.json'), KEEP = fs.existsSync(scanF) ? JSON.parse(fs.readFileSync(scanF, 'utf8')).map(r => r.keep) : null;   // sans relevé : toutes les images
+// --inset 7 --keepfrom DIR/scan.json : fenêtre « ressorts en coupe » (caméra hyd, coupe forcée) pour les images gardées de ces étapes,
+// sauf quand le plan principal montre déjà la coupe → in_<k>.jpg ; à lancer avec une petite vue (--w 640 --h 400 --band 0 --ss 1)
+const INSET = arg('inset', '') ? arg('inset', '').split(',') : null;
+const scanF = INSET ? path.resolve(arg('keepfrom', '')) : path.join(OUT, 'scan.json');
+const ROWS = fs.existsSync(scanF) ? JSON.parse(fs.readFileSync(scanF, 'utf8')) : null;
+const KEEP = !ROWS ? null : INSET ? ROWS.map(r => r.keep && INSET.includes(r.n) && r.cam !== 'hyd' && !r.cut) : ROWS.map(r => r.keep);   // sans relevé : toutes les images
+if (INSET) await page.evaluate(() => { const c = window.__clam, h = c.CAMS.hyd; window.__camOverride = { p: h.p, t: h.t }; c.setCutAuto(false); c.setCutUI(true); document.querySelectorAll('.note').forEach(n => { n.style.visibility = 'hidden'; }); });
 for (let k = FROM; k < TO; k++) {
-  const f = path.join(OUT, `f_${String(k).padStart(5, '0')}.jpg`);
+  const f = path.join(OUT, `${INSET ? 'in' : 'f'}_${String(k).padStart(5, '0')}.jpg`);
   if ((KEEP && !KEEP[k]) || (SKIP && fs.existsSync(f) && fs.statSync(f).size > 10000)) { await step(plan[k], false); continue; }   // plan coupé ou image déjà faite : rejouée sans rendu (continuité de la caméra)
   await step(plan[k], true);
   await page.screenshot({ path: f, type: 'jpeg', quality: 93, clip: view });
