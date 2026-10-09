@@ -3,3 +3,5 @@ blender/lm_work/
 node_modules/
 package.json
 package-lock.json
+# copies de travail temporaires des agents (git worktree)
+.claude/worktrees/
