@@ -2858,8 +2858,9 @@ const TRIP = {
   plate: { P: mkPath([[5.3, 0], [4.6, 2.4], [3.7, 4.3]]), end: { x: 3.7, z: 4.3, yaw: 0 } },
 };
 // q : 0 → 1 sur le trajet (back : retour au banc) ; vitesse constante, départ et arrêt doux ;
-// secs : durée du trajet (s) → les demi-tours du départ et de l'arrivée sont amortis sur TURN_S (au plus 45 % du trajet)
-const TURN_S = .65;
+// secs : durée du trajet (s) → les demi-tours du départ et de l'arrivée sont amortis sur TURN_S (au plus 65 % du trajet :
+// sur un trajet court, les deux demi-tours se chevauchent et le travailleur ne se tourne qu'en partie vers sa marche)
+const TURN_S = .9;
 function pathSpot(S, P, end, q, back = false, secs = 0) {
   if (q <= 0 || q >= 1) { S.spot = (q >= 1) !== back ? { ...end, dist: 0, mv: 0 } : null; return; }
   const a = .18, e = q < a ? q * q / (2 * a * (1 - a)) : q > 1 - a ? 1 - (1 - q) ** 2 / (2 * a * (1 - a)) : (q - a / 2) / (1 - a);
@@ -2867,7 +2868,7 @@ function pathSpot(S, P, end, q, back = false, secs = 0) {
   let yaw = lerp(P.yaws[i], P.yaws[i + 1], f - i) + (back ? Math.PI : 0);
   const y0 = back ? nearAng(end.yaw, P.yaws[64] + Math.PI) : nearAng(HOME.yaw, P.yaws[0]);
   const y1 = back ? nearAng(HOME.yaw, P.yaws[0] + Math.PI) : nearAng(end.yaw, P.yaws[64]);
-  const tb = secs > 0 ? Math.min(.45, TURN_S / secs) : .14;
+  const tb = secs > 0 ? Math.min(.65, TURN_S / secs) : .14;
   yaw = lerp(y0, yaw, ease(seg(q, 0, tb))); yaw = lerp(yaw, y1, ease(seg(q, 1 - tb, 1)));
   S.spot = { x: Pt.x, z: Pt.z, yaw, dist: e * P.L, mv: Math.min(1, 6 * Math.min(q, 1 - q)) };
 }
@@ -3073,11 +3074,12 @@ const SCEN = {
           starLoosen(S, seg(p, f(.8), pL));
           if (p >= pL) S.tool = tl;
           S.wd = p < pL ? seg(p, 0, f(.7)) : 1 - seg(p, at.end + f(.15), at.end + f(.85));
-          // chaque boulon : la clé le sort des filets ; la main gauche vient au boulon pendant la fin du dévissage (0,3 s), puis le tire pendant que la clé passe au suivant
+          // chaque boulon : la clé le sort des filets ; la main gauche vient au boulon pendant la fin du dévissage (0,35 s), le tire (0,2 s)
+          // puis le ramène à la poignée (0,3 s) pendant que la clé passe au suivant : mouvement continu, sans saut, d'un boulon à l'autre (0,85 s)
           if (p > pL) REV.forEach((i, o) => {
             const b = S.pb[i], t0 = at(o) + f(.45);
             b.turns = lerp(rounds(), ENG, ease(seg(p, at(o), t0)));
-            b.gone = p < t0 ? G_APP * seg(p, t0 - f(.3), t0) : G_APP + (G_HAND - G_APP) * seg(p, t0, at(o) + f(.8));
+            b.gone = p < t0 ? G_APP * seg(p, t0 - f(.35), t0) : G_APP + (G_PULL - G_APP) * seg(p, t0, t0 + f(.2)) + (G_HAND - G_PULL) * seg(p, t0 + f(.2), at(o) + f(.95));
           });
           if (p >= tr) trip(S, 'pb', p, tr, tr + f(2.2), tr + f(4), tr + f(6.2));
           if (p >= tr + f(2.2)) putDown(ORDER.map(i => [S.pb[i], 'gone']), p, tr + f(2.3), tr + f(3.8));
@@ -3715,7 +3717,8 @@ function applyScene(S) {
   // option « Numéros et consignes » : seulement le groupe de la prochaine action (J → C → 1-6 → L), comme l'encadré « procédure »
   const numsOn = $('optNums').checked && !D.flightS && explodeE === 0 && hexE === 0;
   const g6 = step6Grp(S);   // étape 6 à venir ou en cours : boulons longs (ou rien si l'étape 6 est omise)
-  const nextGrp = !numsOn ? '' : S.jc.lift < .01 ? 'J' : S.cv.lift < .01 ? 'C' : g6 !== null ? g6 : S.cv.lift > .99 && ORDER.some(i => S.pb[i].gone < .25) ? 'P' : S.cv.lift > .99 && BUSHED.some(i => S.pb[i].gone < .25) ? 'L' : '';
+  // (pas de repères du groupe suivant tant que le couvert ou le couvercle est porté : dessinés par-dessus, ils feraient paraître la pièce transparente)
+  const nextGrp = !numsOn ? '' : S.jc.lift < .01 ? 'J' : S.jc.lift < .99 ? '' : S.cv.lift < .01 ? 'C' : S.cv.lift < .99 ? '' : g6 !== null ? g6 : ORDER.some(i => S.pb[i].gone < .25) ? 'P' : BUSHED.some(i => S.pb[i].gone < .25) ? 'L' : '';
   // pièces portées : couvert et couvercle tirés, portés et posés par le travailleur, leurs boulons dans leurs trous puis rangés
   carryPose(jawCover, S, 'jc', JC_BASE, 1.8, TABLE.jc, S.jc.lift, Math.PI / 2);
   boltsWithPart(jcBolts, jawCover, JC_BASE, S.jc.bolts, S.jc.lift, S.jc.sort, TABLE.jcBolt, 6, S);
