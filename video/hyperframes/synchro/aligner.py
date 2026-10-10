@@ -2,16 +2,16 @@
 # Alignement d'un audio de dialogue déjà enregistré (ElevenLabs…) sur son script, pour caler une vidéo dessus (gen-a.mjs --synchro).
 #
 # Méthode (sans reconnaissance vocale ni réseau) :
-#   1. silences de l'audio (ffmpeg silencedetect, -40 dB, 0,2 s) → reprises de parole et fins de parole ;
+#   1. silences de l'audio (ffmpeg silencedetect, -40 dB, au moins 0,15 s) → reprises de parole et fins de parole ;
 #   2. synthèse de référence du même texte, phrase par phrase, avec une voix locale Piper (bornes connues exactement) ;
 #   3. MFCC des deux audios (numpy seul) puis DTW à bande (dtw.c, compilé ici) : chaque borne de la synthèse → instant de l'audio ;
 #   4. chaque début est recalé sur la reprise de parole la plus proche, chaque fin sur la fin de parole la plus proche ; l'écart
 #      est noté (au-delà de 0,3 s : « à vérifier »), avec la hauteur médiane de la voix de l'îlot (formateur grave, travailleur aigu).
-# Vidéo 1 (2026-10-10) : 28 répliques, 63 phrases ; 26 répliques recalées à ±0,15 s, 2 à vérifier (une question longue, coupée en
-# deux îlots, et la réponse qui la suit : voir README.md).
+# Vidéo 1 (2026-10-10) : 28 répliques, 63 phrases, toutes recalées à ±0,15 s. Avec 0,2 s au lieu de 0,15 s, la pause de 0,198 s
+# entre la question 4 et le « Non. » du formateur était manquée : la réponse était tirée sur la reprise suivante, 0,83 s trop tard.
 #
 # Usage : python3 aligner.py --audio voix.mp3 --script script.json --piper-modele fr-siwis-low.onnx --espeak-data DOSSIER
-#                            --sortie DOSSIER [--ffmpeg ffmpeg] [--bande 0.12]
+#                            --sortie DOSSIER [--ffmpeg ffmpeg] [--bande 0.12] [--pause 0.15]
 #   script.json : liste de répliques {passage, orateur, texte} dans l'ordre de l'audio.
 #   Python : numpy ; pour la synthèse : piper-tts 1.2.0 et piper-phonemize 1.1.0 (dans un venv), voix Piper fr « siwis » (CC BY 4.0,
 #   non fournie). --espeak-data : dossier espeak-ng-data de piper-phonemize, par un chemin court (espeak-ng refuse les chemins longs).
@@ -24,7 +24,7 @@ ap = argparse.ArgumentParser()
 ap.add_argument('--audio', required=True); ap.add_argument('--script', required=True)
 ap.add_argument('--piper-modele', required=True); ap.add_argument('--espeak-data', required=True)
 ap.add_argument('--sortie', required=True); ap.add_argument('--ffmpeg', default=os.environ.get('FFMPEG', 'ffmpeg'))
-ap.add_argument('--bande', type=float, default=.12)
+ap.add_argument('--bande', type=float, default=.12); ap.add_argument('--pause', type=float, default=.15)
 a = ap.parse_args()
 os.makedirs(a.sortie, exist_ok=True)
 S = lambda *p: os.path.join(a.sortie, *p)
@@ -37,7 +37,7 @@ def ffmpeg(*args, capture=False):
 
 # 1) audio réel : PCM 16 kHz mono, silences
 ffmpeg('-y', '-loglevel', 'error', '-i', a.audio, '-ac', '1', '-ar', str(SR), '-f', 's16le', S('reel.raw'))
-log = ffmpeg('-i', a.audio, '-af', 'silencedetect=n=-40dB:d=0.2', '-f', 'null', '-')
+log = ffmpeg('-i', a.audio, '-af', f'silencedetect=n=-40dB:d={a.pause}', '-f', 'null', '-')
 sil, deb = [], None
 for l in log.splitlines():
     m = re.search(r'silence_start: ([0-9.]+)', l)
