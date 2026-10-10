@@ -26,8 +26,14 @@
  {
   "passage": "D_00_c",
   "orateur": 1,
-  "texte": "Les étapes un à cinq sont faites, comme dans la procédure. Regardez la coupe : les dix-huit ressorts sont encore comprimés.",
+  "texte": "Les étapes un à cinq sont faites, comme dans la procédure : les manettes sont fermées, pis le couvercle est enlevé.",
   "mots": 21
+ },
+ {
+  "passage": "D_00_p",
+  "orateur": 1,
+  "texte": "Regardez la coupe : les dix-huit ressorts sont encore comprimés.",
+  "mots": 10
  },
  {
   "passage": "D_01_c",
@@ -68,8 +74,8 @@
  {
   "passage": "D_05_c",
   "orateur": 1,
-  "texte": "Le dernier boulon veut pas se défaire. Il prend l'impact drill pour le desserrer.",
-  "mots": 14
+  "texte": "Le dernier boulon veut pas se défaire. Il insiste avec l'impact drill pour le desserrer.",
+  "mots": 15
  },
  {
   "passage": "D_06_c",
@@ -92,8 +98,8 @@
  {
   "passage": "D_fin",
   "orateur": 1,
-  "texte": "Ce qu'il fallait faire : étape six, les trois boulons longs sans bushing. Étape sept, les six boulons un tour à la fois, dans l'ordre de un à six. Pis jamais un boulon retiré au complet sous charge.",
-  "mots": 38
+  "texte": "Ce qu'il fallait faire : étape six, les trois boulons longs sans bushing, comme il l'a fait. Étape sept, les six boulons un tour à la fois, dans l'ordre de un à six. Pis jamais un boulon retiré au complet sous charge.",
+  "mots": 42
  },
  {
   "passage": "D_questions",
@@ -122,14 +128,14 @@
  {
   "passage": "D_questions",
   "orateur": 2,
-  "texte": "Si un boulon veut pas se défaire, je peux-tu sortir l'impact drill ?",
-  "mots": 13
+  "texte": "Si un boulon veut pas se défaire, je peux-tu forcer avec l'impact drill ?",
+  "mots": 14
  },
  {
   "passage": "D_questions",
   "orateur": 1,
-  "texte": "Pas sous charge. On arrête, pis on en parle au superviseur avant de continuer.",
-  "mots": 14
+  "texte": "Non. On force pas à l'impact drill sous charge. On arrête, pis on en parle au superviseur avant de continuer.",
+  "mots": 20
  },
  {
   "passage": "D_questions",
@@ -140,8 +146,8 @@
  {
   "passage": "D_questions",
   "orateur": 1,
-  "texte": "Tu le dis tout de suite au superviseur, pis tu vas voir le secouriste. Une main enflée, ça se déclare.",
-  "mots": 20
+  "texte": "Tu le dis tout de suite au superviseur, pis tu vas voir le secouriste. Même une petite blessure, ça se déclare.",
+  "mots": 21
  },
  {
   "passage": "D_questions",
