@@ -1,0 +1,34 @@
+<!doctype html>
+<!-- Généré par gen-a.mjs --synchro à partir de templates/carton-fin-synchro.html : carton « À retenir » plein cadre, calé sur l'audio.
+     Même fond, même titre et mêmes lignes que carton-fin.html (make_video.mjs:161-164) ; chaque ligne apparaît (0,3 s) quand le
+     formateur la dit ; entrée : fondu enchaîné de 0,5 s (opacités mesurées sur le rejeu ffmpeg) ; pas de fermeture (les questions suivent).
+     DECALAGE : début de la sous-composition dans le segment (essai court commençant dans le segment : délais négatifs). -->
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <title>À retenir</title>
+  </head>
+  <body>
+    <template>
+      <style>
+{{FONTS_CSS}}
+        #root { position: absolute; left: 0; top: 0; width: {{W}}px; height: {{H}}px; overflow: hidden;
+                font-family: "IBM Plex Sans", sans-serif; color: #fff; }
+        .entree { position: absolute; left: 0; top: 0; width: {{W}}px; height: {{H}}px;
+                  animation-name: fin-entree; animation-duration: {{ENTREE_DUREE}}s; animation-delay: {{DECALAGE}}s; animation-timing-function: linear;
+                  animation-iteration-count: 1; animation-fill-mode: both; }
+        {{ENTREE_CLES}}
+        .ligne { animation-name: ligne-apparait; animation-duration: .3s; animation-timing-function: ease-out;
+                 animation-iteration-count: 1; animation-fill-mode: both; }
+        @keyframes ligne-apparait { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+      </style>
+      <div id="root" data-composition-id="carton-fin" data-width="{{W}}" data-height="{{H}}" data-no-timeline>
+        <div class="entree">
+          <div style="position:absolute;inset:0;background:#111518"></div>
+          <div style="position:absolute;left:96px;right:96px;top:50%;transform:translateY(-50%)">
+            <div style="font-size:18px;letter-spacing:.12em;text-transform:uppercase;color:#f2c230;font-weight:600;margin-bottom:26px">{{KICKER}}</div>{{LIGNES}}</div>
+        </div>
+      </div>
+    </template>
+  </body>
+</html>

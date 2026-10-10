@@ -20,7 +20,17 @@
 //   --fenetre DÉBUT-FIN   essai court : images DÉBUT (incluse) à FIN (exclue) de la vidéo complète, chronologie inchangée (tout est
 //                         calculé sur la vidéo entière puis coupé) ; ne peut pas commencer dans le carton titre (sauf 0) ni dans le
 //                         carton de fin ;
-//   --chronologie-seule   n'écrit que rapport.json (aucun média, aucun HTML) : pour comparer-chronologie.py.
+//   --chronologie-seule   n'écrit que rapport.json (aucun média, aucun HTML) : pour comparer-chronologie.py ;
+//   --synchro FICHIER     vidéo calée sur un audio continu déjà enregistré (dialogue ElevenLabs) : FICHIER = synchro.json (instants
+//                         de l'audio : intro, début de chaque étape, « Pourquoi », lignes « À retenir », questions). Avec --muet
+//                         (l'audio est ajouté après l'encodage). Écarts voulus avec make_video, propres à ce mode :
+//                           - ordre : carton titre, rendus 03 (« 18 ressorts », dit dans l'intro) et 04 (« tant que le cône est
+//                             boulonné »), partie 1, rendu 02, partie 2, partie 3, « À retenir », « Questions de l'équipe » ;
+//                           - chaque étape commence SYN_AVANCE s avant « Étape N » (fondu enchaîné de segment : fini à la voix) ;
+//                             étape plus courte que sa voix : fin figée prolongée ; plus longue : fins figées raccourcies, puis
+//                             images mobiles sautées à intervalles réguliers (jamais les images au ralenti), repère « Accéléré × N » ;
+//                           - « Pourquoi » pendant la phrase qui l'explique ; lignes de « À retenir » montrées quand elles sont dites ;
+//                             carton « Questions de l'équipe » (question, puis réponse quand le formateur répond) ; fondu final 0,5 s.
 import fs from 'node:fs';
 import path from 'node:path';
 import { spawnSync } from 'node:child_process';
@@ -35,6 +45,10 @@ export async function genererA(C) {
   const XF_F = Math.round(XF * FPS);
   const CHRONO = has('chronologie-seule');
   const readJ = f => JSON.parse(fs.readFileSync(f, 'utf8'));
+  const SYN_F = arg('synchro', null) ? path.resolve(arg('synchro')) : null;
+  const SYN = SYN_F ? readJ(SYN_F) : null;
+  if (SYN && VOICE.length) throw new Error('--synchro : ajouter --muet (la voix est l’audio de synchro.json, ajouté après l’encodage)');
+  const SYN_AVANCE = .25, FONDU_FIN = SYN ? .5 : .8;   // avance de l'image sur « Étape N » (coupe) ; fondu de fermeture (make_video : 0,8 s)
   const T = f => f / FPS, S = x => String(x), ms = x => String(Math.round(x * 1000) / 1000);
   const p5 = k => String(k).padStart(5, '0'), p2 = j => String(j).padStart(2, '0');
   const { ffmpeg, RGB, sig, sigFile, upToDate, saveSig, encodeSeq, still } = outilsFfmpeg({ FFMPEG, THREADS, GOP, FORCE, OUT, FPS });
@@ -60,6 +74,7 @@ export async function genererA(C) {
   bandes.r02 = { i: stepIdx('4'), still: true, title: 'Face avant : couvert des mâchoires (jaw cover) et porte-capuchon (cap holder)' };
   bandes.r03 = { i: stepIdx('6'), still: true, title: 'Coupe : 18 ressorts comprimés derrière le cône (bowl)' };
   bandes.r04 = { i: stepIdx('6'), still: true, title: 'Couvercle retiré : 9 boulons du cône, dont 3 longs de retenue' };
+  if (SYN) { bandes.r03.i = -1; bandes.r04.i = -1; }   // --synchro : rendus 03 et 04 dans l'intro (barre d'étapes vide)
   const whyTxt = i => { const nr = narrOf(i); return nr && nr.pourquoi_ecran ? nr.pourquoi_ecran : null; };
   // compteurs (make_video.mjs:140-146) : une clé par tour et boulon des lignes de scan.json des étapes de CONF.inset
   const compteurs = new Map();
@@ -108,6 +123,78 @@ export async function genererA(C) {
   const PARTS = [[0, 2], [3, 4], [5, 8]];
   if (steps.length !== 9) throw new Error(`plan.json : ${steps.length} étapes (le découpage en parties de make_video.mjs:210 en suppose 9)`);
   const stepMarks = [];
+  // --synchro : images visées (première image de chaque segment, de chaque étape) d'après les instants de l'audio
+  const f24 = t => Math.round(t * FPS);
+  let CIB = null;
+  if (SYN) {
+    const E = SYN.etapes, c = n => { if (!E[n] || typeof E[n].c !== 'number') throw new Error(`${SYN_F} : étape ${n} sans début`); return E[n].c; };
+    const seg = { titre: 0, r03: f24(SYN.intro.r03 - XF), r04: f24(SYN.intro.r04 - XF), 'partie 1': f24(c('1') - XF),
+      'partie 2': f24(c('4') - XF), 'partie 3': f24(c('6') - XF), fin: f24(SYN.fin.debut - XF), questions: f24(SYN.questions[0].q - XF) };
+    seg.r02 = seg['partie 2'] - Math.round((INS - XF) * FPS);   // rendu 02 de INS secondes, fini quand « Étape quatre » commence
+    const total = Math.ceil(SYN.duree_audio * FPS - 1e-9);         // la vidéo couvre tout l'audio
+    const suivant = { 0: 'r02', 1: 'partie 3', 2: 'fin' };
+    const etape = PARTS.map(([a, b], p) => {   // début de chaque étape (image absolue) et fin de la partie (fondu suivant compris)
+      const S0 = seg[`partie ${p + 1}`], fin = seg[suivant[p]] + XF_F, A = [];
+      for (let i = a; i <= b; i++) A.push(i === a ? S0 : f24(c(steps[i].n) - SYN_AVANCE));
+      return { S0, fin, A, D: A.map((x, j) => (j + 1 < A.length ? A[j + 1] : fin) - x) };
+    });
+    const ordre = ['titre', 'r03', 'r04', 'partie 1', 'r02', 'partie 2', 'partie 3', 'fin', 'questions'];
+    ordre.forEach((n, j) => { if (j && !(seg[n] > seg[ordre[j - 1]] + XF_F)) throw new Error(`--synchro : segment ${n} (image ${seg[n]}) trop près du précédent`); });
+    if (!(total > seg.questions + 5 * FPS)) throw new Error('--synchro : questions trop courtes');
+    etape.forEach((e, p) => e.D.forEach((d, j) => { if (d < 2 * FPS) throw new Error(`--synchro : étape ${steps[PARTS[p][0] + j].n} : ${d} images seulement`); }));
+    CIB = { seg, total, etape };
+  }
+  // --synchro : met l'étape à D images exactement (voir l'en-tête) ; renvoie le bilan
+  const HOLD_MIN = 2, HOLD_MIN_FIN = 6, MIN_GP = 24, MIN_FONDU = XFN + 4, MIN_PLAN = 6;
+  const auRalenti = x => x.type === 'plan' && !!(plan.frames[x.k] && plan.frames[x.k].slow);
+  const etiquette = r => `Accéléré × ${String(Math.round(r * 2) / 2).replace('.', ',')}`;
+  function recaler(cl, D) {
+    const tot = () => cl.reduce((s, c) => s + c.frames.length + c.hold, 0), last = cl[cl.length - 1];
+    const bilan = { images_source: tot(), images: D, prolongation: 0, figees_retirees: 0, sautees: 0, facteur: 1 };
+    let delta = D - tot();
+    if (delta >= 0) { last.hold += delta; last.prolonge = delta; bilan.prolongation = delta; return bilan; }
+    for (const c of cl) {   // 1) fins figées raccourcies (le plan d'avant le gros plan d'abord, la fin de l'étape ensuite)
+      const r = Math.min(Math.max(0, c.hold - (c === last ? HOLD_MIN_FIN : HOLD_MIN)), -delta);
+      c.hold -= r; delta += r; bilan.figees_retirees += r; if (!delta) return bilan;
+    }
+    // 2) images mobiles sautées à intervalles réguliers, même facteur pour tous les plans de l'étape ; gardées telles quelles : les
+    //    images au ralenti et toute suite d'au plus COURT images mobiles (pas d'accéléré ni de repère « Accéléré » d'une demi-seconde)
+    const COURT = FPS;
+    const fixe = c => { const f = new Array(c.frames.length).fill(false); let j = 0;
+      while (j < c.frames.length) { if (auRalenti(c.frames[j])) { f[j++] = true; continue; }
+        let e = j; while (e < c.frames.length && !auRalenti(c.frames[e])) e++;
+        if (e - j <= COURT) for (let q = j; q < e; q++) f[q] = true;
+        j = e; }
+      return f; };
+    const besoin = D - cl.reduce((s, c) => s + c.hold, 0);
+    const info = cl.map(c => { const fx = fixe(c), lent = fx.filter(Boolean).length, vif = c.frames.length - lent;
+      const min = c.genre === 'gros-plan' ? MIN_GP : c.fade ? MIN_FONDU : MIN_PLAN;
+      return { fx, lent, vif, minVif: Math.min(vif, Math.max(1, min - lent)) }; });
+    const garde = r => info.map(x => x.lent + Math.min(x.vif, Math.max(x.minVif, Math.ceil(x.vif / r - 1e-9))));
+    const somme = r => garde(r).reduce((s, n) => s + n, 0);
+    if (somme(1e9) > besoin) throw new Error(`--synchro : étape ${steps[cl[0].i].n} : ${D} images visées, impossible (minimum ${somme(1e9) + D - besoin})`);
+    let lo = 1, hi = 64;   // plus petit facteur qui tient dans le besoin
+    for (let it = 0; it < 60; it++) { const m = (lo + hi) / 2; if (somme(m) <= besoin) hi = m; else lo = m; }
+    const n = garde(hi);
+    cl.forEach((c, q) => {
+      const x = info[q], nVif = n[q] - x.lent;
+      if (nVif === x.vif) return;
+      const vifs = c.frames.map((f, j) => x.fx[j] ? -1 : j).filter(j => j >= 0);
+      const pris = new Set(nVif === 1 ? [vifs[0]] : [...Array(nVif)].map((_, j) => vifs[Math.round(j * (x.vif - 1) / (nVif - 1))]));
+      const fac = x.vif / nVif;
+      if (fac >= 1.15) for (const j of pris) if (c.frames[j].type === 'plan') c.frames[j].acc = etiquette(fac);
+      c.frames = c.frames.filter((f, j) => x.fx[j] || pris.has(j));
+      if (c.frames.length !== n[q]) throw new Error('recaler : décompte');
+      c.acceleration = fac;
+      bilan.sautees += x.vif - nVif;
+    });
+    bilan.facteur = +(Math.max(...cl.map(c => c.acceleration || 1))).toFixed(3);
+    const reste = besoin - n.reduce((s, v) => s + v, 0);
+    last.hold += reste; bilan.prolongation = reste;
+    if (tot() !== D) throw new Error('recaler : durée');
+    return bilan;
+  }
+  const bilansSynchro = [];
   const parties = PARTS.map(([a, b], p) => {
     const clips = [];
     for (let i = a; i <= b; i++) {
@@ -123,7 +210,12 @@ export async function genererA(C) {
       if (after.length) clips.push({ frames: after, hold: HOLD_END, fade: gp.length > 0, i, genre: 'retour' });
     }
     for (const c of clips) c.prolonge = 0;
-    for (let i = a; i <= b; i++) {   // voix plus longue que l'image : fin de l'étape prolongée (make_video.mjs:231-237)
+    if (SYN) for (let i = a; i <= b; i++) {   // --synchro : chaque étape à la durée que lui laisse l'audio
+      const cl = clips.filter(c => c.i === i), D = CIB.etape[p].D[i - a];
+      bilansSynchro.push({ etape: steps[i].n, debut_image: CIB.etape[p].A[i - a], debut_s: +(CIB.etape[p].A[i - a] / FPS).toFixed(3),
+        voix_s: SYN.etapes[steps[i].n].c, ...recaler(cl, D) });
+    }
+    else for (let i = a; i <= b; i++) {   // voix plus longue que l'image : fin de l'étape prolongée (make_video.mjs:231-237)
       const cl = clips.filter(c => c.i === i); if (!cl.length) continue;
       const have = cl.reduce((s, c) => s + c.frames.length + c.hold, 0) / FPS;
       const vc = voiceOf(i, 'c'), vp = voiceOf(i, 'p');
@@ -147,6 +239,11 @@ export async function genererA(C) {
     for (let i = a; i <= b; i++) { const f0 = frames.findIndex(x => x.i === i), f1 = frames.length - 1 - [...frames].reverse().findIndex(x => x.i === i); if (f0 >= 0) stepMarks.push({ part: p, i, f0, f1 }); }
     return { p, a, b, clips, frames, N: frames.length };
   });
+  if (SYN) for (const P of parties) {   // contrôle : parties et débuts d'étape aux images visées
+    const e = CIB.etape[P.p];
+    if (P.N !== e.fin - e.S0) throw new Error(`--synchro : partie ${P.p + 1} : ${P.N} images, ${e.fin - e.S0} visées`);
+    stepMarks.filter(m => m.part === P.p).forEach(m => { if (e.S0 + m.f0 !== e.A[m.i - P.a]) throw new Error(`--synchro : étape ${steps[m.i].n} à l'image ${e.S0 + m.f0}, visée ${e.A[m.i - P.a]}`); });
+  }
 
   // description d'une image comme decorate (make_video.mjs:251-266) : source, bandeau, fenêtre, compteur, ralenti, « Pourquoi »
   function desc(x, n, p) {
@@ -156,8 +253,12 @@ export async function genererA(C) {
     if (r && CONF.inset.includes(r.n) && r.cam !== 'hyd' && !r.cut && insetSrc(x.k)) d.inset = x.k;
     if (r && r.count && compteurs.has(`${r.count.pass}_${r.count.num}`)) d.cnt = `${r.count.pass}_${r.count.num}`;
     if (pk && pk.slow && !x.hold) d.slow = true;
+    if (SYN) d.acc = x.acc && !x.hold ? x.acc : null;   // --synchro : repère « Accéléré × N »
     const m = stepMarks.find(s => s.part === p && s.i === x.i);
-    if (m && whyTxt(x.i)) {
+    if (SYN) {   // « Pourquoi » pendant la phrase qui l'explique (instants de l'audio)
+      const w = whyTxt(x.i) && SYN.etapes[steps[x.i].n].p, t = (CIB.etape[p].S0 + n) / FPS;
+      if (w && t >= w[0] - .15 && t <= w[1] + .6) d.why = x.i;
+    } else if (m && whyTxt(x.i)) {
       const vc = voiceOf(x.i, 'c'), vp = voiceOf(x.i, 'p'), nr = narrOf(x.i), t = (n - m.f0) / FPS;
       const s0 = vp ? PAD + (vc ? vc.dur + PAD : 0) : PAD + estDur(nr && nr.voix), s1 = s0 + (vp ? vp.dur + .8 : Math.max(4, nr.pourquoi_ecran.length / 14));
       if (t >= s0 && t <= s1) d.why = x.i;
@@ -197,8 +298,21 @@ export async function genererA(C) {
 
   // --- 2) segments (make_video.mjs:288-308) et montage rejoué ---
   const vIntro = VOICE.find(v => v.id === 'intro'), vFin = VOICE.find(v => v.id === 'fin');
-  const TITLE = Math.max(3.5, vIntro ? vIntro.dur + 1.2 : 0), END = Math.max(4, vFin ? vFin.dur + 1.4 : 0);
-  const SEGS = [
+  // --synchro : durée de chaque segment = écart entre les images visées + fondu (le dernier va jusqu'au bout de l'audio)
+  const durSyn = (a, b) => (CIB.seg[b] - CIB.seg[a]) / FPS + XF;
+  const TITLE = SYN ? durSyn('titre', 'r03') : Math.max(3.5, vIntro ? vIntro.dur + 1.2 : 0);
+  const END = SYN ? durSyn('fin', 'questions') : Math.max(4, vFin ? vFin.dur + 1.4 : 0);
+  const SEGS = SYN ? [
+    { nom: 'titre', type: 'titre', dur: TITLE },
+    { nom: 'r03', type: 'rendu', dur: durSyn('r03', 'r04'), image: '03_coupe.jpg' },
+    { nom: 'r04', type: 'rendu', dur: durSyn('r04', 'partie 1'), image: '04_couvercle_retire.jpg' },
+    { nom: 'partie 1', type: 'partie', p: 0 },
+    { nom: 'r02', type: 'rendu', dur: INS, image: '02_face_mandrin.jpg' },
+    { nom: 'partie 2', type: 'partie', p: 1 },
+    { nom: 'partie 3', type: 'partie', p: 2 },
+    { nom: 'fin', type: 'fin', dur: END },
+    { nom: 'questions', type: 'questions', dur: (CIB.total - CIB.seg.questions) / FPS },
+  ] : [
     { nom: 'titre', type: 'titre', dur: TITLE },
     { nom: 'partie 1', type: 'partie', p: 0 },
     { nom: 'r02', type: 'rendu', dur: INS, image: '02_face_mandrin.jpg' },
@@ -224,6 +338,10 @@ export async function genererA(C) {
   const TOTAL_F = REJEU.nb;
   SEGS.forEach((s, k) => { s.vis = k < K - 1 ? SEGS[k + 1].S + SEGS[k + 1].w.length - 1 - s.S : TOTAL_F - s.S; });
   for (const s of SEGS) if (s.type === 'partie' && s.vis !== s.N) throw new Error(`${s.nom} : ${s.N} images, ${s.vis} visibles d'après le rejeu`);
+  if (SYN) {   // le rejeu ffmpeg doit redonner exactement les images visées
+    for (const s of SEGS) if (s.S !== CIB.seg[s.nom]) throw new Error(`--synchro : ${s.nom} commence à l'image ${s.S} (rejeu), visée ${CIB.seg[s.nom]}`);
+    if (TOTAL_F !== CIB.total) throw new Error(`--synchro : ${TOTAL_F} images (rejeu), ${CIB.total} visées`);
+  }
   const E0 = SEGS[K - 1].S;
 
   function rejouer() {
@@ -250,9 +368,9 @@ export async function genererA(C) {
         } else if (s.type === 'partie') {
           const a = inp('-f', 'lavfi', '-i', `color=c=${c}:s=${RW}x${RH}:r=${FPS}`);
           ch.push(`[${a}:v]trim=end_frame=${s.N},${norm}[${l}]`);
-        } else {
+        } else {   // carton de fin (et --synchro : questions) ; fondu de fermeture sur le dernier segment seulement
           const a = inp('-loop', '1', '-t', String(s.dur), '-i', plein[c]);
-          ch.push(`[${a}:v]${norm},fade=t=out:st=${s.dur - 0.8}:d=0.8[${l}]`);
+          ch.push(`[${a}:v]${norm}${k === K - 1 ? `,fade=t=out:st=${s.dur - FONDU_FIN}:d=${FONDU_FIN}` : ''}[${l}]`);
         }
       });
       let cur = 's0', t = SEGS[0].dur;
@@ -331,7 +449,8 @@ export async function genererA(C) {
     fenetre: runs(c.desc, 0, c.total, d => d.inset != null ? 'f' : null).map(r => [r.a, r.b, c.desc.slice(r.a, r.b).map(d => d.inset)]),
     compteur: runs(c.desc, 0, c.total, d => d.cnt).map(r => [r.a, r.b, r.k]),
     ralenti: runs(c.desc, 0, c.total, d => d.slow ? 's' : null).map(r => [r.a, r.b]),
-    pourquoi: runs(c.desc, 0, c.total, d => d.why != null ? 'w' : null).map(r => [r.a, r.b]) });
+    pourquoi: runs(c.desc, 0, c.total, d => d.why != null ? 'w' : null).map(r => [r.a, r.b]),
+    ...(SYN ? { accelere: runs(c.desc, 0, c.total, d => d.acc).map(r => [r.a, r.b, r.k]), acceleration: c.acceleration || 1 } : {}) });
   const voixRapport = [];
   const rapport = () => ({
     scenario: SCEN, frames: FRAMES, narration: MANF && fs.existsSync(MANF) ? MANF : null, fps: FPS, taille: [W, H],
@@ -342,6 +461,8 @@ export async function genererA(C) {
     parties: parties.map(P => ({ p: P.p, nom: SEGS.find(s => s.p === P.p).nom, debut: SEGS.find(s => s.p === P.p).S, images: P.N,
       etapes: stepMarks.filter(m => m.part === P.p).map(m => ({ i: m.i, n: steps[m.i].n, f0: m.f0, f1: m.f1 })), plans: P.clips.map(planRapport) })),
     voix: voixRapport, notes,
+    ...(SYN ? { synchro: { fichier: SYN_F, audio: SYN.audio, duree_audio: SYN.duree_audio, avance_s: SYN_AVANCE, segments_vises: CIB.seg, images_visees: CIB.total,
+      etapes: bilansSynchro } } : {}),
   });
   if (CHRONO) {
     for (const a of audio) voixRapport.push({ id: a.v.id, debut_s: +a.at.toFixed(3), adelay_ms: Math.round(a.at * 1000), duree_s: a.v.dur });
@@ -412,7 +533,7 @@ export async function genererA(C) {
         KB_OY: String(KB_H / 2), KB_DUREE: S((s.n - 1) / FPS), KB_ZOOM: '1.06', BANDEAU: bandeau(s.nom).trimEnd() }));
       nBandes++;
       L.push(`${pad}<!-- rendu Blender ${s.image} (${s.nom}) : ${s.vis} images, entrée en fondu enchaîné sur ${s.w.length - 1} images (opacités mesurées) -->`);
-      L.push(`${pad}<div id="${id}" class="clip hote-plein" style="z-index: ${z}" data-composition-id="${id}" data-composition-src="compositions/${id}.html" ${tl(g0 - A0, g1 - g0)} data-track-index="${s.nom === 'r04' ? 3 : 2}" data-width="${W}" data-height="${H}" data-no-timeline></div>`);
+      L.push(`${pad}<div id="${id}" class="clip hote-plein" style="z-index: ${z}" data-composition-id="${id}" data-composition-src="compositions/${id}.html" ${tl(g0 - A0, g1 - g0)} data-track-index="${(SYN ? s.nom === 'r03' : s.nom === 'r04') ? 3 : 2}" data-width="${W}" data-height="${H}" data-no-timeline></div>`);
       rapportFen.rendus.push({ nom: s.nom, debut: g0 - A0, images: g1 - g0, decalage: d0 });
     } else if (s.type === 'partie') {
       const P = parties[s.p], cls = `p${s.p + 1}`;
@@ -428,6 +549,19 @@ export async function genererA(C) {
         L.push(`${pad}  <div id="${c.id}" class="clip hote-plein hote-plan" data-composition-id="${c.id}" data-composition-src="compositions/${c.id}.html" ${tl(q0 - A0, q1 - q0)} data-track-index="${piste++ % 2}" data-width="${W}" data-height="${H}" data-no-timeline></div>`);
       }
       L.push(`${pad}</div>`);
+    } else if (SYN && s.type === 'fin') {   // --synchro : « À retenir », chaque ligne montrée quand elle est dite
+      const d0 = g0 - s.S, t0 = s.S / FPS;
+      const ligne = (txt, color, t) => LINE(txt, color).replace('<div style="', `<div class="ligne" style="animation-delay:${S(+(t - .15 - t0 - T(d0)).toFixed(4))}s;`);
+      const [l1, l2, l3] = SYN.fin.lignes;
+      writeComp('carton-fin.html', fill(tpl('carton-fin-synchro.html'), { ...common(true), ENTREE_DUREE: dureeCle(s.w), ENTREE_CLES: cle('fin-entree', s.w),
+        DECALAGE: S(-T(d0)), KICKER: 'À retenir · PRO-OP-DD-005',
+        LIGNES: [ligne('Ne jamais retirer les boulons du cône au complet sous charge', '#ff5d52', l1),
+          ligne("Remettre les 3 boulons longs sans bushing (étape 6) avant l'étape 7", '#57c486', l2),
+          ligne("Un tour à la fois, dans l'ordre de 1 à 6", '#f2c230', l3)].join('') }));
+      L.push(`${pad}<!-- carton « À retenir » (--synchro) : ${s.vis} images, lignes montrées à ${SYN.fin.lignes.map(x => ms(x)).join(', ')} s (audio) -->`);
+      L.push(`${pad}<div id="carton-fin" class="clip hote-plein" style="z-index: ${z}" data-composition-id="carton-fin" data-composition-src="compositions/carton-fin.html" ${tl(g0 - A0, g1 - g0)} data-track-index="2" data-width="${W}" data-height="${H}" data-no-timeline></div>`);
+    } else if (s.type === 'questions') {   // --synchro : « Questions de l'équipe »
+      ecrireQuestions(s, g0, g1, z);
     } else {   // carton de fin (make_video.mjs:161-167, 299-300) ; carton-fin.html commun avec D
       writeComp('carton-fin.html', fill(tpl('carton-fin.html'), { ...common(true),
         ENTREE_DUREE: dureeCle(s.w), ENTREE_CLES: cle('fin-entree', s.w),
@@ -439,6 +573,52 @@ export async function genererA(C) {
     }
   });
   function LINE(txt, color) { return `<div style="font-family:'Barlow Condensed',sans-serif;font-size:46px;font-weight:600;line-height:1.12;text-wrap:balance;border-left:6px solid ${color};padding-left:22px;margin-bottom:24px">${nb(txt)}</div>`; }
+
+  // --synchro : « Questions de l'équipe » (une carte par question, réponse montrée quand le formateur répond). Fonds : images de
+  // l'animation 3D (v4-A) et rendus Blender du dépôt, ramenés à 1280 × 720 (couverture, centré).
+  function ecrireQuestions(s, g0, g1, z) {
+    const QR = [
+      { q: 'Pis si un boulon veut pas se défaire ?', r: "On ne force pas à l'impact sous charge. On arrête et on en parle au superviseur avant de continuer.", fond: fImg(1792) },
+      { q: 'Pendant que je dévisse, je me place où ?', r: "Hors de l'axe du mandrin. Jamais devant le cône : s'il part, c'est là qu'il s'en va.", fond: path.join(REPO, 'renders', '02_face_mandrin.jpg') },
+      { q: 'Pis si le cône reste coincé ?', r: 'On ne le frappe pas pour le décoincer, et on ne reste pas devant : les ressorts poussent encore, il peut être projeté.', fond: fImg(1847) },
+      { q: "Si les boulons longs sont durs à remettre, on peut-tu sauter l'étape 6 ?", r: "Non. Les 3 boulons longs retiennent le cône si quelque chose lâche. Sans eux, rien ne l'arrête.", fond: fImg(1241) },
+      { q: 'Pis si quelque chose me semble pas normal ?', r: 'On arrête et on en parle au superviseur. On regarde ça ensemble avant de continuer.', fond: path.join(REPO, 'renders', '01_ensemble.jpg') },
+    ];
+    if (SYN.questions.length !== QR.length) throw new Error(`${SYN_F} : ${SYN.questions.length} questions, ${QR.length} textes`);
+    const d0 = g0 - s.S, t0 = s.S / FPS, Dq = T(s.vis), FX = .3;
+    const pc = t => `${+(100 * Math.min(Dq, Math.max(0, t)) / Dq).toFixed(4)}%`;
+    const cles = (nom, pts) => `@keyframes ${nom} { ${pts.map(([t, v]) => `${pc(t)} { ${v} }`).join(' ')} }`;
+    // fenêtre de chaque carte (temps du segment) : de la question (− 0,35 s) à la question suivante (− 0,35 s), fondu de FX
+    const deb = SYN.questions.map((x, n) => n ? x.q - .35 - t0 : 0);
+    const fin = deb.map((x, n) => n + 1 < deb.length ? deb[n + 1] : Dq);
+    const K_ = [], FONDS = [], CARTES = [];
+    QR.forEach((x, n) => {
+      const a = deb[n], b = fin[n], dern = n === QR.length - 1;
+      // fond : fondu enchaîné, 0 → 1 sur [a, a + FX], 1 → 0 sur [b, b + FX], zoom 1 → 1,04 sur [a, b] (CSS interpole chaque propriété
+      // entre les images clés qui la nomment) ; carte (texte) : sans superposition, 1 → 0 sur [b − FX, b] puis la suivante 0 → 1 sur
+      // [a, a + FX] (a = b de la précédente). Première carte : 1 dès 0 ; dernière : 1 jusqu'au bout.
+      const fond = [[0, `opacity: ${n ? 0 : 1}; transform: scale(1);`], ...(n ? [[a, 'opacity: 0; transform: scale(1);'], [a + FX, 'opacity: 1;']] : []),
+        [b, 'opacity: 1; transform: scale(1.04);'], ...(dern ? [] : [[b + FX, 'opacity: 0;']]), [Dq, `opacity: ${dern ? 1 : 0}; transform: scale(1.04);`]];
+      const carte = [[0, `opacity: ${n ? 0 : 1};`], ...(n ? [[a, 'opacity: 0;'], [a + FX, 'opacity: 1;']] : []),
+        ...(dern ? [] : [[b - FX, 'opacity: 1;'], [b, 'opacity: 0;']]), [Dq, `opacity: ${dern ? 1 : 0};`]];
+      K_.push(cles(`fond-${n + 1}`, fond), cles(`carte-${n + 1}`, carte));
+      const rel = `assets/images/question-${n + 1}.png`;
+      fige(x.fond, rel, `scale=${W}:${H}:force_original_aspect_ratio=increase:flags=lanczos,crop=${W}:${H}`);
+      FONDS.push(`          <img id="fond-question-${n + 1}" class="fond anime clip" style="animation-name: fond-${n + 1}" src="../${rel}" data-start="0" data-duration="${S(Dq)}" data-track-index="${n}" alt="" />`);
+      const rep = +(SYN.questions[n].r - .15 - t0 - T(d0)).toFixed(4);
+      CARTES.push(`          <div class="carte anime" style="animation-name: carte-${n + 1}">
+            <div class="kicker">Questions de l'équipe · ${n + 1} / ${QR.length}</div>
+            <div class="qui" style="color:#f2c230">Question</div>
+            <div class="question">${nb(esc(`« ${x.q} »`))}</div>
+            <div class="reponse" style="animation-delay: ${S(rep)}s"><div class="qui" style="color:#57c486">Réponse</div><div class="t">${nb(esc(x.r))}</div></div>
+          </div>`);
+    });
+    writeComp('questions.html', fill(tpl('questions.html'), { ...common(true), ENTREE_DUREE: dureeCle(s.w), ENTREE_CLES: cle('questions-entree', s.w),
+      DECALAGE: S(-T(d0)), DUREE: S(Dq), FERM_DEBUT: S(T(REJEU.fermetureDebut - d0)), FERM_DUREE: dureeCle(REJEU.fermeture), FERM_CLES: cle('questions-fermeture', REJEU.fermeture),
+      CLES: K_.join('\n        '), FONDS: FONDS.join('\n'), CARTES: CARTES.join('\n') }));
+    L.push(`${pad}<!-- « Questions de l'équipe » (--synchro) : ${s.vis} images ; questions à ${SYN.questions.map(x => ms(x.q)).join(', ')} s, réponses à ${SYN.questions.map(x => ms(x.r)).join(', ')} s (audio) ; fermeture de l'image ${REJEU.fermetureDebut} à la dernière -->`);
+    L.push(`${pad}<div id="questions" class="clip hote-plein" style="z-index: ${z}" data-composition-id="questions" data-composition-src="compositions/questions.html" ${tl(g0 - A0, g1 - g0)} data-track-index="3" data-width="${W}" data-height="${H}" data-no-timeline></div>`);
+  }
 
   // un plan = une sous-composition ; [v0, v1) : images du plan dans la fenêtre (temps locaux décalés de v0)
   function ecrirePlan(P, c, v0, v1) {
@@ -474,6 +654,7 @@ export async function genererA(C) {
       E.push(voie(fill(tpl('compteur.html'), { ID: `compteur-${id}-${j}`, DEBUT: S(T(loc(r.a))), DUREE: S(T(r.b - r.a)),
         RONDS: [1, 2, 3, 4, 5, 6].map(x => `<i class="${x < cc.num ? 'done' : x === cc.num ? 'cur' : ''}">${x}</i>`).join(''), TOUR: String(cc.pass), TOURS: String(cc.R), BOULON: String(cc.num) }), 4, 30, j).trimEnd()); });
     runs(c.desc, v0, v1, d => d.slow ? 's' : null).forEach((r, j) => E.push(voie(fill(tpl('ralenti.html'), { ID: `ralenti-${id}-${j}`, DEBUT: S(T(loc(r.a))), DUREE: S(T(r.b - r.a)) }), 4, 50, j).trimEnd()));
+    if (SYN) runs(c.desc, v0, v1, d => d.acc).forEach((r, j) => E.push(voie(fill(tpl('accelere.html'), { ID: `accelere-${id}-${j}`, DEBUT: S(T(loc(r.a))), DUREE: S(T(r.b - r.a)), TEXTE: esc(r.k) }), 4, 55, j).trimEnd()));
     runs(c.desc, v0, v1, d => d.why != null ? 'w' : null).forEach((r, j) => {
       E.push(`${q}<!-- « Pourquoi » de l'étape ${esc(steps[c.i].n)} (make_video.mjs:259-264, pendant sa voix) -->`);
       E.push(voie(fill(tpl('pourquoi.html'), { ID: `pourquoi-${id}-${j}`, DEBUT: S(T(loc(r.a))), DUREE: S(T(r.b - r.a)), TEXTE: esc(nb(whyTxt(c.i))) }), 3, 60, j).trimEnd());
@@ -492,7 +673,7 @@ export async function genererA(C) {
   const tEnc = (Date.now() - t3d) / 1000;
   for (const d of ['assets/3d', 'assets/fenetre'])   // restes d'un appel précédent : retirés du dossier servi
     for (const f of fs.readdirSync(path.join(OUT, d))) if (!utilises.has(`${d}/${f}`)) { fs.rmSync(path.join(OUT, d, f)); fs.rmSync(sigFile(path.join(OUT, d, f)), { force: true }); }
-  for (const f of fs.readdirSync(path.join(OUT, 'assets/images'))) if (!['01_ensemble.jpg', ...SEGS.filter(s => s.image).map(s => s.image)].includes(f)) fs.rmSync(path.join(OUT, 'assets/images', f));
+  for (const f of fs.readdirSync(path.join(OUT, 'assets/images'))) if (!['01_ensemble.jpg', ...SEGS.filter(s => s.image).map(s => s.image)].includes(f) && !utilises.has(`assets/images/${f}`)) fs.rmSync(path.join(OUT, 'assets/images', f));
 
   // voix : WAV PCM dans le projet (voir gen.mjs, même raison), placées comme adelay ; fenêtre : début coupé (data-media-start)
   const TOT = T(DUREE_F), fen0 = T(A0);

@@ -1,0 +1,170 @@
+[
+ {
+  "passage": "A_intro",
+  "orateur": 1,
+  "texte": "À matin, on parle du démontage du cône d'un mandrin.",
+  "mots": 10
+ },
+ {
+  "passage": "A_intro",
+  "orateur": 2,
+  "texte": "Avec les dix-huit ressorts comprimés en arrière, hein ?",
+  "mots": 9
+ },
+ {
+  "passage": "A_intro",
+  "orateur": 1,
+  "texte": "Exactement. Tant que le cône est boulonné, c'est de l'énergie emmagasinée.",
+  "mots": 11
+ },
+ {
+  "passage": "A_intro",
+  "orateur": 2,
+  "texte": "Correct. On regarde ça étape par étape.",
+  "mots": 7
+ },
+ {
+  "passage": "A_00_c",
+  "orateur": 1,
+  "texte": "Étape un : les manettes Clam et Chuck en position fermée.",
+  "mots": 11
+ },
+ {
+  "passage": "A_00_p",
+  "orateur": 1,
+  "texte": "Regardez la coupe : l'hydraulique est coupé, mais les ressorts verts sont encore comprimés. Fermer les manettes ne libère pas leur énergie.",
+  "mots": 22
+ },
+ {
+  "passage": "A_01_c",
+  "orateur": 1,
+  "texte": "Étape deux : on vérifie que les mâchoires, les jaws, sont fermées.",
+  "mots": 12
+ },
+ {
+  "passage": "A_02_c",
+  "orateur": 1,
+  "texte": "Étape trois : on cadenasse la foreuse. Le cadenas empêche de repartir l'hydraulique, mais les ressorts, eux, poussent encore.",
+  "mots": 19
+ },
+ {
+  "passage": "A_03_c",
+  "orateur": 1,
+  "texte": "Étape quatre : les trois boulons de trois quarts du couvert des mâchoires, avec la clé d'un pouce et un huitième.",
+  "mots": 21
+ },
+ {
+  "passage": "A_04_c",
+  "orateur": 1,
+  "texte": "Étape cinq : les neuf boulons d'un demi-pouce du couvercle, avec la clé de trois quarts.",
+  "mots": 16
+ },
+ {
+  "passage": "A_05_c",
+  "orateur": 1,
+  "texte": "Étape six, c'est la clé de toute la job : on remet les trois boulons longs, les bolts, sans bushing.",
+  "mots": 20
+ },
+ {
+  "passage": "A_05_p",
+  "orateur": 1,
+  "texte": "Sans bushing, ils vissent un pouce et demi plus loin. Assez de filets en prise pour retenir le cône si jamais il part.",
+  "mots": 23
+ },
+ {
+  "passage": "A_06_c",
+  "orateur": 1,
+  "texte": "Étape sept : les six boulons d'un demi-pouce par six pouces et demi. Un tour à la fois, dans l'ordre, de un à six. Regardez le compteur en haut à droite, pis la fenêtre en bas : à chaque tour, les ressorts s'allongent un peu.",
+  "mots": 45
+ },
+ {
+  "passage": "A_06_p",
+  "orateur": 1,
+  "texte": "Les six boulons partagent la charge : les ressorts se détendent peu à peu, également. C'est plus long, mais on reste en contrôle.",
+  "mots": 23
+ },
+ {
+  "passage": "A_07_c",
+  "orateur": 1,
+  "texte": "Étape huit : les ressorts sont détendus. On retire les trois boulons longs d'un demi-pouce par huit pouces.",
+  "mots": 18
+ },
+ {
+  "passage": "A_07_p",
+  "orateur": 1,
+  "texte": "On les garde pour la fin parce qu'ils retiennent le cône jusqu'au bout. Maintenant, ils ne portent plus rien.",
+  "mots": 19
+ },
+ {
+  "passage": "A_08_c",
+  "orateur": 1,
+  "texte": "Étape neuf : on sort le cône, le bowl, pis les mâchoires, et on change les pièces. L'énergie a été relâchée lentement : le cône est resté retenu tout le long.",
+  "mots": 31
+ },
+ {
+  "passage": "A_fin",
+  "orateur": 1,
+  "texte": "Pour le quart : jamais un boulon du cône enlevé au complet sous charge. Les trois boulons longs sans bushing, avant l'étape sept. Pis un tour à la fois.",
+  "mots": 29
+ },
+ {
+  "passage": "A_questions",
+  "orateur": 2,
+  "texte": "Pis si un boulon veut pas se défaire ?",
+  "mots": 9
+ },
+ {
+  "passage": "A_questions",
+  "orateur": 1,
+  "texte": "On force pas à l'impact drill sous charge. On arrête, pis on en parle au superviseur avant de continuer.",
+  "mots": 19
+ },
+ {
+  "passage": "A_questions",
+  "orateur": 2,
+  "texte": "Pendant que je dévisse, je me place où ?",
+  "mots": 9
+ },
+ {
+  "passage": "A_questions",
+  "orateur": 1,
+  "texte": "Hors de l'axe du mandrin. Jamais devant le cône : s'il part, c'est là qu'il s'en va.",
+  "mots": 17
+ },
+ {
+  "passage": "A_questions",
+  "orateur": 2,
+  "texte": "Pis si le cône reste coincé ?",
+  "mots": 7
+ },
+ {
+  "passage": "A_questions",
+  "orateur": 1,
+  "texte": "On le frappe pas pour le décoincer, pis on reste pas devant. Les ressorts poussent encore : il peut être projeté.",
+  "mots": 21
+ },
+ {
+  "passage": "A_questions",
+  "orateur": 2,
+  "texte": "Si les boulons longs sont durs à remettre, on peut-tu sauter l'étape six ?",
+  "mots": 14
+ },
+ {
+  "passage": "A_questions",
+  "orateur": 1,
+  "texte": "Non. Ce sont eux qui retiennent le cône si quelque chose lâche. Sans eux, rien ne l'arrête.",
+  "mots": 17
+ },
+ {
+  "passage": "A_questions",
+  "orateur": 2,
+  "texte": "Pis si quelque chose me semble pas normal ?",
+  "mots": 9
+ },
+ {
+  "passage": "A_questions",
+  "orateur": 1,
+  "texte": "Tu arrêtes, pis tu en parles au superviseur. On regarde ça ensemble avant de continuer.",
+  "mots": 15
+ }
+]

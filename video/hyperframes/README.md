@@ -32,7 +32,8 @@ la voix québécoise s'ajoutera par un simple remontage (voir « Ajouter la voix
 | Chemin | Rôle |
 |---|---|
 | `gen.mjs` | Générateur (Node ≥ 22, bibliothèque standard ; ffmpeg) ; scénario D ici, `--scen A` → `gen-a.mjs` |
-| `gen-a.mjs` | Scénario A : trois parties, rendus Blender, gros plans et fondus, ralenti, compteur, fenêtre ; `--fenetre`, `--chronologie-seule` |
+| `gen-a.mjs` | Scénario A : trois parties, rendus Blender, gros plans et fondus, ralenti, compteur, fenêtre ; `--fenetre`, `--chronologie-seule` ; `--synchro` : vidéo calée sur un audio de dialogue déjà enregistré (voir `synchro/README.md`) |
+| `synchro/` | Alignement d'un audio enregistré sur son script (`aligner.py`, `dtw.c`), instants de la vidéo 1 (`synchro-a.py`, `A/script.json`, `A/bornes.json`, `A/synchro.json`) ; gabarits propres à ce mode : `templates/questions.html`, `templates/carton-fin-synchro.html`, `templates/accelere.html` |
 | `commun.mjs` | Outils communs : ffmpeg et clips à signatures, polices locales, durée des WAV, contrôle hors ligne du projet |
 | `encoder.mjs` | Encodage final de la séquence PNG, exactement comme make_video.mjs (vidéo, voix, image d'aperçu) |
 | `hf.sh` | **Seule façon de lancer HyperFrames** (voir « Sécurité et hors ligne ») |
