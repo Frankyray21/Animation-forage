@@ -2988,6 +2988,7 @@ st.retain = { n: '6', title: 'Remettre les 3 boulons longs (bolts) sans bushing'
 
 /* Étape 7 non respectée : chaque boulon est sorti au complet, en faisant le tour du cercle.
    withRet : les 3 boulons de retenue de l'étape 6 sont en place. */
+const TRIES = [[.1, .28], [.42, .6], [.74, 1.01]];   // reconstitution : les 3 essais à l'impact drill (fractions de l'étape), le dernier continue jusqu'à la casse
 function oneByOne(withRet) {
   const base = S => { S.springLbl = 1; S.zone = 1; S.nums = 1; if (withRet) S.ret = 1; };
   // clé portée du boulon prev au boulon i, dévissage au complet, boulon tiré à la main gauche (gardé dans la main)
@@ -3019,14 +3020,28 @@ function oneByOne(withRet) {
       shots: [{ at: 0, cam: 'tool' }, { at: .62, cam: 'bolts' }],
       text: 'Le boulon 6 porte seul toute la force des ressorts.',
       apply(S, p) { base(S); one(S, p, B(5), B(2), B(6)); } },
-    { n: '7', title: 'Dernier boulon desserré à l\'impact drill, sous pleine charge', cam: 'bolts', dur: 3.5, tone: 'danger', flag: 'Danger',
-      shots: [{ at: 0, cam: 'boltL' }],   // gros plan sur le boulon qui va casser
+    { n: '7', title: 'Dernier boulon desserré à l\'impact drill, sous pleine charge', cam: 'bolts', dur: withRet ? 9 : 3.5, tone: 'danger', flag: 'Danger',
+      shots: withRet ? [{ at: 0, cam: 'boltL' }, { at: .3, cam: 'tool' }, { at: .62, cam: 'boltL' }] : [{ at: 0, cam: 'boltL' }],   // gros plan sur le boulon qui va casser
       text: 'Le dernier boulon ne veut pas se défaire : il retient seul la poussée des 18 ressorts. Le travailleur insiste avec l\'impact drill, plusieurs essais.',
       apply(S, p) {
-        base(S); S.wd = 1;
-        const w = seg(p, 0, .2);
-        if (p < .2) toolMove(S, B(2), B(6), w, lerp(.7, 1, w)); else S.tool = { set: 'pb', a: B(6), b: B(6), w: 0, on: 1 };
-        S.pb[B(6)].turns = 0.25 * ease(seg(p, .2, 1)); S.active = B(6);
+        base(S); S.wd = 1; S.active = B(6);
+        if (!withRet) {
+          const w = seg(p, 0, .2);
+          if (p < .2) toolMove(S, B(2), B(6), w, lerp(.7, 1, w)); else S.tool = { set: 'pb', a: B(6), b: B(6), w: 0, on: 1 };
+          S.pb[B(6)].turns = 0.25 * ease(seg(p, .2, 1));
+          return;
+        }
+        // reconstitution : 3 essais (rafale, le boulon ne bouge pas) ; entre deux, la clé recule et le travailleur se replace ;
+        // au 3e essai le boulon cède d'un quart de tour, puis casse (étape suivante)
+        const w = seg(p, 0, .08);
+        if (p < .08) { toolMove(S, B(2), B(6), w, lerp(.7, 1, w)); return; }
+        let buzz = 0, on = 1;
+        TRIES.forEach(([a, b], k) => {
+          buzz = Math.max(buzz, seg(p, a, a + .015) * (1 - seg(p, b, b + .015)));
+          if (k < TRIES.length - 1) on -= .5 * Math.sin(Math.PI * seg(p, b, TRIES[k + 1][0]));
+        });
+        S.tool = { set: 'pb', a: B(6), b: B(6), w: 0, on, buzz }; S.brace = buzz;
+        S.pb[B(6)].turns = 0.25 * ease(seg(p, TRIES[2][0], 1)) + 0.012 * buzz * (1 - Math.cos(p * 9 * 14 * 2 * Math.PI));   // cliquetis à 14 Hz (étape de 9 s) : le boulon ne bouge pas
       } },
   ];
 }
@@ -3314,7 +3329,9 @@ function build(keep = false) {
     s.apply = (S2, p) => {
       S2.catchD = s.C; S2.catchP = p; S2.ride = s.ride; S2.ret = 1; S2.springLbl = 1; S2.nums = 1 - seg(p, 0, CATCH_T0);
       S2.zone = 1 - seg(p, CATCH_HIT, .7); S2.active = p < CATCH_T0 ? s.ride : -1;
-      S2.tool = { set: 'pb', a: s.ride, b: s.ride, w: 0, on: 1 - .8 * ease(seg(p, CATCH_HIT, CATCH_HIT + .12)) };   // sursaut : la clé recule
+      // rafale (3e essai) jusqu'à la rupture du filet ; sursaut : la clé recule
+      S2.tool = { set: 'pb', a: s.ride, b: s.ride, w: 0, on: 1 - .8 * ease(seg(p, CATCH_HIT, CATCH_HIT + .12)), buzz: 1 - seg(p, CATCH_T0 - .01, CATCH_T0) };
+      S2.brace = 1 - seg(p, CATCH_T0 - .01, CATCH_T0);
     };
   });
   steps.forEach(s => {
@@ -3519,6 +3536,11 @@ function placeWrench(S, fl, sp, hip) {
       out = jolt ? 0 : Math.max(1 - ease(t.on), lerp(hA ? 1 : 0, hB ? 1 : 0, w));
       wrP2.lerpVectors(A, B, w); wrP2.y += -0.02 + .9 * Math.sin(Math.PI * w) * (hA || hB ? 0 : 1) + (jolt ? 1.6 : 1.1) * (1 - ease(t.on));
       const c = w < .5 ? t.a : t.b; spin = (w < .5 ? hA : hB) ? 0 : list[c].rotation.y;
+      if (t.buzz) {   // rafale sur un boulon qui ne cède pas : la clé vibre, la douille bat (déterministe selon T)
+        const bz = t.buzz, tm = S.time * 2 * Math.PI;
+        wrP2.x += .022 * bz * Math.sin(tm * 13); wrP2.z += .018 * bz * Math.sin(tm * 17 + 1); wrP2.y += .012 * bz * Math.sin(tm * 11 + 2);
+        spin += .3 * bz * Math.sin(tm * 14);
+      }
       ring = t.set === 'pb' && S.active >= 0 && (jolt || !holeHidden(pBolts[S.active]));
     } else if (S.active >= 0 && (jolt || !holeHidden(pBolts[S.active]))) {   // corps immobile (léger tremblement quand le boulon tourne), la douille tourne
       const o = pBolts[S.active], B = BOLTS[S.active];
@@ -3590,6 +3612,8 @@ function animateWorker(S, fl) {
   }
   const bend = fl ? 0 : S.bend || 0;
   lean += .5 * bend; tilt += .12 * bend; hip.y -= .9 * bend; hip.x += .3 * bend;
+  const br = S.brace || 0;   // appuie de tout son poids sur la clé pendant la rafale, se redresse entre deux essais
+  lean += .07 * br; hip.x -= .35 * br;
   const WR = placeWrench(S, fl, sp, hip);
   let hands, palm = [0, 0], grips = null;
   const rest = REST_HANDS.map((h, i) => h.clone().add(new THREE.Vector3(mv * 1.1 * Math.sin(ph + i * Math.PI), .05 * Math.sin(tt * 1.4), 0)));
