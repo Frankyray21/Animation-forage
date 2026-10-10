@@ -2252,14 +2252,15 @@ const W = (() => {
     const hand = new THREE.Group(); worker.add(hand);
     const cuff = mesh(new THREE.CylinderGeometry(.33, .31, .55, 16), mat.glove); cuff.position.y = .1; hand.add(cuff);
     const palm = mesh(rboxGeo(.32, .82, .78), mat.glove); palm.position.y = .7; hand.add(palm);
+    const fingers = [];
     for (let f = 0; f < 4; f++) {
       const fg = new THREE.Group(); fg.position.set(-.05, 1.1, (f - 1.5) * .19); fg.rotation.z = .9;
       const p1 = mesh(new THREE.CapsuleGeometry(.085, .32, 4, 8), mat.glove); p1.position.y = .2; fg.add(p1);
       const p2 = mesh(new THREE.CapsuleGeometry(.08, .24, 4, 8), mat.glove); p2.position.set(-.12, .5, 0); p2.rotation.z = .9; fg.add(p2);
-      hand.add(fg);
+      hand.add(fg); fingers.push({ fg, p2 });
     }
     const th = mesh(new THREE.CapsuleGeometry(.1, .38, 4, 8), mat.glove); th.position.set(-.18, .65, s * .42); th.rotation.set(s * .7, 0, .6); hand.add(th);
-    return { s, up, fore, sho, elb, hand, glove: hand };
+    return { s, up, fore, sho, elb, hand, glove: hand, fingers };
   });
   // tête : crâne, mâchoire, nez, oreilles, yeux, bouche ; casque avec lampe frontale ; lunettes ; coquilles
   const head = new THREE.Group();
@@ -2310,10 +2311,24 @@ function ik2(A, T, l1, l2, pole) {
   const n = pole.clone().addScaledVector(dir, -pole.dot(dir)).normalize();
   return { J: A.clone().addScaledVector(dir, l1 * ca).addScaledVector(n, l1 * sa), E };
 }
+// Prise en poing : la pièce (axe ax, point G) passe dans le creux des doigts, paume tournée vers pal, main dans l'axe d'approche d.
+// Renvoie la cible du poignet P et l'orientation de la main q (repère du travailleur)
+const FIST = new THREE.Vector3(-.36, .92, 0);   // creux des doigts fermés, dans le repère de la main (paume = −x, doigts = +y, axe du creux = z)
+function gripPose(G, ax, pal, d, out = {}) {
+  const z = ax.clone().normalize(), y = d.clone().addScaledVector(z, -d.dot(z));
+  if (y.lengthSq() < 1e-6) y.set(-1, 0, 0).addScaledVector(z, z.x);
+  y.normalize();
+  const x = y.clone().cross(z);
+  if (x.dot(pal) > 0) { z.negate(); x.negate(); }   // paume (−x) vers pal
+  out.q = new THREE.Quaternion().setFromRotationMatrix(new THREE.Matrix4().makeBasis(x, y, z));
+  out.P = G.clone().addScaledVector(y, -FIST.y).addScaledVector(x, -FIST.x);
+  return out;
+}
 // Pose : hanches, inclinaison du tronc vers la tête de forage, inclinaison de la tête, cibles des mains,
 // décalage des pieds (marche), palm : poids par main, la cible est la paume (et non le poignet) ;
+// grips : prise en poing par main ({ q, k }, voir gripPose), fondue depuis la main dans l'axe de l'avant-bras ;
 // coordonnées du groupe du travailleur (= monde à sa place devant le mandrin)
-function poseWorker(hip, lean, tilt, hands, feet = null, palm = null) {
+function poseWorker(hip, lean, tilt, hands, feet = null, palm = null, grips = null) {
   W.legs.forEach((L, k) => {
     const H = hip.clone().add(wTmp2.set(0, -.2, L.s * .55));
     const An = feet ? ANKLE[k].clone().add(feet[k]) : ANKLE[k];
@@ -2343,6 +2358,10 @@ function poseWorker(hip, lean, tilt, hands, feet = null, palm = null) {
     A.hand.position.copy(E).addScaledVector(wTmp.subVectors(E, J).normalize(), -.05);
     A.hand.quaternion.setFromUnitVectors(Y_UP, wTmp.subVectors(E, J).normalize());
     A.hand.rotateY(A.s * Math.PI / 2);
+    // prise : poing orienté autour de la pièce, doigts refermés
+    const gk = grips && grips[k] ? grips[k].k : 0;
+    if (gk > 0) A.hand.quaternion.slerp(grips[k].q, gk);
+    A.fingers.forEach(f => { f.fg.rotation.z = .9 + .5 * gk; f.p2.rotation.z = .9 + .35 * gk; });
   });
   return { sh, hd };
 }
@@ -2802,9 +2821,10 @@ function initState() {
     cam: 'intro',
   };
 }
-// Pièces tirées à la main (boulons du cône, bushings) : gone / bushOut 0 → 0,3 tirée dans la main gauche, 0,3 → 0,7 tenue (main),
-// 0,7 → 1 posée sur la table. Retrait complet d'un boulon : dévissage à la clé (0–0,75), puis tiré à la main (0,8–1)
-const G_HAND = .3, G_TBL = .7;
+// Pièces tirées à la main (boulons du cône, bushings) : gone / bushOut 0 → 0,12 la main gauche vient à la pièce (encore en place),
+// → 0,22 tirée dans l'axe, → 0,3 dans la main gauche, 0,3 → 0,7 tenue (main), 0,7 → 1 posée sur la table.
+// Retrait complet d'un boulon : dévissage à la clé (0–0,75), puis tiré à la main (0,8–1)
+const G_APP = .12, G_PULL = .22, G_HAND = .3, G_TBL = .7;
 function removeBolt(S, i, p, from = null) {
   const b = S.pb[i];
   const t0 = from ?? b.turns;
@@ -2837,20 +2857,24 @@ const TRIP = {
   lb: { P: mkPath([[5.3, 0], [4.8, 3.6], [3.6, 6.9]]), end: { x: 3.6, z: 6.9, yaw: 0 } },
   plate: { P: mkPath([[5.3, 0], [4.6, 2.4], [3.7, 4.3]]), end: { x: 3.7, z: 4.3, yaw: 0 } },
 };
-// q : 0 → 1 sur le trajet (back : retour au banc) ; vitesse constante, départ et arrêt doux
-function pathSpot(S, P, end, q, back = false) {
+// q : 0 → 1 sur le trajet (back : retour au banc) ; vitesse constante, départ et arrêt doux ;
+// secs : durée du trajet (s) → les demi-tours du départ et de l'arrivée sont amortis sur TURN_S (au plus 65 % du trajet :
+// sur un trajet court, les deux demi-tours se chevauchent et le travailleur ne se tourne qu'en partie vers sa marche)
+const TURN_S = .9;
+function pathSpot(S, P, end, q, back = false, secs = 0) {
   if (q <= 0 || q >= 1) { S.spot = (q >= 1) !== back ? { ...end, dist: 0, mv: 0 } : null; return; }
   const a = .18, e = q < a ? q * q / (2 * a * (1 - a)) : q > 1 - a ? 1 - (1 - q) ** 2 / (2 * a * (1 - a)) : (q - a / 2) / (1 - a);
   const u = back ? 1 - e : e, Pt = P.c.getPointAt(u), f = u * 64, i = Math.min(63, Math.floor(f));
   let yaw = lerp(P.yaws[i], P.yaws[i + 1], f - i) + (back ? Math.PI : 0);
   const y0 = back ? nearAng(end.yaw, P.yaws[64] + Math.PI) : nearAng(HOME.yaw, P.yaws[0]);
   const y1 = back ? nearAng(HOME.yaw, P.yaws[0] + Math.PI) : nearAng(end.yaw, P.yaws[64]);
-  yaw = lerp(y0, yaw, ease(seg(q, 0, .14))); yaw = lerp(yaw, y1, ease(seg(q, .86, 1)));
+  const tb = secs > 0 ? Math.min(.65, TURN_S / secs) : .14;
+  yaw = lerp(y0, yaw, ease(seg(q, 0, tb))); yaw = lerp(yaw, y1, ease(seg(q, 1 - tb, 1)));
   S.spot = { x: Pt.x, z: Pt.z, yaw, dist: e * P.L, mv: Math.min(1, 6 * Math.min(q, 1 - q)) };
 }
-const walkSpot = (S, q, back = false) => pathSpot(S, WALKP, CONSOLE_SPOT, q, back);
-// Aller à la table [b, c], retour au banc [e, f] (entre les deux : penché sur la table)
-function trip(S, key, p, b, c, e, f) { const T = TRIP[key]; if (p < e) pathSpot(S, T.P, T.end, seg(p, b, c)); else pathSpot(S, T.P, T.end, seg(p, e, f), true); }
+const walkSpot = (S, q, back = false, secs = 0) => pathSpot(S, WALKP, CONSOLE_SPOT, q, back, secs);
+// Aller à la table [b, c], retour au banc [e, f] (entre les deux : penché sur la table) ; S.dur : durée de l'étape (s)
+function trip(S, key, p, b, c, e, f) { const T = TRIP[key], d = S.dur || 0; if (p < e) pathSpot(S, T.P, T.end, seg(p, b, c), false, (c - b) * d); else pathSpot(S, T.P, T.end, seg(p, e, f), true, (f - e) * d); }
 // Pièce portée à deux mains : L 0 → 0,22 tirée hors du mandrin, → 0,32 ramenée devant le corps, → 0,78 portée (trajet), → 1 posée sur la table
 const CP = { pull: .22, grab: .32, put: .78 };
 // L selon p : prise [a, b], trajet [b, c], pose [c, d]
@@ -2878,7 +2902,7 @@ const st = {
     text: 'Mettre les manettes du clam et du chuck en position fermée. Le vérin relâche : les ressorts avancent le cône et les mâchoires se ferment. Les ressorts restent comprimés.',
     // le travailleur va au poste (0–2,3 s) et ferme les 2 manettes (2,8–3,9 s) → gros plan sur le mandrin coupé : l'huile n'est plus sous pression (4,3–4,8 s) → les ressorts avancent le bloc (4,8–7,7 s)
     apply(S, p) {
-      walkSpot(S, seg(p, 0, .27));
+      walkSpot(S, seg(p, 0, .27), false, .27 * (S.dur || 0));
       S.reach = { kind: 'lever', k: ease(seg(p, .26, .33)) * (1 - ease(seg(p, .5, .58))) };
       S.lever = ease(seg(p, .33, .46)); S.press = 1 - ease(seg(p, .5, .56)); S.hyd = 1 - ease(seg(p, .56, .9));
     } },
@@ -2897,7 +2921,7 @@ const st = {
     // retour au banc (0–2,3 s), clé sortie de l'étui, J1, J2 puis J3, clé rangée ; couvert tiré à deux mains (boulons dans ses trous),
     // porté à la table, posé, boulons rangés ; retour au banc
     apply(S, p) {
-      walkSpot(S, seg(p, 0, .15), true);
+      walkSpot(S, seg(p, 0, .15), true, .15 * (S.dur || 0));
       const at = toolSeq(S, 'jc', [0, 1, 2], p, .24, .04, .018, .02, .06);
       for (let k = 0; k < 3; k++) S.jc.bolts[k] = seg(p, at(k), at(k) + .04);
       S.jc.lift = carryL(p, .5, .58, .73, .79);
@@ -3050,8 +3074,13 @@ const SCEN = {
           starLoosen(S, seg(p, f(.8), pL));
           if (p >= pL) S.tool = tl;
           S.wd = p < pL ? seg(p, 0, f(.7)) : 1 - seg(p, at.end + f(.15), at.end + f(.85));
-          // chaque boulon : la clé le sort des filets, la main gauche le tire pendant que la clé passe au suivant
-          if (p > pL) REV.forEach((i, o) => { const b = S.pb[i]; b.turns = lerp(rounds(), ENG, ease(seg(p, at(o), at(o) + f(.45)))); b.gone = G_HAND * seg(p, at(o) + f(.45), at(o) + f(.8)); });
+          // chaque boulon : la clé le sort des filets ; la main gauche vient au boulon pendant la fin du dévissage (0,35 s), le tire (0,2 s)
+          // puis le ramène à la poignée (0,3 s) pendant que la clé passe au suivant : mouvement continu, sans saut, d'un boulon à l'autre (0,85 s)
+          if (p > pL) REV.forEach((i, o) => {
+            const b = S.pb[i], t0 = at(o) + f(.45);
+            b.turns = lerp(rounds(), ENG, ease(seg(p, at(o), t0)));
+            b.gone = p < t0 ? G_APP * seg(p, t0 - f(.35), t0) : G_APP + (G_PULL - G_APP) * seg(p, t0, t0 + f(.2)) + (G_HAND - G_PULL) * seg(p, t0 + f(.2), at(o) + f(.95));
+          });
           if (p >= tr) trip(S, 'pb', p, tr, tr + f(2.2), tr + f(4), tr + f(6.2));
           if (p >= tr + f(2.2)) putDown(ORDER.map(i => [S.pb[i], 'gone']), p, tr + f(2.3), tr + f(3.8));
           S.bend = ease(seg(p, tr + f(2), tr + f(2.4))) * (1 - ease(seg(p, tr + f(3.8), tr + f(4.1))));
@@ -3126,7 +3155,7 @@ function derive(S) {
       const w = S.shake;
       D.pose = { a: w * 0.012 * Math.sin(S.time * 90), b: w * 0.004 * Math.sin(S.time * 70), c: 0 };
     } else {
-      S.pb.forEach((b, i) => { if (b.gone === 0 && b.turns < ENG - 1e-6) cons.push({ i, x: BOLTS[i].x, z: BOLTS[i].z, h: H(b.turns) }); });
+      S.pb.forEach((b, i) => { if (b.gone < G_APP && b.turns < ENG - 1e-6) cons.push({ i, x: BOLTS[i].x, z: BOLTS[i].z, h: H(b.turns) }); });   // la main qui s'approche ne le libère pas encore
       const sol = solvePlate(cons, t);
       let [a, b, c] = sol.th;
       // Le cône est guidé dans son logement : il ne peut que peu basculer avant de se coincer.
@@ -3313,6 +3342,7 @@ function stateAt(t) {
   for (let k = 0; k < i; k++) steps[k].apply(S, 1);
   S.reach = S.tool = null; S.bend = 0;   // gestes : ceux de l'étape en cours seulement (la place S.spot et la clé S.wd restent)
   const before = { jc: S.jc.lift + S.jc.bolts.reduce((a, b) => a + b, 0), cv: S.cv.lift + S.cv.bolts.reduce((a, b) => a + b, 0), pb: S.pb.map(b => b.gone), bush: S.pb.reduce((a, b) => a + b.bushOut, 0), plate: S.plateOut };
+  S.dur = steps[i].dur;   // durée de l'étape (s) : marches amorties en temps réel (pathSpot)
   steps[i].apply(S, p);
   S.recent = {   // pièces retirées pendant l'étape en cours (surbrillance forte)
     jc: S.jc.lift + S.jc.bolts.reduce((a, b) => a + b, 0) > before.jc + 1e-6,
@@ -3403,8 +3433,8 @@ function boltsWithPart(list, part, partBase, bolts, lift, sort, destFn, turns, S
     if (q > 0 && q < 1) holdItem(b, ease(seg(q, 0, .2)) * (1 - ease(seg(q, .85, 1))));
   });
 }
-// Pièce tirée à la main gauche (boulon du cône, bushing) : g 0 → 0,3 tirée dans l'axe (pull) puis dans la main, → 0,7 tenue, → 1 posée sur la table.
-// slot : place dans la poignée ; len : longueur (la pièce est tenue en travers, centrée) ; spin : rotation sur la table
+// Pièce tirée à la main gauche (boulon du cône, bushing) : g 0 → 0,12 la main vient à la pièce, → 0,22 tirée dans l'axe (pull), → 0,3 dans la main,
+// → 0,7 tenue, → 1 posée sur la table. slot : place dans la poignée ; len : longueur (la pièce est tenue en travers, centrée) ; spin : rotation sur la table
 function handPose(o, S, g, from, pull, slot, len, dest, spin, holeSpin) {
   if (g <= 0) { o.position.copy(from); o.rotation.set(0, holeSpin, 0); return; }
   const sp = wSpot(S), c = Math.cos(sp.yaw), sn = Math.sin(sp.yaw);
@@ -3412,14 +3442,14 @@ function handPose(o, S, g, from, pull, slot, len, dest, spin, holeSpin) {
   const fw = (slot % 3 - 1) * .13, up = Math.floor(slot / 3) * .12;
   anchorW(S, 'bundle', cpW).add(cpV.set(-c * fw + sn * len / 2, up, sn * fw + c * len / 2));
   const hand = toRig(cpW), hq = cpQ.setFromUnitVectors(YAX, dirToRig(cpV.set(sn, 0, c), cpV2));
-  if (g < .2) {   // tirée dans l'axe
-    o.position.copy(from); o.position.y += pull * ease(seg(g, .08, .2)); o.rotation.set(0, holeSpin, 0);
-    holdItem(o, ease(seg(g, 0, .08)), true);
-  } else if (g < G_HAND) {   // ramenée dans la main
-    const t = ease(seg(g, .2, G_HAND));
+  if (g < G_PULL) {   // la main gauche vient à la pièce (encore en place), puis la tire dans l'axe
+    o.position.copy(from); o.position.y += pull * ease(seg(g, G_APP, G_PULL)); o.rotation.set(0, holeSpin, 0);
+    holdItem(o, ease(seg(g, 0, G_APP)), true);
+  } else if (g < G_HAND) {   // ramenée dans la main ; la main gauche rejoint en douceur sa place sur la poignée de pièces
+    const t = ease(seg(g, G_PULL, G_HAND));
     cpV.copy(from); cpV.y += pull;
     o.position.lerpVectors(cpV, hand, t); o.quaternion.slerpQuaternions(cpQ2.setFromEuler(cpE.set(0, holeSpin, 0)), hq, t);
-    holdItem(o, 1, true); HOLD.bundle = true;
+    holdItem(o, 1 - ease(seg(g, .26, G_HAND)), true); HOLD.bundle = true;
   } else if (g <= G_TBL) {
     o.position.copy(hand); o.quaternion.copy(hq); HOLD.bundle = true; HOLD.pieces.push(o);
     if (S.flight) {   // projection : le travailleur lâche tout, les pièces tombent au sol
@@ -3442,18 +3472,23 @@ const GRIP_L = new THREE.Vector3(0, u(11.1), -u(2.05)), SUPPORT_L = new THREE.Ve
 const REST_HANDS = [new THREE.Vector3(5.0, FLOOR + 8.3, -1.4), new THREE.Vector3(5.0, FLOOR + 8.3, 1.4)];
 const LEVER_GRIP = new THREE.Vector3(0, 1.52, 0), REACH_R = { jc: 1.25, cv: 1.6, plate: 1.45 };
 const wkV = new THREE.Vector3(), wkF = new THREE.Vector3(), wkL = new THREE.Vector3();
-// Cibles des mains (monde) pour un geste : manettes, cadenas, pièce tirée hors du mandrin
+// Cibles des mains (monde) pour un geste : manettes, cadenas, pièce tirée hors du mandrin.
+// Cadenas : points (paume) ; manettes et pièces : prises en poing { G : point dans le creux des doigts, ax : axe de la pièce, pal : sens de la paume }
 function reachTargets(r) {
   const out = [];
   if (r.kind === 'lever') {
-    // paume droite sur la poignée de la manette CHUCK, paume gauche sur CLAM
-    for (const L of [levers[1], levers[0]]) out.push(L.localToWorld(LEVER_GRIP.clone()));
+    // poing droit sur la poignée de la manette CHUCK, poing gauche sur CLAM, paumes vers l'intérieur (les mains suivent les manettes qui basculent)
+    const G = [levers[1], levers[0]].map(L => { L.updateWorldMatrix(true, false); return L.localToWorld(LEVER_GRIP.clone()); });
+    [levers[1], levers[0]].forEach((L, i) => out.push({ G: G[i], ax: wkV.set(0, 1, 0).transformDirection(L.matrixWorld).clone(), pal: G[1 - i].clone().sub(G[i]) }));
   } else if (r.kind === 'lock') {
     out.push(lockG.getWorldPosition(new THREE.Vector3()).add(wkV.set(0, .12, 0)));
     out.push(consoleG.localToWorld(new THREE.Vector3(-.45, 4.5, .5)));   // l'autre main en appui sur le poste
   } else {
+    // pièce tenue par son bord, à gauche et à droite : le bord passe dans le creux des doigts, paumes vers le centre
     const o = r.kind === 'jc' ? jawCover : r.kind === 'cv' ? cover : plate, c = o.getWorldPosition(new THREE.Vector3()), R0 = REACH_R[r.kind];
-    out.push(c.clone().addScaledVector(wkL, -R0).addScaledVector(wkF, -.2), c.clone().addScaledVector(wkL, R0).addScaledVector(wkF, -.2));
+    const ax = wkV.set(0, 1, 0).transformDirection(o.matrixWorld).clone(), lat = wkL.clone().addScaledVector(ax, -wkL.dot(ax));
+    if (lat.lengthSq() < 1e-6) lat.copy(wkL); lat.normalize();
+    for (const s of [-1, 1]) { const G = c.clone().addScaledVector(lat, s * R0); out.push({ G, ax: ax.clone().cross(lat), pal: c.clone().sub(G) }); }
   }
   return out;
 }
@@ -3556,13 +3591,20 @@ function animateWorker(S, fl) {
   const bend = fl ? 0 : S.bend || 0;
   lean += .5 * bend; tilt += .12 * bend; hip.y -= .9 * bend; hip.x += .3 * bend;
   const WR = placeWrench(S, fl, sp, hip);
-  let hands, palm = [0, 0];
+  let hands, palm = [0, 0], grips = null;
   const rest = REST_HANDS.map((h, i) => h.clone().add(new THREE.Vector3(mv * 1.1 * Math.sin(ph + i * Math.PI), .05 * Math.sin(tt * 1.4), 0)));
   if (rk > 0) {
-    palm = [rk, rk];
     // geste : les mains quittent le repos pour la manette, le cadenas ou la pièce
-    const tg = reachTargets(S.reach).map(toL);
-    hands = rest.map((h, i) => h.lerp(tg[i], rk));
+    const tg = reachTargets(S.reach);
+    if (S.reach.kind === 'lock') { palm = [rk, rk]; hands = rest.map((h, i) => h.lerp(toL(tg[i]), rk)); }
+    else {   // prise en poing : la poignée ou le bord dans le creux des doigts, approche depuis l'épaule
+      const toLd = v => v.applyAxisAngle(Y_UP, -sp.yaw);
+      grips = tg.map((g, i) => {
+        const G = toL(g.G), sh = hip.clone().add(wkV.set(-Math.sin(lean) * WL.torso, Math.cos(lean) * WL.torso, (i ? 1 : -1) * 1.12));
+        return Object.assign(gripPose(G, toLd(g.ax), toLd(g.pal), G.clone().sub(sh)), { k: rk });
+      });
+      hands = rest.map((h, i) => h.lerp(grips[i].P, rk));
+    }
   } else if (S.shake > 0 || S.stuck) {
     // se penche et frappe le cône pour le décoincer
     const k = ease(Math.min(1, (S.shake || 0) * 3)), tap = S.shake > 0 && !fl ? Math.max(0, Math.sin(tt * 9)) * .35 : 0;
@@ -3616,7 +3658,7 @@ function animateWorker(S, fl) {
     lean -= .14 * r; hip.x += .4 * r;
   }
   updateCord();
-  poseWorker(hip, lean, tilt, hands, feet, palm);
+  poseWorker(hip, lean, tilt, hands, feet, palm, grips);
   // modèle GLB : recul et chute du corps entier, pivot aux pieds (le modèle n'a pas de squelette animé ici) ; suit le trajet du travailleur
   if (workerModel) {
     if (gizmo.object !== workerRoot) { workerRoot.position.copy(WORKER_GLB.position).add(wkV.set(sp.x - HOME.x, 0, sp.z - HOME.z)); workerRoot.rotation.set(0, WORKER_GLB.rotY + sp.yaw, 0); }
@@ -3689,7 +3731,8 @@ function applyScene(S) {
   // option « Numéros et consignes » : seulement le groupe de la prochaine action (J → C → 1-6 → L), comme l'encadré « procédure »
   const numsOn = $('optNums').checked && !D.flightS && explodeE === 0 && hexE === 0;
   const g6 = step6Grp(S);   // étape 6 à venir ou en cours : boulons longs (ou rien si l'étape 6 est omise)
-  const nextGrp = !numsOn ? '' : S.jc.lift < .01 ? 'J' : S.cv.lift < .01 ? 'C' : g6 !== null ? g6 : S.cv.lift > .99 && ORDER.some(i => S.pb[i].gone < .25) ? 'P' : S.cv.lift > .99 && BUSHED.some(i => S.pb[i].gone < .25) ? 'L' : '';
+  // (pas de repères du groupe suivant tant que le couvert ou le couvercle est porté : dessinés par-dessus, ils feraient paraître la pièce transparente)
+  const nextGrp = !numsOn ? '' : S.jc.lift < .01 ? 'J' : S.jc.lift < .99 ? '' : S.cv.lift < .01 ? 'C' : S.cv.lift < .99 ? '' : g6 !== null ? g6 : ORDER.some(i => S.pb[i].gone < .25) ? 'P' : BUSHED.some(i => S.pb[i].gone < .25) ? 'L' : '';
   // pièces portées : couvert et couvercle tirés, portés et posés par le travailleur, leurs boulons dans leurs trous puis rangés
   carryPose(jawCover, S, 'jc', JC_BASE, 1.8, TABLE.jc, S.jc.lift, Math.PI / 2);
   boltsWithPart(jcBolts, jawCover, JC_BASE, S.jc.bolts, S.jc.lift, S.jc.sort, TABLE.jcBolt, 6, S);
