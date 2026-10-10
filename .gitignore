@@ -5,3 +5,4 @@ package.json
 package-lock.json
 # copies de travail temporaires des agents (git worktree)
 .claude/worktrees/
+video/frames/
