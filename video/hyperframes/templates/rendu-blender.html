@@ -1,0 +1,44 @@
+<!doctype html>
+<!-- Généré par gen-a.mjs à partir de templates/rendu-blender.html (scénario A) : rendu Blender entre deux parties.
+     make_video.mjs:278-283 (still, full = false) : scale=3200:2000, rognage centré à 3200 × 1550, zoompan 1,00 → 1,06 sur n images,
+     sortie 1280 × 620, bandeau « Rendu Blender » (make_video.mjs:150-154, bandHTML still = true) collé en y = 620 ; durée INS = 3 s
+     (make_video.mjs:289, 293-296). Entrée : fondu enchaîné xfade de 0,5 s (make_video.mjs:302-308), opacité de chaque image mesurée
+     sur la chaîne ffmpeg rejouée ; le segment reste visible jusqu'à la fin du fondu suivant (mesurée aussi).
+     DECALAGE : début de la sous-composition dans le segment (essai court commençant dans le segment : délais négatifs). -->
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <title>{{TITRE_RENDU}}</title>
+  </head>
+  <body>
+    <template>
+      <style>
+{{FONTS_CSS}}
+        #root { position: absolute; left: 0; top: 0; width: {{W}}px; height: {{H}}px; overflow: hidden;
+                font-family: "IBM Plex Sans", sans-serif; color: #fff; }
+{{BASE_CSS}}
+        .entree { position: absolute; left: 0; top: 0; width: {{W}}px; height: {{H}}px;
+                  animation-name: {{ID}}-entree; animation-duration: {{ENTREE_DUREE}}s; animation-delay: {{DECALAGE}}s;
+                  animation-timing-function: linear; animation-iteration-count: 1; animation-fill-mode: both; }
+        {{ENTREE_CLES}}
+        /* zone 3D (1280 × 620) : image de {{KB_W}} × {{KB_H}} (scale=3200:2000 ramené à la largeur du cadre), décalée de {{KB_TOP}} px
+           (rognage centré à 1550 / 2000), agrandie autour du centre de la zone, 1 → 1,06 en (n − 1) / 24 s comme zoompan */
+        .cadre-kb { position: absolute; left: 0; top: 0; width: {{W}}px; height: {{H3}}px; overflow: hidden; }
+        .kb { position: absolute; left: 0; top: {{KB_TOP}}px; width: {{KB_W}}px; height: {{KB_H}}px; max-width: none;
+              transform-origin: {{KB_OX}}px {{KB_OY}}px;
+              animation-name: {{ID}}-kb; animation-duration: {{KB_DUREE}}s; animation-delay: {{DECALAGE}}s;
+              animation-timing-function: linear; animation-iteration-count: 1; animation-fill-mode: both; }
+        @keyframes {{ID}}-kb { from { transform: scale(1); } to { transform: scale({{KB_ZOOM}}); } }
+        .pos-bandeau { position: absolute; left: 0; top: {{H3}}px; width: {{W}}px; height: {{BAND}}px; }
+      </style>
+      <div id="root" data-composition-id="{{ID}}" data-width="{{W}}" data-height="{{H}}" data-no-timeline>
+        <div class="entree">
+          <div class="cadre-kb">
+            <img id="kb-{{ID}}" class="kb clip" src="{{IMAGE}}" data-start="0" data-duration="{{DUREE}}" data-track-index="0" alt="" />
+          </div>
+{{BANDEAU}}
+        </div>
+      </div>
+    </template>
+  </body>
+</html>

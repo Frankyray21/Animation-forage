@@ -1,0 +1,8 @@
+{
+  "name": "clam-outils-hyperframes",
+  "private": true,
+  "description": "Installation figée de HyperFrames 0.8.144 (arbre validé), hors du dépôt : voir video/hyperframes/README.md",
+  "dependencies": {
+    "hyperframes": "0.8.144"
+  }
+}

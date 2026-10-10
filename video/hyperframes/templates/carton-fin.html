@@ -1,0 +1,37 @@
+<!doctype html>
+<!-- Généré par gen.mjs à partir de templates/carton-fin.html : carton de fin plein cadre.
+     make_video.mjs:161-164 (FIN, LINE), 170 (textes du scénario D), 299-300 (fondu de fermeture 0,8 s) ;
+     son entrée est le fondu enchaîné de 0,5 s (xfade, make_video.mjs:302-308). Opacités de l'entrée et de la fermeture : une
+     image clé par image, mesurées sur la chaîne ffmpeg de make_video.mjs (la dernière image peut être noire). -->
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Carton de fin</title>
+  </head>
+  <body>
+    <template>
+      <style>
+{{FONTS_CSS}}
+        #root { position: absolute; left: 0; top: 0; width: {{W}}px; height: {{H}}px; overflow: hidden;
+                font-family: "IBM Plex Sans", sans-serif; color: #fff; }
+        /* fondu enchaîné d'entrée (xfade sur la fin de la partie 3D) */
+        .entree { position: absolute; left: 0; top: 0; width: {{W}}px; height: {{H}}px;
+                  animation-name: fin-entree; animation-duration: {{ENTREE_DUREE}}s; animation-timing-function: linear;
+                  animation-iteration-count: 1; animation-fill-mode: both; }
+        {{ENTREE_CLES}}
+        /* fondu de fermeture vers le noir (fade=t=out:st=END-0.8:d=0.8, END non arrondi) */
+        .fermeture { position: absolute; left: 0; top: 0; width: {{W}}px; height: {{H}}px;
+                     animation-name: fin-fermeture; animation-duration: {{FERM_DUREE}}s; animation-delay: {{FERM_DEBUT}}s;
+                     animation-timing-function: linear; animation-iteration-count: 1; animation-fill-mode: both; }
+        {{FERM_CLES}}
+      </style>
+      <div id="root" data-composition-id="carton-fin" data-width="{{W}}" data-height="{{H}}" data-no-timeline>
+        <div class="entree"><div class="fermeture">
+          <div style="position:absolute;inset:0;background:#111518"></div>
+          <div style="position:absolute;left:96px;right:96px;top:50%;transform:translateY(-50%)">
+            <div style="font-size:18px;letter-spacing:.12em;text-transform:uppercase;color:#f2c230;font-weight:600;margin-bottom:26px">{{KICKER}}</div>{{LIGNES}}</div>
+        </div></div>
+      </div>
+    </template>
+  </body>
+</html>

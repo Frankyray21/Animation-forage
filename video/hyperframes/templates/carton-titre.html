@@ -1,0 +1,43 @@
+<!doctype html>
+<!-- Généré par gen.mjs à partir de templates/carton-titre.html : carton titre plein cadre.
+     make_video.mjs:155-160 (CARD), 166-169 (textes), 278-282 (rendu Blender en Ken Burns 1,00 → 1,06 et fondu d'ouverture 0,6 s).
+     Fondu d'ouverture : opacité de chaque image mesurée sur la chaîne ffmpeg de make_video.mjs (fade=t=in progresse par image). -->
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Carton titre</title>
+  </head>
+  <body>
+    <template>
+      <style>
+{{FONTS_CSS}}
+        #root { position: absolute; left: 0; top: 0; width: {{W}}px; height: {{H}}px; overflow: hidden;
+                font-family: "IBM Plex Sans", sans-serif; color: #fff; }
+        /* fondu d'ouverture depuis le noir (fade=t=in:st=0:d=0.6) : une image clé par image, valeurs mesurées */
+        .ouverture { position: absolute; left: 0; top: 0; width: {{W}}px; height: {{H}}px;
+                     animation-name: titre-ouverture; animation-duration: {{OUV_DUREE}}s; animation-timing-function: linear;
+                     animation-iteration-count: 1; animation-fill-mode: both; }
+        {{OUV_CLES}}
+        /* Ken Burns : scale=3200:2000 puis rognage centré 16:9 (3200 × 1800), zoompan z = 1 + 0,06·on/(n − 1), centré.
+           Ici : image de {{KB_W}} × {{KB_H}} (même rapport de réduction), décalée de {{KB_TOP}} px, agrandie autour du centre du cadre. */
+        .kb { position: absolute; left: 0; top: {{KB_TOP}}px; width: {{KB_W}}px; height: {{KB_H}}px; max-width: none;
+              transform-origin: {{KB_OX}}px {{KB_OY}}px;
+              animation-name: titre-ken-burns; animation-duration: {{KB_DUREE}}s; animation-timing-function: linear;
+              animation-iteration-count: 1; animation-fill-mode: both; }
+        @keyframes titre-ken-burns { from { transform: scale(1); } to { transform: scale({{KB_ZOOM}}); } }
+      </style>
+      <div id="root" data-composition-id="carton-titre" data-width="{{W}}" data-height="{{H}}" data-no-timeline>
+        <div class="ouverture">
+          <!-- minutage explicite (toute la durée du carton) : sans lui, timeline et Studio lui donneraient 3 s par défaut -->
+          <img id="kb-titre" class="kb clip" src="{{IMAGE}}" data-start="0" data-duration="{{DUREE_TITRE}}" data-track-index="0" alt="" />
+          <div style="position:absolute;inset:0;background:linear-gradient(180deg,rgba(8,11,13,.45),rgba(8,11,13,.72) 55%,rgba(8,11,13,.86))"></div>
+          <div style="position:absolute;left:72px;right:72px;bottom:96px">
+            <div style="font-size:18px;letter-spacing:.12em;text-transform:uppercase;color:{{COULEUR}};font-weight:600;margin-bottom:14px">{{KICKER}}</div>
+            <div style="font-family:'Barlow Condensed',sans-serif;font-size:72px;font-weight:700;line-height:1.02;text-wrap:balance">{{TITRE}}</div>
+            <div style="margin-top:22px;font-size:28px;font-weight:500;color:#e3e8eb;border-left:5px solid {{COULEUR}};padding-left:16px">{{SOUS_TITRE}}</div>
+          </div>
+        </div>
+      </div>
+    </template>
+  </body>
+</html>

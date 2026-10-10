@@ -1,0 +1,3 @@
+# Exceptions au .gitignore du dépôt (qui ignore package.json et package-lock.json partout) : arbre npm validé de HyperFrames
+!package.json
+!package-lock.json

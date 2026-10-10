@@ -1,0 +1,44 @@
+<!doctype html>
+<!-- Généré par gen-a.mjs à partir de templates/plan.html (scénario A) : un plan de la partie 3D = une sous-composition.
+     Plan = un « clip » de make_video.mjs:214-229 : images gardées d'une étape avant le gros plan, gros plan tournant des pièces
+     retirées, ou retour du gros plan. Temps locaux (0 = première image du plan, fondu d'entrée compris). Le plan dure jusqu'à la
+     fin du fondu vers le plan suivant, pendant lequel il reste figé sous lui (make_video.mjs:241-245 : « dernière image du plan
+     précédent (figée) → premières images du nouveau plan »).
+     Fondu d'entrée : opacité (j + 1) / 9 aux images j = 0 … 7, puis 1 (compose.py:36-37, Image.blend) ; une image clé par image.
+     Ordre d'empilement de compose.py:35-58 : 3D, bandeau, cadre de la fenêtre, image de la fenêtre, compteur, « Ralenti », « Pourquoi ». -->
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <title>{{TITRE_PLAN}}</title>
+  </head>
+  <body>
+    <template>
+      <style>
+{{FONTS_CSS}}
+        #root { position: absolute; left: 0; top: 0; width: {{W}}px; height: {{H}}px; overflow: hidden;
+                font-family: "IBM Plex Sans", sans-serif; color: #fff; }
+{{BASE_CSS}}
+        .entree { position: absolute; left: 0; top: 0; width: {{W}}px; height: {{H}}px;{{ENTREE_ANIM}} }
+        {{ENTREE_CLES}}
+        .vue3d { position: absolute; left: 0; top: 0; width: {{W}}px; height: {{H3}}px; z-index: 1; }
+        .pos-bandeau { position: absolute; left: 0; top: {{H3}}px; width: {{W}}px; height: {{BAND}}px; z-index: 1; }
+        .inset.pos { left: {{CADRE_X}}px; top: {{CADRE_Y}}px; z-index: 2; }
+        .fenetre { position: absolute; left: {{IN_X}}px; top: {{IN_Y}}px; width: {{IN_W}}px; height: {{IN_H}}px; z-index: 3; }
+        /* compteur et « Ralenti » : position finale (x entier de make_video.mjs:257-258) posée par positionner-calques.js ;
+           ces valeurs-ci ne servent qu'avant son exécution */
+        .hud.pos { left: auto; right: 18px; top: 18px; z-index: 4; }
+        .tag.pos { left: 50%; top: 18px; transform: translateX(-50%); white-space: nowrap; z-index: 5; }
+        .why.pos { left: 18px; top: 18px; z-index: 6; }
+        /* une couche de composition par calque minuté posé sur la 3D : sans elle, Chromium lisse le texte de ces calques tantôt en
+           sous-pixel (LCD), tantôt en niveaux de gris, d'une image à l'autre (rendu non reproductible, graisse qui scintille) ; avec
+           elle, toujours en niveaux de gris (écart de lissage connu n° 1), sans déplacement (vérifié au bit près) */
+        .hud.pos, .tag.pos, .why.pos, .inset.pos { will-change: transform; }
+      </style>
+      <div id="root" data-composition-id="{{ID}}" data-width="{{W}}" data-height="{{H}}" data-no-timeline>
+        <div class="entree">
+{{CORPS}}
+        </div>
+      </div>
+    </template>
+  </body>
+</html>

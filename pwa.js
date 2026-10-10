@@ -1,7 +1,7 @@
 // Application installable et utilisable hors ligne : enregistre sw.js, affiche les boutons [data-install] et [data-offline].
-// [data-offline] « Télécharger pour le hors ligne » : enregistre sur l'appareil tout ce qui manque (pages, 3D, polices, vidéo).
+// [data-offline] « Télécharger pour le hors ligne » : enregistre sur l'appareil tout ce qui manque (pages, 3D, polices, vidéos).
 // Le service worker donne la liste de ce qui manque ; la page télécharge elle-même les petits fichiers (progression en octets)
-// et suit la vidéo, téléchargée par le service worker (elle continue quand on change de page). Un seul téléchargement à la fois (Web Locks).
+// et suit les deux vidéos, téléchargées par le service worker (elles continuent quand on change de page). Un seul téléchargement à la fois (Web Locks).
 // Rien dans un aperçu intégré (cadre) ni sous automatisation (capture vidéo).
 (() => {
   if (window.self !== window.top || !('serviceWorker' in navigator) || !window.isSecureContext || navigator.webdriver) return;
@@ -36,8 +36,8 @@
   const LOCK = 'clam-offline-download';
   const ICON = { idle: '⇩', busy: '⏳', ready: '✓', error: '⇩' };
   const TEXT = {
-    idle: ['Télécharger pour le hors ligne', 'Enregistrer tout le site sur cet appareil (environ 13 Mo) pour l’utiliser sans réseau.'],
-    ready: ['Prêt hors ligne', 'Tout le site est enregistré sur cet appareil : accueil, animation 3D et vidéo.'],
+    idle: ['Télécharger pour le hors ligne', 'Enregistrer tout le site sur cet appareil (environ 17 Mo) pour l’utiliser sans réseau.'],
+    ready: ['Prêt hors ligne', 'Tout le site est enregistré sur cet appareil : accueil, animation 3D et vidéos.'],
     error: ['Réessayer le téléchargement', 'Le téléchargement n’est pas complet.'],
   };
   // états : idle, busy, ready, error ; le bouton garde le focus (aria-disabled plutôt que disabled)
@@ -49,7 +49,8 @@
     if (i) i.textContent = ICON[state]; if (l) l.textContent = text || TEXT[state][0];
     b.title = title || (TEXT[state] ? TEXT[state][1] : '');
   });
-  let busy = false, phase = '';   // phase 'files' : petits fichiers téléchargés par la page ; 'video' : vidéo suivie dans le service worker
+  let busy = false, phase = '';   // phase 'files' : petits fichiers téléchargés par la page ; 'video' : vidéos suivies dans le service worker
+  const VID_EST = 13e6;   // taille des deux vidéos tant que le service worker ne l'a pas donnée
   // état demandé au service worker actif (par canal privé) ; réponse d'une autre version ignorée
   async function ask(type, wait = 20000) {
     const reg = await navigator.serviceWorker.ready, sw = navigator.serviceWorker.controller || reg.active;
@@ -63,13 +64,13 @@
   const valid = s => !!s && s.type === 'status' && typeof s.version === 'string' && s.version.startsWith('clam-') && Array.isArray(s.list) && Array.isArray(s.fonts);
   const status = () => ask('offline-status');
   const sleep = ms => new Promise(r => setTimeout(r, ms));
-  // suit la vidéo téléchargée par le service worker jusqu'à la fin ; un message par seconde le garde actif
+  // suit les vidéos téléchargées par le service worker jusqu'à la fin (progression cumulée) ; un message par seconde le garde actif
   async function follow(show) {
     for (;;) {
       const s = await status().catch(() => null);
       if (!valid(s) || !s.videoPending) return s;
       const p = s.videoProg || { n: 0, len: 0 };
-      show(p.n, p.len || 10e6);
+      show(p.n, p.len || VID_EST);
       await sleep(1000);
     }
   }
@@ -81,9 +82,9 @@
     }
     const s = await status().catch(() => null);
     if (busy || !valid(s)) return;
-    if (s.videoPending) {   // vidéo en cours dans le service worker (première visite, mise à jour, page précédente)
+    if (s.videoPending) {   // vidéos en cours dans le service worker (première visite, mise à jour, page précédente)
       if (following) return; following = true;
-      const f = await follow((n, len) => { if (!busy) setOff('busy', `Téléchargement… ${Math.min(99, Math.floor(100 * n / len))} %`, 'Vidéo en cours d’enregistrement sur cet appareil.'); });
+      const f = await follow((n, len) => { if (!busy) setOff('busy', `Téléchargement… ${Math.min(99, Math.floor(100 * n / len))} %`, 'Vidéos en cours d’enregistrement sur cet appareil.'); });
       following = false;
       if (!busy && valid(f)) setOff(f.ready ? 'ready' : 'idle');
       return;
@@ -116,18 +117,19 @@
   }
   async function download(s) {
     const cache = await caches.open(s.version);
-    const files = s.list.filter(u => u !== s.video), needVideo = s.list.includes(s.video) || s.videoPending;
-    // progression en octets : taille estimée (autres fichiers 150 ko, vidéo 10 Mo) remplacée par la vraie dès qu'elle est connue
+    const vids = s.videos || [s.video];   // service worker d'une version précédente : une seule vidéo
+    const files = s.list.filter(u => !vids.includes(u)), needVideo = vids.some(u => s.list.includes(u)) || s.videoPending;
+    // progression en octets : taille estimée (autres fichiers 150 ko, vidéos 13 Mo) remplacée par la vraie dès qu'elle est connue
     const size = new Map(files.map(u => [u, 150e3])), got = new Map(files.map(u => [u, 0]));
-    let vid = { n: 0, len: needVideo ? 10e6 : 0 }, shown = -1, said = 0;
+    let vid = { n: 0, len: needVideo ? VID_EST : 0 }, shown = -1, said = 0;
     const report = () => {
       let T = vid.len, D = vid.n; size.forEach(v => { T += v; }); got.forEach(v => { D += v; });
       const pc = T ? Math.min(99, Math.floor(100 * D / T)) : 99;
-      if (pc !== shown) { shown = pc; setOff('busy', `Téléchargement… ${pc} %`, 'Le téléchargement de la vidéo continue si vous changez de page.'); }
+      if (pc !== shown) { shown = pc; setOff('busy', `Téléchargement… ${pc} %`, 'Le téléchargement des vidéos continue si vous changez de page.'); }
       if (pc >= said + 25) { said = pc - pc % 25; announce(`Téléchargement : ${said} %`); }
     };
     report();
-    // vidéo : demandée au service worker, suivie pendant les petits fichiers (les messages le gardent actif)
+    // vidéos : demandées au service worker, suivies pendant les petits fichiers (les messages le gardent actif)
     let vp = null;
     if (needVideo) { await ask('offline-video'); vp = follow((n, len) => { vid = { n, len }; report(); }); }
     phase = 'files';
@@ -163,12 +165,12 @@
     const s = await status().catch(() => null);   // bilan établi par le service worker (copie de la version active)
     if (valid(s) && s.ready) {
       setOff('ready');
-      toast('Tout est enregistré sur cet appareil. L’accueil, l’animation 3D et la vidéo fonctionnent maintenant sans réseau.' +
+      toast('Tout est enregistré sur cet appareil. L’accueil, l’animation 3D et les vidéos fonctionnent maintenant sans réseau.' +
         (ios && !standalone ? ' Sur iPhone et iPad, l’application ajoutée à l’écran d’accueil a son propre stockage : ouvrez-la une fois en ligne et touchez aussi ce bouton.' : ''));
     } else {
       setOff('error');
       const n = valid(s) ? s.list.length : 0;
-      toast(quota ? 'Espace de stockage insuffisant sur l’appareil : libérez de l’espace, puis réessayez.'
+      toast(quota || (valid(s) && s.quota) ? 'Espace de stockage insuffisant sur l’appareil : libérez de l’espace, puis réessayez.'   // s.quota : vidéo refusée au service worker
         : !valid(s) ? 'Le site vient d’être mis à jour : rechargez la page, puis réessayez.'
         : `Téléchargement incomplet${n ? ` (${n} fichier${n > 1 ? 's' : ''} manquant${n > 1 ? 's' : ''})` : ''}. Vérifiez la connexion et réessayez.`);
     }
@@ -180,7 +182,7 @@
       navigator.locks.request(LOCK, { ifAvailable: true }, async lock => { if (!lock) return waitOther(); await start(); }).catch(() => { busy = false; refresh(); });
     } else start().catch(() => { busy = false; refresh(); });
   });
-  // quitter la page pendant les petits fichiers les interrompt (la vidéo, elle, continue dans le service worker)
+  // quitter la page pendant les petits fichiers les interrompt (les vidéos, elles, continuent dans le service worker)
   addEventListener('beforeunload', e => { if (busy && phase === 'files') { e.preventDefault(); e.returnValue = ''; } });
 
   // --- installation ---

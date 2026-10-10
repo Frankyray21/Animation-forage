@@ -1,0 +1,34 @@
+<!doctype html>
+<!-- Généré par gen.mjs à partir de templates/etape.html : une étape de la partie 3D = une sous-composition.
+     Temps locaux (0 = première image de l'étape). Ordre d'empilement de compose.py:35-58 : 3D, bandeau, cadre de la fenêtre,
+     image de la fenêtre, compteur, « Ralenti », « Pourquoi ». -->
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Étape {{ETAPE}} — {{TITRE_ETAPE}}</title>
+  </head>
+  <body>
+    <template>
+      <style>
+{{FONTS_CSS}}
+        #root { position: absolute; left: 0; top: 0; width: {{W}}px; height: {{H}}px; overflow: hidden;
+                font-family: "IBM Plex Sans", sans-serif; color: #fff; }
+{{BASE_CSS}}
+        .vue3d { position: absolute; left: 0; top: 0; width: {{W}}px; height: {{H3}}px; z-index: 1; }
+        .pos-bandeau { position: absolute; left: 0; top: {{H3}}px; width: {{W}}px; height: {{BAND}}px; z-index: 1; }
+        .inset.pos { left: {{CADRE_X}}px; top: {{CADRE_Y}}px; z-index: 2; }
+        .fenetre { position: absolute; left: {{IN_X}}px; top: {{IN_Y}}px; width: {{IN_W}}px; height: {{IN_H}}px; z-index: 3; }
+        .hud.pos { left: auto; right: 18px; top: 18px; z-index: 4; }
+        .tag.pos { left: 50%; top: 18px; transform: translateX(-50%); white-space: nowrap; z-index: 5; }
+        .why.pos { left: 18px; top: 18px; z-index: 6; }
+        /* une couche de composition par calque minuté posé sur la 3D : sans elle, Chromium lisse le texte de ces calques tantôt en
+           sous-pixel (LCD), tantôt en niveaux de gris, d'une image à l'autre (rendu non reproductible, graisse qui scintille) ; avec
+           elle, toujours en niveaux de gris (écart de lissage connu n° 1), sans déplacement (vérifié au bit près) */
+        .hud.pos, .tag.pos, .why.pos, .inset.pos { will-change: transform; }
+      </style>
+      <div id="root" data-composition-id="{{ID}}" data-width="{{W}}" data-height="{{H}}" data-no-timeline>
+{{CORPS}}
+      </div>
+    </template>
+  </body>
+</html>

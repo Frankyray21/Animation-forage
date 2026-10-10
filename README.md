@@ -4,19 +4,22 @@ Animation 3D de formation sur la **tête de forage Boyles UM-012-100UG** et son 
 
 Comme lors de l'accident, la tête est **à l'horizontale** : axe de broche à 1,25 m du plancher, face du mandrin vers le travailleur debout devant elle, boîte et moteur à côté du mandrin, chariot et mât dessous, le long de l'axe. Les vues éclatées ramènent la tête à la verticale, comme sur les planches.
 
-**Accueil** (`index.html`) : page d'ouverture d'une rencontre sécurité, projetable — « Ce qui s'est passé » (frise de 4 images tirées de la 3D, scénario de l'accident) et « Le danger caché » (ressorts comprimés même cadenassé), avec **Commencer la présentation** (ouvre `animation.html#presenter`, mode Présentation) et **Explorer la 3D** (`animation.html`). Un seul thème, sombre, rouge et jaune d'avertissement ; images dans `img/` et `renders/`.
+**Accueil** (`index.html`) : page d'ouverture d'une rencontre sécurité, projetable — « Ce qui s'est passé » (vidéo de la reconstitution, puis frise de 4 images tirées de la 3D, scénario de l'accident) et « Le danger caché » (ressorts comprimés même cadenassé), avec **Commencer la présentation** (ouvre `animation.html#presenter`, mode Présentation) et **Explorer la 3D** (`animation.html`). Un seul thème, sombre, rouge et jaune d'avertissement ; images dans `img/` et `renders/`.
 
-**Application installable et hors ligne** : bouton **Installer l'application** (accueil, en haut à droite ; animation, à côté de « ← Accueil ») sur Android, Chrome et Edge ; sur iPhone et iPad, le bouton rappelle « Partager → Sur l'écran d'accueil ». Le service worker `sw.js` (enregistré par `pwa.js`, manifeste `manifest.webmanifest`, icônes dans `icons/`) garde une copie locale des pages, des images, de three.js (version figée sur le CDN), des polices et de la vidéo : après une première visite en ligne, le site fonctionne sans réseau. Pages : réseau d'abord, copie locale hors ligne ; changer `VERSION` dans `sw.js` pour forcer le renouvellement des copies. Bouton **Télécharger pour le hors ligne** (accueil, en haut ; animation, à côté de « ← Accueil »).
-- **Ce qu'il fait** : il enregistre d'un coup tout ce qui manque sur l'appareil (pages, images, three.js, polices et vidéo, environ 13 Mo). Il affiche la progression en pourcentage des octets, puis **✓ Prêt hors ligne**, ou **Réessayer le téléchargement** en cas d'échec. Il demande aussi au navigateur de ne pas effacer cette copie (stockage persistant).
+**Application installable et hors ligne** : bouton **Installer l'application** (accueil, en haut à droite ; animation, à côté de « ← Accueil ») sur Android, Chrome et Edge ; sur iPhone et iPad, le bouton rappelle « Partager → Sur l'écran d'accueil ». Le service worker `sw.js` (enregistré par `pwa.js`, manifeste `manifest.webmanifest`, icônes dans `icons/`) garde une copie locale des pages, des images, de three.js (version figée sur le CDN), des polices et des deux vidéos : après une première visite en ligne, le site fonctionne sans réseau. Pages : réseau d'abord, copie locale hors ligne ; changer `VERSION` dans `sw.js` pour forcer le renouvellement des copies. Bouton **Télécharger pour le hors ligne** (accueil, en haut ; animation, à côté de « ← Accueil »).
+- **Ce qu'il fait** : il enregistre d'un coup tout ce qui manque sur l'appareil (pages, images, three.js, polices et les deux vidéos, environ 17 Mo). Il affiche la progression en pourcentage des octets, puis **✓ Prêt hors ligne**, ou **Réessayer le téléchargement** en cas d'échec. Il demande aussi au navigateur de ne pas effacer cette copie (stockage persistant).
 - **Fonctionnement** : le service worker donne la liste de ce qui manque (message `offline-status`).
   - Petits fichiers : la page les télécharge elle-même. Ses requêtes, marquées `cache: 'reload'` et `credentials: 'omit'`, ne passent pas par le service worker.
-  - Vidéo : le service worker la télécharge (message `offline-video`) et les pages suivent sa progression, un message par seconde, ce qui le garde actif sans événement long. Le téléchargement continue quand on change de page.
+  - Vidéos (procédure et accident, liste `VIDEOS` de `sw.js`) : le service worker les télécharge l'une après l'autre (message `offline-video`) et les pages suivent la progression cumulée (octets reçus sur la somme des deux tailles), un message par seconde, ce qui le garde actif sans événement long. Le téléchargement continue quand on change de page. Une vidéo en échec n'empêche pas l'autre ; seule celle qui manque est reprise au prochain essai.
+  - « Prêt hors ligne » seulement quand tout est là, les deux vidéos comprises. Hors ligne, chaque vidéo est lue par morceaux (requêtes Range) depuis sa copie locale.
+  - Stockage plein : le message « Espace de stockage insuffisant » s'affiche aussi quand c'est le service worker qui n'a pas pu enregistrer une vidéo.
 - **Plusieurs onglets** : un seul téléchargement à la fois pour tous les onglets (Web Locks). Les autres affichent « Téléchargement dans un autre onglet… ». Quitter la page pendant les petits fichiers demande une confirmation.
 - **Au chargement**, et après une mise à jour du site, le bouton indique déjà « Prêt hors ligne » si tout est enregistré.
 - **iPhone et iPad** : l'application ajoutée à l'écran d'accueil a son propre stockage. Il faut l'ouvrir une fois en ligne et toucher aussi ce bouton ; le message de fin le rappelle.
-- **Mise à jour du site** (nouvelle `VERSION`) : l'installation n'attend jamais la vidéo, car un événement du service worker est arrêté au bout de 5 min.
-  - La vidéo déjà enregistrée est toujours reprise ; une vidéo périmée vaut mieux qu'aucune, y compris si le réseau coupe pendant la mise à jour.
-  - Si sa taille diffère de celle en ligne (relevée par une requête HEAD), elle est signalée comme périmée et la nouvelle est téléchargée en arrière-plan après l'activation. La copie n'est remplacée qu'une fois la nouvelle vidéo complète.
+- **Mise à jour du site** (nouvelle `VERSION`) : l'installation n'attend jamais les vidéos, car un événement du service worker est arrêté au bout de 5 min.
+  - Chaque vidéo déjà enregistrée est toujours reprise ; une vidéo périmée vaut mieux qu'aucune, y compris si le réseau coupe pendant la mise à jour.
+  - Si sa taille diffère de celle en ligne (relevée par une requête HEAD, une par vidéo), elle est signalée comme périmée et la nouvelle est téléchargée en arrière-plan après l'activation. Chaque copie n'est remplacée qu'une fois la nouvelle vidéo complète.
+  - La taille en ligne est relevée de nouveau à chaque démarrage du service worker (filet de sécurité) : une vidéo republiée sans nouvelle `VERSION`, ou dont la taille n'a pas pu être relevée pendant l'installation, est ainsi repérée et retéléchargée en arrière-plan. Changer quand même `VERSION` à chaque nouvelle vidéo (voir `video/README.md`).
   - Une ancienne version de `pwa.js` reçoit une réponse immédiate et propose de réessayer.
 - **Origine partagée** : le site partage l'origine frankyray21.github.io avec d'autres applications. Le service worker ne supprime donc que ses propres copies (`clam-…`).
 
@@ -182,23 +185,33 @@ Les quatre images fixes `renders/*.jpg` (Cycles, à partir du même modèle 3D e
 
 Retiré (option « Éclairage réaliste », dossier `lightmaps/`, scripts de cuisson) : la scène est éclairée en temps réel seulement. Dernière version dans l'historique git (commit 18e6ac1).
 
-## Vidéo de la procédure
+## Vidéos (procédure et accident)
 
-La section repliable **Vidéo de la procédure** contient `video/procedure_boyles_h.mp4` : le scénario A « Procédure respectée », étapes 1 à 9, pour former les travailleurs. Fichier : H.264, 1280 × 720, 24 i/s, 1 min 52 s, 9,0 Mo, sans son ; aperçu `video/procedure_poster.jpg`.
+Deux vidéos de formation, montées avec **HyperFrames** (HeyGen, licence Apache-2.0, version 0.8.144 figée, rendu entièrement hors ligne). Format commun : H.264, 1280 × 720, 24 i/s, **sans son pour l'instant** (la voix québécoise sera ajoutée au remontage).
 
-Plan :
+| Vidéo | Fichier | Durée | Taille | Où |
+| --- | --- | --- | --- | --- |
+| Procédure : scénario A « Procédure respectée », étapes 1 à 9 | `video/procedure_boyles_h.mp4`, aperçu `video/procedure_poster.jpg` | 1 min 56 s | ≈ 9 Mo | `animation.html`, section repliable **Vidéo de la procédure** |
+| Accident : scénario D « Boulons retirés un par un : cône retenu », reconstitution | `video/accident_boyles_h.mp4`, aperçu `video/accident_poster.jpg` | 1 min 11 s | ≈ 4,1 Mo | accueil, section « Ce qui s'est passé » ; `animation.html`, section repliable **Vidéo de l'accident** |
+
+Plan de la procédure :
 - carton titre sur le rendu Blender de l'ensemble ;
 - animation 3D à vitesse 1×, caméra auto à plans variés (gestes du travailleur, coupe du mandrin seulement quand elle montre les ressorts comprimés, numéros des boulons) ;
 - les plans où le travailleur porte les pièces à la table sont coupés et remplacés par un gros plan tournant des pièces retirées, en surbrillance ; au retour, seule la fin du plan est gardée (travailleur immobile, sans pivot brusque) ;
 - sous la 3D, un bandeau de 100 px : barre des 9 étapes, numéro et titre de l'étape, consigne de la procédure au mot près (texte de l'encadré de l'animation) ; rien ne couvre la 3D ;
+- étape 7 : compteur de tours (tour et boulon) pendant le desserrage en étoile, passage ralenti (« Ralenti × ½ ») et fenêtre « ressorts en coupe » ;
 - rendus Blender intercalés avec léger zoom (face avant avant l'étape 4, coupe et couvercle retiré avant l'étape 6) ;
 - carton « À retenir ».
 
+Plan de l'accident : carton titre ; étapes 1 à 5 résumées ; étape 6 faite (3 boulons longs remis sans bushing) ; boulons du cône sortis au complet, un par un ; dernier boulon desserré à l'impact drill sous pleine charge ; le boulon casse, l'outil est projeté, le cône est retenu par les 3 boulons longs ; bilan ; carton de fin. Même bandeau (barre des 8 étapes, « Reconstitution »), encadrés « Pourquoi » et fenêtre « ressorts en coupe ».
+
 Anti-scintillement : capture suréchantillonnée 2× (2560 × 1240, réduite par moyenne de zone), caméra amortie, grands déplacements de caméra en coupe franche.
 
-Si la vidéo ou son aperçu ne se chargent pas (artefact sans fichiers), ou si le navigateur ne lit pas le H.264, la section est masquée.
+Si une vidéo ou son aperçu ne se chargent pas (artefact sans fichiers), si le navigateur ne lit pas le H.264, ou si l'appareil est hors ligne et que la vidéo n'y est pas enregistrée, son lecteur est masqué (accueil comme animation).
 
-Elle est produite par `video/make_video.mjs` : capture image par image, déterministe, de l'animation (`video/capture.mjs`, chromium + Playwright ; dt fixe et horloge virtuelle injectés dans une copie servie de la page, `animation.html` n'est pas modifié), relevé des plans gardés, gros plans des pièces retirées, bandeaux et cartons rendus en PNG, composition (`video/compose.py`), montage et encodage ffmpeg (fondus enchaînés). Voir `video/README.md` pour la refaire.
+Hors ligne : les deux vidéos font partie du bouton **Télécharger pour le hors ligne** (voir plus haut) ; le service worker les télécharge l'une après l'autre et les sert ensuite par morceaux (Range) depuis la copie locale.
+
+Production : la 3D est capturée image par image, de façon déterministe, par `video/capture.mjs` (chromium + Playwright ; dt fixe et horloge virtuelle injectés dans une copie servie de la page, `animation.html` n'est pas modifié). Le montage (cartons, bandeaux, gros plans, fondus enchaînés, compteur, ralenti, fenêtre en coupe) est une composition HyperFrames produite par `video/hyperframes/gen.mjs`, qui reprend image par image la chronologie de `video/make_video.mjs` (chaîne de référence et de comparaison, avec `video/compose.py`) ; HyperFrames rend une séquence PNG sans perte, encodée ensuite aux réglages de `make_video.mjs` (x264). Voir `video/README.md` (chaîne de montage) et `video/hyperframes/README.md` pour les refaire.
 
 ## Textes
 

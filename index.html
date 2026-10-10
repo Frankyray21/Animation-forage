@@ -81,6 +81,11 @@ h2 { margin: 0 0 12px; font-family: var(--display); font-weight: 700; font-size:
 .story { display: grid; gap: 10px; max-width: 52em; padding-left: 18px; border-left: 4px solid var(--red); font-size: clamp(17px, 1.45vw, 19px); }
 .story p { margin: 0; }
 
+/* vidéo de la reconstitution */
+.film { margin: 0 0 30px; max-width: 960px; }
+.film video { display: block; width: 100%; height: auto; aspect-ratio: 16 / 9; border: 1px solid var(--line); border-radius: 10px; background: #000; }
+.film figcaption { margin-top: 10px; font-size: 15px; color: var(--muted); }
+
 /* frise de l'accident */
 .steps { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px; counter-reset: s; }
 .steps > li { display: grid; align-content: start; gap: 10px; min-width: 0; padding-bottom: 4px; }
@@ -170,6 +175,16 @@ footer p { margin: 0; max-width: 80ch; }
         <p>Le dernier boulon ne voulait pas se défaire. Il a utilisé l’impact drill pour desserrer le dernier boulon. Après plusieurs essais, le boulon a cassé et l’impact drill a été projeté vers lui.</p>
         <p>L’outil l’a frappé au thorax et il est tombé au sol. Après avoir repris son souffle, il a constaté que sa main droite était enflée.</p>
       </div>
+      <figure class="film" id="vidAccSec">
+        <video id="vidAcc" controls preload="none" playsinline poster="video/accident_poster.jpg" src="video/accident_boyles_h.mp4" aria-label="Vidéo : reconstitution de l'accident au démontage du cône du mandrin"></video>
+        <figcaption>Reconstitution de l'accident en animation 3D · <span class="nw">1&nbsp;min&nbsp;11&nbsp;s</span> · sans son pour l'instant</figcaption>
+      </figure>
+      <script>
+      // vidéo de l'accident : cachée si le fichier ou l'aperçu manque (aperçu sans fichiers), si le navigateur ne lit pas le H.264,
+      // ou hors ligne quand elle n'est pas enregistrée sur l'appareil (un service worker d'avant clam-v8 servirait la procédure à sa place)
+      { const v = document.getElementById('vidAcc'), hide = () => { document.getElementById('vidAccSec').hidden = true; }; v.addEventListener('error', hide); if (!v.canPlayType('video/mp4; codecs="avc1.64001f"')) hide(); const p = new Image(); p.onerror = hide; p.src = v.getAttribute('poster');
+        const off = () => { try { if (!navigator.onLine) caches.match(v.src).then(r => { if (!r) hide(); }, () => {}); } catch (e) {} }; off(); addEventListener('offline', off); }
+      </script>
       <ol class="steps">
         <li>
           <div class="ph"><img src="img/accident-1.jpg" width="1200" height="750" alt="Mandrin en coupe : les 3 boulons longs sont remis dans le cône, les ressorts verts sont comprimés."><span class="n">6</span></div>

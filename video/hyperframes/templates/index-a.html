@@ -1,0 +1,38 @@
+<!doctype html>
+<!-- Généré par gen-a.mjs ({{GENERATED}}) : ne pas modifier à la main, relancer le générateur (node gen.mjs --scen A …).
+     Rendu de référence : « hf.sh render . --format png-sequence … » (headless shell Chromium 141 imposé, hors ligne), puis
+     encoder.mjs (encodage de make_video.mjs). Ne pas utiliser « preview » (GSAP injecté depuis un CDN). -->
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width={{W}}, height={{H}}" />
+    <title>{{TITRE_PAGE}}</title>
+    <style>
+{{FONTS_CSS}}
+      html, body { margin: 0; width: {{W}}px; height: {{H}}px; overflow: hidden; background: #000; }
+      /* racine : fond noir (fondu d'ouverture et de fermeture vers le noir, comme fade=t=in / fade=t=out) ;
+         police et couleur du body de BASE (make_video.mjs:86) */
+      #video { position: relative; width: {{W}}px; height: {{H}}px; overflow: hidden; background: #000;
+               font-family: "IBM Plex Sans", sans-serif; color: #fff; }
+{{TEXTE_RENDU}}
+      /* Segments de make_video.mjs:290-300 dans l'ordre (carton titre, partie 1, rendu 02, partie 2, rendus 03 et 04, partie 3,
+         carton de fin) : chaque segment est au-dessus du précédent (z-index croissant) et y entre par le fondu enchaîné xfade de
+         0,5 s (make_video.mjs:302-308) : opacité de chaque image mesurée sur la chaîne ffmpeg rejouée. Parties : enveloppes non
+         minutées (animation à délai global) ; rendus et cartons : fondu dans leur sous-composition. */
+      .partie { position: absolute; left: 0; top: 0; width: {{W}}px; height: {{H}}px;
+                animation-timing-function: linear; animation-iteration-count: 1; animation-fill-mode: both; }
+{{STYLES_SEGMENTS}}
+      .hote-plein { position: absolute; left: 0; top: 0; width: {{W}}px; height: {{H}}px; }
+      .hote-plan { z-index: 1; }
+    </style>
+  </head>
+  <body>
+    <div id="video" data-composition-id="{{COMP_ID}}" data-start="0" data-duration="{{DUREE}}"
+         data-width="{{W}}" data-height="{{H}}" data-fps="{{FPS}}" data-no-timeline>
+{{CORPS}}
+    </div>
+    <script>
+{{AJUSTER_JS}}
+    </script>
+  </body>
+</html>

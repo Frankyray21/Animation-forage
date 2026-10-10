@@ -467,7 +467,12 @@ body.pres .pres-cmp:not([hidden]) { display: grid; position: absolute; inset: 66
     <details class="bom" id="vidSec">
       <summary class="bom-toggle">Vidéo de la procédure</summary>
       <video class="vid" id="vid" controls preload="none" playsinline poster="video/procedure_poster.jpg" src="video/procedure_boyles_h.mp4" aria-label="Vidéo de formation : procédure respectée, étapes 1 à 9" onerror="this.closest('details').hidden = true"></video>
-      <p class="gal-note vid-note">Scénario A « Procédure respectée », étapes 1 à 9 (2&nbsp;min, sans son) : l'animation 3D de cette page, avec la consigne de la procédure en bandeau, un gros plan de chaque pièce retirée et trois rendus Blender. Pour former les travailleurs.</p>
+      <p class="gal-note vid-note">Scénario A « Procédure respectée », étapes 1 à 9 (1&nbsp;min&nbsp;56&nbsp;s, sans son pour l'instant), montée avec HyperFrames : l'animation 3D de cette page, avec la consigne de la procédure en bandeau, le compteur de tours pendant le desserrage en étoile, un gros plan de chaque pièce retirée et trois rendus Blender. Pour former les travailleurs.</p>
+    </details>
+    <details class="bom" id="vidSecD">
+      <summary class="bom-toggle">Vidéo de l'accident</summary>
+      <video class="vid" id="vidD" controls preload="none" playsinline poster="video/accident_poster.jpg" src="video/accident_boyles_h.mp4" aria-label="Vidéo : reconstitution de l'accident, boulons du cône retirés un par un" onerror="this.closest('details').hidden = true"></video>
+      <p class="gal-note vid-note">Reconstitution de l'accident « Boulons retirés un par un : cône retenu » (1&nbsp;min&nbsp;11&nbsp;s, sans son pour l'instant), montée avec HyperFrames : étapes 1 à 5 résumées, étape 6 faite, boulons du cône sortis au complet, dernier boulon desserré à l'impact drill, outil projeté, cône retenu par les 3 boulons longs, bilan.</p>
     </details>
 
 
@@ -4119,7 +4124,7 @@ $('bNext').addEventListener('click', () => { const { i } = locate(T); T = i < st
 $('scrub').addEventListener('input', e => { T = e.target.value / 1000 * total; leverMan.on = false; setPlaying(false); });
 $('optSpeed').addEventListener('change', e => { speed = +e.target.value; });
 addEventListener('keydown', e => {
-  if (e.target.closest('input, select, textarea')) return;
+  if (e.target.closest('input, select, textarea, video, summary')) return;   // lecteurs vidéo et sections repliables : touches natives
   if (e.code === 'Space') { e.preventDefault(); $('bPlay').click(); }
   else if (e.key === 'ArrowRight') $('bNext').click();
   else if (e.key === 'ArrowLeft') $('bPrev').click();
@@ -4523,8 +4528,12 @@ $('helpX').addEventListener('click', () => showHelp(false));
 $('helpVeil').addEventListener('click', () => showHelp(false));   // clic en dehors de la fenêtre : fermer
 document.addEventListener('keydown', e => { if (e.key === 'Escape' && !$('help').hidden) showHelp(false); });
 { let seen = false; try { seen = !!localStorage.getItem(HELP_KEY); } catch (e) {} if (!seen) showHelp(true); }
-// Vidéo de la procédure : section cachée si le fichier ou l'aperçu manque (artefact sans fichiers) ou si le navigateur ne lit pas le H.264
-{ const v = $('vid'), hide = () => { $('vidSec').hidden = true; }; v.addEventListener('error', hide); if (!v.canPlayType('video/mp4; codecs="avc1.64001f"')) hide(); const p = new Image(); p.onerror = hide; p.src = v.getAttribute('poster'); }
+// Vidéos de la procédure et de l'accident : section cachée si le fichier ou l'aperçu manque (artefact sans fichiers), si le navigateur ne lit pas le H.264,
+// ou hors ligne quand la vidéo n'est pas enregistrée sur l'appareil (un service worker d'avant clam-v8 servirait la procédure à la place de l'accident)
+for (const [id, sec] of [['vid', 'vidSec'], ['vidD', 'vidSecD']]) {
+  const v = $(id), hide = () => { $(sec).hidden = true; }; v.addEventListener('error', hide); if (!v.canPlayType('video/mp4; codecs="avc1.64001f"')) hide(); const p = new Image(); p.onerror = hide; p.src = v.getAttribute('poster');
+  const off = () => { try { if (!navigator.onLine) caches.match(v.src).then(r => { if (!r) hide(); }, () => {}); } catch (e) {} }; off(); addEventListener('offline', off);
+}
 // Pause à chaque étape : carte « fait » ancrée sur l'action dans la 3D
 let pauseStep = -1, pauseT = 0;
 const actV = new THREE.Vector3();
