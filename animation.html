@@ -3144,8 +3144,9 @@ const SCEN = {
     make: () => [
       first5, st.retain, ...oneByOne(true),
       { n: '!', title: 'Le boulon casse : outil projeté, cône retenu', cam: 'catch', sec: true, catch: true, tone: 'warn', flag: 'Retenu', ride: byNum(6),
+        shots: [{ at: 0, cam: 'catch' }, { at: CATCH_HIT + .04, cam: 'fall' }],   // contact au thorax en gros plan, puis la chute en plan large
         text: 'Après plusieurs essais, le dernier boulon casse. L\'impact drill est projeté vers le travailleur et le frappe au thorax. Le cône avance de quelques millimètres : les 3 boulons longs l\'arrêtent.' },
-      { n: '✓', title: 'Bilan', cam: 'catch', dur: 6, tone: 'warn', summary: true, text: '' },
+      { n: '✓', title: 'Bilan', cam: 'fall', dur: 6, tone: 'warn', summary: true, text: '' },
     ],
   },
 };
@@ -3329,9 +3330,10 @@ function build(keep = false) {
     s.apply = (S2, p) => {
       S2.catchD = s.C; S2.catchP = p; S2.ride = s.ride; S2.ret = 1; S2.springLbl = 1; S2.nums = 1 - seg(p, 0, CATCH_T0);
       S2.zone = 1 - seg(p, CATCH_HIT, .7); S2.active = p < CATCH_T0 ? s.ride : -1;
-      // rafale (3e essai) jusqu'à la rupture du filet ; sursaut : la clé recule
-      S2.tool = { set: 'pb', a: s.ride, b: s.ride, w: 0, on: 1 - .8 * ease(seg(p, CATCH_HIT, CATCH_HIT + .12)), buzz: 1 - seg(p, CATCH_T0 - .01, CATCH_T0) };
-      S2.brace = 1 - seg(p, CATCH_T0 - .01, CATCH_T0);
+      // rafale (3e essai) jusqu'à la rupture du filet ; puis l'outil est projeté au thorax (tFly), lâché (drop), le travailleur tombe (tFall)
+      const bz = 1 - seg(p, CATCH_T0 - .01, CATCH_T0);
+      S2.tool = { set: 'pb', a: s.ride, b: s.ride, w: 0, on: 1, buzz: bz }; S2.brace = bz;
+      S2.tFly = seg(p, CATCH_T0 + .02, CATCH_HIT); S2.drop = seg(p, CATCH_HIT + .02, CATCH_HIT + .22); S2.tFall = seg(p, CATCH_HIT + .02, CATCH_HIT + .34);
     };
   });
   steps.forEach(s => {
@@ -3340,7 +3342,7 @@ function build(keep = false) {
     s.ev = ev;
     s.apply = ev.flight
       ? (S2) => { S2.flight = ev.F; S2.launchT = 99; S2.ride = ev.ride; }
-      : (S2) => { S2.catchD = ev.C; S2.catchP = 1; S2.ride = ev.ride; S2.ret = 1; S2.springLbl = 1; S2.tool = { set: 'pb', a: ev.ride, b: ev.ride, w: 0, on: .2 }; };
+      : (S2, p) => { S2.catchD = ev.C; S2.catchP = 1; S2.ride = ev.ride; S2.ret = 1; S2.springLbl = 1; S2.tool = { set: 'pb', a: ev.ride, b: ev.ride, w: 0, on: 1 }; S2.tFly = S2.drop = S2.tFall = 1; S2.tRest = p; };   // au sol, l'outil tombé ; se redresse lentement en tenant sa main droite
   });
   starts = []; total = 0;
   steps.forEach(s => { starts.push(total); total += s.dur; });
@@ -3469,8 +3471,8 @@ function handPose(o, S, g, from, pull, slot, len, dest, spin, holeSpin) {
     holdItem(o, 1 - ease(seg(g, .26, G_HAND)), true); HOLD.bundle = true;
   } else if (g <= G_TBL) {
     o.position.copy(hand); o.quaternion.copy(hq); HOLD.bundle = true; HOLD.pieces.push(o);
-    if (S.flight) {   // projection : le travailleur lâche tout, les pièces tombent au sol
-      const F = S.flight, t0 = F.hands ? F.hands.t : 0, d = seg(S.launchT, t0, t0 + .45);
+    if (S.flight || S.drop) {   // projection, ou coup reçu : le travailleur lâche tout, les pièces tombent au sol
+      const F = S.flight, t0 = F && F.hands ? F.hands.t : 0, d = F ? seg(S.launchT, t0, t0 + .45) : S.drop;
       o.position.x += (slot - 3) * .12 * d; o.position.y += .6 * d; o.position.z = lerp(hand.z, Z_FLOOR + .08, d * d);
       HOLD.bundle = d <= 0;
     }
@@ -3511,7 +3513,7 @@ function reachTargets(r) {
 }
 /* ---------- Clé à chocs : à la ceinture (étui, hanche droite), sortie et portée au mandrin (S.wd), sur un boulon (S.tool, S.active) ---------- */
 const QX90 = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(1, 0, 0), Math.PI / 2);
-const wrP = new THREE.Vector3(), wrP2 = new THREE.Vector3(), wrP3 = new THREE.Vector3(), wrP4 = new THREE.Vector3(), wrM = new THREE.Vector3(), wrQ = new THREE.Quaternion(), wrQ2 = new THREE.Quaternion();
+const wrP = new THREE.Vector3(), wrP2 = new THREE.Vector3(), wrP3 = new THREE.Vector3(), wrP4 = new THREE.Vector3(), wrM = new THREE.Vector3(), wrQ = new THREE.Quaternion(), wrQ2 = new THREE.Quaternion(), wrQ3 = new THREE.Quaternion(), wrE = new THREE.Euler();
 const wrCord = wrench.userData.cord;
 rig.add(wrCord);   // cordon recalculé dans le repère du mandrin : de la poignée au sol, puis jusqu'à la prise
 function placeWrench(S, fl, sp, hip) {
@@ -3525,7 +3527,7 @@ function placeWrench(S, fl, sp, hip) {
     // étui : la clé pend, douille en bas, poignée vers l'extérieur
     toRig(wPt(sp, hip.x - .3, hip.y - 2.35, -1.55, wrP)); wrQ.setFromAxisAngle(ZAX, sp.yaw + Math.PI / 2).multiply(QX90);
     // out : clé écartée du boulon, poignée tournée de 45° vers la droite du corps (couchée dans l'axe, l'arrière entrerait dans le torse)
-    let spin = 0, ring = false, out = 1;
+    let spin = 0, ring = false, out = 1, tumble = 0;
     const idle = (v = wrP2) => toRig(wPt(sp, hip.x - 3.5, hip.y + 1.4, -.6, v));   // tenue devant le corps, un peu à droite (poignée hors du torse)
     const jolt = !!S.catchD;   // outil projeté sur le boulon cassé : il recule droit vers le thorax, reste sur son boulon même en coupe
     if (S.tool) {   // sur le boulon a, dégagée et portée vers le boulon b (w), approchée dans l'axe (on)
@@ -3534,12 +3536,22 @@ function placeWrench(S, fl, sp, hip) {
       const hA = !jolt && holeHidden(list[t.a]), hB = !jolt && holeHidden(list[t.b]);
       const A = hA ? idle(wrP3) : list[t.a].userData.from, B = hB ? idle(wrP4) : list[t.b].userData.from;
       out = jolt ? 0 : Math.max(1 - ease(t.on), lerp(hA ? 1 : 0, hB ? 1 : 0, w));
-      wrP2.lerpVectors(A, B, w); wrP2.y += -0.02 + .9 * Math.sin(Math.PI * w) * (hA || hB ? 0 : 1) + (jolt ? 1.6 : 1.1) * (1 - ease(t.on));
+      wrP2.lerpVectors(A, B, w); wrP2.y += -0.02 + .9 * Math.sin(Math.PI * w) * (hA || hB ? 0 : 1) + 1.1 * (1 - ease(t.on));
       const c = w < .5 ? t.a : t.b; spin = (w < .5 ? hA : hB) ? 0 : list[c].rotation.y;
       if (t.buzz) {   // rafale sur un boulon qui ne cède pas : la clé vibre, la douille bat (déterministe selon T)
         const bz = t.buzz, tm = S.time * 2 * Math.PI;
         wrP2.x += .022 * bz * Math.sin(tm * 13); wrP2.z += .018 * bz * Math.sin(tm * 17 + 1); wrP2.y += .012 * bz * Math.sin(tm * 11 + 2);
         spin += .3 * bz * Math.sin(tm * 14);
+      }
+      if (jolt) {   // boulon cassé : l'outil part du boulon (emporté par le cône) jusqu'au thorax (contact), puis, lâché, tombe au sol devant les pieds
+        const f = ease(S.tFly || 0), d = ease(S.drop || 0);
+        const yT = bodyFront0(AXIS_Y + wrP2.z) - RIG_X - u(13.4);   // douille quand le bout de la poignée touche le thorax
+        wrP2.y += f * (yT - wrP2.y); wrP2.z += .3 * f;
+        if (d > 0) {
+          toRig(wPt(sp, 1.0, FLOOR + u(1.7), .3, wrP3));   // douille vers le banc, poignée aux pieds du travailleur
+          wrP2.lerp(wrP3, d); wrP2.z += .6 * Math.sin(Math.PI * d) * (1 - d);
+          tumble = d;
+        }
       }
       ring = t.set === 'pb' && S.active >= 0 && (jolt || !holeHidden(pBolts[S.active]));
     } else if (S.active >= 0 && (jolt || !holeHidden(pBolts[S.active]))) {   // corps immobile (léger tremblement quand le boulon tourne), la douille tourne
@@ -3551,6 +3563,7 @@ function placeWrench(S, fl, sp, hip) {
       spin = o.rotation.y; ring = true; out = 0;
     } else idle();
     wrQ2.setFromAxisAngle(ZAX, sp.yaw + Math.PI / 4 * out);
+    if (tumble > 0) wrQ2.multiply(wrQ3.setFromEuler(wrE.set(.45 * tumble, Math.PI / 2 * tumble, 0)));   // tombée : couchée sur le côté
     const k = R.k = wrench.userData.k = ease(seg(R.wd, .25, 1));
     // sortie et rangement hors du corps : la clé passe à droite de la hanche, douille en bas, et ne se couche qu'une fois devant le corps
     toRig(wPt(sp, hip.x - 3.1, hip.y - 1.5, -3.0, wrM));
@@ -3601,7 +3614,7 @@ function animateWorker(S, fl) {
   let lean = .127 + .012 * Math.sin(tt * 1.4), tilt = .08;
   // marche : pas alternés (amplitude 2,4 = 24 cm), bassin un peu plus bas, bras ballants
   const ph = sp.dist / 4.8 * Math.PI, mv = sp.mv;
-  const feet = mv > 0 ? [0, 1].map(k => new THREE.Vector3(-2.4 * Math.sin(ph + k * Math.PI) * mv, .55 * Math.max(0, Math.cos(ph + k * Math.PI)) * mv, 0)) : null;
+  let feet = mv > 0 ? [0, 1].map(k => new THREE.Vector3(-2.4 * Math.sin(ph + k * Math.PI) * mv, .55 * Math.max(0, Math.cos(ph + k * Math.PI)) * mv, 0)) : null;
   hip.y += wBob(sp);
   const rk = S.reach && !fl ? S.reach.k : 0;
   // corps : penché vers une manette, le cadenas, une pièce ou la table
@@ -3676,10 +3689,19 @@ function animateWorker(S, fl) {
     if (F.hands) showBurst(bursts[0], new THREE.Vector3(HANDS.x + .3, F.hands.h + .3, 0), seg(lt, tH, tH + .35));
     if (F.impact) showBurst(bursts[1], new THREE.Vector3(...F.impact.w), seg(lt, tB, tB + .35));
   }
-  if (S.catchD) {   // arrêté par la retenue : sursaut
-    const r = ease(seg(S.catchP, CATCH_HIT, CATCH_HIT + .1)) * (1 - .6 * ease(seg(S.catchP, .6, 1)));
-    hands = hands.map((h, i) => h.add(new THREE.Vector3(1.6, .9, (i ? 1 : -1) * .4).multiplyScalar(r)));
-    lean -= .14 * r; hip.x += .4 * r;
+  if (S.catchD) {   // outil projeté au thorax : encaisse le coup, tombe assis au sol en lâchant tout ; au sol, reprend son souffle et regarde sa main droite
+    const q = S.tFall || 0, k1 = ease(seg(q, 0, .3)), k2 = ease(seg(q, .2, .85)), k3 = ease(seg(q, .3, .85)), rs = ease(seg(S.tRest || 0, .1, .6));
+    hip.x += 2.7 * k2; hip.y = lerp(hip.y, FLOOR + 1.1, ease(seg(q, .08, .65)));   // les jambes plient d'abord, puis il s'assoit vers l'arrière
+    lean += -.45 * k1 + .1 * k2 + .6 * rs; tilt += -.25 * k1 + .3 * k2 + .25 * rs;
+    feet = [0, 1].map(() => new THREE.Vector3(-1.2 * k2, 0, 0));   // les pieds glissent vers l'avant, genoux relevés
+    const chest = hip.clone().add(new THREE.Vector3(-Math.sin(lean) * 3.4 - 1.0, Math.cos(lean) * 3.4 - .2, 0));
+    hands = hands.map((h, i) => {
+      const s = i ? 1 : -1;
+      h.lerp(chest.clone().add(new THREE.Vector3(0, 0, s * .4)), k1);                              // mains à la poitrine
+      h.lerp(new THREE.Vector3(hip.x + 2.4, FLOOR + .4, s * 1.6), k3);                             // puis en appui au sol derrière lui
+      return h.lerp(new THREE.Vector3(hip.x - (i ? 2.2 : 2.6), hip.y + (i ? 3.5 : 3.0), i ? .8 : .3), rs);   // main gauche sur la main droite, devant lui (côté gauche, vu de la caméra)
+    });
+    if (S.catchP >= CATCH_HIT && S.ride >= 0) { const yC = AXIS_Y + BOLTS[S.ride].z; showBurst(bursts[1], new THREE.Vector3(bodyFront0(yC) - .2, yC + .3, 0), seg(S.catchP, CATCH_HIT, CATCH_HIT + .08)); }
   }
   updateCord();
   poseWorker(hip, lean, tilt, hands, feet, palm, grips);
@@ -3945,6 +3967,7 @@ const CAMS = {
   wide: { p: [2.0, 7.0, 24], t: [1.6, 1.2, 0] },
   hexplode: { p: [-16.1, 13.1, 32.1], t: [-2.2, 3.6, 2.5] },
   catch: { p: [3.2, 7.4, 12], t: [0.8, 4.7, 0] },
+  fall: { p: [4.6, 3.8, 26], t: [3.0, -1.0, 0] },   // reconstitution : le travailleur tombé au sol devant le mandrin, outil au sol
   explode: { p: [-8.1, 12.5, 21.2], t: [-0.6, 4.6, 0] },
   // plans de la mise en scène (caméra auto) : fixes, ou calculés à chaque image (fn) depuis la position monde de l'objet visé
   walk: { p: [-3.0, 14.5, 29.5], t: [-3.0, 1.6, 3.2] },          // plan large : le travailleur va au poste ou revient au banc
