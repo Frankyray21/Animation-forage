@@ -5,11 +5,12 @@ Deux vidéos pour la formation sur le démontage du cône du mandrin (PRO-OP-DD-
 
 | Fichier | Scénario | Contenu | Durée |
 |---|---|---|---|
-| `procedure_boyles_h.mp4` + `procedure_poster.jpg` | A, « Procédure respectée » | Étapes 1 à 9 de la procédure, trois parties séparées par les rendus Blender, carton de fin « À retenir » | 115,5 s (2 773 images, ≈ 9 Mo) |
+| `procedure_boyles_h.mp4` + `procedure_poster.jpg` | A, « Procédure respectée » | Intro à deux voix et rendus Blender, étapes 1 à 9 calées sur la voix, « À retenir », questions de l'équipe ; **avec le son** (dialogue ElevenLabs, AAC mono 48 kHz 128 kbit/s) | 147,5 s (3 540 images, ≈ 11 Mo) |
 | `accident_boyles_h.mp4` + `accident_poster.jpg` | D, reconstitution de l'accident | Boulons du cône retirés un par un, dernier boulon desserré à l'impact drill, carton de fin « Ce qu'il fallait faire » | 71,4 s (1 714 images, ≈ 4,1 Mo) |
 
 Format commun : H.264 High (libx264, preset slow, CRF 27), yuv420p, 1280 × 720, 24 i/s, `+faststart`, couleurs BT.601 non
-balisées. **Sans son pour l'instant** : la voix québécoise sera ajoutée par un remontage (voir « Voix »). Image d'aperçu :
+balisées. **Procédure avec le son** : vidéo calée sur l'audio du dialogue (voir « Voix » et [hyperframes/synchro/README.md](hyperframes/synchro/README.md)) ;
+accident sans son pour l'instant. Image d'aperçu :
 le carton titre (image à 2,2 s).
 
 Mise en page : la 3D occupe le haut de l'image (1280 × 620) et un bandeau de 100 px en dessous donne la barre des étapes, le
@@ -21,7 +22,9 @@ affiche alors « Pièces retirées » et leurs numéros. Calques posés sur la 3
 compteur de tours du desserrage en étoile et repère « Ralenti × ½ » (procédure, étape 7), fenêtre « ressorts en coupe »
 (en bas à droite ; étape 7, et étape « ! » de l'accident). Fin d'étape figée 0,6 s ; fondus enchaînés de 0,5 s entre les parties.
 
-Montage de la procédure : titre sur `renders/01_ensemble.jpg` (3,5 s), étapes 1–3, `02_face_mandrin` (3 s), étapes 4–5,
+Montage de la procédure (avec la voix, `gen.mjs --synchro`) : titre sur `renders/01_ensemble.jpg`, puis `03_coupe`, `04_couvercle_retire`
+et `02_face_mandrin` pendant l'intro à deux voix, étapes 1–9 calées sur « Étape N », « À retenir » (3 lignes), questions de
+l'équipe. Montage muet d'origine (sans `--synchro`, inchangé) : titre (3,5 s), étapes 1–3, `02_face_mandrin` (3 s), étapes 4–5,
 `03_coupe` et `04_couvercle_retire` (3 s chacun), étapes 6–9, fin (4 s). Les rendus Blender ont un Ken Burns (zoom
 1,00 → 1,06) au-dessus du bandeau. L'accident : titre, les 8 étapes d'un seul tenant, fin.
 
@@ -122,9 +125,13 @@ par `curl`, qui suit le mandataire HTTPS ; défaut `$TMPDIR/clam-cdn-cache`), et
 Pour contrôler quelques images 3D, capture seule : `node video/capture.mjs --out /tmp/f --from 800 --to 801`. `--info` affiche
 les étapes et leur durée. La capture reprend là où elle s'est arrêtée avec `--skip-existing`.
 
-## Voix (à venir)
+## Voix
 
-Les vidéos sont muettes pour l'instant. Pour ajouter la voix québécoise, sans refaire la capture :
+**Procédure (fait, 2026-10-10)** : la voix est un dialogue à deux voix enregistré d'un seul tenant dans ElevenLabs (abonnement de
+l'auteur ; script `hyperframes/synchro/A/script.json`). La vidéo est calée dessus par `gen.mjs --scen A --muet --synchro`, puis
+l'audio d'origine est posé tel quel (sans traitement, −19,6 LUFS) : voir [hyperframes/synchro/README.md](hyperframes/synchro/README.md).
+
+**Autre voie (voix de synthèse placée par passage)**, pour l'accident ou sans enregistrement d'un seul tenant, sans refaire la capture :
 
 1. `python3 "$DEPOT/video/tts.py" --scen A --voix Gabrielle` (Amazon Polly, voix neuronales fr-CA ; identifiants AWS dans
    l'environnement) → `video/narration/A/*.mp3` et `video/narration/A/manifeste.json` (durée de chaque passage) ;

@@ -36,7 +36,7 @@
   const LOCK = 'clam-offline-download';
   const ICON = { idle: '⇩', busy: '⏳', ready: '✓', error: '⇩' };
   const TEXT = {
-    idle: ['Télécharger pour le hors ligne', 'Enregistrer tout le site sur cet appareil (environ 17 Mo) pour l’utiliser sans réseau.'],
+    idle: ['Télécharger pour le hors ligne', 'Enregistrer tout le site sur cet appareil (environ 19 Mo) pour l’utiliser sans réseau.'],
     ready: ['Prêt hors ligne', 'Tout le site est enregistré sur cet appareil : accueil, animation 3D et vidéos.'],
     error: ['Réessayer le téléchargement', 'Le téléchargement n’est pas complet.'],
   };
@@ -50,7 +50,7 @@
     b.title = title || (TEXT[state] ? TEXT[state][1] : '');
   });
   let busy = false, phase = '';   // phase 'files' : petits fichiers téléchargés par la page ; 'video' : vidéos suivies dans le service worker
-  const VID_EST = 13e6;   // taille des deux vidéos tant que le service worker ne l'a pas donnée
+  const VID_EST = 15.2e6;   // taille des deux vidéos tant que le service worker ne l'a pas donnée
   // état demandé au service worker actif (par canal privé) ; réponse d'une autre version ignorée
   async function ask(type, wait = 20000) {
     const reg = await navigator.serviceWorker.ready, sw = navigator.serviceWorker.controller || reg.active;
@@ -119,7 +119,7 @@
     const cache = await caches.open(s.version);
     const vids = s.videos || [s.video];   // service worker d'une version précédente : une seule vidéo
     const files = s.list.filter(u => !vids.includes(u)), needVideo = vids.some(u => s.list.includes(u)) || s.videoPending;
-    // progression en octets : taille estimée (autres fichiers 150 ko, vidéos 13 Mo) remplacée par la vraie dès qu'elle est connue
+    // progression en octets : taille estimée (autres fichiers 150 ko, vidéos 15 Mo) remplacée par la vraie dès qu'elle est connue
     const size = new Map(files.map(u => [u, 150e3])), got = new Map(files.map(u => [u, 0]));
     let vid = { n: 0, len: needVideo ? VID_EST : 0 }, shown = -1, said = 0;
     const report = () => {

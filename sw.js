@@ -5,7 +5,7 @@
 // elle-même les petits fichiers (requêtes cache: 'reload' + credentials: 'omit', laissées au réseau ici) ; les deux vidéos sont téléchargées
 // ici, l'une après l'autre (message offline-video), avec la progression cumulée envoyée aux pages, et continuent quand on change de page.
 // Le site partage l'origine frankyray21.github.io avec d'autres applications : seules les copies « clam-… » sont gérées ici.
-const VERSION = 'clam-v8';   // vidéos montées avec HyperFrames : procédure refaite, accident ajouté (deux vidéos)
+const VERSION = 'clam-v9';   // procédure avec la voix (dialogue ElevenLabs, 2 min 27 s) : copies hors ligne muettes renouvelées
 const PREFIX = 'clam-';
 const LOCAL = [
   './', 'index.html', 'animation.html', 'manifest.webmanifest', 'pwa.js',
@@ -43,7 +43,7 @@ let videoJob = null, videoProg = null;   // vidéos téléchargées par le servi
 let videoQuota = false;   // stockage plein pendant l'enregistrement d'une vidéo (message « espace insuffisant » de la page)
 const abs = u => new URL(u, self.location).href;
 
-// L'installation n'attend jamais les vidéos (13 Mo) : sur une liaison lente, le navigateur arrête un événement après 5 min.
+// L'installation n'attend jamais les vidéos (15 Mo) : sur une liaison lente, le navigateur arrête un événement après 5 min.
 // La copie précédente de chaque vidéo est toujours reprise (une vidéo périmée vaut mieux qu'aucune) ; la nouvelle arrive ensuite en arrière-plan.
 self.addEventListener('install', e => {
   e.waitUntil((async () => {

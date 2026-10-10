@@ -7,7 +7,7 @@ Comme lors de l'accident, la tête est **à l'horizontale** : axe de broche à 1
 **Accueil** (`index.html`) : page d'ouverture d'une rencontre sécurité, projetable — « Ce qui s'est passé » (vidéo de la reconstitution, puis frise de 4 images tirées de la 3D, scénario de l'accident) et « Le danger caché » (ressorts comprimés même cadenassé), avec **Commencer la présentation** (ouvre `animation.html#presenter`, mode Présentation) et **Explorer la 3D** (`animation.html`). Un seul thème, sombre, rouge et jaune d'avertissement ; images dans `img/` et `renders/`.
 
 **Application installable et hors ligne** : bouton **Installer l'application** (accueil, en haut à droite ; animation, à côté de « ← Accueil ») sur Android, Chrome et Edge ; sur iPhone et iPad, le bouton rappelle « Partager → Sur l'écran d'accueil ». Le service worker `sw.js` (enregistré par `pwa.js`, manifeste `manifest.webmanifest`, icônes dans `icons/`) garde une copie locale des pages, des images, de three.js (version figée sur le CDN), des polices et des deux vidéos : après une première visite en ligne, le site fonctionne sans réseau. Pages : réseau d'abord, copie locale hors ligne ; changer `VERSION` dans `sw.js` pour forcer le renouvellement des copies. Bouton **Télécharger pour le hors ligne** (accueil, en haut ; animation, à côté de « ← Accueil »).
-- **Ce qu'il fait** : il enregistre d'un coup tout ce qui manque sur l'appareil (pages, images, three.js, polices et les deux vidéos, environ 17 Mo). Il affiche la progression en pourcentage des octets, puis **✓ Prêt hors ligne**, ou **Réessayer le téléchargement** en cas d'échec. Il demande aussi au navigateur de ne pas effacer cette copie (stockage persistant).
+- **Ce qu'il fait** : il enregistre d'un coup tout ce qui manque sur l'appareil (pages, images, three.js, polices et les deux vidéos, environ 19 Mo). Il affiche la progression en pourcentage des octets, puis **✓ Prêt hors ligne**, ou **Réessayer le téléchargement** en cas d'échec. Il demande aussi au navigateur de ne pas effacer cette copie (stockage persistant).
 - **Fonctionnement** : le service worker donne la liste de ce qui manque (message `offline-status`).
   - Petits fichiers : la page les télécharge elle-même. Ses requêtes, marquées `cache: 'reload'` et `credentials: 'omit'`, ne passent pas par le service worker.
   - Vidéos (procédure et accident, liste `VIDEOS` de `sw.js`) : le service worker les télécharge l'une après l'autre (message `offline-video`) et les pages suivent la progression cumulée (octets reçus sur la somme des deux tailles), un message par seconde, ce qui le garde actif sans événement long. Le téléchargement continue quand on change de page. Une vidéo en échec n'empêche pas l'autre ; seule celle qui manque est reprise au prochain essai.
@@ -187,21 +187,22 @@ Retiré (option « Éclairage réaliste », dossier `lightmaps/`, scripts de cui
 
 ## Vidéos (procédure et accident)
 
-Deux vidéos de formation, montées avec **HyperFrames** (HeyGen, licence Apache-2.0, version 0.8.144 figée, rendu entièrement hors ligne). Format commun : H.264, 1280 × 720, 24 i/s, **sans son pour l'instant** (la voix québécoise sera ajoutée au remontage).
+Deux vidéos de formation, montées avec **HyperFrames** (HeyGen, licence Apache-2.0, version 0.8.144 figée, rendu entièrement hors ligne). Format commun : H.264, 1280 × 720, 24 i/s. **La procédure a le son** : une discussion à deux voix (formateur et travailleur, accent québécois) enregistrée dans ElevenLabs, sur laquelle la vidéo est calée (`video/hyperframes/synchro/`). L'accident est **sans son pour l'instant**.
 
 | Vidéo | Fichier | Durée | Taille | Où |
 | --- | --- | --- | --- | --- |
-| Procédure : scénario A « Procédure respectée », étapes 1 à 9 | `video/procedure_boyles_h.mp4`, aperçu `video/procedure_poster.jpg` | 1 min 56 s | ≈ 9 Mo | `animation.html`, section repliable **Vidéo de la procédure** |
+| Procédure : scénario A « Procédure respectée », étapes 1 à 9 | `video/procedure_boyles_h.mp4`, aperçu `video/procedure_poster.jpg` | 2 min 27 s, avec le son | ≈ 11 Mo | `animation.html`, section repliable **Vidéo de la procédure** |
 | Accident : scénario D « Boulons retirés un par un : cône retenu », reconstitution | `video/accident_boyles_h.mp4`, aperçu `video/accident_poster.jpg` | 1 min 11 s | ≈ 4,1 Mo | accueil, section « Ce qui s'est passé » ; `animation.html`, section repliable **Vidéo de l'accident** |
 
 Plan de la procédure :
-- carton titre sur le rendu Blender de l'ensemble ;
-- animation 3D à vitesse 1×, caméra auto à plans variés (gestes du travailleur, coupe du mandrin seulement quand elle montre les ressorts comprimés, numéros des boulons) ;
+- carton titre sur le rendu Blender de l'ensemble, puis, pendant l'intro à deux voix, les rendus Blender coupe (« 18 ressorts »), couvercle retiré (« 9 boulons du cône ») et face avant ;
+- chaque étape commence quand le formateur dit « Étape N » et reste à l'écran jusqu'à la fin de sa phrase : fin figée prolongée si l'étape est courte, sinon images sautées avec le repère « Vidéo accélérée × N » (jamais le ralenti) ; animation 3D à vitesse 1× ailleurs, caméra auto à plans variés (gestes du travailleur, coupe du mandrin seulement quand elle montre les ressorts comprimés, numéros des boulons) ;
 - les plans où le travailleur porte les pièces à la table sont coupés et remplacés par un gros plan tournant des pièces retirées, en surbrillance ; au retour, seule la fin du plan est gardée (travailleur immobile, sans pivot brusque) ;
 - sous la 3D, un bandeau de 100 px : barre des 9 étapes, numéro et titre de l'étape, consigne de la procédure au mot près (texte de l'encadré de l'animation) ; rien ne couvre la 3D ;
 - étape 7 : compteur de tours (tour et boulon) pendant le desserrage en étoile, passage ralenti (« Ralenti × ½ ») et fenêtre « ressorts en coupe » ;
-- rendus Blender intercalés avec léger zoom (face avant avant l'étape 4, coupe et couvercle retiré avant l'étape 6) ;
-- carton « À retenir ».
+- encadrés « Pourquoi » pendant la phrase qui les explique ;
+- carton « À retenir » (trois lignes, chacune quand elle est dite) ;
+- « Questions de l'équipe » : cinq questions d'un travailleur, chaque réponse affichée quand le formateur répond.
 
 Plan de l'accident : carton titre ; étapes 1 à 5 résumées ; étape 6 faite (3 boulons longs remis sans bushing) ; boulons du cône sortis au complet, un par un ; dernier boulon desserré à l'impact drill sous pleine charge ; le boulon casse, l'outil est projeté, le cône est retenu par les 3 boulons longs ; bilan ; carton de fin. Même bandeau (barre des 8 étapes, « Reconstitution »), encadrés « Pourquoi » et fenêtre « ressorts en coupe ».
 
