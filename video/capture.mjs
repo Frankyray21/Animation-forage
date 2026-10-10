@@ -150,8 +150,9 @@ if (process.argv.includes('--scan')) {   // relevé sans rendu : plan, consigne 
     await step(plan[k], false);
     const m = await page.evaluate(() => {
       const c = document.getElementById('procCard'), st = window.__clam.cutState(), S = window.__clam.state(), z = window.__star ? window.__star() : null;
-      // desserrage en étoile en cours : boulon actif (numéro 1–6) et tour en cours
-      const count = z && S.active >= 0 && S.pb && S.pb[S.active] ? { num: z.order.indexOf(S.active) + 1, pass: Math.min(z.R, Math.max(1, Math.floor(S.pb[S.active].turns - 1e-3) + 1)), R: z.R } : null;
+      // desserrage en étoile en cours : boulon actif (numéro 1–6) et tour en cours ; tours déjà faits + 1, y compris quand la clé
+      // arrive au boulon et n'a pas encore tourné (sinon le compteur revenait au tour précédent au début de chaque boulon)
+      const count = z && S.active >= 0 && S.pb && S.pb[S.active] ? { num: z.order.indexOf(S.active) + 1, pass: Math.min(z.R, Math.max(1, Math.floor(S.pb[S.active].turns + 1e-3) + 1)), R: z.R } : null;
       return { cam: st.cam, cut: st.cutOn, cons: c.hidden ? '' : (c.dataset.html || ''), count };
     });
     const s = info.steps[plan[k].step];
