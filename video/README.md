@@ -5,7 +5,7 @@ Deux vidéos pour la formation sur le démontage du cône du mandrin (PRO-OP-DD-
 
 | Fichier | Scénario | Contenu | Durée |
 |---|---|---|---|
-| `procedure_boyles_h.mp4` + `procedure_poster.jpg` | A, « Procédure respectée » | Intro à deux voix et rendus Blender, étapes 1 à 9 calées sur la voix, « À retenir », questions de l'équipe ; **avec le son** (dialogue ElevenLabs, AAC mono 48 kHz 128 kbit/s) | 147,5 s (3 540 images, ≈ 11 Mo) |
+| `procedure_boyles_h.mp4` + `procedure_poster.jpg` | A, « Procédure respectée » | Intro à deux voix et rendus Blender, étapes 1 à 9 calées sur la voix, « À retenir », questions de l'équipe ; **avec le son** (dialogue ElevenLabs allongé de pauses, AAC mono 48 kHz 128 kbit/s) | 185,7 s (4 457 images, ≈ 12,6 Mo) |
 | `accident_boyles_h.mp4` + `accident_poster.jpg` | D, reconstitution de l'accident | Boulons du cône retirés un par un, dernier boulon desserré à l'impact drill, carton de fin « Ce qu'il fallait faire » | 71,4 s (1 714 images, ≈ 4,1 Mo) |
 
 Format commun : H.264 High (libx264, preset slow, CRF 27), yuv420p, 1280 × 720, 24 i/s, `+faststart`, couleurs BT.601 non
@@ -129,7 +129,8 @@ les étapes et leur durée. La capture reprend là où elle s'est arrêtée avec
 
 **Procédure (fait, 2026-10-10)** : la voix est un dialogue à deux voix enregistré d'un seul tenant dans ElevenLabs (abonnement de
 l'auteur ; script `hyperframes/synchro/A/script.json`). La vidéo est calée dessus par `gen.mjs --scen A --muet --synchro`, puis
-l'audio d'origine est posé tel quel (sans traitement, −19,6 LUFS) : voir [hyperframes/synchro/README.md](hyperframes/synchro/README.md).
+l'audio est posé sans traitement (−19,6 LUFS). Il a été allongé de 30 pauses de silence placées dans ses silences (147,5 s →
+185,7 s, aucun mot touché) pour que la vidéo n'aille plus trop vite : voir [hyperframes/synchro/README.md](hyperframes/synchro/README.md).
 
 **Autre voie (voix de synthèse placée par passage)**, pour l'accident ou sans enregistrement d'un seul tenant, sans refaire la capture :
 
