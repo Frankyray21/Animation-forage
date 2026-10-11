@@ -23,7 +23,9 @@ voix.mp3 + script.json
 | `dtw.c` | DTW à bande Sakoe-Chiba, compilé par aligner.py (`cc -O2`) |
 | `synchro-a.py` | Produit le `synchro.json` de la vidéo 1 (contenu sous le tableau) |
 | `A/script.json` | Dialogue de la vidéo 1 tel qu'il a été donné à ElevenLabs (28 répliques : passage, orateur 1 = formateur, 2 = travailleur, texte) |
-| `A/bornes.json`, `A/synchro.json` | Mesures de l'audio du 2026-10-10 (`ElevenLabs_2026-10-10T20_05_10__s100_v4.mp3`) et instants qui ont servi au rendu |
+| `A/bornes.json`, `A/synchro.json` | Mesures de l'audio du 2026-10-10 (`ElevenLabs_2026-10-10T20_05_10__s100_v4.mp3`, 147,5 s) et instants du premier rendu |
+| `allonger.py`, `A/pauses.json` | Allongement de l'audio : pauses de silence insérées dans ses silences (aucun mot coupé), instants décalés |
+| `A/bornes-allonge.json`, `A/synchro-allonge.json` | Instants de l'audio allongé (185,7 s) : ceux de la vidéo en ligne |
 
 **Étapes de `aligner.py`.**
 1. Synthèse de référence du texte, phrase par phrase, avec une voix Piper locale.
@@ -111,6 +113,34 @@ La ligne 1 est volontairement au singulier : le pluriel de make_video, « les bo
 `rapport.json` contient un bilan par étape, sous la clé `synchro`.
 
 **Capture à utiliser.** Les images 3D de A au relevé de compteur corrigé, `v4-A-hf` : seul son `scan.json` diffère, sur le champ `count` de l'étape 7. Avec l'ancien relevé, le compteur alterne entre deux tours.
+
+## Allongement (vidéo 1, 2026-10-11)
+
+La vidéo calée sur l'audio d'origine (147,5 s) allait trop vite : ElevenLabs enchaîne les répliques presque sans pause, et les
+étapes 4, 5 et 7 étaient accélérées (× 1,4, × 3,5, × 1,9). `allonger.py` insère des pauses de silence dans l'audio, chacune
+au milieu d'un silence existant (coupe vérifiée sous −45 dBFS ; mesuré : −77 à −88 dBFS), sans toucher à la voix, puis décale
+tous les instants de `bornes.json`. `A/pauses.json` (30 pauses, 37,2 s, + 1 s à la fin) :
+
+- 1 s environ avant chaque « Étape N », 0,6 s avant chaque phrase « Pourquoi », 0,4 s entre les répliques de l'intro ;
+- après une étape dont l'image demande plus de temps que sa voix : +1,2 s (étape 4), +6 s (étape 5 : les 9 boulons du couvercle
+  et le gros plan), +1,5 s avant « Regardez le compteur », +3 s et +1,3 s à l'étape 7 (desserrage en étoile, gros plan) ;
+- « À retenir » : 1,5 s avant, 0,6 s entre les lignes ; questions : 1,5 s avant la première, 0,6 s entre question et réponse,
+  1,2 s entre deux questions.
+
+Résultat : 185,7 s (4 457 images) ; accélération résiduelle × 1,05 (étape 4), × 1,13 (étape 5), × 1,15 (étape 7), sous le seuil
+du repère « Vidéo accélérée ». Pour raccourcir ou allonger encore : modifier `A/pauses.json`, puis relancer allonger.py,
+synchro-a.py et le rendu.
+
+```sh
+python3 video/hyperframes/synchro/allonger.py --audio voix_A_elevenlabs.mp3 --bornes video/hyperframes/synchro/A/bornes.json \
+  --plan video/hyperframes/synchro/A/pauses.json --sortie $HF_TRAVAIL/allonge      # voix_allongee.wav / .mp3, bornes.json
+python3 video/hyperframes/synchro/synchro-a.py --bornes $HF_TRAVAIL/allonge/bornes.json --sortie $HF_TRAVAIL/allonge/synchro.json \
+  --audio voix_A_allongee.mp3
+# puis gen.mjs --synchro $HF_TRAVAIL/allonge/synchro.json, rendu, encodage, et l'audio voix_allongee.wav posé à 0 s
+```
+
+À 4 457 images, le rendu d'un seul tenant demande environ 18 Go libres (estimation de HyperFrames) : rendu fait en trois
+fenêtres (`--fenetre 0-1470`, `1470-3004`, `3004-4457`, débuts de segment), séquences PNG mises bout à bout, puis encodage.
 
 ## Commandes (vidéo 1)
 

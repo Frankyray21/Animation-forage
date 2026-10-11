@@ -1,0 +1,156 @@
+{
+ "note": "Pauses insérées dans l'audio ElevenLabs de la vidéo 1 (allonger.py) : la vidéo calée dessus allait trop vite.",
+ "pauses": [
+  {
+   "avant": "1",
+   "duree": 0.4,
+   "raison": "intro : réponse du travailleur"
+  },
+  {
+   "avant": "2",
+   "duree": 0.4,
+   "raison": "intro"
+  },
+  {
+   "avant": "3",
+   "duree": 0.4,
+   "raison": "intro"
+  },
+  {
+   "avant": "4",
+   "duree": 1.2,
+   "raison": "avant « Étape un »"
+  },
+  {
+   "avant": "5",
+   "duree": 0.6,
+   "raison": "avant « Regardez la coupe » (Pourquoi)"
+  },
+  {
+   "avant": "6",
+   "duree": 1.0,
+   "raison": "avant « Étape deux »"
+  },
+  {
+   "avant": "7",
+   "duree": 1.0,
+   "raison": "avant « Étape trois »"
+  },
+  {
+   "avant": "8",
+   "duree": 1.0,
+   "raison": "avant « Étape quatre »"
+  },
+  {
+   "avant": "9",
+   "duree": 2.2,
+   "raison": "avant « Étape cinq » : fin de l'étape 4 à vitesse normale"
+  },
+  {
+   "avant": "10",
+   "duree": 7.0,
+   "raison": "avant « Étape six » : 9 boulons du couvercle et gros plan de l'étape 5 à vitesse normale"
+  },
+  {
+   "avant": "11",
+   "duree": 0.6,
+   "raison": "avant le Pourquoi de l'étape 6"
+  },
+  {
+   "avant": "12",
+   "duree": 1.0,
+   "raison": "avant « Étape sept »"
+  },
+  {
+   "avant": "12.3",
+   "duree": 1.5,
+   "raison": "avant « Regardez le compteur » : ralenti de l'étape 7"
+  },
+  {
+   "avant": "13",
+   "duree": 3.0,
+   "raison": "avant le Pourquoi de l'étape 7 : desserrage en étoile à vitesse normale"
+  },
+  {
+   "avant": "14",
+   "duree": 2.3,
+   "raison": "avant « Étape huit » : fin de l'étape 7 (gros plan, retour)"
+  },
+  {
+   "avant": "15",
+   "duree": 0.6,
+   "raison": "avant le Pourquoi de l'étape 8"
+  },
+  {
+   "avant": "16",
+   "duree": 1.0,
+   "raison": "avant « Étape neuf »"
+  },
+  {
+   "avant": "17",
+   "duree": 1.5,
+   "raison": "avant « Pour le quart » (À retenir)"
+  },
+  {
+   "avant": "17.2",
+   "duree": 0.6,
+   "raison": "À retenir, ligne 2"
+  },
+  {
+   "avant": "17.3",
+   "duree": 0.6,
+   "raison": "À retenir, ligne 3"
+  },
+  {
+   "avant": "18",
+   "duree": 1.5,
+   "raison": "avant la question 1"
+  },
+  {
+   "avant": "19",
+   "duree": 0.6,
+   "raison": "réponse 1"
+  },
+  {
+   "avant": "20",
+   "duree": 1.2,
+   "raison": "question 2"
+  },
+  {
+   "avant": "21",
+   "duree": 0.6,
+   "raison": "réponse 2"
+  },
+  {
+   "avant": "22",
+   "duree": 1.2,
+   "raison": "question 3"
+  },
+  {
+   "avant": "23",
+   "duree": 0.6,
+   "raison": "réponse 3"
+  },
+  {
+   "avant": "24",
+   "duree": 1.2,
+   "raison": "question 4"
+  },
+  {
+   "avant": "25",
+   "duree": 0.6,
+   "raison": "réponse 4"
+  },
+  {
+   "avant": "26",
+   "duree": 1.2,
+   "raison": "question 5"
+  },
+  {
+   "avant": "27",
+   "duree": 0.6,
+   "raison": "réponse 5"
+  }
+ ],
+ "fin": 1.0
+}
