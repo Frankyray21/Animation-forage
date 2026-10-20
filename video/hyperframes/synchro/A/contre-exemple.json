@@ -1,0 +1,9 @@
+{
+ "_note": "Contre-exemple de la vidéo 1 (à intégrer au prochain rendu) : après le « Pourquoi » de l'étape 7 (A_06_p), environ 15 s d'images du scénario « Sans les boulons longs : cône projeté », teintées rouge, sur la voix du passage A_06_x ; retour à la procédure à l'étape 8.",
+ "apres": "A_06_p",
+ "passage": "A_06_x",
+ "bandeau_entree": "✗ Si on ne respecte pas la séquence",
+ "bandeau_retour": "✓ La bonne méthode",
+ "images": "scénario B : boulons du cône sortis au complet un par un, ressorts toujours comprimés dans la fenêtre en coupe, dernier boulon qui casse, cône projeté (ralenti)",
+ "teinte": "rouge"
+}
