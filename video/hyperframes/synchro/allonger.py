@@ -42,6 +42,10 @@ for e in plan['pauses']:
     t = (f + r) / 2
     n = int(round(t * SR)); w = x[max(0, n - 480):n + 480]
     niv = 20 * np.log10(np.sqrt(np.mean(w ** 2)) + 1e-12)
+    if niv > -45:   # milieu du silence occupé (souffle, bruit de bouche) : point le plus calme du silence, par pas de 10 ms
+        cands = [(20 * np.log10(np.sqrt(np.mean(x[max(0, m - 480):m + 480] ** 2)) + 1e-12), m)
+                 for m in range(int((f + .03) * SR), int((r - .03) * SR), 480)]
+        if cands: niv, n = min(cands); t = n / SR
     if niv > -45: raise SystemExit(f"« {e['avant']} » : coupe à {t:.3f} s dans un passage à {niv:.1f} dBFS (pas un silence)")
     coupes.append({'avant': str(e['avant']), 't': round(t, 4), 'duree': float(e['duree']), 'niveau_dbfs': round(float(niv), 1),
                    'raison': e.get('raison', '')})
