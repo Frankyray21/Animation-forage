@@ -109,8 +109,9 @@
  {
   "passage": "A_08_c",
   "orateur": 1,
-  "texte": "Étape neuf : on sort le cône, le bowl, pis les mâchoires, et on change les pièces. L'énergie a été relâchée lentement : le cône est resté retenu tout le long.",
-  "mots": 31
+  "texte": "Étape neuf : on sort le cône, le bowl, pis les mâchoires, et on change les pièces. L'énergie résiduelle a été relâchée lentement : le cône est resté retenu tout le long.",
+  "mots": 32,
+  "a_enregistrer": "L'énergie résiduelle a été relâchée lentement : le cône est resté retenu tout le long."
  },
  {
   "passage": "A_fin",
