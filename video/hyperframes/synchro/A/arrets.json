@@ -1,0 +1,13 @@
+{
+ "_note": "Cartes d'arrêt de la vidéo 1 : image plein écran, sans voix, environ 8 s, pour que l'animateur mette sur pause et questionne l'équipe. « apres » : passage après lequel la carte s'affiche.",
+ "arrets": [
+  {
+   "apres": "A_00_p",
+   "titre": "⏸ Arrêt — On en discute",
+   "question": "Les ressorts sont encore comprimés. Selon vous, comment on peut relâcher cette énergie-là sans danger ?",
+   "consigne": "Mettez la vidéo sur pause et discutez en équipe.",
+   "fond": "coupe des ressorts comprimés (image figée de l'étape 1)",
+   "duree": 8
+  }
+ ]
+}
