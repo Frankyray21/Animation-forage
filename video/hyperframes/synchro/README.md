@@ -23,7 +23,6 @@ voix.mp3 + script.json
 | `dtw.c` | DTW à bande Sakoe-Chiba, compilé par aligner.py (`cc -O2`) |
 | `synchro-a.py` | Produit le `synchro.json` de la vidéo 1 (contenu sous le tableau) |
 | `A/script.json` | Dialogue de la vidéo 1 tel qu'il a été donné à ElevenLabs (28 répliques : passage, orateur 1 = formateur, 2 = travailleur, texte) |
-| `A/script-v2.json` | Script à jour, pas encore entièrement enregistré (30 répliques) : étape 6 reformulée, ajouts sur l'énergie résiduelle (étapes 1 et 3, une question de l'équipe). `a_enregistrer` : fin de réplique, ou réplique entière, à enregistrer puis à insérer dans l'audio |
 | `A/bornes.json`, `A/synchro.json` | Mesures de l'audio du 2026-10-10 (`ElevenLabs_2026-10-10T20_05_10__s100_v4.mp3`, 147,5 s) et instants du premier rendu |
 | `allonger.py`, `A/pauses.json` | Allongement de l'audio : pauses de silence insérées dans ses silences (aucun mot coupé), instants décalés |
 | `A/bornes-allonge.json`, `A/synchro-allonge.json` | Instants de l'audio allongé (185,7 s) : ceux de la vidéo en ligne |

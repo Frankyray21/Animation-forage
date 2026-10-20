@@ -32,9 +32,8 @@
  {
   "passage": "A_00_p",
   "orateur": 1,
-  "texte": "Regardez la coupe : l'hydraulique est coupé, mais les ressorts verts sont encore comprimés. Fermer les manettes ne libère pas leur énergie. C'est ce qu'on appelle de l'énergie résiduelle : elle reste emmagasinée dans l'équipement, même quand la source est arrêtée.",
-  "mots": 41,
-  "a_enregistrer": "C'est ce qu'on appelle de l'énergie résiduelle : elle reste emmagasinée dans l'équipement, même quand la source est arrêtée."
+  "texte": "Regardez la coupe : l'hydraulique est coupé, mais les ressorts verts sont encore comprimés. Fermer les manettes ne libère pas leur énergie.",
+  "mots": 22
  },
  {
   "passage": "A_01_c",
@@ -45,9 +44,8 @@
  {
   "passage": "A_02_c",
   "orateur": 1,
-  "texte": "Étape trois : on cadenasse la foreuse. Le cadenas empêche de repartir l'hydraulique, mais les ressorts, eux, poussent encore. Cette énergie résiduelle, on la contrôle aussi : on la retient à l'étape six, pis on la relâche tranquillement à l'étape sept.",
-  "mots": 41,
-  "a_enregistrer": "Cette énergie résiduelle, on la contrôle aussi : on la retient à l'étape six, pis on la relâche tranquillement à l'étape sept."
+  "texte": "Étape trois : on cadenasse la foreuse. Le cadenas empêche de repartir l'hydraulique, mais les ressorts, eux, poussent encore.",
+  "mots": 19
  },
  {
   "passage": "A_03_c",
@@ -65,15 +63,13 @@
   "passage": "A_05_c",
   "orateur": 1,
   "texte": "Étape six, c'est la clé de toute la job. Il est important de desserrer les boulons longs un à la fois, de retirer l'espaceur, qu'on appelle le bushing, pis de resserrer complètement le boulon sans bushing.",
-  "mots": 36,
-  "a_enregistrer": "Étape six, c'est la clé de toute la job. Il est important de desserrer les boulons longs un à la fois, de retirer l'espaceur, qu'on appelle le bushing, pis de resserrer complètement le boulon sans bushing."
+  "mots": 36
  },
  {
   "passage": "A_05_p",
   "orateur": 1,
   "texte": "Ça nous permet d'avoir l'espace requis pour desserrer les six autres boulons, tout en enlevant la tension des ressorts. Pis on garde une sécurité supplémentaire avec les trois boulons longs toujours en place.",
-  "mots": 33,
-  "a_enregistrer": "Ça nous permet d'avoir l'espace requis pour desserrer les six autres boulons, tout en enlevant la tension des ressorts. Pis on garde une sécurité supplémentaire avec les trois boulons longs toujours en place."
+  "mots": 33
  },
  {
   "passage": "A_06_c",
@@ -158,20 +154,6 @@
   "orateur": 1,
   "texte": "Non. Ce sont eux qui retiennent le cône si quelque chose lâche. Sans eux, rien ne l'arrête.",
   "mots": 17
- },
- {
-  "passage": "A_questions",
-  "orateur": 2,
-  "texte": "L'énergie résiduelle, y en a juste dans les ressorts ?",
-  "mots": 10,
-  "a_enregistrer": "L'énergie résiduelle, y en a juste dans les ressorts ?"
- },
- {
-  "passage": "A_questions",
-  "orateur": 1,
-  "texte": "Pas juste là. Il y a aussi la pression qui reste dans les boyaux hydrauliques, une pièce qui peut tomber, un câble tendu. Avant de démonter, on se demande toujours : qu'est-ce qui peut encore bouger ?",
-  "mots": 37,
-  "a_enregistrer": "Pas juste là. Il y a aussi la pression qui reste dans les boyaux hydrauliques, une pièce qui peut tomber, un câble tendu. Avant de démonter, on se demande toujours : qu'est-ce qui peut encore bouger ?"
  },
  {
   "passage": "A_questions",
