@@ -162,6 +162,20 @@
  {
   "passage": "A_questions",
   "orateur": 2,
+  "texte": "L'énergie résiduelle, y en a juste dans les ressorts ?",
+  "mots": 10,
+  "a_enregistrer": "L'énergie résiduelle, y en a juste dans les ressorts ?"
+ },
+ {
+  "passage": "A_questions",
+  "orateur": 1,
+  "texte": "Pas juste là. Il y a aussi la pression qui reste dans les boyaux hydrauliques, une pièce qui peut tomber, un câble tendu. Avant de démonter, on se demande toujours : qu'est-ce qui peut encore bouger ?",
+  "mots": 37,
+  "a_enregistrer": "Pas juste là. Il y a aussi la pression qui reste dans les boyaux hydrauliques, une pièce qui peut tomber, un câble tendu. Avant de démonter, on se demande toujours : qu'est-ce qui peut encore bouger ?"
+ },
+ {
+  "passage": "A_questions",
+  "orateur": 2,
   "texte": "Pis si quelque chose me semble pas normal ?",
   "mots": 9
  },
