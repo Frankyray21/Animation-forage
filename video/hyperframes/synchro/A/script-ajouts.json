@@ -1,0 +1,68 @@
+[
+ {
+  "passage": "A_00_p",
+  "orateur": 1,
+  "texte": "C'est ce qu'on appelle de l'énergie résiduelle : elle reste emmagasinée dans l'équipement, même quand la source est arrêtée.",
+  "ligne_v2": 5
+ },
+ {
+  "passage": "A_02_c",
+  "orateur": 1,
+  "texte": "Chacun pose son cadenas, pis on vérifie que la foreuse peut pas repartir. Le cadenas empêche de repartir l'hydraulique, mais les ressorts, eux, poussent encore. Cette énergie résiduelle, on la contrôle aussi : à l'étape six, les trois boulons longs, remis sans bushing, retiennent le cône. À l'étape sept, on desserre les six autres boulons un tour à la fois, pis les ressorts se détendent tranquillement.",
+  "ligne_v2": 7
+ },
+ {
+  "passage": "A_05_c",
+  "orateur": 1,
+  "texte": "Étape six, c'est la clé de toute la job. Il est important de desserrer les boulons longs un à la fois, de retirer l'espaceur, qu'on appelle le bushing, pis de resserrer complètement le boulon sans bushing.",
+  "ligne_v2": 10
+ },
+ {
+  "passage": "A_05_p",
+  "orateur": 1,
+  "texte": "Ça nous permet d'avoir l'espace requis pour desserrer les six autres boulons, tout en enlevant la tension des ressorts. Pis on garde une sécurité supplémentaire avec les trois boulons longs toujours en place.",
+  "ligne_v2": 11
+ },
+ {
+  "passage": "A_06_x",
+  "orateur": 1,
+  "texte": "Regardez ce qui arrive si on sort les boulons au complet, un après l'autre, sans s'occuper de l'énergie résiduelle. Les ressorts restent comprimés, pis chaque boulon enlevé laisse plus de charge aux autres. Le dernier porte toute la force : il casse, pis le cône est projeté. C'est pour ça qu'on y va un tour à la fois.",
+  "ligne_v2": 14
+ },
+ {
+  "passage": "A_08_c",
+  "orateur": 1,
+  "texte": "L'énergie résiduelle a été relâchée lentement : le cône est resté retenu tout le long.",
+  "ligne_v2": 17
+ },
+ {
+  "passage": "A_fin",
+  "orateur": 1,
+  "texte": "Les trois boulons longs sans bushing, avant de desserrer les six autres boulons. Pis un tour à la fois.",
+  "ligne_v2": 18
+ },
+ {
+  "passage": "A_questions",
+  "orateur": 2,
+  "texte": "L'énergie résiduelle, y en a juste dans les ressorts ?",
+  "ligne_v2": 27
+ },
+ {
+  "passage": "A_questions",
+  "orateur": 1,
+  "texte": "Pas juste là. Il y a aussi la pression qui reste dans les boyaux hydrauliques, une pièce qui peut tomber, un câble tendu. Avant de démonter, on se demande toujours : qu'est-ce qui peut encore bouger ?",
+  "ligne_v2": 28
+ },
+ {
+  "passage": "A_questions",
+  "orateur": 2,
+  "texte": "Pis si le quart finit avant que la job soit faite ?",
+  "ligne_v2": 29
+ },
+ {
+  "passage": "A_questions",
+  "orateur": 1,
+  "texte": "On pose un scellé sur la foreuse, avec une fiche qui explique la nature de l'intervention. Après, chacun peut enlever son cadenas. Le prochain quart sait exactement où on est rendu, pis chacun repose son cadenas avant de reprendre la job. Sans ça, quelqu'un pourrait repartir la foreuse sans savoir que le mandrin est à moitié démonté, pis que les ressorts sont peut-être encore sous charge. Le cône pourrait être projeté.",
+  "ligne_v2": 30
+ }
+]

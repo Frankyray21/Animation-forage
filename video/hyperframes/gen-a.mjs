@@ -83,7 +83,11 @@ export async function genererA(C) {
   bandes.r03 = { i: stepIdx('6'), still: true, title: 'Coupe : 18 ressorts comprimés derrière le cône (bowl)' };
   bandes.r04 = { i: stepIdx('6'), still: true, title: 'Couvercle retiré : 9 boulons du cône, dont 3 longs de retenue' };
   if (SYN) { bandes.r03.i = -1; bandes.r04.i = -1; bandes.r02.i = -1; }   // --synchro : rendus 03, 04 et 02 dans l'intro (barre d'étapes vide)
-  const whyTxt = i => { const nr = narrOf(i); return nr && nr.pourquoi_ecran ? nr.pourquoi_ecran : null; };
+  // --synchro avec la voix de script-v2 (encadré « Pourquoi » de l'étape 3 dans synchro.json) : textes à l'écran repris de cette voix
+  const WHY_V2 = SYN && SYN.etapes['3'] && SYN.etapes['3'].p ? {
+    '1': "Fermer les manettes coupe l'hydraulique, pas l'énergie résiduelle des ressorts.",
+    '3': "Le cadenas isole la source. L'énergie résiduelle des ressorts : retenue à l'étape 6, relâchée à l'étape 7." } : {};
+  const whyTxt = i => { if (WHY_V2[steps[i].n]) return WHY_V2[steps[i].n]; const nr = narrOf(i); return nr && nr.pourquoi_ecran ? nr.pourquoi_ecran : null; };
   // compteurs (make_video.mjs:140-146) : une clé par tour et boulon des lignes de scan.json des étapes de CONF.inset
   const compteurs = new Map();
   scan.forEach(r => { if (r.count && CONF.inset.includes(r.n) && SCEN === 'A') compteurs.set(`${r.count.pass}_${r.count.num}`, r.count); });
@@ -110,10 +114,16 @@ export async function genererA(C) {
   const srcOf = x => x.type === 'gp' ? srcGp(x.file) : src3d(x.k);
   let simInset = null, simInsetN = 0;
   const insetCache = new Map();
+  // --synchro, voix de script-v2 : pendant la fin figée de l'étape 3 (explication de l'énergie résiduelle), fenêtre fixe des ressorts
+  // comprimés : dernière image de la coupe (caméra hyd) de l'étape 1, recadrée 16:10 et réduite à 640 × 400 comme la capture --inset
+  const INSET_FIXE = SYN && SYN.etapes['3'] && SYN.etapes['3'].p ? { '3': scan.filter(r => r.n === '1' && r.cam === 'hyd' && r.keep).pop() } : {};
   const insetSrc = k => {   // fenêtre « ressorts en coupe » : make_video.mjs:254 (incrustée seulement si l'image existe)
     if (insetCache.has(k)) return insetCache.get(k);
     let r = null;
-    if (jpegOk(inImg(k))) r = inImg(k);
+    if (typeof k === 'string') {   // fenêtre fixe (INSET_FIXE)
+      const row = INSET_FIXE[k.replace('fixe-', '')]; r = path.join(OUT, '.travail', `fenetre-${k}.png`);
+      if (!CHRONO) { fs.mkdirSync(path.dirname(r), { recursive: true }); ffmpeg(['-i', src3d(row.k), '-vf', 'crop=ih*1.6:ih,scale=640:400:flags=lanczos', '-frames:v', '1', r]); }
+    } else if (jpegOk(inImg(k))) r = inImg(k);
     else if (SIM_INSET) {
       if (!simInset) {   // une image du plan « hyd » (la caméra de la fenêtre) recadrée 16:10 et réduite à 640 × 400 comme la capture --inset
         const hyd = scan.find(x => x.cam === 'hyd' && jpegOk(fImg(x.k)));
@@ -280,6 +290,7 @@ export async function genererA(C) {
       const w = whyTxt(x.i) && SYN.etapes[steps[x.i].n].p, t = (CIB.etape[p].S0 + n) / FPS;
       if (w && t >= w[0] - .15 && t <= w[1] + .6) d.why = x.i;
       d.acc = x.acc && !x.hold && d.why == null ? x.acc : null;   // repère « Vidéo accélérée × N », pas pendant un « Pourquoi »
+      if (x.hold && INSET_FIXE[steps[x.i].n]) d.inset = `fixe-${steps[x.i].n}`;
     } else if (m && whyTxt(x.i)) {
       const vc = voiceOf(x.i, 'c'), vp = voiceOf(x.i, 'p'), nr = narrOf(x.i), t = (n - m.f0) / FPS;
       const s0 = vp ? PAD + (vc ? vc.dur + PAD : 0) : PAD + estDur(nr && nr.voix), s1 = s0 + (vp ? vp.dur + .8 : Math.max(4, nr.pourquoi_ecran.length / 14));
@@ -600,7 +611,16 @@ export async function genererA(C) {
   // --synchro : « Questions de l'équipe » (une carte par question, réponse montrée quand le formateur répond). Fonds : images de
   // l'animation 3D (v4-A) et rendus Blender du dépôt, ramenés à 1280 × 720 (couverture, centré), sans outil posé sur un boulon.
   function ecrireQuestions(s, g0, g1, z) {
-    const QR = [
+    const k3 = scan.filter(r => r.step === stepIdx('3') && r.keep).pop();   // fin de l'étape 3 (cadenas posé)
+    const QR = SYN.questions.length === 7 ? [   // script-v2 : questions regroupées par thème, deux nouvelles (énergie résiduelle, changement de quart)
+      { q: 'Pendant que je dévisse, je me place où ?', r: "Hors de l'axe du mandrin. Jamais devant le cône : s'il part, c'est là qu'il s'en va.", fond: path.join(REPO, 'renders', '02_face_mandrin.jpg') },
+      { q: 'Pis si un boulon veut pas se défaire ?', r: "On ne force pas à l'impact drill sous charge. On arrête et on en parle au superviseur avant de continuer.", fond: path.join(REPO, 'renders', '04_couvercle_retire.jpg') },
+      { q: 'Pis si le cône reste coincé ?', r: 'On ne le frappe pas pour le décoincer, et on ne reste pas devant : les ressorts poussent encore, il peut être projeté.', fond: fImg(1847) },
+      { q: "Si les boulons longs sont durs à remettre, on peut-tu sauter l'étape 6 ?", r: "Non. Les 3 boulons longs retiennent le cône si quelque chose lâche. Sans eux, rien ne l'arrête.", fond: fImg(1241) },
+      { q: "L'énergie résiduelle, y en a juste dans les ressorts ?", r: "Pas juste là : pression qui reste dans les boyaux hydrauliques, pièce qui peut tomber, câble tendu. Avant de démonter : qu'est-ce qui peut encore bouger ?", fond: path.join(REPO, 'renders', '03_coupe.jpg') },
+      { q: 'Pis si le quart finit avant que la job soit faite ?', r: "Scellé sur la foreuse et fiche qui explique l'intervention ; chacun reprend son cadenas. Le quart suivant pose les siens avant de reprendre. Sans ça, la foreuse pourrait repartir, ressorts encore sous charge.", fond: fImg(k3.k) },
+      { q: 'Pis si quelque chose me semble pas normal ?', r: 'On arrête et on en parle au superviseur. On regarde ça ensemble avant de continuer.', fond: path.join(REPO, 'renders', '01_ensemble.jpg') },
+    ] : [
       { q: 'Pis si un boulon veut pas se défaire ?', r: "On ne force pas à l'impact drill sous charge. On arrête et on en parle au superviseur avant de continuer.", fond: path.join(REPO, 'renders', '04_couvercle_retire.jpg') },
       { q: 'Pendant que je dévisse, je me place où ?', r: "Hors de l'axe du mandrin. Jamais devant le cône : s'il part, c'est là qu'il s'en va.", fond: path.join(REPO, 'renders', '02_face_mandrin.jpg') },
       { q: 'Pis si le cône reste coincé ?', r: 'On ne le frappe pas pour le décoincer, et on ne reste pas devant : les ressorts poussent encore, il peut être projeté.', fond: fImg(1847) },
