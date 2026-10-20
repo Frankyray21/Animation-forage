@@ -5,7 +5,7 @@ Deux vidéos pour la formation sur le démontage du cône du mandrin (PRO-OP-DD-
 
 | Fichier | Scénario | Contenu | Durée |
 |---|---|---|---|
-| `procedure_boyles_h.mp4` + `procedure_poster.jpg` | A, « Procédure respectée » | Intro à deux voix et rendus Blender, étapes 1 à 9 calées sur la voix, « À retenir », questions de l'équipe ; **avec le son** (dialogue ElevenLabs allongé de pauses, AAC mono 48 kHz 128 kbit/s) | 185,7 s (4 457 images, ≈ 12,6 Mo) |
+| `procedure_boyles_h.mp4` + `procedure_poster.jpg` | A, « Procédure respectée » | Intro à deux voix et rendus Blender, étapes 1 à 9 calées sur la voix, énergie résiduelle (étapes 1 et 3), carte « Arrêt — On en discute », contre-exemple du scénario B à l'étape 7, « À retenir », 7 questions de l'équipe, carte « À vous la parole » ; **avec le son** (dialogue ElevenLabs du 2026-10-20 allongé de pauses, AAC mono 48 kHz 128 kbit/s) | 337,2 s (8 092 images, ≈ 18,2 Mo) |
 | `accident_boyles_h.mp4` + `accident_poster.jpg` | D, reconstitution de l'accident | Boulons du cône retirés un par un, dernier boulon desserré à l'impact drill, carton de fin « Ce qu'il fallait faire » | 71,4 s (1 714 images, ≈ 4,1 Mo) |
 
 Format commun : H.264 High (libx264, preset slow, CRF 27), yuv420p, 1280 × 720, 24 i/s, `+faststart`, couleurs BT.601 non

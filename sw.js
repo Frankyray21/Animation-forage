@@ -5,7 +5,7 @@
 // elle-même les petits fichiers (requêtes cache: 'reload' + credentials: 'omit', laissées au réseau ici) ; les deux vidéos sont téléchargées
 // ici, l'une après l'autre (message offline-video), avec la progression cumulée envoyée aux pages, et continuent quand on change de page.
 // Le site partage l'origine frankyray21.github.io avec d'autres applications : seules les copies « clam-… » sont gérées ici.
-const VERSION = 'clam-v10';   // procédure avec la voix, allongée (pauses, 3 min 06 s) : copies hors ligne renouvelées
+const VERSION = 'clam-v11';   // procédure v5 (5 min 37 s : énergie résiduelle, cartes d'arrêt, contre-exemple) : copies hors ligne renouvelées
 const PREFIX = 'clam-';
 const LOCAL = [
   './', 'index.html', 'animation.html', 'manifest.webmanifest', 'pwa.js',

@@ -173,3 +173,21 @@ ffmpeg -i $HF_TRAVAIL/procedure_synchro_muet.mp4 -i voix_A_elevenlabs.mp3 -map 0
 compte images × 1280 × 720 × 4 octets, soit 13,05 Go pour 3 540 images. Il faut donc environ 14,5 Go libres en plus du
 cache d'extraction (environ 1,6 Go), même si les PNG réels font environ 2 Go. Avec `--fenetre DÉBUT-FIN`, on peut rendre
 en plusieurs morceaux, identiques image par image.
+
+## Version 5 (2026-10-20) : script-v2, voix complète, ajouts montés
+
+Script `A/script-v2.json` (33 répliques) enregistré d'un seul tenant dans ElevenLabs (Germain et Adam, v4). Chaîne :
+
+```sh
+python3 aligner.py --audio voix.mp3 --script <script-v2 : passage, orateur, texte> … --sortie $T/align
+python3 voix-complete.py --audio voix.mp3 --bornes $T/align/bornes.json --sortie $T/voix      # voix principale + a_part/A_06_x.wav
+python3 allonger.py --audio $T/voix/voix_principale.wav --bornes $T/voix/bornes.json --plan A/pauses-v5.json --sortie $T/voix/allonge
+python3 synchro-a.py --bornes $T/voix/allonge/bornes.json --sortie $T/voix/allonge/synchro.json
+node gen.mjs --scen A --frames <capture A> --muet --synchro $T/voix/allonge/synchro.json --out … --fenetre A-B   # rendu par fenêtres
+node cartes.mjs --build <projet> --plan-b <capture B> --sortie $T/cartes                     # cartes et calques des ajouts
+python3 inserer.py --rendu <PNG des fenêtres> --rapport <projet>/rapport.json --voix $T/voix/allonge/voix_allongee.wav \
+  --a-part $T/voix --cartes $T/cartes --plan-b <capture B> --sortie procedure_boyles_h.mp4
+```
+
+Capture B (contre-exemple) : `capture.mjs --scen B --slow 43.5-46.5:2`, images 482 à 1256 (étapes 7 et « ! »). Fenêtres de rendu :
+pas de début dans le carton de fin ni dans les questions (gen-a.mjs). Résultat : 337,2 s (8 092 images, 18,2 Mo).
