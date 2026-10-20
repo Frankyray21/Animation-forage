@@ -86,7 +86,8 @@ export async function genererA(C) {
   // --synchro avec la voix de script-v2 (encadré « Pourquoi » de l'étape 3 dans synchro.json) : textes à l'écran repris de cette voix
   const WHY_V2 = SYN && SYN.etapes['3'] && SYN.etapes['3'].p ? {
     '1': "Fermer les manettes coupe l'hydraulique, pas l'énergie résiduelle des ressorts.",
-    '3': "Le cadenas isole la source. L'énergie résiduelle des ressorts : retenue à l'étape 6, relâchée à l'étape 7." } : {};
+    '3': "Le cadenas isole la source. L'énergie résiduelle des ressorts : retenue à l'étape 6, relâchée à l'étape 7.",
+    '6': 'Sans bushing : l’espace pour desserrer les 6 autres boulons, avec les 3 boulons longs comme sécurité.' } : {};
   const whyTxt = i => { if (WHY_V2[steps[i].n]) return WHY_V2[steps[i].n]; const nr = narrOf(i); return nr && nr.pourquoi_ecran ? nr.pourquoi_ecran : null; };
   // compteurs (make_video.mjs:140-146) : une clé par tour et boulon des lignes de scan.json des étapes de CONF.inset
   const compteurs = new Map();
