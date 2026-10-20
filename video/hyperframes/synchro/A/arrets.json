@@ -1,5 +1,5 @@
 {
- "_note": "Cartes d'arrêt de la vidéo 1 : image plein écran, sans voix, environ 8 s, pour que l'animateur mette sur pause et questionne l'équipe. « apres » : passage après lequel la carte s'affiche.",
+ "_note": "Cartes d'arrêt de la vidéo 1 : image plein écran, sans voix, pour que l'animateur mette sur pause et questionne l'équipe. « apres » : passage après lequel la carte s'affiche (« fin » : dernière image, à la place du fondu au noir).",
  "arrets": [
   {
    "apres": "A_00_p",
@@ -8,6 +8,18 @@
    "consigne": "Mettez la vidéo sur pause et discutez en équipe.",
    "fond": "coupe des ressorts comprimés (image figée de l'étape 1)",
    "duree": 8
+  },
+  {
+   "apres": "fin",
+   "titre": "⏸ À vous la parole",
+   "questions": [
+    "Sur nos équipements, où est-ce qu'il peut rester de l'énergie résiduelle après le cadenassage ?",
+    "Dans votre travail, quand est-ce que le cadenas suffit pas, pis qu'il faut contrôler une énergie qui reste ?",
+    "Qu'est-ce qu'on doit vérifier avant de démonter, une fois la foreuse cadenassée ?"
+   ],
+   "consigne": "Mettez la vidéo sur pause et discutez en équipe.",
+   "fond": "image de fin",
+   "duree": 10
   }
  ]
 }
