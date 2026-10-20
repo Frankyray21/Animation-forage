@@ -184,6 +184,20 @@
  {
   "passage": "A_questions",
   "orateur": 2,
+  "texte": "Pis si le quart finit avant que la job soit faite ?",
+  "mots": 12,
+  "a_enregistrer": "Pis si le quart finit avant que la job soit faite ?"
+ },
+ {
+  "passage": "A_questions",
+  "orateur": 1,
+  "texte": "On pose un scellé sur la foreuse, avec une fiche qui explique la nature de l'intervention. Après, chacun peut enlever son cadenas. Le prochain quart sait exactement où on est rendu, pis chacun repose son cadenas avant de reprendre la job.",
+  "mots": 41,
+  "a_enregistrer": "On pose un scellé sur la foreuse, avec une fiche qui explique la nature de l'intervention. Après, chacun peut enlever son cadenas. Le prochain quart sait exactement où on est rendu, pis chacun repose son cadenas avant de reprendre la job."
+ },
+ {
+  "passage": "A_questions",
+  "orateur": 2,
   "texte": "Pis si quelque chose me semble pas normal ?",
   "mots": 9
  },
