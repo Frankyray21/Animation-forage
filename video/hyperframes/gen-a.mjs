@@ -579,7 +579,7 @@ export async function genererA(C) {
       writeComp('carton-fin.html', fill(tpl('carton-fin-synchro.html'), { ...common(true), ENTREE_DUREE: dureeCle(s.w), ENTREE_CLES: cle('fin-entree', s.w),
         DECALAGE: S(-T(d0)), KICKER: 'À retenir · PRO-OP-DD-005',
         LIGNES: [ligne('Jamais un boulon du cône enlevé au complet sous charge', '#ff5d52', l1),   // mot pour mot l'audio (« un boulon »)
-          ligne("Remettre les 3 boulons longs sans bushing (étape 6) avant l'étape 7", '#57c486', l2),
+          ligne('Les 3 boulons longs sans bushing, avant de desserrer les 6 autres', '#57c486', l2),   // suit la voix (script-v2)
           ligne("Un tour à la fois, dans l'ordre de 1 à 6", '#f2c230', l3)].join('') }));
       L.push(`${pad}<!-- carton « À retenir » (--synchro) : ${s.vis} images, lignes montrées à ${SYN.fin.lignes.map(x => ms(x)).join(', ')} s (audio) -->`);
       L.push(`${pad}<div id="carton-fin" class="clip hote-plein" style="z-index: ${z}" data-composition-id="carton-fin" data-composition-src="compositions/carton-fin.html" ${tl(g0 - A0, g1 - g0)} data-track-index="2" data-width="${W}" data-height="${H}" data-no-timeline></div>`);

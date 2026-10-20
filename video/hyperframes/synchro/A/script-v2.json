@@ -108,8 +108,9 @@
  {
   "passage": "A_fin",
   "orateur": 1,
-  "texte": "Pour le quart : jamais un boulon du cône enlevé au complet sous charge. Les trois boulons longs sans bushing, avant l'étape sept. Pis un tour à la fois.",
-  "mots": 29
+  "texte": "Pour le quart : jamais un boulon du cône enlevé au complet sous charge. Les trois boulons longs sans bushing, avant de desserrer les six autres boulons. Pis un tour à la fois.",
+  "mots": 33,
+  "a_enregistrer": "Les trois boulons longs sans bushing, avant de desserrer les six autres boulons. Pis un tour à la fois."
  },
  {
   "passage": "A_questions",
