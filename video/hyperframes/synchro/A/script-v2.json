@@ -123,18 +123,6 @@
  {
   "passage": "A_questions",
   "orateur": 2,
-  "texte": "Pis si un boulon veut pas se défaire ?",
-  "mots": 9
- },
- {
-  "passage": "A_questions",
-  "orateur": 1,
-  "texte": "On force pas à l'impact drill sous charge. On arrête, pis on en parle au superviseur avant de continuer.",
-  "mots": 19
- },
- {
-  "passage": "A_questions",
-  "orateur": 2,
   "texte": "Pendant que je dévisse, je me place où ?",
   "mots": 9
  },
@@ -143,6 +131,18 @@
   "orateur": 1,
   "texte": "Hors de l'axe du mandrin. Jamais devant le cône : s'il part, c'est là qu'il s'en va.",
   "mots": 17
+ },
+ {
+  "passage": "A_questions",
+  "orateur": 2,
+  "texte": "Pis si un boulon veut pas se défaire ?",
+  "mots": 9
+ },
+ {
+  "passage": "A_questions",
+  "orateur": 1,
+  "texte": "On force pas à l'impact drill sous charge. On arrête, pis on en parle au superviseur avant de continuer.",
+  "mots": 19
  },
  {
   "passage": "A_questions",
