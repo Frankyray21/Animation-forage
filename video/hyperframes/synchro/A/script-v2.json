@@ -191,9 +191,9 @@
  {
   "passage": "A_questions",
   "orateur": 1,
-  "texte": "On pose un scellé sur la foreuse, avec une fiche qui explique la nature de l'intervention. Après, chacun peut enlever son cadenas. Le prochain quart sait exactement où on est rendu, pis chacun repose son cadenas avant de reprendre la job.",
-  "mots": 41,
-  "a_enregistrer": "On pose un scellé sur la foreuse, avec une fiche qui explique la nature de l'intervention. Après, chacun peut enlever son cadenas. Le prochain quart sait exactement où on est rendu, pis chacun repose son cadenas avant de reprendre la job."
+  "texte": "On pose un scellé sur la foreuse, avec une fiche qui explique la nature de l'intervention. Après, chacun peut enlever son cadenas. Le prochain quart sait exactement où on est rendu, pis chacun repose son cadenas avant de reprendre la job. Sans ça, quelqu'un pourrait repartir la foreuse sans savoir que le mandrin est à moitié démonté, pis que les ressorts sont peut-être encore sous charge. Le cône pourrait être projeté.",
+  "mots": 71,
+  "a_enregistrer": "On pose un scellé sur la foreuse, avec une fiche qui explique la nature de l'intervention. Après, chacun peut enlever son cadenas. Le prochain quart sait exactement où on est rendu, pis chacun repose son cadenas avant de reprendre la job. Sans ça, quelqu'un pourrait repartir la foreuse sans savoir que le mandrin est à moitié démonté, pis que les ressorts sont peut-être encore sous charge. Le cône pourrait être projeté."
  },
  {
   "passage": "A_questions",
