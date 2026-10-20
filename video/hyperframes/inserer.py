@@ -113,7 +113,7 @@ SR = 48000
 def lire_audio(f):
     raw = subprocess.run([a.ffmpeg, '-hide_banner', '-loglevel', 'error', '-i', f, '-ac', '1', '-ar', str(SR), '-f', 'f32le', '-'], capture_output=True, check=True).stdout
     return np.frombuffer(raw, dtype=np.float32).copy()
-voix = lire_audio(a.voix); ce = lire_audio(os.path.join(a.a_part, 'A_06_x.wav'))
+voix = lire_audio(a.voix); ce = lire_audio(os.path.join(a.a_part, 'a_part', 'A_06_x.wav'))
 def audio_contre():
     y = np.zeros(int(round(N_CE / FPS * SR)), np.float32)
     for j in range(5):
