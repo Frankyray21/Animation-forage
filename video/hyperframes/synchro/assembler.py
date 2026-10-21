@@ -60,8 +60,9 @@ utilises, R = set(), []
 for i, l in enumerate(V2):
     m, pre = [], norm(l['texte'][:len(l['texte']) - len(l.get('a_enregistrer', ''))])
     if pre:   # début (ou toute la réplique) repris de l'ancien audio
-        k = next((k for k, o in enumerate(OL) if k not in utilises and o['passage'] == l['passage'] and
-                  (norm(o['texte']) == pre if not l.get('a_enregistrer') else norm(o['texte']).startswith(pre))), None)
+        # réplique identique, sinon réplique de l'ancien audio qui commence par ce texte (fin ajoutée, ou fin retirée du script)
+        k = next((k for k, o in enumerate(OL) if k not in utilises and o['passage'] == l['passage'] and norm(o['texte']) == pre and not l.get('a_enregistrer')), None)
+        if k is None: k = next((k for k, o in enumerate(OL) if k not in utilises and o['passage'] == l['passage'] and norm(o['texte']).startswith(pre)), None)
         if k is None: raise SystemExit(f'réplique {i} ({l["passage"]}) : début « {pre[:40]}… » absent de l\'ancien audio')
         utilises.add(k); P, acc = [], ''
         for p in phr(OP, k):

@@ -83,10 +83,12 @@ export async function genererA(C) {
   bandes.r03 = { i: stepIdx('6'), still: true, title: 'Coupe : 18 ressorts comprimés derrière le cône (bowl)' };
   bandes.r04 = { i: stepIdx('6'), still: true, title: 'Couvercle retiré : 9 boulons du cône, dont 3 longs de retenue' };
   if (SYN) { bandes.r03.i = -1; bandes.r04.i = -1; bandes.r02.i = -1; }   // --synchro : rendus 03, 04 et 02 dans l'intro (barre d'étapes vide)
-  // --synchro avec la voix de script-v2 (encadré « Pourquoi » de l'étape 3 dans synchro.json) : textes à l'écran repris de cette voix
-  const WHY_V2 = SYN && SYN.etapes['3'] && SYN.etapes['3'].p ? {
+  // --synchro avec la voix de script-v2 ou v3 (7 questions) : textes à l'écran repris de cette voix ; encadré de l'étape 3 seulement si
+  // synchro.json lui donne une phrase (« Cette énergie résiduelle… », retirée de script-v3)
+  const V2 = SYN && SYN.questions.length === 7;
+  const WHY_V2 = V2 ? {
     '1': "Fermer les manettes coupe l'hydraulique, pas l'énergie résiduelle des ressorts.",
-    '3': "Le cadenas isole la source. L'énergie résiduelle des ressorts : retenue à l'étape 6, relâchée à l'étape 7.",
+    ...(SYN.etapes['3'] && SYN.etapes['3'].p ? { '3': "Le cadenas isole la source. L'énergie résiduelle des ressorts : retenue à l'étape 6, relâchée à l'étape 7." } : {}),
     '6': 'Sans bushing : l’espace pour desserrer les 6 autres boulons, avec les 3 boulons longs comme sécurité.' } : {};
   const whyTxt = i => { if (WHY_V2[steps[i].n]) return WHY_V2[steps[i].n]; const nr = narrOf(i); return nr && nr.pourquoi_ecran ? nr.pourquoi_ecran : null; };
   // compteurs (make_video.mjs:140-146) : une clé par tour et boulon des lignes de scan.json des étapes de CONF.inset
@@ -117,7 +119,7 @@ export async function genererA(C) {
   const insetCache = new Map();
   // --synchro, voix de script-v2 : pendant la fin figée de l'étape 3 (explication de l'énergie résiduelle), fenêtre fixe des ressorts
   // comprimés : dernière image de la coupe (caméra hyd) de l'étape 1, recadrée 16:10 et réduite à 640 × 400 comme la capture --inset
-  const INSET_FIXE = SYN && SYN.etapes['3'] && SYN.etapes['3'].p ? { '3': scan.filter(r => r.n === '1' && r.cam === 'hyd' && r.keep).pop() } : {};
+  const INSET_FIXE = V2 ? { '3': scan.filter(r => r.n === '1' && r.cam === 'hyd' && r.keep).pop() } : {};
   const insetSrc = k => {   // fenêtre « ressorts en coupe » : make_video.mjs:254 (incrustée seulement si l'image existe)
     if (insetCache.has(k)) return insetCache.get(k);
     let r = null;
