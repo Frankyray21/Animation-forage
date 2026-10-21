@@ -6,3 +6,4 @@ package-lock.json
 # copies de travail temporaires des agents (git worktree)
 .claude/worktrees/
 video/frames/
+__pycache__/
