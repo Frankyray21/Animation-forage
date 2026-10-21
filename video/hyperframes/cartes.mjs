@@ -6,7 +6,7 @@
 //   - repères « Vidéo accélérée × N » (même style que dans le rendu) pour les images du contre-exemple sautées.
 // Même allure que les cartes du rendu (templates/questions.html, base.css) : polices locales du projet HyperFrames (--build), aucune
 // ressource externe ; fonds : rendus Blender du dépôt (renders/), assombris.
-// Usage : node video/hyperframes/cartes.mjs --build BUILD --plan-b DOSSIER_CAPTURE_B --sortie DOSSIER
+// Usage : node video/hyperframes/cartes.mjs --build BUILD --plan-b DOSSIER_CAPTURE_B --sortie DOSSIER [--lang en]
 //   BUILD : projet de gen-a.mjs (compositions/questions.html pour les @font-face, assets/fonts) ; PLAYWRIGHT, HF_NAVIGATEUR comme ailleurs.
 import fs from 'node:fs';
 import path from 'node:path';
@@ -14,6 +14,8 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 const HERE = path.dirname(fileURLToPath(import.meta.url)), REPO = path.resolve(HERE, '..', '..');
 const ARGV = process.argv.slice(2), arg = (k, d) => { const i = ARGV.indexOf('--' + k); return i < 0 ? d : ARGV[i + 1]; };
 const BUILD = path.resolve(arg('build', '')), PLANB = path.resolve(arg('plan-b', '')), OUT = path.resolve(arg('sortie', ''));
+const LANG = arg('lang', 'fr');   // en : textes traduits par anglais/traduire.mjs (traduction.json)
+const { traduire, resteFrancais } = await import('./anglais/traduire.mjs');
 if (!arg('build') || !arg('plan-b') || !arg('sortie')) throw new Error('usage : node cartes.mjs --build BUILD --plan-b DOSSIER --sortie DOSSIER');
 const W = 1280, H = 720, BAND = 100;
 const A = p => JSON.parse(fs.readFileSync(path.join(HERE, 'synchro', 'A', p), 'utf8'));
@@ -93,6 +95,7 @@ const ctx = await nav.newContext({ viewport: { width: W, height: H }, deviceScal
 await ctx.route(/^(?!file:|data:|about:)/, r => r.abort());   // hors ligne : seules les ressources locales
 fs.mkdirSync(OUT, { recursive: true });
 for (const p of pages) {
+  if (LANG === 'en') { p.html = traduire(p.html).texte; const r = resteFrancais(p.html.replace(/@font-face[^}]*}/g, '')); if (r.length) throw new Error(`${p.nom} : reste en français : ${r.join(' | ')}`); }
   const f = path.join(OUT, `${p.nom}.html`); fs.writeFileSync(f, p.html);
   const pg = await ctx.newPage(); await pg.goto(pathToFileURL(f).href); await pg.evaluate(() => document.fonts.ready);
   await pg.waitForFunction(() => [...document.images].every(i => i.complete && i.naturalWidth > 0));

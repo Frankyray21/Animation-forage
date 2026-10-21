@@ -24,7 +24,7 @@ fin = lambda i: r3(L[i]['fin_parole'])
 ph = lambda i, j: r3(next(p['reprise'] for p in P if p['ligne'] == i and p['phrase'] == j))
 for l in L:
     if l['a_verifier']: print(f"! réplique {l['ligne']} ({l['texte'][:40]}…) : écart {l['ecart_debut']:+.2f} / {l['ecart_fin']:+.2f} s, à vérifier")
-p3 = next((r3(p['reprise']) for p in P if p['ligne'] == 7 and p['texte'].startswith('Cette énergie résiduelle')), None)
+p3 = next((r3(p['reprise']) for p in P if p['ligne'] == 7 and p['texte'].startswith(('Cette énergie résiduelle', 'We control that residual energy'))), None)
 S = {
   'audio': a.audio or B['audio'], 'duree_audio': round(B['duree'], 3), 'fin_parole': r3(B['fin_parole']),
   'intro': {'titre': deb(0), 'r03': deb(1), 'r04': ph(2, 1), 'r02': deb(3), 'fin': fin(3)},

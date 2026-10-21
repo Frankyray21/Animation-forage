@@ -1,0 +1,385 @@
+{
+ "_note": "Textes à l'écran de la vidéo 1, français → anglais (traduire.mjs). {n}, {m}, {a}, {b}, {c}, {x} : nombres repris tels quels (virgule décimale → point). Ordre : du plus long au plus court au moment de l'application.",
+ "paires": [
+  [
+   "Manettes CLAM et CHUCK en position fermée",
+   "CLAM and CHUCK levers in the closed position"
+  ],
+  [
+   "étape 1 · poste de commande · le vérin relâche, les ressorts restent comprimés",
+   "step 1 · control station · the cylinder releases, the springs stay compressed"
+  ],
+  [
+   "étape 2 · vérifier avant de démonter",
+   "step 2 · check before disassembly"
+  ],
+  [
+   "Cadenasser la foreuse — le cadenassage ne libère pas l'énergie des ressorts",
+   "Lock out the drill — lockout does not release the spring energy"
+  ],
+  [
+   "étape 3 · cadenas et étiquette sur le poste de commande",
+   "step 3 · lock and tag on the control station"
+  ],
+  [
+   "3 boulons ¾ à dévisser avec une clé 1 1/8",
+   "3 bolts ¾ to loosen with a 1 1/8 wrench"
+  ],
+  [
+   "J1 à J3 · B750-1500 · couvert des mâchoires (jaw cover) · étape 4",
+   "J1 to J3 · B750-1500 · jaw cover · step 4"
+  ],
+  [
+   "9 boulons ½ à dévisser avec une clé ¾",
+   "9 bolts ½ to loosen with a ¾ wrench"
+  ],
+  [
+   "C1 à C9 · B500-2250 · porte-capuchon (cap holder) · étape 5",
+   "C1 to C9 · B500-2250 · cap holder · step 5"
+  ],
+  [
+   "L1 à L3 · B500-8000 · étape 6",
+   "L1 to L3 · B500-8000 · step 6"
+  ],
+  [
+   "1 boulon ½ × 6 ½ à dévisser 1 tour à la fois, ordre 1 → 6",
+   "1 bolt ½ × 6 ½ to loosen 1 turn at a time, order 1 → 6"
+  ],
+  [
+   "{n} boulons ½ × 6 ½ à dévisser 1 tour à la fois, ordre 1 → 6",
+   "{n} bolts ½ × 6 ½ to loosen 1 turn at a time, order 1 → 6"
+  ],
+  [
+   "B500-6500 · clé ¾ · étape 7 · 3 boulons longs L1–L3 (B500-8000) : retenue du cône",
+   "B500-6500 · ¾ wrench · step 7 · 3 long bolts L1–L3 (B500-8000): hold the cone"
+  ],
+  [
+   "1 boulon long ½ × 8 à retirer",
+   "1 long bolt ½ × 8 to remove"
+  ],
+  [
+   "{n} boulons longs ½ × 8 à retirer",
+   "{n} long bolts ½ × 8 to remove"
+  ],
+  [
+   "L1 à L3 · B500-8000 · ressorts détendus · étape 8",
+   "L1 to L3 · B500-8000 · springs released · step 8"
+  ],
+  [
+   "Ressorts détendus : retirer le cône (bowl) et les mâchoires, changer les pièces",
+   "Springs released: remove the cone (bowl) and the jaws, change the parts"
+  ],
+  [
+   "étape 9 · plus d'énergie résiduelle",
+   "step 9 · no more residual energy"
+  ],
+  [
+   "Retirer le couvert des mâchoires (jaw cover)",
+   "Remove the jaw cover"
+  ],
+  [
+   "Retirer le couvercle (cap holder, 9 boulons ½)",
+   "Remove the cap holder (9 bolts ½)"
+  ],
+  [
+   "Remettre les 3 boulons longs (bolts) sans bushing",
+   "Put the 3 long bolts back without the bushing"
+  ],
+  [
+   "Dévisser 1 tour à la fois, ordre 1 à 6",
+   "Loosen 1 turn at a time, order 1 to 6"
+  ],
+  [
+   "Retirer les 3 boulons longs",
+   "Remove the 3 long bolts"
+  ],
+  [
+   "Changer les pièces",
+   "Change the parts"
+  ],
+  [
+   "Mâchoires (jaws) fermées",
+   "Jaws closed"
+  ],
+  [
+   "Manettes fermées",
+   "Levers closed"
+  ],
+  [
+   "Cadenasser",
+   "Lock out"
+  ],
+  [
+   "Couvert des mâchoires + 3 boulons ¾",
+   "Jaw cover + 3 bolts ¾"
+  ],
+  [
+   "Couvercle + 9 boulons ½",
+   "Cap holder + 9 bolts ½"
+  ],
+  [
+   "6 boulons ½ × 6 ½",
+   "6 bolts ½ × 6 ½"
+  ],
+  [
+   "3 boulons longs ½ × 8",
+   "3 long bolts ½ × 8"
+  ],
+  [
+   "Cône et mâchoires",
+   "Cone and jaws"
+  ],
+  [
+   "Pièces retirées",
+   "Parts removed"
+  ],
+  [
+   "Face avant : couvert des mâchoires (jaw cover) et porte-capuchon (cap holder)",
+   "Front face: jaw cover and cap holder"
+  ],
+  [
+   "Coupe : 18 ressorts comprimés derrière le cône (bowl)",
+   "Cutaway: 18 compressed springs behind the cone (bowl)"
+  ],
+  [
+   "Couvercle retiré : 9 boulons du cône, dont 3 longs de retenue",
+   "Cap holder removed: 9 cone bolts, including 3 long retaining bolts"
+  ],
+  [
+   "Rendu Blender",
+   "Blender render"
+  ],
+  [
+   "Procédure",
+   "Procedure"
+  ],
+  [
+   ">Étape<",
+   ">Step<"
+  ],
+  [
+   "Fermer les manettes coupe l'hydraulique, pas l'énergie résiduelle des ressorts.",
+   "Closing the levers shuts off the hydraulics, not the residual energy of the springs."
+  ],
+  [
+   "Le cadenas isole la source. L'énergie résiduelle des ressorts : retenue à l'étape 6, relâchée à l'étape 7.",
+   "The lock isolates the source. The residual energy of the springs: held in step 6, released in step 7."
+  ],
+  [
+   "Sans bushing : l’espace pour desserrer les 6 autres boulons, avec les 3 boulons longs comme sécurité.",
+   "Without the bushing: room to loosen the other 6 bolts, with the 3 long bolts as a safety."
+  ],
+  [
+   "Un tour à la fois : les 6 boulons partagent la charge pendant toute la détente.",
+   "One turn at a time: the 6 bolts share the load while the springs release."
+  ],
+  [
+   "Ressorts détendus : les 3 boulons de retenue ne portent plus rien. Retirés en dernier.",
+   "Springs released: the 3 retaining bolts carry nothing anymore. Removed last."
+  ],
+  [
+   ">Pourquoi<",
+   ">Why<"
+  ],
+  [
+   "Vidéo de formation · Tête UM-012-100UG",
+   "Training video · UM-012-100UG head"
+  ],
+  [
+   "Démonter le cône d'un mandrin — PRO-OP-DD-005",
+   "Removing the cone from a chuck — PRO-OP-DD-005"
+  ],
+  [
+   "Les ressorts (springs) restent comprimés : suivre chaque étape",
+   "The springs stay compressed: follow every step"
+  ],
+  [
+   "À retenir · PRO-OP-DD-005",
+   "Key points · PRO-OP-DD-005"
+  ],
+  [
+   "Jamais un boulon du cône enlevé au complet sous charge",
+   "Never take a cone bolt all the way out under load"
+  ],
+  [
+   "Les 3 boulons longs sans bushing, avant de desserrer les 6 autres",
+   "The 3 long bolts without the bushing, before loosening the other 6"
+  ],
+  [
+   "Un tour à la fois, dans l'ordre de 1 à 6",
+   "One turn at a time, in order from 1 to 6"
+  ],
+  [
+   "Questions de l'équipe · {n} / {m}",
+   "Questions from the team · {n} / {m}"
+  ],
+  [
+   ">Réponse<",
+   ">Answer<"
+  ],
+  [
+   "PRO-OP-DD-005 · Rencontre sécurité",
+   "PRO-OP-DD-005 · Safety meeting"
+  ],
+  [
+   "Pendant que je dévisse, je me place où ?",
+   "While I'm loosening, where do I stand?"
+  ],
+  [
+   "Hors de l'axe du mandrin. Jamais devant le cône : s'il part, c'est là qu'il s'en va.",
+   "Out of line with the chuck. Never in front of the cone: if it lets go, that's where it's headed."
+  ],
+  [
+   "Pis si un boulon veut pas se défaire ?",
+   "What if a bolt won't come loose?"
+  ],
+  [
+   "On ne force pas à l'impact drill sous charge. On arrête et on en parle au superviseur avant de continuer.",
+   "Don't force it with the impact drill under load. Stop and talk to your supervisor before going any further."
+  ],
+  [
+   "Pis si le cône reste coincé ?",
+   "What if the cone gets stuck?"
+  ],
+  [
+   "On ne le frappe pas pour le décoincer, et on ne reste pas devant : les ressorts poussent encore, il peut être projeté.",
+   "Don't hit it to free it, and don't stand in front of it: the springs are still pushing, it can be thrown out."
+  ],
+  [
+   "Si les boulons longs sont durs à remettre, on peut-tu sauter l'étape 6 ?",
+   "If the long bolts are hard to put back, can we skip step 6?"
+  ],
+  [
+   "Non. Les 3 boulons longs retiennent le cône si quelque chose lâche. Sans eux, rien ne l'arrête.",
+   "No. The 3 long bolts hold the cone if something gives. Without them, nothing stops it."
+  ],
+  [
+   "L'énergie résiduelle, y en a juste dans les ressorts ?",
+   "Residual energy, is it only in the springs?"
+  ],
+  [
+   "Pas juste là : pression qui reste dans les boyaux hydrauliques, pièce qui peut tomber, câble tendu. Avant de démonter : qu'est-ce qui peut encore bouger ?",
+   "Not just there: pressure left in the hydraulic hoses, a part that could fall, a cable under tension. Before taking anything apart: what can still move?"
+  ],
+  [
+   "Pis si le quart finit avant que la job soit faite ?",
+   "What if the shift ends before the job is done?"
+  ],
+  [
+   "Scellé sur la foreuse et fiche qui explique l'intervention ; chacun reprend son cadenas. Le quart suivant pose les siens avant de reprendre. Sans ça, la foreuse pourrait repartir, ressorts encore sous charge.",
+   "Seal on the drill and a tag explaining the work; everyone removes their lock. The next shift puts theirs on before resuming. Without that, the drill could restart with the springs still under load."
+  ],
+  [
+   "Pis si quelque chose me semble pas normal ?",
+   "What if something doesn't seem right?"
+  ],
+  [
+   "On arrête et on en parle au superviseur. On regarde ça ensemble avant de continuer.",
+   "Stop and talk to your supervisor. We look at it together before going any further."
+  ],
+  [
+   "Ralenti × ½",
+   "Slow motion × ½"
+  ],
+  [
+   "Vidéo accélérée × {x}",
+   "Video sped up × {x}"
+  ],
+  [
+   "Ressorts · vue en coupe",
+   "Springs · cutaway view"
+  ],
+  [
+   "Desserrage en étoile · 1 tour à la fois",
+   "Star pattern loosening · 1 turn at a time"
+  ],
+  [
+   "Tour {a} sur {b} · boulon {c}",
+   "Turn {a} of {b} · bolt {c}"
+  ],
+  [
+   "Arrêt — On en discute",
+   "Stop — Let's talk"
+  ],
+  [
+   "Question pour l'équipe",
+   "Question for the team"
+  ],
+  [
+   "Questions pour l'équipe",
+   "Questions for the team"
+  ],
+  [
+   "Les ressorts sont encore comprimés. Selon vous, comment on peut relâcher cette énergie-là sans danger ?",
+   "The springs are still compressed. In your opinion, how can we release that energy safely?"
+  ],
+  [
+   "Mettez la vidéo sur pause et discutez en équipe.",
+   "Pause the video and discuss as a team."
+  ],
+  [
+   "À vous la parole",
+   "Your turn"
+  ],
+  [
+   "Sur nos équipements, où est-ce qu'il peut rester de l'énergie résiduelle après le cadenassage ?",
+   "On our equipment, where could residual energy remain after lockout?"
+  ],
+  [
+   "Dans votre travail, quand est-ce que le cadenas suffit pas, pis qu'il faut contrôler une énergie qui reste ?",
+   "In your work, when is a lock not enough, and you need to control energy that remains?"
+  ],
+  [
+   "Qu'est-ce qu'on doit vérifier avant de démonter, une fois la foreuse cadenassée ?",
+   "What should we check before taking things apart, once the drill is locked out?"
+  ],
+  [
+   "Retour à la procédure",
+   "Back to the procedure"
+  ],
+  [
+   "La bonne méthode",
+   "The right way"
+  ],
+  [
+   "Étape 8 : les ressorts sont détendus, les 3 boulons longs ne portent plus rien.",
+   "Step 8: the springs are released, the 3 long bolts carry nothing anymore."
+  ],
+  [
+   "Si on ne respecte pas la séquence",
+   "If you don't follow the sequence"
+  ],
+  [
+   "Contre-exemple",
+   "Counter-example"
+  ],
+  [
+   "Ce qu'il ne faut pas faire",
+   "What not to do"
+  ],
+  [
+   "Ne pas faire",
+   "Do not do"
+  ],
+  [
+   "Boulons 4, 1 et 3 retirés au complet",
+   "Bolts 4, 1 and 3 taken all the way out"
+  ],
+  [
+   "Boulon 5 retiré : le cône bascule",
+   "Bolt 5 removed: the cone tilts"
+  ],
+  [
+   "Boulon 2 retiré : un seul boulon retient tout",
+   "Bolt 2 removed: one bolt holds everything"
+  ],
+  [
+   "Dernier boulon desserré à l'impact drill, sous pleine charge",
+   "Last bolt loosened with the impact drill, under full load"
+  ],
+  [
+   "Le boulon casse : cône projeté",
+   "The bolt breaks: cone thrown out"
+  ]
+ ]
+}

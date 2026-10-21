@@ -25,6 +25,7 @@ ap.add_argument('--audio', required=True); ap.add_argument('--script', required=
 ap.add_argument('--piper-modele', required=True); ap.add_argument('--espeak-data', required=True)
 ap.add_argument('--sortie', required=True); ap.add_argument('--ffmpeg', default=os.environ.get('FFMPEG', 'ffmpeg'))
 ap.add_argument('--bande', type=float, default=.12); ap.add_argument('--pause', type=float, default=.15)
+ap.add_argument('--langue', default='fr')   # en : voix Piper anglaise (en-us lessac), sans les graphies phonétiques françaises
 a = ap.parse_args()
 os.makedirs(a.sortie, exist_ok=True)
 S = lambda *p: os.path.join(a.sortie, *p)
@@ -65,7 +66,8 @@ for i, r in enumerate(script):
     ph = [m.strip() for m in re.split(r'(?<=[.?:])\s+', r['texte']) if m.strip()]
     for j, m in enumerate(ph):
         txt = m
-        for x, y in PRON: txt = txt.replace(x, y)
+        if a.langue == 'fr':
+            for x, y in PRON: txt = txt.replace(x, y)
         buf = io.BytesIO()
         with wave.open(buf, 'wb') as f: voix.synthesize(txt, f, length_scale=1.0, sentence_silence=0.0)
         buf.seek(0)

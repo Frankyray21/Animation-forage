@@ -1,0 +1,167 @@
+[
+ {
+  "passage": "A_intro",
+  "orateur": 1,
+  "texte": "This morning, we're talking about removing the cone from a chuck."
+ },
+ {
+  "passage": "A_intro",
+  "orateur": 2,
+  "texte": "With the eighteen springs compressed behind it, right?"
+ },
+ {
+  "passage": "A_intro",
+  "orateur": 1,
+  "texte": "Exactly. As long as the cone is bolted in, that's stored energy."
+ },
+ {
+  "passage": "A_intro",
+  "orateur": 2,
+  "texte": "Got it. Let's go through it step by step."
+ },
+ {
+  "passage": "A_00_c",
+  "orateur": 1,
+  "texte": "Step one: the Clam and Chuck levers in the closed position."
+ },
+ {
+  "passage": "A_00_p",
+  "orateur": 1,
+  "texte": "Look at the cutaway: the hydraulics are off, but the green springs are still compressed. Closing the levers doesn't release their energy. That's what we call residual energy: it stays stored in the equipment, even when the source is shut off."
+ },
+ {
+  "passage": "A_01_c",
+  "orateur": 1,
+  "texte": "Step two: we check that the jaws are closed."
+ },
+ {
+  "passage": "A_02_c",
+  "orateur": 1,
+  "texte": "Step three: we lock out the drill. Everyone puts on their own lock, and we check that the drill can't restart. The lock keeps the hydraulics from restarting, but the springs are still pushing. We control that residual energy too: in step six, the three long bolts, put back without the bushing, hold the cone. In step seven, we loosen the other six bolts one turn at a time, and the springs ease off slowly."
+ },
+ {
+  "passage": "A_03_c",
+  "orateur": 1,
+  "texte": "Step four: the three three-quarter-inch bolts on the jaw cover, with the one-and-an-eighth-inch wrench."
+ },
+ {
+  "passage": "A_04_c",
+  "orateur": 1,
+  "texte": "Step five: the nine half-inch bolts on the cap holder, with the three-quarter-inch wrench."
+ },
+ {
+  "passage": "A_05_c",
+  "orateur": 1,
+  "texte": "Step six is the key to the whole job. It's important to loosen the long bolts one at a time, remove the spacer, which we call the bushing, and fully retighten the bolt without the bushing."
+ },
+ {
+  "passage": "A_05_p",
+  "orateur": 1,
+  "texte": "That gives us the room we need to loosen the other six bolts while releasing the spring tension. And we keep an extra safety with the three long bolts still in place."
+ },
+ {
+  "passage": "A_06_c",
+  "orateur": 1,
+  "texte": "Step seven: the six half-inch by six-and-a-half-inch bolts. One turn at a time, in order, from one to six. Watch the counter in the top right, and the window at the bottom: with each turn, the springs stretch out a little."
+ },
+ {
+  "passage": "A_06_p",
+  "orateur": 1,
+  "texte": "The six bolts share the load: the springs relax little by little, evenly. It takes longer, but we stay in control."
+ },
+ {
+  "passage": "A_06_x",
+  "orateur": 1,
+  "texte": "Look what happens if you take the bolts all the way out, one after the other, without dealing with the residual energy. The springs stay compressed, and every bolt you remove puts more load on the others. The last one carries all the force: it breaks, and the cone gets thrown out. That's why we go one turn at a time."
+ },
+ {
+  "passage": "A_07_c",
+  "orateur": 1,
+  "texte": "Step eight: the springs are relaxed. We remove the three long half-inch by eight-inch bolts."
+ },
+ {
+  "passage": "A_07_p",
+  "orateur": 1,
+  "texte": "We leave them for last because they hold the cone right to the end. Now they're not carrying anything."
+ },
+ {
+  "passage": "A_08_c",
+  "orateur": 1,
+  "texte": "Step nine: we take out the cone, the bowl, and the jaws, and we change the parts. The residual energy was released slowly: the cone stayed held the whole time."
+ },
+ {
+  "passage": "A_fin",
+  "orateur": 1,
+  "texte": "For this shift: never take a cone bolt all the way out under load. The three long bolts without the bushing, before loosening the other six bolts. And one turn at a time."
+ },
+ {
+  "passage": "A_questions",
+  "orateur": 2,
+  "texte": "While I'm loosening, where do I stand?"
+ },
+ {
+  "passage": "A_questions",
+  "orateur": 1,
+  "texte": "Out of line with the chuck. Never in front of the cone: if it lets go, that's where it's headed."
+ },
+ {
+  "passage": "A_questions",
+  "orateur": 2,
+  "texte": "What if a bolt won't come loose?"
+ },
+ {
+  "passage": "A_questions",
+  "orateur": 1,
+  "texte": "Don't force it with the impact drill under load. Stop, and talk to your supervisor before going any further."
+ },
+ {
+  "passage": "A_questions",
+  "orateur": 2,
+  "texte": "What if the cone gets stuck?"
+ },
+ {
+  "passage": "A_questions",
+  "orateur": 1,
+  "texte": "Don't hit it to free it, and don't stand in front of it. The springs are still pushing: it can be thrown out."
+ },
+ {
+  "passage": "A_questions",
+  "orateur": 2,
+  "texte": "If the long bolts are hard to put back, can we skip step six?"
+ },
+ {
+  "passage": "A_questions",
+  "orateur": 1,
+  "texte": "No. They're what holds the cone if something gives. Without them, nothing stops it."
+ },
+ {
+  "passage": "A_questions",
+  "orateur": 2,
+  "texte": "Residual energy, is it only in the springs?"
+ },
+ {
+  "passage": "A_questions",
+  "orateur": 1,
+  "texte": "Not just there. There's also pressure left in the hydraulic hoses, a part that could fall, a cable under tension. Before taking anything apart, we always ask ourselves: what can still move?"
+ },
+ {
+  "passage": "A_questions",
+  "orateur": 2,
+  "texte": "What if the shift ends before the job is done?"
+ },
+ {
+  "passage": "A_questions",
+  "orateur": 1,
+  "texte": "We put a seal on the drill, with a tag that explains the work being done. After that, everyone can remove their lock. The next shift knows exactly where we're at, and everyone puts their lock back on before resuming the job. Without that, someone could restart the drill without knowing the chuck is half taken apart, and that the springs may still be under load. The cone could be thrown out."
+ },
+ {
+  "passage": "A_questions",
+  "orateur": 2,
+  "texte": "What if something doesn't seem right?"
+ },
+ {
+  "passage": "A_questions",
+  "orateur": 1,
+  "texte": "You stop, and you talk to your supervisor. We look at it together before going any further."
+ }
+]
