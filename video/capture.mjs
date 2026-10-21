@@ -5,7 +5,7 @@
 // La page est servie depuis le dépôt par un petit serveur local ; les crochets de capture sont
 // injectés dans la copie servie (animation.html n'est jamais modifié).
 //
-// Usage : node video/capture.mjs [--out DIR] [--scen A|D] [--fps 24] [--ss 2] [--band 100] [--from K] [--to K] [--skip-existing] [--gpu] [--scan | --inserts | --info | --at T1,T2]
+// Usage : node video/capture.mjs [--out DIR] [--scen A|B|D] [--lang fr|en] [--fps 24] [--ss 2] [--band 100] [--from K] [--to K] [--skip-existing] [--gpu] [--scan | --inserts | --info | --at T1,T2]
 // --ss : suréchantillonnage (rendu à ss × la taille, réduit au montage) contre le crénelage et le scintillement des arêtes
 // Variables : PLAYWRIGHT (chemin du module playwright si non installé localement),
 //             CHROME (exécutable chromium), THREE_DIR (copie locale du paquet three@0.160.0),
@@ -89,6 +89,9 @@ await page.route(/^https:\/\/(cdn\.jsdelivr\.net|fonts\.googleapis\.com|fonts\.g
 });
 const SCEN = arg('scen', 'A');   // A : procédure respectée ; D : reconstitution de l'accident (boulons retirés un par un)
 await page.addInitScript(sc => { try { localStorage.setItem('clam-scen', sc); } catch (e) {} }, SCEN);
+// --lang en : textes dessinés dans la 3D en anglais (étiquettes, plaques, étiquette de cadenassage, note, bandeau ; animation.html SCENE_TR)
+const LANG = arg('lang', 'fr');
+await page.addInitScript(l => { try { localStorage.setItem('clam-scene-lang', l); } catch (e) {} }, LANG);
 await page.goto(URL0, { waitUntil: 'load' });
 await page.waitForFunction(() => window.__clam, null, { timeout: 180000 });
 console.log('WebGL : ' + await page.evaluate(() => { const g = document.createElement('canvas').getContext('webgl2'), e = g && g.getExtension('WEBGL_debug_renderer_info'); return e ? g.getParameter(e.UNMASKED_RENDERER_WEBGL) : '?'; }));
