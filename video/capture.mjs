@@ -141,7 +141,8 @@ if (arg('film', '')) {
     const file = path.join(OUT, `f_${String(k).padStart(5, '0')}.jpg`);
     const render = !PROJONLY && k >= FROM && (!ATK || ATK.has(k)) && !(SKIPF && fs.existsSync(file) && fs.statSync(file).size > 10000);
     await fstep(k, fr, render);
-    if (k >= FROM && fr.proj.length) proj[k] = Object.fromEntries((await page.evaluate(ids => window.__clam.project(ids), fr.proj)).map((v, i) => [fr.proj[i], v]));
+    if (k >= FROM) { const r = await page.evaluate(ids => ({ p: window.__clam.project(ids), lm: window.__clam.leverMan() }), fr.proj);   // avec l'avancement des manettes
+      proj[k] = { ...Object.fromEntries(r.p.map((v, i) => [fr.proj[i], v])), lm: [r.lm.on ? +r.lm.q.toFixed(4) : 1, r.lm.dir] }; }
     if (render) {
       await page.screenshot({ path: file, type: 'jpeg', quality: 93, clip: view }); nr++;
       if (nr % 24 === 1 || k === TO - 1) console.log(`image ${k + 1}/${F.N} · ${((Date.now() - t0) / 1000 / nr).toFixed(1)} s/image (rejeu compris)`);

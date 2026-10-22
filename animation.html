@@ -4743,7 +4743,7 @@ async function start() {
   // priorité de profondeur par matériau : surfaces confondues toujours départagées de la même façon
   {
     const seen = new Set();
-    const tag = m => { if (!m || seen.has(m) || m.isSpriteMaterial) return; seen.add(m); m.polygonOffset = true; m.polygonOffsetFactor = 0; m.polygonOffsetUnits = (seen.size % 61) - 30; m.needsUpdate = true; };
+    const tag = m => { if (!m || seen.has(m) || m.isSpriteMaterial) return; seen.add(m); m.polygonOffset = true; const r = (seen.size % 61) - 30; m.polygonOffsetFactor = r / 100; m.polygonOffsetUnits = r; m.needsUpdate = true; };
     scene.traverse(o => { if (o.isMesh) [].concat(o.material).forEach(tag); });
   }
   buildLabels();
@@ -4759,11 +4759,11 @@ async function start() {
   const S = stateAt(T); applyScene(S); updateUI(S, true);
   requestAnimationFrame(frame);
   window.__clam = { stateAt, steps: () => steps, starts: () => starts, total: () => total, setT: v => { T = v; }, P, setExplode, setHeadExplode, headExplodeNow: v => { setHeadExplode(v); hexE = v ? 1 : 0; }, setCutUI: setCut, setCutAuto, CAMS, cutState: () => ({ cutOn, cutAuto, cam: lastCamKey }), explodeNow: v => { setExplode(v); explodeE = v ? 1 : 0; }, select: id => select(byId(id)), PARTS, camera, setQuality, worker: { set: setWorker, get: () => ({ x: WORKER_GLB.position.x, y: WORKER_GLB.position.y, z: WORKER_GLB.position.z, rotYdeg: WORKER_GLB.rotY * 180 / Math.PI, scale: WORKER_GLB.scale, loaded: !!workerModel }), root: workerRoot }, setCut: v => { cutOn = v; applyCut(); }, levers, THREE, state: () => stateAt(T), leverMan: () => ({ ...leverMan }), leverGo: dir => { const S = stateAt(T); if (leverMan.on) leverBlend(S, 0); leverMan.on = true; leverMan.q = 0; leverMan.dir = dir; leverMan.from = { lever: S.lever, hyd: S.hyd, press: S.press }; },
-    // position à l'écran (0..1) du centre d'une pièce ; « id@top » : l'objet le plus haut de la pièce (côté gardé par la coupe), p. ex. un ressort ;
+    // position à l'écran (0..1) du centre d'une pièce ; « id@top » / « id@bas » : l'objet le plus haut / le plus bas de la pièce (côté gardé par la coupe), p. ex. un ressort ;
     // « id@bord » : le haut d'une pièce en anneau (cône, piston), au lieu de son centre sur l'axe
     isolate, project: ids => { camera.updateMatrixWorld(); return ids.map(key => { const [id, mode] = key.split('@'), p = byId(id), box = new THREE.Box3(), c = new THREE.Vector3(); if (!p) return null;
       let objs = p.objs.filter(Boolean);
-      if (mode === 'top') { const ctr = o => new THREE.Box3().expandByObject(o).getCenter(new THREE.Vector3()); objs = objs.filter(o => !cutOn || ctr(o).z <= .05).sort((a, b) => ctr(b).y - ctr(a).y).slice(0, 1); }
+      if (mode === 'top' || mode === 'bas') { const ctr = o => new THREE.Box3().expandByObject(o).getCenter(new THREE.Vector3()), sg = mode === 'top' ? 1 : -1; objs = objs.filter(o => !cutOn || ctr(o).z <= .05).sort((a, b) => sg * (ctr(b).y - ctr(a).y)).slice(0, 1); }
       objs.forEach(o => box.expandByObject(o)); if (box.isEmpty()) return null; box.getCenter(c);
       if (mode === 'bord') c.set(c.x, box.max.y - .15 * (box.max.y - box.min.y), Math.min(c.z, 0));   // bord haut, côté gardé par la coupe (pièce en anneau)
       const v = c.project(camera); return [(v.x + 1) / 2, (1 - v.y) / 2, v.z]; }); }, oilG, labels: () => labels, STROKE, JAW_OPEN };
