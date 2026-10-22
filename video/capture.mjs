@@ -5,7 +5,7 @@
 // La page est servie depuis le dépôt par un petit serveur local ; les crochets de capture sont
 // injectés dans la copie servie (animation.html n'est jamais modifié).
 //
-// Usage : node video/capture.mjs [--out DIR] [--scen A|B|D] [--lang fr|en] [--fps 24] [--ss 2] [--band 100] [--from K] [--to K] [--skip-existing] [--gpu] [--scan | --inserts | --info | --at T1,T2]
+// Usage : node video/capture.mjs [--out DIR] [--scen A|B|D] [--lang fr|en] [--fps 24] [--ss 2] [--band 100] [--from K] [--to K] [--skip-existing] [--gpu] [--scan | --inserts | --info | --at T1,T2 | --film FILM.mjs]
 // --ss : suréchantillonnage (rendu à ss × la taille, réduit au montage) contre le crénelage et le scintillement des arêtes
 // Variables : PLAYWRIGHT (chemin du module playwright si non installé localement),
 //             CHROME (exécutable chromium), THREE_DIR (copie locale du paquet three@0.160.0),
@@ -101,6 +101,56 @@ await page.evaluate(async () => {
   document.getElementById('help').hidden = true; document.getElementById('helpVeil').hidden = true;
   document.getElementById('optNums').checked = true; document.getElementById('optWorker').checked = true;
 });
+
+// --film video/meca/film.mjs : film découpé image par image (caméra, coupe, manettes, pièces isolées, vue éclatée) → f_<k>.jpg
+// et proj_<from>.json (position à l'écran des pièces nommées au montage) ; --at k1,k2 : ces images seulement (aperçu) ;
+// --proj-only : proj_<from>.json seulement (rejeu sans rendu, quelques minutes)
+if (arg('film', '')) {
+  const F = await import(path.resolve(arg('film', '')));
+  const FROM = +arg('from', 0), TO = Math.min(+arg('to', F.N), F.N), SKIPF = process.argv.includes('--skip-existing');
+  const PROJONLY = process.argv.includes('--proj-only');   // positions des pièces seulement, sans rendu
+  const ATK = arg('at', '') ? new Set(arg('at', '').split(',').map(Number)) : null;
+  fs.mkdirSync(OUT, { recursive: true });
+  const view = await page.evaluate(() => { const b = document.getElementById('view').getBoundingClientRect(); return { x: b.left, y: b.top, width: b.width, height: b.height }; });
+  await page.evaluate(() => {
+    const c = window.__clam, w = document.getElementById('optWorker'); w.checked = false; w.dispatchEvent(new Event('change'));
+    c.setCutAuto(false); c.setCutUI(false); window.__noLabels = true; document.querySelectorAll('.note').forEach(n => { n.style.visibility = 'hidden'; });
+    window.__cap = true; window.__go = 0; window.__cutFar = true;
+  });
+  const ev = e => page.evaluate(([e]) => {
+    const c = window.__clam, [k, v] = e;
+    if (k === 'lever') c.leverGo(v); else if (k === 'cut') c.setCutUI(v); else if (k === 'explode') c.setExplode(v);
+  }, [e]);
+  async function fstep(k, fr, render) {
+    const n = await page.evaluate(([k, fr, render, fps]) => {
+      const c = window.__clam; c.setT(0); window.__fixedDt = fr.dt; window.__camOverride = fr.cam;
+      window.__vt = 1000 * (k + 100) / fps; window.__noRender = !render; window.__go = 1; return window.__frames || 0;
+    }, [k, fr, render, F.FPS]);
+    await page.waitForFunction(n => (window.__frames || 0) > n, n, { polling: 'raf' });
+  }
+  if (ATK) console.log(JSON.stringify(await page.evaluate(() => { const c = window.__clam, T = c.THREE;   // boîtes des pièces (cadrage)
+    return Object.fromEntries(['3506870', '3506909', '3506908', '5200517', '2920390', 'UM-021-01-01'].map(id => { const b = new T.Box3(); c.PARTS.find(p => p.id === id).objs.filter(Boolean).forEach(o => b.expandByObject(o)); return [id, [b.min.toArray().map(v => +v.toFixed(2)), b.max.toArray().map(v => +v.toFixed(2))]]; })); })));
+  for (const e of F.PRE || []) await ev(e);
+  for (let i = 0; i < 72; i++) await fstep(i - 100, { ...F.at(0), dt: 1 / F.FPS }, false);
+  let iso = null, hi;
+  const proj = {}, t0 = Date.now(); let nr = 0;
+  for (let k = 0; k < TO; k++) {
+    for (const e of F.events(k)) { if (e[0] === 'iso') { iso = e[1]; await page.evaluate(([a, b]) => window.__clam.isolate(a, b), [iso, hi || null]); } else await ev(e); }
+    const fr = F.at(k);
+    if (fr.hi !== hi) { hi = fr.hi; await page.evaluate(([a, b]) => window.__clam.isolate(a, b), [iso, hi || null]); }
+    const file = path.join(OUT, `f_${String(k).padStart(5, '0')}.jpg`);
+    const render = !PROJONLY && k >= FROM && (!ATK || ATK.has(k)) && !(SKIPF && fs.existsSync(file) && fs.statSync(file).size > 10000);
+    await fstep(k, fr, render);
+    if (k >= FROM && fr.proj.length) proj[k] = Object.fromEntries((await page.evaluate(ids => window.__clam.project(ids), fr.proj)).map((v, i) => [fr.proj[i], v]));
+    if (render) {
+      await page.screenshot({ path: file, type: 'jpeg', quality: 93, clip: view }); nr++;
+      if (nr % 24 === 1 || k === TO - 1) console.log(`image ${k + 1}/${F.N} · ${((Date.now() - t0) / 1000 / nr).toFixed(1)} s/image (rejeu compris)`);
+    }
+  }
+  if (!ATK) fs.writeFileSync(path.join(OUT, `proj_${FROM}.json`), JSON.stringify(proj));
+  console.log(`film ${FROM}–${TO - 1} terminé en ${((Date.now() - t0) / 1000).toFixed(0)} s`);
+  await browser.close(); server.close(); process.exit(0);
+}
 
 // --- plan : chaque étape à 1×, plus une image exacte de fin d'étape (figée ensuite au montage) ---
 const info = await page.evaluate(() => { const c = window.__clam; return { steps: c.steps().map(s => ({ n: s.n, title: s.title, dur: s.dur, act: s.act || '' })), starts: c.starts(), total: c.total(), scen: document.getElementById('scenChipText').textContent }; });
