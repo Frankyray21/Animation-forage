@@ -2782,7 +2782,7 @@ function applyHeadExplode(h) {
 /* ================= Sélection d'une pièce et vue en coupe ================= */
 const CUT = new THREE.Plane(new THREE.Vector3(0, 0, -1), 0);   // garde la moitié arrière (z ≤ 0)
 const CUT_DEEP = new THREE.Plane(new THREE.Vector3(0, 0, -1), -u(2.0));   // bloc des ressorts : ouvert 2 po plus loin, une rangée de ressorts apparaît
-let cutOn = false, selected = null;   // vue entière au départ ; coupe automatique selon le plan
+let cutOn = false, selected = null, cutTurn = false;   // cutTurn : plan de coupe orienté par setCutPlane (film du mécanisme)   // vue entière au départ ; coupe automatique selon le plan
 const ghostMat = new THREE.MeshStandardMaterial({ color: 0x9aa4ab, transparent: true, opacity: 0.12, depthWrite: false, roughness: 1 });
 // La tête garde ses propres matériaux : la coupe ne tranche que le mandrin.
 const headMats = new Set(), ghostHead = ghostMat.clone();
@@ -2826,7 +2826,7 @@ function applyCut() {
     const inS = S => S.has(m) || [...S].some(pm => hiCache.get(pm) === m);
     const free = (cutFree.plate && inS(plateMats)) || (cutFree.cover && inS(coverMats)) || (cutFree.jc && inS(jcMats)) || inS(cutFree.mats);
     // ressorts dessinés entiers (convention des vues en coupe) ; bloc des logements coupé plus profond pour les montrer
-    const spring = inS(new Set([mat.spring]));
+    const spring = !cutTurn && inS(new Set([mat.spring]));   // coupe tournante (film du mécanisme) : ressorts coupés comme le reste, sans apparition brusque
     m.clippingPlanes = !cutOn || free || spring ? null : inS(new Set([mat.springBlock])) ? [CUT_DEEP] : [CUT];
     if (m !== ghostMat && !(m.side === THREE.BackSide)) m.side = cutOn ? THREE.DoubleSide : THREE.FrontSide;
     m.clipShadows = true;                              // la moitié retirée ne projette plus d'ombre
@@ -3949,7 +3949,7 @@ function applyScene(S) {
     }
     m.position.set(s.x, POCKET, s.z); m.rotation.set(0, 0, 0);
     // en coupe : ressorts de la moitié retirée masqués (d'après le plan de coupe, qui peut tourner dans le film du mécanisme)
-    m.visible = !(cutOn && explodeE === 0 && hexE === 0 && CUT.distanceToPoint(springW.set(s.x, POCKET, s.z).applyMatrix4(springGroup.matrixWorld)) < -u(.7));
+    m.visible = !(cutOn && !cutTurn && explodeE === 0 && hexE === 0 && CUT.distanceToPoint(springW.set(s.x, POCKET, s.z).applyMatrix4(springGroup.matrixWorld)) < -u(.7));
     const compVis = D.comp[j] / 1000 / U * X;
     setSpringLen(m, Math.max(u(3.2), LC + t - compVis + hOff));   // vérin sous pression : plus comprimés ; jamais sous la longueur à spires jointives
   });
@@ -4765,7 +4765,8 @@ async function start() {
     // position à l'écran (0..1) du centre d'une pièce ; « id@top » / « id@bas » : l'objet le plus haut / le plus bas de la pièce (côté gardé par la coupe), p. ex. un ressort ;
     // « id@bord » : le haut d'une pièce en anneau (cône, piston), au lieu de son centre sur l'axe
     // coupe orientée (film du mécanisme) : plan qui contient l'axe du mandrin (point a) et fait face à la direction n ; null : coupe d'origine (z ≤ 0)
-    setCutPlane: (n, a) => { if (!n) { CUT.set(new THREE.Vector3(0, 0, -1), 0); CUT_DEEP.set(new THREE.Vector3(0, 0, -1), -u(2.0)); return; }
+    setCutPlane: (n, a) => { const turn = !!n; if (turn !== cutTurn) { cutTurn = turn; applyCut(); }
+      if (!n) { CUT.set(new THREE.Vector3(0, 0, -1), 0); CUT_DEEP.set(new THREE.Vector3(0, 0, -1), -u(2.0)); return; }
       const N = new THREE.Vector3(...n).normalize().negate(), c = -N.dot(new THREE.Vector3(...a)); CUT.set(N, c); CUT_DEEP.set(N.clone(), c - u(2.0)); },
     isolate, project: ids => { camera.updateMatrixWorld(); return ids.map(key => { const [id, mode] = key.split('@'), p = byId(id), box = new THREE.Box3(), c = new THREE.Vector3(); if (!p) return null;
       let objs = p.objs.filter(Boolean);

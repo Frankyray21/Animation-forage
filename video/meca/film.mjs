@@ -45,8 +45,8 @@ export function events(k) {
   return e;
 }
 const ARROWS = ['3506909@bord', '3506908@bord', '5200517@top', '2920390@bord', 'UM-021-01-01@top', 'UM-021-01-01@bas'];
-// vue 360° : tour complet autour du mandrin, coupe tournée avec la caméra (le plan de coupe contient l'axe et fait face à la caméra :
-// on voit toujours l'intérieur) ; manettes ouvertes et fermées deux fois pendant le tour, ralenti ×1,5 (course 2,7 s)
+// vue 360° : tour complet autour du mandrin, coupe tournée avec la caméra (le plan de coupe contient l'axe et s'ouvre du côté de la
+// caméra : on voit toujours l'intérieur ; les ressorts y sont coupés comme le reste) ; manettes ouvertes et fermées deux fois pendant le tour, ralenti ×1,5 (course 2,7 s)
 export const T360 = [23, 39], SLOW360 = 1.5;
 export const CYCLES = [[24.6, 0], [28.4, 1], [32.2, 0], [36, 1]];
 const AXE = [-1.85, 4.76, 0], R360 = 5.0, H360 = 1.6;
@@ -65,11 +65,12 @@ export function at(k) {
   } else if (t < 39) {                           // tour complet à vitesse constante, raccordé en douceur au cadrage de côté
     const q = (t - 23) / 16, ang = 360 * (q < .5 ? 2 * q * q : 1 - 2 * (1 - q) * (1 - q));   // départ et arrivée en douceur
     cam = orb(ang, R360, H360, AXE);
-    const w = Math.min(seg(t, 23, 24.5), 1 - seg(t, 37.5, 39));
     if (t < 24.5) cam = camLerp(SIDE, cam, ease(seg(t, 23, 24.5)));
     if (t > 37.5) cam = camLerp(cam, RET, ease(seg(t, 37.5, 39)));
-    const d = [0, (cam.p[1] - AXE[1]) * w, cam.p[2] - AXE[2]], L = Math.hypot(d[1], d[2]) || 1;
-    cutN = [0, d[1] / L, d[2] / L];
+    // plan de coupe : tourne autour de l'axe à la même vitesse que la caméra (0° de côté, 90° vers le haut quand la caméra
+    // est devant, retour par le haut quand elle est derrière) : jamais de bascule brusque, toujours ouvert du côté de la caméra
+    const b = (ang <= 180 ? ang : 360 - ang) * Math.PI / 180;
+    cutN = [0, Math.sin(b), Math.cos(b)];
     dt = 1 / FPS / SLOW360; proj = [];
   } else {                                       // mécanisme seul, de côté : ressorts soulignés
     cam = RET; hi = t >= 39.5 ? '5200517' : null; proj = ['5200517@top'];
