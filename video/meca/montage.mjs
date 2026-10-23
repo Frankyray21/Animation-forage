@@ -145,7 +145,7 @@ html,body{margin:0;width:${W}px;height:${H}px;overflow:hidden;background:transpa
 .cad b{display:block;font-size:24px;letter-spacing:.1em;text-transform:uppercase;margin-bottom:6px}
 .cad.alerte{background:rgba(150,24,18,.94);border-color:#ff6a5c;max-width:980px} .cad.alerte div{font-size:31px}
 .cad.ok{background:rgba(24,96,46,.94);border-color:#6fe08c} .cad.ok div{font-size:31px}
-.cad.bandeau{bottom:auto;top:110px;padding:10px 22px;background:rgba(150,24,18,.94);border-color:#ff6a5c} .cad.bandeau div{font-size:28px}
+.cad.bandeau{bottom:auto;top:150px;left:auto;right:40px;transform:none;max-width:500px;padding:10px 22px;background:rgba(150,24,18,.94);border-color:#ff6a5c} .cad.bandeau div{font-size:28px}
 .cad div{font-family:"Barlow Condensed",sans-serif;font-size:38px;font-weight:600;line-height:1.08;text-wrap:balance}
 </style></head><body><div id="r"></div></body></html>`;
 
