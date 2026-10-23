@@ -1,4 +1,4 @@
-// Film « mécanisme des mâchoires » (45 s) : le mécanisme construit pièce par pièce, pour capture.mjs --film.
+// Film « mécanisme des mâchoires » (48 s) : le mécanisme construit pièce par pièce, pour capture.mjs --film.
 // Chaque plan ajoute une pièce (les autres sont cachées) et actionne les manettes : on voit ce que la nouvelle pièce fait.
 // Pièces entières (pas de coupe) sauf pour le piston, dont l'huile ne se voit qu'à l'intérieur du cylindre.
 // Chaque image k donne la caméra, la pièce soulignée et le pas de temps (dt < 1/24 : ralenti). Les événements (coupe,
@@ -6,7 +6,7 @@
 // quelle que soit la tranche capturée. Caméra lente (petits arcs) : les déplacements rapides font papilloter les détails fins.
 // Les textes et les flèches de mouvement sont ajoutés au montage (video/meca/montage.mjs) ; proj : pièces dont la position
 // à l'écran est relevée (« id@ax » : un point décalé vers l'avant, pour le sens du mouvement), plus l'avancement des manettes.
-export const FPS = 24, N = 45 * FPS;
+export const FPS = 24, N = 48 * FPS;
 const s = t => Math.round(t * FPS);
 const ease = x => x <= 0 ? 0 : x >= 1 ? 1 : x * x * (3 - 2 * x);
 const lerp = (a, b, q) => a + (b - a) * q;
@@ -29,10 +29,10 @@ export const PLANS = [
   [18, 26, 'ressorts'],      // + les 18 ressorts : ils poussent le cône
   [26, 33, 'piston'],        // + le piston et le cylindre (en coupe, avec l'huile) : l'huile tire le cône
   [33, 39, 'boitier'],       // + le boîtier : de l'extérieur, presque rien ne bouge
-  [39, 45, 'retenir'],       // ressorts soulignés : l'énergie qui reste
+  [39, 48, 'ouvfer'],        // ouvertes ou fermées ? manettes ouvertes : ressorts écrasés, le cadenas n'y change rien ; fermées : le moins d'énergie
 ];
 // manettes : [instant s, sens (0 ouvrir, 1 fermer)] — deux basculements par plan
-export const CYCLES = [[4.6, 0], [7.8, 1], [12.0, 0], [15.0, 1], [19.2, 0], [22.6, 1], [27.0, 0], [30.0, 1], [34.0, 0], [36.6, 1]];
+export const CYCLES = [[4.6, 0], [7.8, 1], [12.0, 0], [15.0, 1], [19.2, 0], [22.6, 1], [27.0, 0], [30.0, 1], [34.0, 0], [36.6, 1], [39.2, 0], [43.8, 1]];
 // avant l'image 0 (images rejouées sans rendu) : manettes fermées, mâchoires fermées
 export const PRE = [['lever', 1]];
 export const plan = k => PLANS.find(([a, b]) => k >= s(a) && k < s(b)) || PLANS[PLANS.length - 1];
@@ -74,8 +74,8 @@ export function at(k) {
   } else if (t < 39) {                           // + boîtier : le mandrin complet sur la tête, de trois quarts
     cam = orb(lerp(36, 48, ease(seg(t, 33, 39))), 7.4, 1.8, AXE);
     proj = ['3506870', 'UM-021-01-01'];
-  } else {                                       // mécanisme seul en coupe, ressorts soulignés
-    cam = { p: [-2.4, 5.6, 6.0], t: [-2.4, 4.95, 0] }; dt = 1 / FPS;
+  } else {                                       // mécanisme seul en coupe, ressorts soulignés ; manettes ouvertes puis fermées (ralenti ×1,5)
+    cam = { p: [-2.4, 5.6, 6.0], t: [-2.4, 4.95, 0] };
     hi = t >= 39.5 ? '5200517' : null; proj = ['5200517@top'];
   }
   return { cam, dt, hi, proj };

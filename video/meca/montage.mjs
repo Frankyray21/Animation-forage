@@ -27,7 +27,7 @@ const TX = {
       [18, 26, '3 · + les 18 ressorts', 'Ils poussent le cône'],
       [26, 33, '4 · + le piston et l\'huile', 'L\'huile tire le cône'],
       [33, 39, '5 · + le boîtier', 'Tout est caché à l\'intérieur'],
-      [39, 46, 'À retenir', 'L\'énergie qui reste : les ressorts'],
+      [39, 49, 'À retenir', 'Manettes ouvertes ou fermées ?'],
     ],
     etat: [
       [4.6, 11, 'Manettes ouvertes : les mâchoires s\'écartent.', 'Manettes fermées : les mâchoires se referment sur la tige.'],
@@ -37,7 +37,6 @@ const TX = {
     ],
     legendes: [
       [33.6, 39, 'De l\'extérieur, presque rien ne bouge : les ressorts travaillent cachés dans le boîtier.'],
-      [39.4, 42.2, 'Manettes fermées : il reste le moins d\'énergie possible. Mais les ressorts restent comprimés, retenus par les boulons du cône.'],
     ],
     etiquettes: [
       [0.6, 3.2, '3506870', 'Boîtier du mandrin', -80, -60],
@@ -47,12 +46,18 @@ const TX = {
       [26.3, 33, '3506909@bord', 'Cylindre hydraulique', -90, -50],
       [26.3, 33, '3506908@bord', 'Piston', 70, -60],
       [33.3, 39, '3506870', 'Boîtier du mandrin', -80, -60],
-      [39.8, 46, '5200517@top', '18 ressorts comprimés', -80, -50],
+      [39.5, 46.6, '5200517@top', '18 ressorts', -80, -50],
     ],
     huile: 'Huile',
     manettes: ['Manettes', 'ouvertes', 'fermées'],
     ralenti: 'Ralenti',
-    cadenas: 'Le cadenas coupe l\'hydraulique, pas l\'énergie des ressorts.',
+    // danger des manettes ouvertes : [début, fin, classe, icône, titre, texte]
+    cartes: [
+      [20.6, 22.6, 'bandeau', '⚠', '', 'Manettes ouvertes : les ressorts sont écrasés au maximum.'],
+      [40.0, 43.8, 'alerte', 'cadenas', 'Manettes ouvertes', 'Ressorts écrasés au maximum. Si on cadenasse comme ça, le cadenas n\'y change rien : toute cette énergie reste prise dans le mandrin.'],
+      [44.4, 46.6, 'ok', '✓', 'Manettes fermées', 'Les ressorts sont étirés au maximum : c\'est là qu\'il reste le moins d\'énergie.'],
+      [46.6, 49, 'fin', 'cadenas', '', 'Avant de cadenasser : manettes fermées.'],
+    ],
   },
   en: {
     plans: [
@@ -62,7 +67,7 @@ const TX = {
       [18, 26, '3 · + the 18 springs', 'They push the cone'],
       [26, 33, '4 · + the piston and the oil', 'The oil pulls the cone'],
       [33, 39, '5 · + the housing', 'Everything is hidden inside'],
-      [39, 46, 'Remember', 'The energy that stays: the springs'],
+      [39, 49, 'Remember', 'Levers open or closed?'],
     ],
     etat: [
       [4.6, 11, 'Levers open: the jaws spread apart.', 'Levers closed: the jaws close on the rod.'],
@@ -72,7 +77,6 @@ const TX = {
     ],
     legendes: [
       [33.6, 39, 'From the outside, almost nothing moves: the springs work hidden inside the housing.'],
-      [39.4, 42.2, 'Levers closed leaves the least energy possible. But the springs stay compressed, held by the cone bolts.'],
     ],
     etiquettes: [
       [0.6, 3.2, '3506870', 'Chuck housing', -80, -60],
@@ -82,12 +86,17 @@ const TX = {
       [26.3, 33, '3506909@bord', 'Hydraulic cylinder', -90, -50],
       [26.3, 33, '3506908@bord', 'Piston', 70, -60],
       [33.3, 39, '3506870', 'Chuck housing', -80, -60],
-      [39.8, 46, '5200517@top', '18 springs, compressed', -80, -50],
+      [39.5, 46.6, '5200517@top', '18 springs', -80, -50],
     ],
     huile: 'Oil',
     manettes: ['Levers', 'open', 'closed'],
     ralenti: 'Slow motion',
-    cadenas: 'The lock cuts off the hydraulics, not the energy in the springs.',
+    cartes: [
+      [20.6, 22.6, 'bandeau', '⚠', '', 'Levers open: the springs are fully compressed.'],
+      [40.0, 43.8, 'alerte', 'cadenas', 'Levers open', 'Springs fully compressed. If you lock out like this, the lock changes nothing: all that energy stays trapped in the chuck.'],
+      [44.4, 46.6, 'ok', '✓', 'Levers closed', 'The springs are fully extended: that is where the least energy remains.'],
+      [46.6, 49, 'fin', 'cadenas', '', 'Before locking out: levers closed.'],
+    ],
   },
 }[LANG];
 
@@ -132,6 +141,11 @@ html,body{margin:0;width:${W}px;height:${H}px;overflow:hidden;background:transpa
 .cad{position:absolute;left:50%;bottom:34px;transform:translateX(-50%);display:flex;align-items:center;gap:20px;background:rgba(17,21,24,.9);
   border:3px solid #f2c230;border-radius:8px;padding:18px 28px;max-width:860px}
 .cad svg{flex:none}
+.cad .ic{flex:none;font-size:44px;line-height:1;font-weight:700}
+.cad b{display:block;font-size:24px;letter-spacing:.1em;text-transform:uppercase;margin-bottom:6px}
+.cad.alerte{background:rgba(150,24,18,.94);border-color:#ff6a5c;max-width:980px} .cad.alerte div{font-size:31px}
+.cad.ok{background:rgba(24,96,46,.94);border-color:#6fe08c} .cad.ok div{font-size:31px}
+.cad.bandeau{bottom:auto;top:110px;padding:10px 22px;background:rgba(150,24,18,.94);border-color:#ff6a5c} .cad.bandeau div{font-size:28px}
 .cad div{font-family:"Barlow Condensed",sans-serif;font-size:38px;font-weight:600;line-height:1.08;text-wrap:balance}
 </style></head><body><div id="r"></div></body></html>`;
 
@@ -154,8 +168,8 @@ function calque(k) {
   for (const [a, b, kk, ti] of TX.plans) { const o = fade(t, a, b); if (o > 0) out.push(`<div class="titre" style="opacity:${o}"><div class="k">${esc(nb(kk))}</div><div class="t"><span>${esc(nb(ti))}</span></div></div>`); }
   const nom = F.plan(k)[2];
   // état des manettes (éclair au basculement) et ralenti
-  if (t >= 3.5 && t < 39) {
-    const d = leverAt(t), o = fade(t, 3.5, 39), te = leverT(t), fl = te >= 0 && t < te + 1.2 && Math.floor((t - te) * 4) % 2 === 0;
+  if (t >= 3.5 && t < 48) {
+    const d = leverAt(t), o = fade(t, 3.5, 48.5), te = leverT(t), fl = te >= 0 && t < te + 1.2 && Math.floor((t - te) * 4) % 2 === 0;
     out.push(`<div class="etat${fl ? ' flash' : ''}" style="opacity:${o}">${TX.manettes[0]} <b class="${d ? 'fer' : 'ouv'}">${TX.manettes[d ? 2 : 1]}</b></div>`);
     if (fr.dt < 1 / F.FPS - 1e-9) { const f = +(1 / (fr.dt * F.FPS)).toFixed(1); out.push(`<div class="lent" style="top:94px;opacity:${o}">${TX.ralenti} ×${LANG === 'fr' ? String(f).replace('.', ',') : f}</div>`); }
   }
@@ -194,7 +208,7 @@ function calque(k) {
     out.push(`<div class="p" style="opacity:${o}"><svg width="1" height="1"><line x1="${x}" y1="${y}" x2="${lx}" y2="${ly}" stroke="#f2c230" stroke-width="2.5"/></svg>` +
       `<div class="dot" style="left:${x}px;top:${y}px"></div><div class="nom" data-c="${cote}" style="left:${lx}px;top:${ly}px">${esc(nb(nm))}</div></div>`);
   }
-  { const o = fade(t, 42.2, 46); if (o > 0) out.push(`<div class="cad" style="opacity:${o}">${CADENAS}<div>${esc(nb(TX.cadenas))}</div></div>`); }
+  for (const [a, b, cl, ic, ti, tx] of TX.cartes) { const o = fade(t, a, b); if (o > 0) out.push(`<div class="cad ${cl}" style="opacity:${o}">${ic === 'cadenas' ? CADENAS : `<span class="ic">${ic}</span>`}<div>${ti ? `<b>${esc(nb(ti))}</b>` : ''}${esc(nb(tx))}</div></div>`); }
   return out.join('');
 }
 
