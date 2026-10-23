@@ -23,7 +23,7 @@ const PARTS_MECA = ['3506909', '3506908', '5000199', '3506928', '5200517', '2920
 export const T_OUV = 4.5, T_FER = 14;
 // plans : [début s, fin s, nom]
 export const PLANS = [
-  [0, 3.6, 'tour'],          // court travelling extérieur, finit en coupe
+  [0, 3.6, 'tour'],          // vue extérieure, puis passage franc à la coupe
   [3.6, 13.5, 'ouvrir'],     // manettes ouvertes : huile, piston et cône reculent, ressorts écrasés, mâchoires ouvertes
   [13.5, 23, 'fermer'],      // manettes fermées : pression tombe, ressorts poussent le cône, mâchoires serrées
   [23, 30, 'retenir'],       // le mécanisme seul, ressorts soulignés : l'énergie qui reste
@@ -46,10 +46,11 @@ const ARROWS = ['3506909@bord', '3506908@bord', '5200517@top', '2920390@bord', '
 export function at(k) {
   const t = k / FPS;
   let cam = SIDE, dt = 1 / FPS, hi = null, proj = ARROWS;
-  if (t < 3.6) {                                 // extérieur, lent (un quart de tour) puis coupe
-    cam = orb(lerp(60, 8, ease(t / 3.6)), lerp(8, 7, ease(t / 3.6)), lerp(2.0, 1.2, ease(t / 3.6)));
-    if (t >= 2.3) cam = camLerp(cam, SIDE, ease((t - 2.3) / 1.3));
-    proj = t < 2.3 ? ['3506870', 'UM-021-01-01'] : ARROWS;
+  if (t < 2.3) {                                 // extérieur, caméra presque immobile (un déplacement rapide fait papilloter les détails fins)
+    cam = orb(lerp(42, 36, t / 2.3), 8, 1.8);
+    proj = ['3506870', 'UM-021-01-01'];
+  } else if (t < 3.6) {                          // passage franc à la coupe, même cadrage que la suite
+    proj = ARROWS;
   } else if (t < 23) {
     dt = 1 / FPS / SLOW;
   } else {                                       // mécanisme seul : léger travelling avant, ressorts soulignés

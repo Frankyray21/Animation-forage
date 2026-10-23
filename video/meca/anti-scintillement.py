@@ -4,7 +4,9 @@
 # à l'autre) prend la moyenne de ses voisines ; en mouvement (voisines différentes), l'image k est gardée telle quelle (pas de bord doublé)
 import numpy as np, sys
 from PIL import Image
-src, dst, N, T = sys.argv[1], sys.argv[2], 1080, 18
+src, dst, T = sys.argv[1], sys.argv[2], 18
+import glob, os
+N = len(glob.glob(os.path.join(src, "f_*.jpg")))
 L = lambda k: np.asarray(Image.open(f'{src}/f_{min(N-1,max(0,k)):05d}.jpg'), dtype=np.int16)
 a, b = L(0), L(0)
 for k in range(N):
