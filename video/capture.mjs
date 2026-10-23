@@ -133,12 +133,12 @@ if (arg('film', '')) {
     return Object.fromEntries(['3506870', '3506909', '3506908', '5200517', '2920390', 'UM-021-01-01'].map(id => { const b = new T.Box3(); c.PARTS.find(p => p.id === id).objs.filter(Boolean).forEach(o => b.expandByObject(o)); return [id, [b.min.toArray().map(v => +v.toFixed(2)), b.max.toArray().map(v => +v.toFixed(2))]]; })); })));
   for (const e of F.PRE || []) await ev(e);
   for (let i = 0; i < 72; i++) await fstep(i - 100, { ...F.at(0), dt: 1 / F.FPS }, false);
-  let iso = null, hi;
+  let iso = null, isoO = {}, hi;
   const proj = {}, t0 = Date.now(); let nr = 0;
   for (let k = 0; k < TO; k++) {
-    for (const e of F.events(k)) { if (e[0] === 'iso') { iso = e[1]; await page.evaluate(([a, b]) => window.__clam.isolate(a, b), [iso, hi || null]); } else await ev(e); }
+    for (const e of F.events(k)) { if (e[0] === 'iso') { iso = e[1]; isoO = e[2] || {}; await page.evaluate(([a, b, o]) => window.__clam.isolate(a, b, o), [iso, hi || null, isoO]); } else await ev(e); }
     const fr = F.at(k);
-    if (fr.hi !== hi) { hi = fr.hi; await page.evaluate(([a, b]) => window.__clam.isolate(a, b), [iso, hi || null]); }
+    if (fr.hi !== hi) { hi = fr.hi; await page.evaluate(([a, b, o]) => window.__clam.isolate(a, b, o), [iso, hi || null, isoO]); }
     const file = path.join(OUT, `f_${String(k).padStart(5, '0')}.jpg`);
     const done = fs.existsSync(file) && fs.statSync(file).size > 10000 || MB > 1 && fs.existsSync(file.replace('.jpg', `_${MB}.jpg`));
     const render = !PROJONLY && k >= FROM && (!ATK || ATK.has(k)) && !(SKIPF && done);
