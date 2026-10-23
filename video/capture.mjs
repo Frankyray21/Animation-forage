@@ -123,7 +123,7 @@ if (arg('film', '')) {
   }, [e]);
   async function fstep(k, fr, render) {
     const n = await page.evaluate(([k, fr, render, fps]) => {
-      const c = window.__clam; c.setT(0); window.__fixedDt = fr.dt; window.__camOverride = fr.cam;
+      const c = window.__clam; c.setT(0); window.__fixedDt = fr.dt; window.__camOverride = fr.cam; c.setCutPlane(fr.cutN || null, fr.axe || null);
       window.__vt = 1000 * (k + 100) / fps; window.__noRender = !render; window.__go = 1; return window.__frames || 0;
     }, [k, fr, render, F.FPS]);
     await page.waitForFunction(n => (window.__frames || 0) > n, n, { polling: 'raf' });

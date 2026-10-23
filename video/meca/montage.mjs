@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// Montage du film « mécanisme des mâchoires » (30 s) : textes à l'écran posés sur les images de capture.mjs --film video/meca/film.mjs.
+// Montage du film « mécanisme des mâchoires » (45 s) : textes à l'écran posés sur les images de capture.mjs --film video/meca/film.mjs.
 // Un calque transparent par image (Playwright) : titre du plan, état des manettes, légende du bas, noms des pièces accrochés à leur
 // position à l'écran (proj_*.json de la capture), repère « Ralenti », flèches de mouvement des pièces et chaîne des étapes
 // (huile, piston, cône, ressorts, mâchoires) réglées sur l'avancement réel des manettes ; puis ffmpeg : images + calques → MP4 1920 × 1080, sans son.
@@ -24,20 +24,22 @@ const TX = {
       [0.3, 3.6, 'Mandrin Boyles H', 'Comment les mâchoires serrent la tige'],
       [3.6, 13.5, '1 · Manettes ouvertes', 'Les mâchoires s\'ouvrent'],
       [13.5, 23, '2 · Manettes fermées', 'Les mâchoires serrent'],
-      [23, 31, 'À retenir', 'L\'énergie qui reste : les ressorts'],
+      [23, 39, '3 · Vue 360° de l\'intérieur', 'Le mécanisme en action'],
+      [39, 46, 'À retenir', 'L\'énergie qui reste : les ressorts'],
     ],
     legendes: [
       [2.4, 3.6, 'Vue en coupe : le mandrin ouvert en deux.'],
-      [23.4, 26.6, 'Manettes fermées : il reste le moins d\'énergie possible. Mais les ressorts restent comprimés, retenus par les boulons du cône.'],
+      [39.4, 42.2, 'Manettes fermées : il reste le moins d\'énergie possible. Mais les ressorts restent comprimés, retenus par les boulons du cône.'],
     ],
     etiquettes: [
       [0.6, 2.2, '3506870', 'Boîtier du mandrin', -80, -60],
       [0.6, 2.2, 'UM-021-01-01', 'Mâchoires', 80, -60],
-      [23.8, 31, '5200517@top', '18 ressorts comprimés', -80, -50],
+      [39.8, 46, '5200517@top', '18 ressorts comprimés', -80, -50],
     ],
     ouvrir: ['Manette ouverte', 'L\'huile entre', 'Piston et cône reculent', 'Ressorts écrasés · mâchoires ouvertes'],
     fermer: ['Manette fermée', 'La pression tombe', 'Les ressorts poussent le cône', 'Mâchoires serrées sur la tige'],
     noms: { huile: 'Huile', piston: 'Piston', ressorts: 'Ressorts', cone: 'Cône', machoires: 'Mâchoires' },
+    tour: ['Manettes ouvertes : l\'huile recule le cône, les ressorts s\'écrasent, les mâchoires s\'ouvrent.', 'Manettes fermées : les ressorts poussent le cône, les mâchoires serrent.'],
     manettes: ['Manettes', 'ouvertes', 'fermées'],
     ralenti: 'Ralenti',
     cadenas: 'Le cadenas coupe l\'hydraulique, pas l\'énergie des ressorts.',
@@ -47,20 +49,22 @@ const TX = {
       [0.3, 3.6, 'Boyles H chuck', 'How the jaws grip the rod'],
       [3.6, 13.5, '1 · Levers open', 'The jaws open'],
       [13.5, 23, '2 · Levers closed', 'The jaws clamp'],
-      [23, 31, 'Remember', 'The energy that stays: the springs'],
+      [23, 39, '3 · 360° view of the inside', 'The mechanism in action'],
+      [39, 46, 'Remember', 'The energy that stays: the springs'],
     ],
     legendes: [
       [2.4, 3.6, 'Cutaway view: the chuck opened in half.'],
-      [23.4, 26.6, 'Levers closed leaves the least energy possible. But the springs stay compressed, held by the cone bolts.'],
+      [39.4, 42.2, 'Levers closed leaves the least energy possible. But the springs stay compressed, held by the cone bolts.'],
     ],
     etiquettes: [
       [0.6, 2.2, '3506870', 'Chuck housing', -80, -60],
       [0.6, 2.2, 'UM-021-01-01', 'Jaws', 80, -60],
-      [23.8, 31, '5200517@top', '18 springs, compressed', -80, -50],
+      [39.8, 46, '5200517@top', '18 springs, compressed', -80, -50],
     ],
     ouvrir: ['Lever open', 'Oil flows in', 'Piston and cone move back', 'Springs compressed · jaws open'],
     fermer: ['Lever closed', 'Pressure drops', 'The springs push the cone', 'Jaws clamped on the rod'],
     noms: { huile: 'Oil', piston: 'Piston', ressorts: 'Springs', cone: 'Cone', machoires: 'Jaws' },
+    tour: ['Levers open: oil pulls the cone back, the springs compress, the jaws open.', 'Levers closed: the springs push the cone, the jaws clamp.'],
     manettes: ['Levers', 'open', 'closed'],
     ralenti: 'Slow motion',
     cadenas: 'The lock cuts off the hydraulics, not the energy in the springs.',
@@ -71,7 +75,9 @@ const SEUILS = [0, .25, .42, .9];   // avancement des manettes où chaque étape
 // position des pièces et avancement des manettes : proj de la capture, toutes tranches confondues
 const PROJ = {}, PDIR = path.resolve(arg('proj', IMG));   // --proj : dossier d'un relevé --proj-only, si le découpage a changé après la capture
 for (const f of fs.readdirSync(PDIR).filter(f => /^proj_\d+\.json$/.test(f))) Object.assign(PROJ, JSON.parse(fs.readFileSync(path.join(PDIR, f), 'utf8')));
-const leverAt = t => t >= F.T_FER ? 1 : t >= F.T_OUV ? 0 : 1;
+const LEV = []; for (let k = 0; k < F.N; k++) for (const e of F.events(k)) if (e[0] === 'lever') LEV.push([k / F.FPS, e[1]]);
+const leverAt = t => { let d = 1; for (const [a, v] of LEV) if (t >= a) d = v; return d; };
+const leverT = t => { let a0 = -1; for (const [a] of LEV) if (t >= a) a0 = a; return a0; };   // instant du dernier basculement
 
 // --- page des calques ---
 const polices = path.resolve(arg('polices', ''));
@@ -133,10 +139,10 @@ function calque(k) {
   const t = k / F.FPS, out = [], fr = F.at(k), P = PROJ[k] || {};
   for (const [a, b, kk, ti] of TX.plans) { const o = fade(t, a, b); if (o > 0) out.push(`<div class="titre" style="opacity:${o}"><div class="k">${esc(nb(kk))}</div><div class="t"><span>${esc(nb(ti))}</span></div></div>`); }
   // état des manettes, éclair au basculement ; ralenti
-  if (t >= 3.6 && t < 23) {
-    const d = leverAt(t), o = fade(t, 3.6, 23), te = d ? F.T_FER : F.T_OUV, fl = t >= te && t < te + 1.2 && Math.floor((t - te) * 4) % 2 === 0;
+  if (t >= 3.6 && t < 39) {
+    const d = leverAt(t), o = fade(t, 3.6, 39), te = leverT(t), fl = t >= te && t < te + 1.2 && Math.floor((t - te) * 4) % 2 === 0;
     out.push(`<div class="etat${fl ? ' flash' : ''}" style="opacity:${o}">${TX.manettes[0]} <b class="${d ? 'fer' : 'ouv'}">${TX.manettes[d ? 2 : 1]}</b></div>`);
-    if (fr.dt < 1 / F.FPS - 1e-9) out.push(`<div class="lent" style="top:94px;opacity:${o}">${TX.ralenti} ×${Math.round(1 / (fr.dt * F.FPS))}</div>`);
+    if (fr.dt < 1 / F.FPS - 1e-9) { const f = +(1 / (fr.dt * F.FPS)).toFixed(1); out.push(`<div class="lent" style="top:94px;opacity:${o}">${TX.ralenti} ×${LANG === 'fr' ? String(f).replace('.', ',') : f}</div>`); }
   }
   // mouvement : chaîne des étapes et flèches sur les pièces, d'après l'avancement réel des manettes
   if (t >= 3.6 && t < 23) {
@@ -177,7 +183,9 @@ function calque(k) {
     out.push(`<div class="p" style="opacity:${o}"><svg width="1" height="1"><line x1="${x}" y1="${y}" x2="${lx}" y2="${ly}" stroke="#f2c230" stroke-width="2.5"/></svg>` +
       `<div class="dot" style="left:${x}px;top:${y}px"></div><div class="nom" data-c="${cote}" style="left:${lx}px;top:${ly}px">${esc(nb(nom))}</div></div>`);
   }
-  { const o = fade(t, 26.6, 31); if (o > 0) out.push(`<div class="cad" style="opacity:${o}">${CADENAS}<div>${esc(nb(TX.cadenas))}</div></div>`); }
+  // vue 360° : ce qui bouge, selon l'état des manettes
+  if (t >= 24.4 && t < 38.8) { const o = fade(t, 24.4, 38.8); out.push(`<div class="leg" style="opacity:${o}">${esc(nb(TX.tour[leverAt(t)]))}</div>`); }
+  { const o = fade(t, 42.2, 46); if (o > 0) out.push(`<div class="cad" style="opacity:${o}">${CADENAS}<div>${esc(nb(TX.cadenas))}</div></div>`); }
   return out.join('');
 }
 
