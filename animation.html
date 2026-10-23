@@ -677,7 +677,7 @@ THREE.ShaderChunk.opaque_fragment += `
 if ( ! gl_FrontFacing ) gl_FragColor.rgb = vec3( 0.105, 0.11, 0.118 );   // teinte de coupe uniforme, sans éclairage ni texture : deux faces superposées ne peuvent plus clignoter
 // Deux pièces en contact (voile / manchon, bloc des ressorts / bol…) : la face avant grise de l'une et la face arrière
 // (teinte de coupe) de l'autre sont au même endroit. La face arrière est repoussée d'environ 1 mm : la face avant gagne toujours.
-gl_FragDepth = gl_FrontFacing ? gl_FragCoord.z : min( 1.0, gl_FragCoord.z + 1.5e-6 );
+gl_FragDepth = gl_FrontFacing ? gl_FragCoord.z : min( 1.0, gl_FragCoord.z + 1.5e-6 + 2.0 * fwidth( gl_FragCoord.z ) );   // + pente : tient aussi vue en biais
 #endif
 `;
 // Usure de la peinture (matériaux PAINT_WEAR) : la couleur de sommet r < 1 marque les arêtes arrondies ; là où le canal bleu
@@ -2826,7 +2826,7 @@ function applyCut() {
     const inS = S => S.has(m) || [...S].some(pm => hiCache.get(pm) === m);
     const free = (cutFree.plate && inS(plateMats)) || (cutFree.cover && inS(coverMats)) || (cutFree.jc && inS(jcMats)) || inS(cutFree.mats);
     // ressorts dessinés entiers (convention des vues en coupe) ; bloc des logements coupé plus profond pour les montrer
-    const spring = !cutTurn && inS(new Set([mat.spring]));   // coupe tournante (film du mécanisme) : ressorts coupés comme le reste, sans apparition brusque
+    const spring = inS(new Set([mat.spring]));
     m.clippingPlanes = !cutOn || free || spring ? null : inS(new Set([mat.springBlock])) ? [CUT_DEEP] : [CUT];
     if (m !== ghostMat && !(m.side === THREE.BackSide)) m.side = cutOn ? THREE.DoubleSide : THREE.FrontSide;
     m.clipShadows = true;                              // la moitié retirée ne projette plus d'ombre
@@ -3949,7 +3949,14 @@ function applyScene(S) {
     }
     m.position.set(s.x, POCKET, s.z); m.rotation.set(0, 0, 0);
     // en coupe : ressorts de la moitié retirée masqués (d'après le plan de coupe, qui peut tourner dans le film du mécanisme)
-    m.visible = !(cutOn && !cutTurn && explodeE === 0 && hexE === 0 && CUT.distanceToPoint(springW.set(s.x, POCKET, s.z).applyMatrix4(springGroup.matrixWorld)) < -u(.7));
+    const dCut = CUT.distanceToPoint(springW.set(s.x, POCKET, s.z).applyMatrix4(springGroup.matrixWorld));
+    m.visible = !(cutOn && !cutTurn && explodeE === 0 && hexE === 0 && dCut < -u(.7));
+    // coupe tournante (film du mécanisme) : ressort entier, effacé en fondu quand il passe du côté retiré (ni tranché ni escamoté d'un coup)
+    if (cutTurn) {
+      if (!m.userData.turnMat) { m.userData.turnMat = m.material.clone(); m.userData.turnMat.transparent = true; m.userData.preTurn = m.material; }
+      const a = Math.max(0, Math.min(1, (dCut + u(1.6)) / u(1.2)));
+      m.material = m.userData.turnMat; m.userData.turnMat.opacity = a; m.userData.turnMat.depthWrite = a > .98; m.visible = a > .01;
+    } else if (m.userData.preTurn) { m.material = m.userData.preTurn; delete m.userData.preTurn; delete m.userData.turnMat; }
     const compVis = D.comp[j] / 1000 / U * X;
     setSpringLen(m, Math.max(u(3.2), LC + t - compVis + hOff));   // vérin sous pression : plus comprimés ; jamais sous la longueur à spires jointives
   });

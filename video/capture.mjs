@@ -108,6 +108,7 @@ await page.evaluate(async () => {
 if (arg('film', '')) {
   const F = await import(path.resolve(arg('film', '')));
   const FROM = +arg('from', 0), TO = Math.min(+arg('to', F.N), F.N), SKIPF = process.argv.includes('--skip-existing');
+  const MB = +arg('mb', 1);   // --mb N : flou de mouvement sur les images marquées mb par le film (N sous-images, moyennées par video/meca/flou.py)
   const PROJONLY = process.argv.includes('--proj-only');   // positions des pièces seulement, sans rendu
   const ATK = arg('at', '') ? new Set(arg('at', '').split(',').map(Number)) : null;
   fs.mkdirSync(OUT, { recursive: true });
@@ -139,12 +140,20 @@ if (arg('film', '')) {
     const fr = F.at(k);
     if (fr.hi !== hi) { hi = fr.hi; await page.evaluate(([a, b]) => window.__clam.isolate(a, b), [iso, hi || null]); }
     const file = path.join(OUT, `f_${String(k).padStart(5, '0')}.jpg`);
-    const render = !PROJONLY && k >= FROM && (!ATK || ATK.has(k)) && !(SKIPF && fs.existsSync(file) && fs.statSync(file).size > 10000);
-    await fstep(k, fr, render);
+    const done = fs.existsSync(file) && fs.statSync(file).size > 10000 || MB > 1 && fs.existsSync(file.replace('.jpg', `_${MB}.jpg`));
+    const render = !PROJONLY && k >= FROM && (!ATK || ATK.has(k)) && !(SKIPF && done);
+    if (MB > 1 && fr.mb) {   // flou de mouvement : N sous-images (caméra intermédiaire, pas de temps dt/N) → f_<k>_<j>.jpg, moyennées ensuite
+      const prev = F.at(Math.max(0, k - 1)).cam;
+      for (let j = 1; j <= MB; j++) {
+        const q = j / MB, cam = { p: prev.p.map((v, i) => v + (fr.cam.p[i] - v) * q), t: prev.t.map((v, i) => v + (fr.cam.t[i] - v) * q) };
+        await fstep(k, { ...fr, cam, dt: fr.dt / MB }, render);
+        if (render) await page.screenshot({ path: file.replace('.jpg', `_${j}.jpg`), type: 'jpeg', quality: 95, clip: view });
+      }
+    } else await fstep(k, fr, render);
     if (k >= FROM) { const r = await page.evaluate(ids => ({ p: window.__clam.project(ids), lm: window.__clam.leverMan() }), fr.proj);   // avec l'avancement des manettes
       proj[k] = { ...Object.fromEntries(r.p.map((v, i) => [fr.proj[i], v])), lm: [r.lm.on ? +r.lm.q.toFixed(4) : 1, r.lm.dir] }; }
     if (render) {
-      await page.screenshot({ path: file, type: 'jpeg', quality: 93, clip: view }); nr++;
+      if (!(MB > 1 && fr.mb)) await page.screenshot({ path: file, type: 'jpeg', quality: 93, clip: view }); nr++;
       if (nr % 24 === 1 || k === TO - 1) console.log(`image ${k + 1}/${F.N} · ${((Date.now() - t0) / 1000 / nr).toFixed(1)} s/image (rejeu compris)`);
     }
   }

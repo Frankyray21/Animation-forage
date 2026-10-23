@@ -46,7 +46,7 @@ export function events(k) {
 }
 const ARROWS = ['3506909@bord', '3506908@bord', '5200517@top', '2920390@bord', 'UM-021-01-01@top', 'UM-021-01-01@bas'];
 // vue 360° : tour complet autour du mandrin, coupe tournée avec la caméra (le plan de coupe contient l'axe et s'ouvre du côté de la
-// caméra : on voit toujours l'intérieur ; les ressorts y sont coupés comme le reste) ; manettes ouvertes et fermées deux fois pendant le tour, ralenti ×1,5 (course 2,7 s)
+// caméra : on voit toujours l'intérieur ; les ressorts du côté retiré s'effacent en fondu) ; manettes ouvertes et fermées deux fois pendant le tour, ralenti ×1,5 (course 2,7 s)
 export const T360 = [23, 39], SLOW360 = 1.5;
 export const CYCLES = [[24.6, 0], [28.4, 1], [32.2, 0], [36, 1]];
 const AXE = [-1.85, 4.76, 0], R360 = 5.0, H360 = 1.6;
@@ -63,7 +63,8 @@ export function at(k) {
   } else if (t < 23) {
     dt = 1 / FPS / SLOW;
   } else if (t < 39) {                           // tour complet à vitesse constante, raccordé en douceur au cadrage de côté
-    const q = (t - 23) / 16, ang = 360 * (q < .5 ? 2 * q * q : 1 - 2 * (1 - q) * (1 - q));   // départ et arrivée en douceur
+    // vitesse constante, départ et arrivée adoucis sur 1,5 s : la caméra ne va jamais plus vite qu'il ne faut (moins de papillotement)
+    const r = 1.5, T = 16, u = t - 23, v = 1 / (T - r), x = u < r ? u * u / (2 * r) : u > T - r ? (T - r) - (T - u) * (T - u) / (2 * r) : u - r / 2, ang = 360 * x * v;
     cam = orb(ang, R360, H360, AXE);
     if (t < 24.5) cam = camLerp(SIDE, cam, ease(seg(t, 23, 24.5)));
     if (t > 37.5) cam = camLerp(cam, RET, ease(seg(t, 37.5, 39)));
