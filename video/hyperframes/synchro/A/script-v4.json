@@ -1,0 +1,236 @@
+[
+ {
+  "passage": "A_intro",
+  "orateur": 1,
+  "texte": "À matin, on parle du démontage du cône d'un mandrin.",
+  "mots": 10
+ },
+ {
+  "passage": "A_intro",
+  "orateur": 2,
+  "texte": "Avec les dix-huit ressorts comprimés en arrière, hein ?",
+  "mots": 9
+ },
+ {
+  "passage": "A_intro",
+  "orateur": 1,
+  "texte": "Exactement. Tant que le cône est boulonné, c'est de l'énergie emmagasinée.",
+  "mots": 11
+ },
+ {
+  "passage": "A_intro",
+  "orateur": 2,
+  "texte": "Correct. On regarde ça étape par étape.",
+  "mots": 7
+ },
+ {
+  "passage": "A_meca",
+  "orateur": 1,
+  "texte": "Avant de commencer, on regarde ce qu'il y a dans le mandrin.",
+  "mots": 12,
+  "a_enregistrer": "Avant de commencer, on regarde ce qu'il y a dans le mandrin."
+ },
+ {
+  "passage": "A_meca",
+  "orateur": 1,
+  "texte": "Manettes ouvertes : l'huile pousse le piston, qui tire le cône vers l'arrière. Les ressorts s'écrasent, pis les mâchoires s'ouvrent.",
+  "mots": 20,
+  "a_enregistrer": "Manettes ouvertes : l'huile pousse le piston, qui tire le cône vers l'arrière. Les ressorts s'écrasent, pis les mâchoires s'ouvrent."
+ },
+ {
+  "passage": "A_meca",
+  "orateur": 1,
+  "texte": "Manettes fermées : la pression tombe. Les ressorts poussent le cône vers l'avant, pis son coin referme les mâchoires sur la tige.",
+  "mots": 22,
+  "a_enregistrer": "Manettes fermées : la pression tombe. Les ressorts poussent le cône vers l'avant, pis son coin referme les mâchoires sur la tige."
+ },
+ {
+  "passage": "A_meca",
+  "orateur": 2,
+  "texte": "Fait que les ressorts poussent tout le temps ?",
+  "mots": 9,
+  "a_enregistrer": "Fait que les ressorts poussent tout le temps ?"
+ },
+ {
+  "passage": "A_meca",
+  "orateur": 1,
+  "texte": "Tout le temps. Pis de l'extérieur, on voit rien : tout est caché dans le boîtier.",
+  "mots": 16,
+  "a_enregistrer": "Tout le temps. Pis de l'extérieur, on voit rien : tout est caché dans le boîtier."
+ },
+ {
+  "passage": "A_00_c",
+  "orateur": 1,
+  "texte": "Étape un : les manettes Clam et Chuck en position fermée. Pourquoi fermées ? En position ouverte, l'hydraulique pousse le vérin, pis les ressorts sont écrasés au maximum. Si on cadenasse comme ça, le cadenas n'y change rien : toute cette énergie-là reste prise dans le mandrin. Fermées, les ressorts sont étirés au maximum : c'est là qu'il en reste le moins.",
+  "mots": 62,
+  "a_enregistrer": "Pourquoi fermées ? En position ouverte, l'hydraulique pousse le vérin, pis les ressorts sont écrasés au maximum. Si on cadenasse comme ça, le cadenas n'y change rien : toute cette énergie-là reste prise dans le mandrin. Fermées, les ressorts sont étirés au maximum : c'est là qu'il en reste le moins."
+ },
+ {
+  "passage": "A_00_p",
+  "orateur": 1,
+  "texte": "Regardez la coupe : l'hydraulique est coupé, mais les ressorts verts sont encore comprimés. Fermer les manettes ne libère pas leur énergie. C'est ce qu'on appelle de l'énergie résiduelle : elle reste emmagasinée dans l'équipement, même quand la source est arrêtée.",
+  "mots": 41
+ },
+ {
+  "passage": "A_01_c",
+  "orateur": 1,
+  "texte": "Étape deux : on vérifie que les mâchoires, les jaws, sont fermées.",
+  "mots": 12
+ },
+ {
+  "passage": "A_02_c",
+  "orateur": 1,
+  "texte": "Étape trois : on cadenasse la foreuse. Chacun pose son cadenas, pis on vérifie que la foreuse peut pas repartir. Le cadenas empêche de repartir l'hydraulique, mais les ressorts, eux, poussent encore.",
+  "mots": 32
+ },
+ {
+  "passage": "A_03_c",
+  "orateur": 1,
+  "texte": "Étape quatre : les trois boulons de trois quarts du couvert des mâchoires, avec la clé d'un pouce et un huitième.",
+  "mots": 21
+ },
+ {
+  "passage": "A_04_c",
+  "orateur": 1,
+  "texte": "Étape cinq : les neuf boulons d'un demi-pouce du couvercle, avec la clé de trois quarts.",
+  "mots": 16
+ },
+ {
+  "passage": "A_05_c",
+  "orateur": 1,
+  "texte": "Étape six, c'est la clé de toute la job. Il est important de desserrer les boulons longs un à la fois, de retirer l'espaceur, qu'on appelle le bushing, pis de resserrer complètement le boulon sans bushing.",
+  "mots": 36
+ },
+ {
+  "passage": "A_05_p",
+  "orateur": 1,
+  "texte": "Ça nous permet d'avoir l'espace requis pour desserrer les six autres boulons, tout en enlevant la tension des ressorts. Pis on garde une sécurité supplémentaire avec les trois boulons longs toujours en place.",
+  "mots": 33
+ },
+ {
+  "passage": "A_06_c",
+  "orateur": 1,
+  "texte": "Étape sept : les six boulons d'un demi-pouce par six pouces et demi. Un tour à la fois, dans l'ordre, de un à six. Regardez le compteur en haut à droite, pis la fenêtre en bas : à chaque tour, les ressorts s'allongent un peu.",
+  "mots": 45
+ },
+ {
+  "passage": "A_06_p",
+  "orateur": 1,
+  "texte": "Les six boulons partagent la charge : les ressorts se détendent peu à peu, également. C'est plus long, mais on reste en contrôle.",
+  "mots": 23
+ },
+ {
+  "passage": "A_06_x",
+  "orateur": 1,
+  "texte": "Regardez ce qui arrive si on sort les boulons au complet, un après l'autre, sans s'occuper de l'énergie résiduelle. Les ressorts restent comprimés, pis chaque boulon enlevé laisse plus de charge aux autres. Le dernier porte toute la force : il casse, pis le cône est projeté. C'est pour ça qu'on y va un tour à la fois.",
+  "mots": 58
+ },
+ {
+  "passage": "A_07_c",
+  "orateur": 1,
+  "texte": "Étape huit : les ressorts sont détendus. On retire les trois boulons longs d'un demi-pouce par huit pouces.",
+  "mots": 18
+ },
+ {
+  "passage": "A_07_p",
+  "orateur": 1,
+  "texte": "On les garde pour la fin parce qu'ils retiennent le cône jusqu'au bout. Maintenant, ils ne portent plus rien.",
+  "mots": 19
+ },
+ {
+  "passage": "A_08_c",
+  "orateur": 1,
+  "texte": "Étape neuf : on sort le cône, le bowl, pis les mâchoires, et on change les pièces. L'énergie résiduelle a été relâchée lentement : le cône est resté retenu tout le long.",
+  "mots": 32
+ },
+ {
+  "passage": "A_fin",
+  "orateur": 1,
+  "texte": "Pour le quart : jamais un boulon du cône enlevé au complet sous charge. Les trois boulons longs sans bushing, avant de desserrer les six autres boulons. Pis un tour à la fois.",
+  "mots": 33
+ },
+ {
+  "passage": "A_questions",
+  "orateur": 2,
+  "texte": "Pendant que je dévisse, je me place où ?",
+  "mots": 9
+ },
+ {
+  "passage": "A_questions",
+  "orateur": 1,
+  "texte": "Hors de l'axe du mandrin. Jamais devant le cône : s'il part, c'est là qu'il s'en va.",
+  "mots": 17
+ },
+ {
+  "passage": "A_questions",
+  "orateur": 2,
+  "texte": "Pis si un boulon veut pas se défaire ?",
+  "mots": 9
+ },
+ {
+  "passage": "A_questions",
+  "orateur": 1,
+  "texte": "On force pas à l'impact drill sous charge. On arrête, pis on en parle au superviseur avant de continuer.",
+  "mots": 19
+ },
+ {
+  "passage": "A_questions",
+  "orateur": 2,
+  "texte": "Pis si le cône reste coincé ?",
+  "mots": 7
+ },
+ {
+  "passage": "A_questions",
+  "orateur": 1,
+  "texte": "On le frappe pas pour le décoincer, pis on reste pas devant. Les ressorts poussent encore : il peut être projeté.",
+  "mots": 21
+ },
+ {
+  "passage": "A_questions",
+  "orateur": 2,
+  "texte": "Si les boulons longs sont durs à remettre, on peut-tu sauter l'étape six ?",
+  "mots": 14
+ },
+ {
+  "passage": "A_questions",
+  "orateur": 1,
+  "texte": "Non. Ce sont eux qui retiennent le cône si quelque chose lâche. Sans eux, rien ne l'arrête.",
+  "mots": 17
+ },
+ {
+  "passage": "A_questions",
+  "orateur": 2,
+  "texte": "L'énergie résiduelle, y en a juste dans les ressorts ?",
+  "mots": 10
+ },
+ {
+  "passage": "A_questions",
+  "orateur": 1,
+  "texte": "Pas juste là. Il y a aussi la pression qui reste dans les boyaux hydrauliques, une pièce qui peut tomber, un câble tendu. Avant de démonter, on se demande toujours : qu'est-ce qui peut encore bouger ?",
+  "mots": 37
+ },
+ {
+  "passage": "A_questions",
+  "orateur": 2,
+  "texte": "Pis si le quart finit avant que la job soit faite ?",
+  "mots": 12
+ },
+ {
+  "passage": "A_questions",
+  "orateur": 1,
+  "texte": "On pose un scellé sur la foreuse, avec une fiche qui explique la nature de l'intervention. Après, chacun peut enlever son cadenas. Le prochain quart sait exactement où on est rendu, pis chacun repose son cadenas avant de reprendre la job. Sans ça, quelqu'un pourrait repartir la foreuse sans savoir que le mandrin est à moitié démonté, pis que les ressorts sont peut-être encore sous charge. Le cône pourrait être projeté.",
+  "mots": 71
+ },
+ {
+  "passage": "A_questions",
+  "orateur": 2,
+  "texte": "Pis si quelque chose me semble pas normal ?",
+  "mots": 9
+ },
+ {
+  "passage": "A_questions",
+  "orateur": 1,
+  "texte": "Tu arrêtes, pis tu en parles au superviseur. On regarde ça ensemble avant de continuer.",
+  "mots": 15
+ }
+]
