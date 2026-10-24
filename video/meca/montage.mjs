@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// Montage du film « mécanisme des mâchoires » (45 s) : textes à l'écran posés sur les images de capture.mjs --film video/meca/film.mjs.
+// Montage du film « mécanisme des mâchoires » (41,5 s) : textes à l'écran posés sur les images de capture.mjs --film video/meca/film.mjs.
 // Un calque transparent par image (Playwright) : titre du plan, état des manettes, légende du bas, noms des pièces accrochés à leur
 // position à l'écran (proj_*.json de la capture), repère « Ralenti », flèches dans le sens réel du mouvement des pièces
 // (mâchoires, cône, ressorts, piston, huile) pendant leur course, phrase selon l'état des manettes ; puis ffmpeg : images + calques → MP4 1920 × 1080, sans son.
@@ -23,20 +23,18 @@ const TX = {
     plans: [
       [0.3, 2.5, 'Mandrin Boyles H', 'Comment fonctionne le mandrin'],
       [2.5, 12.5, 'Le mécanisme en action', 'Manettes ouvertes, puis fermées'],
-      [12.5, 18.5, '1 · Les mâchoires', 'Elles serrent la tige'],
-      [18.5, 24.5, '2 · + le cône', 'Son coin pousse les mâchoires'],
-      [24.5, 31.5, '3 · + les 18 ressorts', 'Ils poussent le cône'],
-      [31.5, 37, '4 · + le boîtier', 'Tout est caché à l\'intérieur'],
-      [37, 47, 'À retenir', 'Manettes ouvertes ou fermées ?'],
+      [12.5, 19.5, '1 · Le cône et les mâchoires', 'Son coin pousse les mâchoires'],
+      [19.5, 27, '2 · + les 18 ressorts', 'Ils poussent le cône'],
+      [27, 32.5, '3 · + le boîtier', 'Tout est caché à l\'intérieur'],
+      [32.5, 42.5, 'À retenir', 'Manettes ouvertes ou fermées ?'],
     ],
     etat: [
       [3.6, 12.5, 'Manettes ouvertes : l\'huile pousse le piston, qui tire le cône vers l\'arrière. Les ressorts s\'écrasent, les mâchoires s\'ouvrent.', 'Manettes fermées : la pression tombe. Les ressorts poussent le cône vers l\'avant, son coin referme les mâchoires.'],
-      [13.3, 18.5, 'Manettes ouvertes : les mâchoires s\'écartent.', 'Manettes fermées : les mâchoires se referment sur la tige.'],
-      [19.2, 24.5, 'Manettes ouvertes : le cône recule, les mâchoires s\'écartent.', 'Manettes fermées : le cône avance, son coin referme les mâchoires.'],
-      [25.4, 31.5, 'Manettes ouvertes : le cône recule et écrase les ressorts.', 'Manettes fermées : les ressorts repoussent le cône vers l\'avant.'],
+      [13.3, 19.5, 'Manettes ouvertes : le cône recule, les mâchoires s\'écartent.', 'Manettes fermées : le cône avance, son coin referme les mâchoires.'],
+      [20.3, 27, 'Manettes ouvertes : le cône recule et écrase les ressorts. Les mâchoires s\'ouvrent.', 'Manettes fermées : les ressorts repoussent le cône, les mâchoires se referment.'],
     ],
     legendes: [
-      [32.1, 37, 'De l\'extérieur, presque rien ne bouge : les ressorts travaillent cachés dans le boîtier.'],
+      [27.6, 32.5, 'De l\'extérieur, presque rien ne bouge : les ressorts travaillent cachés dans le boîtier.'],
     ],
     etiquettes: [
       [0.5, 2.3, '3506870', 'Boîtier du mandrin', -80, -60],
@@ -44,18 +42,21 @@ const TX = {
       [2.8, 12.5, '3506908@bord', 'Piston', -150, -40],
       [2.8, 12.5, '5200517@top', '18 ressorts', 150, -30],
       [2.8, 12.5, '2920390@bord', 'Cône', 150, 60],
-      [12.8, 18.5, 'UM-021-01-01@top', '8 mâchoires', 90, -50],
-      [18.8, 24.5, '2920390', 'Cône (bol)', -110, -70],
-      [24.8, 31.5, '5200517@top', '18 ressorts', -90, -50],
-      [31.8, 37, '3506870', 'Boîtier du mandrin', -80, -60],
-      [37.5, 44.6, '5200517@top', '18 ressorts', -80, -50],
+      [12.8, 16, '2920390', 'Cône (bol)', -110, -70],
+      [12.8, 19.5, 'UM-021-01-01@top', '8 mâchoires', 90, -50],
+      [19.8, 27, '5200517@top', '18 ressorts', -90, -50],
+      [27.3, 32.5, '3506870', 'Boîtier du mandrin', -80, -60],
+      [33, 40.1, '5200517@top', '18 ressorts', -80, -50],
     ],
-    // [début, fin, classe, icône, titre, texte]
+    // [début, fin, classe, icône, titre, texte] ; bandeau rouge à chaque ouverture des manettes
     cartes: [
-      [26.8, 28.6, 'bandeau', '⚠', '', 'Manettes ouvertes : les ressorts sont écrasés au maximum.'],
-      [38.0, 41.8, 'alerte', 'cadenas', 'Manettes ouvertes', 'Ressorts écrasés au maximum. Si on cadenasse comme ça, le cadenas n\'y change rien : toute cette énergie reste prise dans le mandrin.'],
-      [42.4, 44.6, 'ok', '✓', 'Manettes fermées', 'Les ressorts sont étirés au maximum : c\'est là qu\'il reste le moins d\'énergie.'],
-      [44.6, 47, 'fin', 'cadenas', '', 'Avant de cadenasser : manettes fermées.'],
+      [4.6, 8.0, 'bandeau', '⚠', '', 'Manettes ouvertes = ressorts comprimés au maximum.'],
+      [14.3, 16.4, 'bandeau', '⚠', '', 'Manettes ouvertes = ressorts comprimés au maximum.'],
+      [21.3, 23.6, 'bandeau', '⚠', '', 'Manettes ouvertes = ressorts comprimés au maximum.'],
+      [28.8, 30.1, 'bandeau', '⚠', '', 'Manettes ouvertes = ressorts comprimés au maximum, même si on ne voit rien.'],
+      [33.5, 37.3, 'alerte', 'cadenas', 'Manettes ouvertes', 'Ressorts comprimés au maximum. Si on cadenasse comme ça, le cadenas n\'y change rien : toute cette énergie reste prise dans le mandrin.'],
+      [37.9, 40.1, 'ok', '✓', 'Manettes fermées', 'Les ressorts sont étirés au maximum : c\'est là qu\'il reste le moins d\'énergie.'],
+      [40.1, 42.5, 'fin', 'cadenas', '', 'Avant de cadenasser : manettes fermées.'],
     ],
     huile: 'Huile',
     manettes: ['Manettes', 'ouvertes', 'fermées'],
@@ -65,20 +66,18 @@ const TX = {
     plans: [
       [0.3, 2.5, 'Boyles H chuck', 'How the chuck works'],
       [2.5, 12.5, 'The mechanism in action', 'Levers open, then closed'],
-      [12.5, 18.5, '1 · The jaws', 'They grip the rod'],
-      [18.5, 24.5, '2 · + the cone', 'Its wedge pushes the jaws'],
-      [24.5, 31.5, '3 · + the 18 springs', 'They push the cone'],
-      [31.5, 37, '4 · + the housing', 'Everything is hidden inside'],
-      [37, 47, 'Remember', 'Levers open or closed?'],
+      [12.5, 19.5, '1 · The cone and the jaws', 'Its wedge pushes the jaws'],
+      [19.5, 27, '2 · + the 18 springs', 'They push the cone'],
+      [27, 32.5, '3 · + the housing', 'Everything is hidden inside'],
+      [32.5, 42.5, 'Remember', 'Levers open or closed?'],
     ],
     etat: [
       [3.6, 12.5, 'Levers open: oil pushes the piston, which pulls the cone back. The springs compress, the jaws open.', 'Levers closed: pressure drops. The springs push the cone forward, its wedge closes the jaws.'],
-      [13.3, 18.5, 'Levers open: the jaws spread apart.', 'Levers closed: the jaws close on the rod.'],
-      [19.2, 24.5, 'Levers open: the cone moves back, the jaws spread apart.', 'Levers closed: the cone moves forward, its wedge closes the jaws.'],
-      [25.4, 31.5, 'Levers open: the cone moves back and compresses the springs.', 'Levers closed: the springs push the cone forward again.'],
+      [13.3, 19.5, 'Levers open: the cone moves back, the jaws spread apart.', 'Levers closed: the cone moves forward, its wedge closes the jaws.'],
+      [20.3, 27, 'Levers open: the cone moves back and compresses the springs. The jaws open.', 'Levers closed: the springs push the cone back, the jaws close.'],
     ],
     legendes: [
-      [32.1, 37, 'From the outside, almost nothing moves: the springs work hidden inside the housing.'],
+      [27.6, 32.5, 'From the outside, almost nothing moves: the springs work hidden inside the housing.'],
     ],
     etiquettes: [
       [0.5, 2.3, '3506870', 'Chuck housing', -80, -60],
@@ -86,17 +85,20 @@ const TX = {
       [2.8, 12.5, '3506908@bord', 'Piston', -150, -40],
       [2.8, 12.5, '5200517@top', '18 springs', 150, -30],
       [2.8, 12.5, '2920390@bord', 'Cone', 150, 60],
-      [12.8, 18.5, 'UM-021-01-01@top', '8 jaws', 90, -50],
-      [18.8, 24.5, '2920390', 'Cone (bowl)', -110, -70],
-      [24.8, 31.5, '5200517@top', '18 springs', -90, -50],
-      [31.8, 37, '3506870', 'Chuck housing', -80, -60],
-      [37.5, 44.6, '5200517@top', '18 springs', -80, -50],
+      [12.8, 16, '2920390', 'Cone (bowl)', -110, -70],
+      [12.8, 19.5, 'UM-021-01-01@top', '8 jaws', 90, -50],
+      [19.8, 27, '5200517@top', '18 springs', -90, -50],
+      [27.3, 32.5, '3506870', 'Chuck housing', -80, -60],
+      [33, 40.1, '5200517@top', '18 springs', -80, -50],
     ],
     cartes: [
-      [26.8, 28.6, 'bandeau', '⚠', '', 'Levers open: the springs are fully compressed.'],
-      [38.0, 41.8, 'alerte', 'cadenas', 'Levers open', 'Springs fully compressed. If you lock out like this, the lock changes nothing: all that energy stays trapped in the chuck.'],
-      [42.4, 44.6, 'ok', '✓', 'Levers closed', 'The springs are fully extended: that is where the least energy remains.'],
-      [44.6, 47, 'fin', 'cadenas', '', 'Before locking out: levers closed.'],
+      [4.6, 8.0, 'bandeau', '⚠', '', 'Levers open = springs fully compressed.'],
+      [14.3, 16.4, 'bandeau', '⚠', '', 'Levers open = springs fully compressed.'],
+      [21.3, 23.6, 'bandeau', '⚠', '', 'Levers open = springs fully compressed.'],
+      [28.8, 30.1, 'bandeau', '⚠', '', 'Levers open = springs fully compressed, even if you cannot see it.'],
+      [33.5, 37.3, 'alerte', 'cadenas', 'Levers open', 'Springs fully compressed. If you lock out like this, the lock changes nothing: all that energy stays trapped in the chuck.'],
+      [37.9, 40.1, 'ok', '✓', 'Levers closed', 'The springs are fully extended: that is where the least energy remains.'],
+      [40.1, 42.5, 'fin', 'cadenas', '', 'Before locking out: levers closed.'],
     ],
     huile: 'Oil',
     manettes: ['Levers', 'open', 'closed'],
@@ -151,7 +153,7 @@ html,body{margin:0;width:${W}px;height:${H}px;overflow:hidden;background:transpa
 .cad b{display:block;font-size:24px;letter-spacing:.1em;text-transform:uppercase;margin-bottom:6px}
 .cad.alerte{background:rgba(150,24,18,.94);border-color:#ff6a5c;max-width:980px} .cad.alerte div{font-size:31px}
 .cad.ok{background:rgba(24,96,46,.94);border-color:#6fe08c} .cad.ok div{font-size:31px}
-.cad.bandeau{bottom:auto;top:150px;left:auto;right:40px;transform:none;max-width:500px;padding:10px 22px;background:rgba(150,24,18,.94);border-color:#ff6a5c} .cad.bandeau div{font-size:28px}
+.cad.bandeau{bottom:150px;left:auto;right:34px;transform:none;max-width:420px;padding:10px 20px;background:rgba(150,24,18,.94);border-color:#ff6a5c} .cad.bandeau div{font-size:28px}
 .cad div{font-family:"Barlow Condensed",sans-serif;font-size:38px;font-weight:600;line-height:1.08;text-wrap:balance}
 </style></head><body><div id="r"></div></body></html>`;
 
@@ -174,8 +176,8 @@ function calque(k) {
   for (const [a, b, kk, ti] of TX.plans) { const o = fade(t, a, b); if (o > 0) out.push(`<div class="titre" style="opacity:${o}"><div class="k">${esc(nb(kk))}</div><div class="t"><span>${esc(nb(ti))}</span></div></div>`); }
   const nom = F.plan(k)[2];
   // état des manettes (éclair au basculement) et ralenti
-  if (t >= 2.5 && t < 46) {
-    const d = leverAt(t), o = fade(t, 2.5, 46.5);
+  if (t >= 2.5 && t < F.N / F.FPS) {
+    const d = leverAt(t), o = fade(t, 2.5, F.N / F.FPS + .5);
     // couleur de l'écran selon les manettes : cadre et voile rouges (ouvertes), verts (fermées)
     out.unshift(`<div class="ecran ${d ? 'fer' : 'ouv'}" style="opacity:${o}"></div>`);   // sous les textes
     const te = leverT(t), fl = te >= 0 && t < te + 1.2 && Math.floor((t - te) * 4) % 2 === 0;
@@ -192,7 +194,7 @@ function calque(k) {
   // flèche le long de l'axe, posée en key ; sens à l'écran donné par deux points d'une même pièce (centre → centre décalé vers l'avant) :
   // vers l'arrière à l'ouverture, vers l'avant à la fermeture
   const axial = (key, dA, dB, col, L, off = 0) => {
-    const p = pt(key), a = pt(dA), b = pt(dB); if (!p || !a || !b || w <= 0) return;
+    const p = pt(key), a = pt(dA), b = pt(dB); if (!p || !a || !b || w <= 0 || Math.hypot(b[0] - a[0], b[1] - a[1]) < 18) return;   // axe vu de face : pas de flèche
     let [ux, uy] = unit(a, b); if (ouv) { ux = -ux; uy = -uy; }
     const x0 = p[0] - ux * L / 2 + ux * 12 * pulse + -uy * off, y0 = p[1] - uy * L / 2 + uy * 12 * pulse + ux * off;
     svg.push(fleche(x0, y0, ux, uy, L, col, w)); };
@@ -207,9 +209,8 @@ function calque(k) {
     const c = pt('3506909@bord'), wo = te < 0 ? 0 : Math.min(seg(u, .1 * course, .2 * course), 1 - seg(u, .5 * course + .6, .5 * course + 1));
     if (c && wo > 0) { svg.push(fleche(c[0], ouv ? c[1] - 96 + 10 * pulse : c[1] - 22 - 10 * pulse, 0, ouv ? 1 : -1, 64, '#ff9d2e', wo)); noms.push([c[0], c[1] - 118, TX.huile, 'huile', wo]); }
   }
-  if (nom === 'machoires') { radial('UM-021-01-01', 'UM-021-01-01@top'); radial('UM-021-01-01', 'UM-021-01-01@bas'); }
-  if (nom === 'cone') { axial('2920390', '2920390', '2920390@ax', '#f2c230', 90, 0); radial('UM-021-01-01', 'UM-021-01-01@top'); }
-  if (nom === 'ressorts') { axial('2920390', '2920390', '2920390@ax', '#f2c230', 90, 0); axial('5200517@top', '2920390', '2920390@ax', '#4fd06a', 80, -40); }
+  if (nom === 'cone') { axial('2920390', '2920390', '2920390@ax', '#f2c230', 90, 0); radial('UM-021-01-01', 'UM-021-01-01@top'); radial('UM-021-01-01', 'UM-021-01-01@bas'); }
+  if (nom === 'ressorts') { axial('2920390', '2920390', '2920390@ax', '#f2c230', 90, 0); axial('5200517@top', '2920390', '2920390@ax', '#4fd06a', 80, -40); radial('UM-021-01-01', 'UM-021-01-01@top'); radial('UM-021-01-01', 'UM-021-01-01@bas'); }
   if (svg.length) out.push(`<svg class="fl" width="${W}" height="${H}">${svg.join('')}</svg>`);
   for (const [x, y, n, c, o] of noms) out.push(`<div class="fn ${c}" style="left:${x}px;top:${y}px;opacity:${o}">${esc(nb(n))}</div>`);
   for (const [a, b, s] of TX.legendes) { const o = fade(t, a, b); if (o > 0) out.push(`<div class="leg" style="opacity:${o}">${esc(nb(s))}</div>`); }
