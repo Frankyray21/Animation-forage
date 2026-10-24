@@ -1,6 +1,5 @@
-// Film « mécanisme des mâchoires » (41,5 s), pour capture.mjs --film : d'abord tout le mécanisme en action (coupe de côté),
-// puis construit pièce par pièce (les autres pièces cachées) en actionnant les manettes : on voit ce que chaque pièce fait ;
-// la caméra tourne vers l'avant pour montrer les mâchoires qui s'ouvrent et se ferment.
+// Film « mécanisme des mâchoires » (32 s), pour capture.mjs --film : vue 360° du mandrin seul, chaque système montré en couleur
+// (les autres pièces en transparence) pendant que les manettes s'ouvrent et se ferment, puis la scène « Manettes ouvertes ou fermées ? ».
 // Pièces entières (pas de coupe) dans les plans pièce par pièce.
 // Chaque image k donne la caméra, la pièce soulignée et le pas de temps (dt < 1/24 : ralenti). Les événements (coupe,
 // manettes, isolement) partent à l'image indiquée ; la capture rejoue toujours depuis l'image 0, donc l'état est le même
@@ -21,18 +20,26 @@ const AXE = [-1.85, 4.76, 0];                    // axe du mandrin (selon x, ava
 const MACH = ['UM-021-01-01'], CONE = ['2920390'], RESS = ['5200517'];
 const PIST = ['3506908', '5000199', '3506928'], CYL = ['3506909'];
 const MECA = [...MACH, ...CONE, ...RESS, ...PIST, ...CYL];
+// les systèmes du mandrin (pièces de la nomenclature), montrés un à un pendant le tour
+export const SYSTEMES = [
+  ['hydraulique', ['3506909', '3506908', '5035016', '5035018', '5035015', '5035017', '2501-8-6']],
+  ['transmission', ['5000199', '3506928', '3506882', '5054078', '5222624']],
+  ['ressorts', ['5200517']],
+  ['coneMachoires', ['2920390', 'UM-021-01-01']],
+  ['retenue', ['B500-6500', 'B500-8000', '3506878']],
+];
+const TOUT = ['3506881', '3506879', '3506910', 'B500-1500', 'B500-4500', 'NC500', '3506909', '5035016', '5035018', '3506908', '5035015', '5035017', '5222624',
+  '5000199', '3506882', '5054078', '3506928', '2501-8-6', 'ZNPT250', '5041022', '3506870', '3506880', '5040192', '5200517', '2920390', 'UM-021-01-01',
+  'B500-6500', '3506878', 'B500-8000', '3506906', 'B500-2250', '3506907', 'B750-1500', 'W500-M'];
+export const T_SYS = 3.5, T360 = 21;             // un système toutes les 3,5 s, puis le boîtier ; tour complet en 21 s
 // plans : [début s, fin s, nom]
 export const PLANS = [
-  [0, 2.5, 'exterieur'],
-  [2.5, 12.5, 'action'],     // tout le mécanisme en coupe : huile, piston, cône, ressorts, mâchoires, un cycle ouvrir / fermer
-  [12.5, 19.5, 'cone'],      // puis pièce par pièce : mâchoires + cône (en transparence), la caméra tourne vers l'avant (mâchoires de face)
-  [19.5, 27, 'ressorts'],    // + les 18 ressorts : ils poussent le cône ; même rotation vers l'avant
-  [27, 32.5, 'boitier'],     // + le boîtier : de l'extérieur, presque rien ne bouge
-  [32.5, 43.5, 'ouvfer'],    // ouvertes ou fermées ? (seule scène gardée dans la vidéo, montage.mjs --debut 32.5) manettes ouvertes : ressorts écrasés, le cadenas n'y change rien ; fermées : le moins d'énergie
+  [0, 21, 'systemes'],       // vue 360° : chaque système en couleur, les autres en transparence ; manettes ouvertes / fermées pendant le tour
+  [21, 32, 'ouvfer'],        // ouvertes ou fermées ? manettes ouvertes : ressorts écrasés, le cadenas n'y change rien ; fermées : le moins d'énergie
 ];
-export const N = 43.5 * FPS;
-// manettes : [instant s, sens (0 ouvrir, 1 fermer)] — deux basculements par plan
-export const CYCLES = [[3.6, 0], [8.0, 1], [13.3, 0], [16.4, 1], [20.3, 0], [23.6, 1], [27.8, 0], [30.1, 1], [32.7, 0], [37.3, 1]];
+export const N = 32 * FPS;
+// manettes : [instant s, sens (0 ouvrir, 1 fermer)]
+export const CYCLES = [[1.0, 0], [4.6, 1], [8.2, 0], [11.8, 1], [15.4, 0], [19.0, 1], [21.2, 0], [25.8, 1]];
 // avant l'image 0 (images rejouées sans rendu) : manettes fermées, mâchoires fermées
 export const PRE = [['lever', 1]];
 export const plan = k => PLANS.find(([a, b]) => k >= s(a) && k < s(b)) || PLANS[PLANS.length - 1];
@@ -40,37 +47,24 @@ export const plan = k => PLANS.find(([a, b]) => k >= s(a) && k < s(b)) || PLANS[
 // événements à l'image k (avant le calcul de l'image) ; iso : [pièces pleines, { verre : pièces en transparence, cacher : le reste caché }]
 export function events(k) {
   const e = [];
-  if (k === s(2.5)) e.push(['cut', true], ['iso', MECA]);
-  if (k === s(12.5)) e.push(['cut', false], ['iso', MACH, { verre: CONE, cacher: true }]);
-  if (k === s(19.5)) e.push(['iso', [...MACH, ...RESS], { verre: CONE, cacher: true }]);
-  if (k === s(27)) e.push(['iso', null]);
-  if (k === s(32.5)) e.push(['cut', true], ['iso', MECA]);
+  SYSTEMES.forEach(([, ids], i) => { if (k === s(i * T_SYS)) e.push(['iso', ids, { cacher: true, fantome: ['3506870'] }]); });   // le système en couleur, le boîtier en fantôme, le reste caché
+  if (k === s(SYSTEMES.length * T_SYS)) e.push(['iso', TOUT, { cacher: true }]);   // le boîtier : tout le mandrin, en plein
+  if (k === s(21)) e.push(['cut', true], ['iso', MECA]);
   for (const [t, d] of CYCLES) if (k === s(t)) e.push(['lever', d]);
   return e;
 }
-const SIDE = { p: [-2.6, 5.5, 6.5], t: [-2.6, 4.98, 0] };   // coupe de côté, mécanisme entier
 // image k : caméra, pas de temps, pièce soulignée, pièces dont on relève la position
 export function at(k) {
   const t = k / FPS;
   let cam, dt = 1 / FPS / SLOW, hi = null, proj = [];
-  if (t < 2.5) {                                 // le mandrin sur la tête, caméra presque immobile
-    cam = orb(lerp(42, 36, t / 2.5), 8, 1.8, AXE); dt = 1 / FPS;
-    proj = ['3506870', 'UM-021-01-01'];
-  } else if (t < 12.5) {                         // le mécanisme en action : coupe de côté fixe
-    cam = SIDE;
-    proj = ['3506909@bord', '3506908@bord', '3506908', '3506908@ax', '2920390@bord', '5200517@top', 'UM-021-01-01', 'UM-021-01-01@top', 'UM-021-01-01@bas'];
-  } else if (t < 19.5) {                         // mâchoires + cône : de côté (le coin) vers l'avant (mâchoires de face), lentement
-    cam = orb(lerp(28, 72, ease(seg(t, 12.5, 19.5))), 4.0, 1.0, [-0.95, 4.76, 0]);
-    proj = ['2920390', '2920390@ax', 'UM-021-01-01', 'UM-021-01-01@top', 'UM-021-01-01@bas'];
-  } else if (t < 27) {                           // + ressorts : la couronne entière, de côté vers l'avant
-    cam = orb(lerp(22, 66, ease(seg(t, 19.5, 27))), 5.6, 1.6, [-1.3, 4.76, 0]);
-    proj = ['5200517@top', '5200517', '2920390', '2920390@ax', 'UM-021-01-01', 'UM-021-01-01@top', 'UM-021-01-01@bas'];
-  } else if (t < 32.5) {                         // + boîtier : le mandrin complet sur la tête, de trois quarts
-    cam = orb(lerp(36, 46, ease(seg(t, 27, 32.5))), 7.4, 1.8, AXE);
-    proj = ['3506870', 'UM-021-01-01'];
+  if (t < 21) {                                  // tour complet à vitesse constante (départ et arrivée adoucis), de côté, un peu au-dessus
+    const r = 1.2, T = T360, v = 1 / (T - r), x = t < r ? t * t / (2 * r) : t > T - r ? (T - r) - (T - t) * (T - t) / (2 * r) : t - r / 2;
+    const zoom = ease(seg(t, 10.0, 11.0)) * (1 - ease(seg(t, 13.6, 14.6)));   // plus près pendant le cône et les mâchoires (petites pièces)
+    cam = orb(360 * x * v, lerp(5.6, 3.4, zoom), lerp(1.7, 1.0, zoom), AXE);
+    proj = ['3506909', '5000199', '5200517@top', '2920390', 'B500-8000', '3506870'];
   } else {                                       // mécanisme seul en coupe, ressorts soulignés ; manettes ouvertes puis fermées
     cam = { p: [-2.4, 5.6, 6.0], t: [-2.4, 4.95, 0] };
-    hi = t >= 33 ? '5200517' : null; proj = ['5200517@top'];
+    hi = t >= 21.5 ? '5200517' : null; proj = ['5200517@top'];
   }
   return { cam, dt, hi, proj };
 }
