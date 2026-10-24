@@ -3,7 +3,8 @@
 // Un calque transparent par image (Playwright) : titre du plan, état des manettes, légende du bas, noms des pièces accrochés à leur
 // position à l'écran (proj_*.json de la capture), repère « Ralenti », flèches dans le sens réel du mouvement des pièces
 // (mâchoires, cône, ressorts, piston, huile) pendant leur course, phrase selon l'état des manettes ; puis ffmpeg : images + calques → MP4 1920 × 1080, sans son.
-// Usage : node video/meca/montage.mjs --img DOSSIER_CAPTURE [--proj DOSSIER] --polices COMPOSITION.html --sortie FICHIER.mp4 [--lang fr|en] [--at k1,k2]
+// Usage : node video/meca/montage.mjs --img DOSSIER_CAPTURE [--proj DOSSIER] --polices COMPOSITION.html --sortie FICHIER.mp4 [--lang fr|en] [--at k1,k2] [--debut S]
+//   --debut S : la vidéo commence à S secondes du film (ex. 32.5 : seulement la scène « Manettes ouvertes ou fermées ? »)
 //   COMPOSITION.html : une composition d'un projet HyperFrames (ses @font-face et ../assets/fonts) ; PLAYWRIGHT, CHROME, FFMPEG.
 import fs from 'node:fs';
 import path from 'node:path';
@@ -26,7 +27,7 @@ const TX = {
       [12.5, 19.5, '1 · Le cône et les mâchoires', 'Son coin pousse les mâchoires'],
       [19.5, 27, '2 · + les 18 ressorts', 'Ils poussent le cône'],
       [27, 32.5, '3 · + le boîtier', 'Tout est caché à l\'intérieur'],
-      [32.5, 42.5, 'À retenir', 'Manettes ouvertes ou fermées ?'],
+      [32.5, 44.5, 'À retenir', 'Manettes ouvertes ou fermées ?'],
     ],
     etat: [
       [3.6, 12.5, 'Manettes ouvertes : l\'huile pousse le piston, qui tire le cône vers l\'arrière. Les ressorts s\'écrasent, les mâchoires s\'ouvrent.', 'Manettes fermées : la pression tombe. Les ressorts poussent le cône vers l\'avant, son coin referme les mâchoires.'],
@@ -56,7 +57,7 @@ const TX = {
       [28.8, 30.1, 'bandeau', '⚠', '', 'Manettes ouvertes = ressorts comprimés au maximum, même si on ne voit rien.'],
       [33.5, 37.3, 'alerte', 'cadenas', 'Manettes ouvertes', 'Ressorts comprimés au maximum. Si on cadenasse comme ça, le cadenas n\'y change rien : toute cette énergie reste prise dans le mandrin.'],
       [37.9, 40.1, 'ok', '✓', 'Manettes fermées', 'Les ressorts sont étirés au maximum : c\'est là qu\'il reste le moins d\'énergie.'],
-      [40.1, 42.5, 'fin', 'cadenas', '', 'Avant de cadenasser : manettes fermées.'],
+      [40.1, 44.5, 'fin', 'cadenas', '', 'Avant de cadenasser : manettes fermées.'],
     ],
     huile: 'Huile',
     manettes: ['Manettes', 'ouvertes', 'fermées'],
@@ -69,7 +70,7 @@ const TX = {
       [12.5, 19.5, '1 · The cone and the jaws', 'Its wedge pushes the jaws'],
       [19.5, 27, '2 · + the 18 springs', 'They push the cone'],
       [27, 32.5, '3 · + the housing', 'Everything is hidden inside'],
-      [32.5, 42.5, 'Remember', 'Levers open or closed?'],
+      [32.5, 44.5, 'Remember', 'Levers open or closed?'],
     ],
     etat: [
       [3.6, 12.5, 'Levers open: oil pushes the piston, which pulls the cone back. The springs compress, the jaws open.', 'Levers closed: pressure drops. The springs push the cone forward, its wedge closes the jaws.'],
@@ -98,7 +99,7 @@ const TX = {
       [28.8, 30.1, 'bandeau', '⚠', '', 'Levers open = springs fully compressed, even if you cannot see it.'],
       [33.5, 37.3, 'alerte', 'cadenas', 'Levers open', 'Springs fully compressed. If you lock out like this, the lock changes nothing: all that energy stays trapped in the chuck.'],
       [37.9, 40.1, 'ok', '✓', 'Levers closed', 'The springs are fully extended: that is where the least energy remains.'],
-      [40.1, 42.5, 'fin', 'cadenas', '', 'Before locking out: levers closed.'],
+      [40.1, 44.5, 'fin', 'cadenas', '', 'Before locking out: levers closed.'],
     ],
     huile: 'Oil',
     manettes: ['Levers', 'open', 'closed'],
@@ -230,8 +231,8 @@ const page = await browser.newPage({ viewport: { width: W, height: H }, deviceSc
 const OV = path.join(path.dirname(OUT), `calques_${LANG}`); fs.mkdirSync(OV, { recursive: true });
 fs.writeFileSync(path.join(OV, 'calque.html'), html);   // page en file:// : les polices locales se chargent
 await page.goto(pathToFileURL(path.join(OV, 'calque.html')).href, { waitUntil: 'load' }); await page.evaluate(() => document.fonts.ready);
-const ATK = arg('at', '') ? arg('at', '').split(',').map(Number) : null;
-for (const k of ATK || [...Array(F.N).keys()]) {
+const ATK = arg('at', '') ? arg('at', '').split(',').map(Number) : null, K0 = Math.round(+arg('debut', 0) * F.FPS);
+for (const k of ATK || [...Array(F.N - K0).keys()].map(i => i + K0)) {
   await page.evaluate(h => {
     const r = document.getElementById('r'); r.innerHTML = h;
     // nom de pièce : à gauche du trait vers la gauche, centré verticalement sur le bout du trait, gardé dans l'image
@@ -248,7 +249,7 @@ if (ATK) {   // aperçus : image + calque → apercu_<k>.jpg
   for (const k of ATK) { const n = String(k).padStart(5, '0');
     execFileSync(FF, ['-loglevel', 'error', '-y', '-i', path.join(IMG, `f_${n}.jpg`), '-i', path.join(OV, `o_${n}.png`), '-filter_complex', '[0]scale=1920:1080[a];[a][1]overlay', '-q:v', '3', path.join(path.dirname(OUT), `apercu_${LANG}_${n}.jpg`)]); }
 } else {
-  execFileSync(FF, ['-loglevel', 'error', '-y', '-framerate', String(F.FPS), '-i', path.join(IMG, 'f_%05d.jpg'), '-framerate', String(F.FPS), '-i', path.join(OV, 'o_%05d.png'),
+  execFileSync(FF, ['-loglevel', 'error', '-y', '-framerate', String(F.FPS), '-start_number', String(K0), '-i', path.join(IMG, 'f_%05d.jpg'), '-framerate', String(F.FPS), '-start_number', String(K0), '-i', path.join(OV, 'o_%05d.png'),
     '-filter_complex', '[0]scale=1920:1080:flags=lanczos[a];[a][1]overlay,format=yuv420p', '-c:v', 'libx264', '-preset', 'slow', '-crf', '22', '-movflags', '+faststart', OUT], { stdio: 'inherit' });
   console.log(`${OUT} : ${(fs.statSync(OUT).size / 1e6).toFixed(1)} Mo`);
 }

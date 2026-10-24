@@ -28,9 +28,9 @@ export const PLANS = [
   [12.5, 19.5, 'cone'],      // puis pièce par pièce : mâchoires + cône (en transparence), la caméra tourne vers l'avant (mâchoires de face)
   [19.5, 27, 'ressorts'],    // + les 18 ressorts : ils poussent le cône ; même rotation vers l'avant
   [27, 32.5, 'boitier'],     // + le boîtier : de l'extérieur, presque rien ne bouge
-  [32.5, 41.5, 'ouvfer'],    // ouvertes ou fermées ? manettes ouvertes : ressorts écrasés, le cadenas n'y change rien ; fermées : le moins d'énergie
+  [32.5, 43.5, 'ouvfer'],    // ouvertes ou fermées ? (seule scène gardée dans la vidéo, montage.mjs --debut 32.5) manettes ouvertes : ressorts écrasés, le cadenas n'y change rien ; fermées : le moins d'énergie
 ];
-export const N = 41.5 * FPS;
+export const N = 43.5 * FPS;
 // manettes : [instant s, sens (0 ouvrir, 1 fermer)] — deux basculements par plan
 export const CYCLES = [[3.6, 0], [8.0, 1], [13.3, 0], [16.4, 1], [20.3, 0], [23.6, 1], [27.8, 0], [30.1, 1], [32.7, 0], [37.3, 1]];
 // avant l'image 0 (images rejouées sans rendu) : manettes fermées, mâchoires fermées
