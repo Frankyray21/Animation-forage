@@ -4769,6 +4769,9 @@ async function start() {
   try { saved = localStorage.getItem('clam-scen') || 'D'; } catch (e) {}
   selectScen(SCEN[saved] ? saved : 'D');   // par défaut : la reconstitution de l'accident (cône retenu)
   if (location.hash === '#presenter') setPres(true);   // lien « Commencer la présentation » de l'accueil
+  // lien « Voir dans la 3D » de la page procédure (procedure.html#… → animation.html#etape-N) : procédure respectée, au début de l'étape N
+  const allerEtape = () => { const m = /^#etape-([1-9])$/.exec(location.hash); if (!m) return; selectScen('A'); const i = steps.findIndex(s => s.n === m[1]); if (i >= 0) T = starts[i]; };
+  allerEtape(); addEventListener('hashchange', allerEtape);
   resize();
   const S = stateAt(T); applyScene(S); updateUI(S, true);
   requestAnimationFrame(frame);

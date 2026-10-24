@@ -1,7 +1,7 @@
 // Application installable et utilisable hors ligne : enregistre sw.js, affiche les boutons [data-install] et [data-offline].
 // [data-offline] « Télécharger pour le hors ligne » : enregistre sur l'appareil tout ce qui manque (pages, 3D, polices, vidéos).
 // Le service worker donne la liste de ce qui manque ; la page télécharge elle-même les petits fichiers (progression en octets)
-// et suit les deux vidéos, téléchargées par le service worker (elles continuent quand on change de page). Un seul téléchargement à la fois (Web Locks).
+// et suit les vidéos, téléchargées par le service worker (elles continuent quand on change de page). Un seul téléchargement à la fois (Web Locks).
 // Rien dans un aperçu intégré (cadre) ni sous automatisation (capture vidéo).
 (() => {
   if (window.self !== window.top || !('serviceWorker' in navigator) || !window.isSecureContext || navigator.webdriver) return;
@@ -36,7 +36,7 @@
   const LOCK = 'clam-offline-download';
   const ICON = { idle: '⇩', busy: '⏳', ready: '✓', error: '⇩' };
   const TEXT = {
-    idle: ['Télécharger pour le hors ligne', 'Enregistrer tout le site sur cet appareil (environ 26 Mo) pour l’utiliser sans réseau.'],
+    idle: ['Télécharger pour le hors ligne', 'Enregistrer tout le site sur cet appareil (environ 34 Mo) pour l’utiliser sans réseau.'],
     ready: ['Prêt hors ligne', 'Tout le site est enregistré sur cet appareil : accueil, animation 3D et vidéos.'],
     error: ['Réessayer le téléchargement', 'Le téléchargement n’est pas complet.'],
   };
@@ -50,7 +50,7 @@
     b.title = title || (TEXT[state] ? TEXT[state][1] : '');
   });
   let busy = false, phase = '';   // phase 'files' : petits fichiers téléchargés par la page ; 'video' : vidéos suivies dans le service worker
-  const VID_EST = 22.3e6;   // taille des deux vidéos tant que le service worker ne l'a pas donnée
+  const VID_EST = 30.1e6;   // taille des trois vidéos tant que le service worker ne l'a pas donnée
   // état demandé au service worker actif (par canal privé) ; réponse d'une autre version ignorée
   async function ask(type, wait = 20000) {
     const reg = await navigator.serviceWorker.ready, sw = navigator.serviceWorker.controller || reg.active;
@@ -119,7 +119,7 @@
     const cache = await caches.open(s.version);
     const vids = s.videos || [s.video];   // service worker d'une version précédente : une seule vidéo
     const files = s.list.filter(u => !vids.includes(u)), needVideo = vids.some(u => s.list.includes(u)) || s.videoPending;
-    // progression en octets : taille estimée (autres fichiers 150 ko, vidéos 22 Mo) remplacée par la vraie dès qu'elle est connue
+    // progression en octets : taille estimée (autres fichiers 150 ko, vidéos 30 Mo) remplacée par la vraie dès qu'elle est connue
     const size = new Map(files.map(u => [u, 150e3])), got = new Map(files.map(u => [u, 0]));
     let vid = { n: 0, len: needVideo ? VID_EST : 0 }, shown = -1, said = 0;
     const report = () => {

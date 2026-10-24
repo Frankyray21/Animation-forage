@@ -2,16 +2,17 @@
 // Pages : réseau d'abord (mises à jour), copie locale si hors ligne. Images et scripts du site : copie locale, rafraîchie en arrière-plan.
 // three.js (version figée sur le CDN) et polices : copie locale d'abord. Vidéos : lectures partielles (Range) servies depuis la copie locale hors ligne.
 // Bouton « Télécharger pour le hors ligne » (pwa.js) : le message offline-status donne la liste de ce qui manque. La page télécharge
-// elle-même les petits fichiers (requêtes cache: 'reload' + credentials: 'omit', laissées au réseau ici) ; les deux vidéos sont téléchargées
+// elle-même les petits fichiers (requêtes cache: 'reload' + credentials: 'omit', laissées au réseau ici) ; les vidéos sont téléchargées
 // ici, l'une après l'autre (message offline-video), avec la progression cumulée envoyée aux pages, et continuent quand on change de page.
 // Le site partage l'origine frankyray21.github.io avec d'autres applications : seules les copies « clam-… » sont gérées ici.
-const VERSION = 'clam-v11';   // procédure v5 (5 min 37 s : énergie résiduelle, cartes d'arrêt, contre-exemple) : copies hors ligne renouvelées
+const VERSION = 'clam-v12';   // page « procédure étape par étape » et vidéo du mécanisme : copies hors ligne renouvelées
 const PREFIX = 'clam-';
 const LOCAL = [
-  './', 'index.html', 'animation.html', 'manifest.webmanifest', 'pwa.js',
+  './', 'index.html', 'animation.html', 'procedure.html', 'manifest.webmanifest', 'pwa.js',
   'icons/icon-192.png', 'icons/icon-512.png', 'icons/icon-maskable-512.png', 'icons/apple-touch-icon.png', 'icons/favicon-32.png',
   'img/accident-1.jpg', 'img/accident-2.jpg', 'img/accident-3.jpg', 'img/accident-4.jpg',
   'renders/03_coupe.jpg', 'renders/04_couvercle_retire.jpg', 'video/procedure_poster.jpg', 'video/accident_poster.jpg',
+  ...[1, 2, 3, 4, 5, 6, 7, 8, 9].map(n => `img/procedure/etape-${n}.jpg`), 'img/procedure/mecanisme.jpg',
 ];
 const FONTS = [
   'https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800&family=IBM+Plex+Mono:wght@500&family=IBM+Plex+Sans:wght@400;500;600&display=swap',
@@ -37,7 +38,7 @@ const CDN = [
   "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/shaders/SMAAShader.js",
   "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/utils/BufferGeometryUtils.js"
 ];
-const VIDEOS = ['video/procedure_boyles_h.mp4', 'video/accident_boyles_h.mp4'];   // procédure (scénario A), accident (reconstitution)
+const VIDEOS = ['video/procedure_boyles_h.mp4', 'video/accident_boyles_h.mp4', 'video/mecanisme_machoires_fr.mp4'];   // procédure (scénario A), accident (reconstitution), mécanisme
 const META = u => 'clam-meta/size/' + u;   // taille de chaque vidéo en ligne (repère une copie périmée) : relevée à l'installation, puis à chaque démarrage
 let videoJob = null, videoProg = null;   // vidéos téléchargées par le service worker, progression cumulée { n, len } suivie par les pages
 let videoQuota = false;   // stockage plein pendant l'enregistrement d'une vidéo (message « espace insuffisant » de la page)

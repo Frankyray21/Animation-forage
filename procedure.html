@@ -1,0 +1,284 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Procédure étape par étape</title>
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#101417">
+<link rel="icon" href="icons/favicon-32.png" sizes="32x32" type="image/png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Clam sous tension">
+<script src="pwa.js" defer></script>
+<meta name="description" content="Démontage du cône d'un mandrin (PRO-OP-DD-005), étape par étape : quoi faire, pourquoi, et une case à cocher par étape pour suivre la procédure sur le terrain.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800&family=IBM+Plex+Mono:wght@500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+/* Procédure étape par étape : même thème que l'accueil (sombre, rouge et jaune d'avertissement), pensée pour le téléphone sur le terrain */
+:root {
+  --bg: #101417; --bg2: #171c20; --panel: #1d2328; --line: #2c343a;
+  --ink: #eef1f3; --muted: #a3adb4; --red: #e5372b; --red-ink: #ffffff; --yellow: #f2c230; --yellow-ink: #15191c; --green: #57c486;
+  --display: "Barlow Condensed", "Arial Narrow", "Roboto Condensed", sans-serif;
+  --body: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body { margin: 0; background: var(--bg); color: var(--ink); font: 400 17px/1.55 var(--body); }
+img { max-width: 100%; height: auto; display: block; }
+a { color: inherit; }
+.nw { white-space: nowrap; }
+.wrap { width: min(1100px, 100%); margin: 0 auto; padding-inline: clamp(16px, 4vw, 40px); }
+.hazard { height: 8px; background: repeating-linear-gradient(-45deg, var(--yellow) 0 14px, #15191c 14px 28px); }
+
+/* barre du haut */
+.top { display: flex; flex-wrap: wrap; gap: 6px 16px; align-items: center; justify-content: space-between; padding-block: 14px; font-family: var(--mono); font-size: 13px; color: var(--muted); letter-spacing: .02em; }
+.top a { color: var(--ink); text-decoration: none; }
+.top a:hover, .top a:focus-visible { text-decoration: underline; }
+.top-r { display: inline-flex; flex-wrap: wrap; align-items: center; gap: 8px 16px; }
+.install { display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; border: 1px solid var(--yellow); border-radius: 999px; background: transparent; color: var(--yellow); font: 600 14px/1.2 var(--body); cursor: pointer; }
+.install:hover, .install:focus-visible { background: var(--yellow); color: var(--yellow-ink); }
+.install[hidden] { display: none; }
+.offline { border-color: var(--line); color: var(--ink); }
+.offline:hover, .offline:focus-visible { background: var(--panel); color: var(--ink); border-color: var(--muted); }
+.offline[data-state="busy"] { cursor: progress; font-variant-numeric: tabular-nums; }
+.offline[data-state="ready"] { border-color: color-mix(in srgb, var(--green) 60%, var(--bg)); color: var(--green); background: transparent; cursor: default; }
+.offline[data-state="error"] { border-color: var(--red); color: #ff8a80; }
+
+/* ouverture */
+.head { padding-block: clamp(18px, 4vh, 44px) 8px; }
+.tag { display: inline-block; padding: 5px 11px 4px; border-radius: 4px; background: var(--yellow); color: var(--yellow-ink); font-size: 13px; font-weight: 600; letter-spacing: .09em; text-transform: uppercase; }
+h1 { margin: 14px 0 12px; font-family: var(--display); font-weight: 700; font-size: clamp(38px, 5vw, 64px); line-height: 1.02; text-wrap: balance; }
+.lede { margin: 0 0 22px; max-width: 40em; font-size: clamp(17px, 1.5vw, 19px); color: #d4dade; }
+.progress { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; display: flex; flex-wrap: wrap; gap: 10px 16px; align-items: center; padding: 12px clamp(14px, 2vw, 18px); margin-top: 4px; border-radius: 10px; background: var(--bg2); border: 1px solid var(--line); }
+.progress .bar { flex: 1 1 220px; height: 10px; border-radius: 999px; background: var(--panel); overflow: hidden; }
+.progress .bar i { display: block; height: 100%; width: 0; background: var(--green); transition: width .25s; }
+.progress output { font: 600 16px/1.2 var(--body); font-variant-numeric: tabular-nums; }
+.btn-s { padding: 8px 14px; border-radius: 8px; border: 1px solid var(--line); background: transparent; color: var(--ink); font: 600 15px/1.1 var(--body); cursor: pointer; text-decoration: none; display: inline-flex; align-items: center; gap: 8px; }
+.btn-s:hover, .btn-s:focus-visible { border-color: var(--muted); }
+.btn-s:focus-visible, .check input:focus-visible + span { outline: 3px solid var(--ink); outline-offset: 3px; }
+
+/* règles à retenir */
+section { padding-block: clamp(26px, 5vh, 48px); }
+.kicker { margin: 0 0 6px; font-family: var(--mono); font-size: 13px; color: var(--yellow); letter-spacing: .04em; }
+h2 { margin: 0 0 16px; font-family: var(--display); font-weight: 700; font-size: clamp(30px, 3.6vw, 44px); line-height: 1; text-transform: uppercase; text-wrap: balance; }
+.rules { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+.rules li { padding: 14px 16px; border-radius: 10px; background: color-mix(in srgb, var(--red) 14%, var(--bg)); border: 1px solid color-mix(in srgb, var(--red) 55%, var(--bg)); }
+.rules b { display: block; font-family: var(--display); font-weight: 700; font-size: 24px; line-height: 1.1; margin-bottom: 4px; }
+.rules span { font-size: 15px; color: #e3d6d4; }
+.film { margin: 22px 0 0; max-width: 860px; }
+.film video { display: block; width: 100%; height: auto; aspect-ratio: 16 / 9; border: 1px solid var(--line); border-radius: 10px; background: #000; }
+.film figcaption { margin-top: 8px; font-size: 15px; color: var(--muted); }
+
+/* étapes */
+.steps { list-style: none; margin: 0; padding: 0; display: grid; gap: 18px; }
+.step { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.15fr); gap: 0; border-radius: 12px; overflow: hidden; background: var(--bg2); border: 1px solid var(--line); scroll-margin-top: 90px; }
+.step.done { border-color: color-mix(in srgb, var(--green) 55%, var(--bg)); }
+.step .ph { position: relative; background: #0b0e10; }
+.step .ph img { width: 100%; height: 100%; aspect-ratio: 16 / 9; object-fit: cover; }
+.step .n { position: absolute; left: 12px; top: 12px; display: grid; place-items: center; width: 46px; height: 46px; border-radius: 50%; background: var(--yellow); color: var(--yellow-ink); font: 800 28px/1 var(--display); }
+.step.done .n { background: var(--green); color: #0d1f14; }
+.step .body { display: grid; align-content: start; gap: 10px; padding: clamp(14px, 2vw, 22px); min-width: 0; }
+.step h3 { margin: 0; font-family: var(--display); font-weight: 700; font-size: clamp(26px, 2.6vw, 32px); line-height: 1.05; text-wrap: balance; }
+.step .do { margin: 0; padding-left: 22px; display: grid; gap: 4px; }
+.step .do li::marker { color: var(--yellow); font-weight: 700; }
+.step .why { margin: 0; padding: 8px 12px; border-radius: 8px; background: var(--panel); border-left: 4px solid var(--yellow); font-size: 15.5px; color: #ccd3d8; }
+.step .why b { color: var(--ink); }
+.step .warn { margin: 0; padding: 8px 12px; border-radius: 8px; background: color-mix(in srgb, var(--red) 18%, var(--bg)); border-left: 4px solid var(--red); font-size: 15.5px; color: #ffd9d5; }
+.step .warn b { color: #fff; }
+.step .acts { display: flex; flex-wrap: wrap; gap: 10px 14px; align-items: center; margin-top: 4px; }
+.check { display: inline-flex; align-items: center; gap: 10px; cursor: pointer; font-weight: 600; user-select: none; }
+.check input { position: absolute; opacity: 0; width: 1px; height: 1px; }
+.check span { display: inline-flex; align-items: center; gap: 10px; padding: 8px 14px 8px 10px; border-radius: 8px; border: 2px solid var(--line); }
+.check span::before { content: ""; width: 22px; height: 22px; border-radius: 5px; border: 2px solid var(--muted); display: grid; place-items: center; font-size: 16px; line-height: 1; }
+.check input:checked + span { border-color: var(--green); color: #b9f0cd; }
+.check input:checked + span::before { content: "✓"; background: var(--green); border-color: var(--green); color: #0d1f14; font-weight: 800; }
+
+/* en cas de doute */
+.doubt { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.doubt li { padding: 14px 16px; border-radius: 10px; background: var(--bg2); border: 1px solid var(--line); }
+.doubt b { display: block; font-family: var(--display); font-weight: 700; font-size: 22px; line-height: 1.1; margin-bottom: 4px; }
+.doubt span { font-size: 15.5px; color: #ccd3d8; }
+.end { display: flex; flex-wrap: wrap; gap: 12px; }
+footer { padding-block: 22px 30px; border-top: 1px solid var(--line); font-size: 13px; color: var(--muted); }
+footer p { margin: 0; max-width: 80ch; }
+
+@media (max-width: 860px) {
+  .step { grid-template-columns: minmax(0, 1fr); }
+  .rules, .doubt { grid-template-columns: minmax(0, 1fr); }
+}
+</style>
+</head>
+<body>
+<div class="hazard" aria-hidden="true"></div>
+<header class="wrap top">
+  <a href="index.html">← Accueil</a>
+  <span class="top-r"><button type="button" class="install offline" data-offline hidden><span aria-hidden="true" data-offline-icon>⇩</span> <span data-offline-label>Télécharger pour le hors ligne</span></button><button type="button" class="install" data-install hidden><span aria-hidden="true">⤓</span> Installer l'application</button><span>Procédure PRO-OP-DD-005</span></span>
+</header>
+
+<main>
+  <div class="wrap head">
+    <span class="tag">Sur le terrain</span>
+    <h1>Démontage du cône d'un mandrin, étape par étape</h1>
+    <p class="lede">Les 9&nbsp;étapes de la procédure, dans l'ordre&nbsp;: quoi faire, avec quelle clé, et pourquoi. Cochez chaque étape une fois faite&nbsp;; les cases restent cochées sur cet appareil.</p>
+    <div class="progress" role="group" aria-label="Avancement">
+      <output id="compte" aria-live="polite">0 / 9 étapes faites</output>
+      <div class="bar" aria-hidden="true"><i id="barre"></i></div>
+      <button type="button" class="btn-s" id="raz">Tout décocher</button>
+    </div>
+  </div>
+
+  <section class="wrap" aria-labelledby="h-avant">
+    <p class="kicker">Avant de commencer</p>
+    <h2 id="h-avant">Trois règles</h2>
+    <ul class="rules">
+      <li><b>Manettes fermées avant de cadenasser</b><span>Ouvertes, les ressorts sont écrasés au maximum&nbsp;: le cadenas n'y change rien.</span></li>
+      <li><b>Étape 6 avant l'étape 7</b><span>Les 3&nbsp;boulons longs remis sans bushing avant de toucher aux boulons du cône.</span></li>
+      <li><b>Jamais un boulon du cône sorti au complet sous charge</b><span>Un tour à la fois, dans l'ordre 1 à 6, jusqu'à ce que les ressorts soient détendus.</span></li>
+    </ul>
+    <figure class="film" id="vidMecaSec">
+      <video id="vidMeca" controls preload="none" playsinline poster="img/procedure/mecanisme.jpg" src="video/mecanisme_machoires_fr.mp4" aria-label="Vidéo : comment fonctionne le mandrin, manettes ouvertes et fermées"></video>
+      <figcaption>Comment fonctionne le mandrin · manettes ouvertes (écran rouge) et fermées (écran vert) · <span class="nw">sans son</span></figcaption>
+    </figure>
+    <script>
+    // vidéo du mécanisme : cachée si le fichier manque, si le navigateur ne lit pas le H.264, ou hors ligne quand elle n'est pas enregistrée sur l'appareil
+    { const v = document.getElementById('vidMeca'), hide = () => { document.getElementById('vidMecaSec').hidden = true; }; v.addEventListener('error', hide); if (!v.canPlayType('video/mp4; codecs="avc1.64001f"')) hide();
+      const off = () => { try { if (!navigator.onLine) caches.match(v.src).then(r => { if (!r) hide(); }, () => {}); } catch (e) {} }; off(); addEventListener('offline', off); }
+    </script>
+  </section>
+
+  <section class="wrap" aria-labelledby="h-etapes">
+    <p class="kicker">PRO-OP-DD-005</p>
+    <h2 id="h-etapes">Les 9 étapes</h2>
+    <ol class="steps">
+      <li class="step" id="etape-1">
+        <div class="ph"><img src="img/procedure/etape-1.jpg" width="1200" height="675" loading="lazy" alt="Mandrin en coupe, manettes fermées : les ressorts verts sont encore comprimés derrière le cône."><span class="n" aria-hidden="true">1</span></div>
+        <div class="body">
+          <h3>Manettes fermées</h3>
+          <ol class="do"><li>Mettre les manettes du clam et du chuck en position <b>fermée</b>.</li></ol>
+          <p class="warn"><b>Pas en position ouverte&nbsp;:</b> l'hydraulique pousse le vérin, les ressorts sont écrasés au maximum. Si on cadenasse comme ça, le cadenas n'y change rien&nbsp;: toute cette énergie reste prise dans le mandrin.</p>
+          <p class="why"><b>Pourquoi fermées&nbsp;?</b> Les ressorts sont alors étirés au maximum&nbsp;: c'est là qu'il reste le moins d'énergie. Ils restent quand même comprimés.</p>
+          <div class="acts"><label class="check"><input type="checkbox" data-etape="1"><span>Fait</span></label><a class="btn-s" href="animation.html#etape-1">Voir dans la 3D</a></div>
+        </div>
+      </li>
+      <li class="step" id="etape-2">
+        <div class="ph"><img src="img/procedure/etape-2.jpg" width="1200" height="675" loading="lazy" alt="Face avant du mandrin : les mâchoires sont fermées."><span class="n" aria-hidden="true">2</span></div>
+        <div class="body">
+          <h3>Mâchoires (jaws) fermées</h3>
+          <ol class="do"><li>Vérifier que les mâchoires sont fermées.</li></ol>
+          <p class="why"><b>Pourquoi&nbsp;?</b> Mâchoires fermées&nbsp;: les ressorts ont poussé le cône vers l'avant, l'hydraulique ne les retient plus.</p>
+          <div class="acts"><label class="check"><input type="checkbox" data-etape="2"><span>Fait</span></label><a class="btn-s" href="animation.html#etape-2">Voir dans la 3D</a></div>
+        </div>
+      </li>
+      <li class="step" id="etape-3">
+        <div class="ph"><img src="img/procedure/etape-3.jpg" width="1200" height="675" loading="lazy" alt="Cadenas et étiquette « Danger, ne pas utiliser » posés sur le poste de commande."><span class="n" aria-hidden="true">3</span></div>
+        <div class="body">
+          <h3>Cadenasser</h3>
+          <ol class="do"><li>Chacun pose son cadenas.</li><li>Vérifier que la foreuse ne peut pas repartir.</li></ol>
+          <p class="why"><b>Pourquoi&nbsp;?</b> Le cadenas empêche l'hydraulique de repartir. Mais les ressorts, eux, poussent encore&nbsp;: c'est l'énergie résiduelle.</p>
+          <div class="acts"><label class="check"><input type="checkbox" data-etape="3"><span>Fait</span></label><a class="btn-s" href="animation.html#etape-3">Voir dans la 3D</a></div>
+        </div>
+      </li>
+      <li class="step" id="etape-4">
+        <div class="ph"><img src="img/procedure/etape-4.jpg" width="1200" height="675" loading="lazy" alt="Les 3 boulons du couvert des mâchoires, repérés J1 à J3, desserrés à la clé."><span class="n" aria-hidden="true">4</span></div>
+        <div class="body">
+          <h3>Retirer le couvert des mâchoires (jaw cover)</h3>
+          <ol class="do"><li>Dévisser les 3&nbsp;boulons <span class="nw">¾ po</span> (clé <span class="nw">1 ⅛ po</span>).</li><li>Retirer le couvert.</li></ol>
+          <div class="acts"><label class="check"><input type="checkbox" data-etape="4"><span>Fait</span></label><a class="btn-s" href="animation.html#etape-4">Voir dans la 3D</a></div>
+        </div>
+      </li>
+      <li class="step" id="etape-5">
+        <div class="ph"><img src="img/procedure/etape-5.jpg" width="1200" height="675" loading="lazy" alt="Le couvercle (cap holder) et ses boulons, repérés C1 à C9."><span class="n" aria-hidden="true">5</span></div>
+        <div class="body">
+          <h3>Retirer le couvercle (cap holder)</h3>
+          <ol class="do"><li>Enlever les 9&nbsp;boulons <span class="nw">½ po</span> (clé <span class="nw">¾ po</span>).</li><li>Retirer le couvercle.</li></ol>
+          <p class="warn"><b>Attention&nbsp;:</b> le cône et ses 9&nbsp;boulons apparaissent. Les ressorts sont toujours comprimés.</p>
+          <div class="acts"><label class="check"><input type="checkbox" data-etape="5"><span>Fait</span></label><a class="btn-s" href="animation.html#etape-5">Voir dans la 3D</a></div>
+        </div>
+      </li>
+      <li class="step" id="etape-6">
+        <div class="ph"><img src="img/procedure/etape-6.jpg" width="1200" height="675" loading="lazy" alt="Les 3 boulons longs du cône, repérés L1 à L3, revissés sans bushing."><span class="n" aria-hidden="true">6</span></div>
+        <div class="body">
+          <h3>Remettre les 3 boulons longs sans bushing</h3>
+          <ol class="do"><li>Un boulon long à la fois <span class="nw">(½ × 8 po)</span>&nbsp;: le desserrer et retirer son bushing <span class="nw">(1 ½ po)</span>.</li><li>Resserrer complètement le boulon, sans bushing.</li></ol>
+          <p class="why"><b>Pourquoi&nbsp;?</b> Sans bushing, ils vissent <span class="nw">1 ½ po</span> plus loin&nbsp;: ils retiennent le cône s'il part, pendant qu'on desserre les 6&nbsp;autres boulons.</p>
+          <p class="warn"><b>Toujours avant l'étape 7.</b> Sans eux, rien n'arrête le cône.</p>
+          <div class="acts"><label class="check"><input type="checkbox" data-etape="6"><span>Fait</span></label><a class="btn-s" href="animation.html#etape-6">Voir dans la 3D</a></div>
+        </div>
+      </li>
+      <li class="step" id="etape-7">
+        <div class="ph"><img src="img/procedure/etape-7.jpg" width="1200" height="675" loading="lazy" alt="Mandrin en coupe pendant le desserrage : les boulons du cône sont dévissés un tour à la fois dans l'ordre."><span class="n" aria-hidden="true">7</span></div>
+        <div class="body">
+          <h3>Dévisser les 6 boulons du cône, 1 tour à la fois</h3>
+          <ol class="do"><li>Dévisser chaque boulon <span class="nw">(½ × 6 ½ po)</span> d'<b>un tour seulement</b>, dans l'ordre 1 à 6.</li><li>Refaire le tour de 1 à 6, jusqu'à ce que les ressorts soient détendus.</li><li>Retirer ensuite les 6&nbsp;boulons.</li></ol>
+          <p class="why"><b>Pourquoi&nbsp;?</b> Les 6&nbsp;boulons partagent la charge&nbsp;: les ressorts se détendent peu à peu, également. C'est plus long, mais on reste en contrôle.</p>
+          <p class="warn"><b>Jamais un boulon sorti au complet sous charge.</b> Se placer hors de l'axe du mandrin, jamais devant le cône. Si un boulon résiste&nbsp;: pas d'impact drill sous charge, on arrête et on en parle au superviseur.</p>
+          <div class="acts"><label class="check"><input type="checkbox" data-etape="7"><span>Fait</span></label><a class="btn-s" href="animation.html#etape-7">Voir dans la 3D</a></div>
+        </div>
+      </li>
+      <li class="step" id="etape-8">
+        <div class="ph"><img src="img/procedure/etape-8.jpg" width="1200" height="675" loading="lazy" alt="Les 3 boulons longs, repérés L1 à L3, retirés une fois les ressorts détendus."><span class="n" aria-hidden="true">8</span></div>
+        <div class="body">
+          <h3>Retirer les 3 boulons longs</h3>
+          <ol class="do"><li>Les ressorts sont détendus&nbsp;: retirer les 3&nbsp;boulons longs <span class="nw">(½ × 8 po)</span>.</li></ol>
+          <p class="why"><b>Pourquoi à la fin&nbsp;?</b> Ils retiennent le cône jusqu'au bout. Maintenant, ils ne portent plus rien.</p>
+          <div class="acts"><label class="check"><input type="checkbox" data-etape="8"><span>Fait</span></label><a class="btn-s" href="animation.html#etape-8">Voir dans la 3D</a></div>
+        </div>
+      </li>
+      <li class="step" id="etape-9">
+        <div class="ph"><img src="img/procedure/etape-9.jpg" width="1200" height="675" loading="lazy" alt="Le cône est sorti du mandrin, ressorts détendus."><span class="n" aria-hidden="true">9</span></div>
+        <div class="body">
+          <h3>Changer les pièces</h3>
+          <ol class="do"><li>Sortir le cône (bowl) et les mâchoires.</li><li>Changer les pièces.</li></ol>
+          <p class="why"><b>Résultat&nbsp;:</b> l'énergie résiduelle a été relâchée lentement&nbsp;; le cône est resté retenu tout le long.</p>
+          <div class="acts"><label class="check"><input type="checkbox" data-etape="9"><span>Fait</span></label><a class="btn-s" href="animation.html#etape-9">Voir dans la 3D</a></div>
+        </div>
+      </li>
+    </ol>
+  </section>
+
+  <section class="wrap" aria-labelledby="h-doute">
+    <p class="kicker">En cas de doute</p>
+    <h2 id="h-doute">On arrête, on en parle</h2>
+    <ul class="doubt">
+      <li><b>Le cône reste coincé</b><span>On ne le frappe pas pour le décoincer, et on ne reste pas devant&nbsp;: les ressorts poussent encore, il peut être projeté.</span></li>
+      <li><b>Un boulon ne veut pas se défaire</b><span>Pas d'impact drill sous charge. On arrête, et on en parle au superviseur avant de continuer.</span></li>
+      <li><b>Le quart finit avant la fin de la job</b><span>On pose un scellé sur la foreuse, avec une fiche qui explique la nature de l'intervention. Chacun repose son cadenas avant de reprendre.</span></li>
+      <li><b>Quelque chose ne semble pas normal</b><span>On arrête, et on en parle au superviseur. On regarde ça ensemble avant de continuer.</span></li>
+    </ul>
+  </section>
+
+  <section class="wrap end" aria-label="Voir aussi">
+    <a class="btn-s" href="animation.html#presenter">▶ Présentation de la procédure</a>
+    <a class="btn-s" href="index.html">Ce qui s'est passé (l'accident)</a>
+  </section>
+</main>
+
+<footer class="wrap">
+  <p>Procédure PRO-OP-DD-005 · Tête de forage UM-012-100UG · Mandrin UM-070-142AA. Images tirées de la reconstitution en 3D&nbsp;: les mouvements des ressorts et du cône y sont exagérés pour être visibles.</p>
+</footer>
+<div class="hazard" aria-hidden="true"></div>
+<script>
+// cases « Fait » : gardées sur cet appareil (une simple aide sur le terrain ; la page marche aussi sans stockage)
+(() => {
+  const KEY = 'clam-procedure-faites', cases = [...document.querySelectorAll('[data-etape]')];
+  let faites = [];
+  try { faites = JSON.parse(localStorage.getItem(KEY) || '[]'); } catch (e) {}
+  const maj = () => {
+    const n = cases.filter(c => c.checked).length;
+    document.getElementById('compte').textContent = `${n} / ${cases.length} étapes faites`;
+    document.getElementById('barre').style.width = `${100 * n / cases.length}%`;
+    cases.forEach(c => c.closest('.step').classList.toggle('done', c.checked));
+    try { localStorage.setItem(KEY, JSON.stringify(cases.filter(c => c.checked).map(c => c.dataset.etape))); } catch (e) {}
+  };
+  cases.forEach(c => { c.checked = faites.includes(c.dataset.etape); c.addEventListener('change', maj); });
+  document.getElementById('raz').addEventListener('click', () => { cases.forEach(c => { c.checked = false; }); maj(); });
+  maj();
+})();
+</script>
+</body>
+</html>
