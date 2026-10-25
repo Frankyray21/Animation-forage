@@ -5,7 +5,7 @@
 // elle-même les petits fichiers (requêtes cache: 'reload' + credentials: 'omit', laissées au réseau ici) ; les vidéos sont téléchargées
 // ici, l'une après l'autre (message offline-video), avec la progression cumulée envoyée aux pages, et continuent quand on change de page.
 // Le site partage l'origine frankyray21.github.io avec d'autres applications : seules les copies « clam-… » sont gérées ici.
-const VERSION = 'clam-v13';   // vidéo du mécanisme : vue 360° des systèmes du mandrin
+const VERSION = 'clam-v14';   // vidéo du mécanisme : plus lente, transitions en fondu
 const PREFIX = 'clam-';
 const LOCAL = [
   './', 'index.html', 'animation.html', 'procedure.html', 'manifest.webmanifest', 'pwa.js',
