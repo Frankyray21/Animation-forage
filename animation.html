@@ -2869,19 +2869,25 @@ function select(p) {
 
 // capture du film du mécanisme : pièces gardées pleines (ids), les autres en fantôme ; hi : pièce soulignée (contour) ; ids null : tout rétabli
 // opts.verre : pièces dessinées en transparence (leur couleur) ; opts.cacher : les autres pièces du mandrin cachées au lieu d'être en fantôme ;
-// opts.fantome : pièces gardées en fantôme gris même avec opts.cacher (repère, ex. le boîtier)
+// opts.fantome : pièces gardées en fantôme gris même avec opts.cacher (repère, ex. le boîtier) ;
+// opts.fondu : [[pièces, opacité 0–1], …] (deux groupes au plus) : fondu enchaîné d'un groupe de pièces à l'autre
 const hideMat = new THREE.MeshBasicMaterial({ visible: false }), verreCache = new Map();
 const verre = m => { if (Array.isArray(m)) return m.map(verre); if (!verreCache.has(m)) { const v = m.clone(); v.transparent = true; v.opacity = .32; v.depthWrite = false; verreCache.set(m, v); } return verreCache.get(m); };
+// fondu : copies transparentes des matériaux, une par groupe de fondu (opacité réglée à chaque appel)
+const fonduCache = [new Map(), new Map()];
+const fondu = (m, j, a) => { if (Array.isArray(m)) return m.map(x => fondu(x, j, a)); const c = fonduCache[j]; if (!c.has(m)) { const v = m.clone(); v.transparent = true; c.set(m, v); }
+  const v = c.get(m); v.opacity = a * (m.transparent ? m.opacity : 1); v.depthWrite = a > .6; return v; };
 function isolate(ids, hi, opts = {}) {
   selected = null; const keep = new Set(ids || []), glass = new Set(opts.verre || []), fant = new Set(opts.fantome || []);
+  const fond = new Map(); (opts.fondu || []).forEach(([fi, a], j) => fi.forEach(id => fond.set(id, [j, a])));
   for (const [g, ghost] of [[clampG, opts.cacher ? hideMat : ghostMat], [headG, ghostHead], [workerRoot, ghostHead], [carriage, ghostHead]]) g.traverse(m => {
     if (!m.isMesh || m.userData.xray) return;
     if (!m.userData.orig) m.userData.orig = m.material;
     let o = m; while (o && !o.userData.part) o = o.parent;   // pièce portée par le maillage ou par un groupe parent (bol, mâchoires…)
     const id = o && o.userData.part.id;
-    m.material = !ids || keep.has(id) || m.parent === oilG ? m.userData.orig : glass.has(id) ? verre(m.userData.orig) : fant.has(id) ? ghostMat : ghost;
+    m.material = !ids || keep.has(id) || m.parent === oilG ? m.userData.orig : fond.has(id) ? fondu(m.userData.orig, ...fond.get(id)) : glass.has(id) ? verre(m.userData.orig) : fant.has(id) ? ghostMat : ghost;
   });
-  for (const v of verreCache.values()) v.clippingPlanes = cutOn ? [CUT] : null;
+  for (const v of [...verreCache.values(), ...fonduCache[0].values(), ...fonduCache[1].values()]) v.clippingPlanes = cutOn ? [CUT] : null;
   // hors du mandrin (tête, banc, console, sol) : masqué pendant l'isolement, rétabli ensuite
   const inClamp = new Set(); clampG.traverse(o => inClamp.add(o));
   scene.traverse(m => {

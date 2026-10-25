@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// Montage du film « mécanisme des mâchoires » (32 s) : textes à l'écran posés sur les images de capture.mjs --film video/meca/film.mjs.
+// Montage du film « mécanisme des mâchoires » (51 s) : textes à l'écran posés sur les images de capture.mjs --film video/meca/film.mjs.
 // Un calque transparent par image (Playwright) : titre du plan, état des manettes, légende du bas, noms des pièces accrochés à leur
 // position à l'écran (proj_*.json de la capture), repère « Ralenti », flèches dans le sens réel du mouvement des pièces
 // (mâchoires, cône, ressorts, piston, huile) pendant leur course, phrase selon l'état des manettes ; puis ffmpeg : images + calques → MP4 1920 × 1080, sans son.
@@ -19,34 +19,32 @@ const W = 1280, H = 720, DSF = 1.5;   // calques dessinés en 1280 × 720, rendu
 // --- textes ---
 // plans : [début, fin, surtitre, titre] ; etat : [début, fin, phrase manettes ouvertes, phrase manettes fermées] (selon l'état
 // des manettes) ; legendes : [début, fin, texte] ; etiquettes : [début, fin, clé de proj, nom, dx, dy]
+const T = F.T_SYS, T0 = F.T360, TG = 1.5;   // un système toutes les T s ; scène finale à T0 (après le glissé de TG s)
+const sysEt = noms => [['3506909', -90], ['5000199', -90], ['5200517@top', -70], ['2920390', -90], ['B500-8000', -80], ['3506870', -90]]
+  .map(([cle, dy], i) => [i * T + 0.6, (i + 1) * T - 0.6, cle, noms[i], 110, dy]);
+const bandeaux = txt => [0, 2, 4].map(i => [i * T + 1.6, i * T + T - 0.6, 'bandeau', '⚠', '', txt]);   // à chaque ouverture des manettes
 const TX = {
   fr: {
     plans: [
-      [0.2, 21, 'Vue 360°', 'Les systèmes du mandrin'],
-      [21, 33, 'À retenir', 'Manettes ouvertes ou fermées ?'],
+      [0.2, T0, 'Vue 360°', 'Les systèmes du mandrin'],
+      [T0 + 0.4, T0 + F.T_FIN + 1, 'À retenir', 'Manettes ouvertes ou fermées ?'],
     ],
     etat: [
-      [1.4, 21, 'Manettes ouvertes : le cône recule, les ressorts s\'écrasent, les mâchoires s\'ouvrent.', 'Manettes fermées : les ressorts poussent le cône, les mâchoires se referment.'],
+      [1.4, T0, 'Manettes ouvertes : le cône recule, les ressorts s\'écrasent, les mâchoires s\'ouvrent.', 'Manettes fermées : les ressorts poussent le cône, les mâchoires se referment.'],
     ],
     legendes: [],
     // un système à la fois : [début, fin, clé de proj, nom, dx, dy]
     etiquettes: [
-      [0.3, 3.5, '3506909', 'Système hydraulique : ouvre le mandrin', 110, -90],
-      [3.6, 7.0, '5000199', 'Roulement et manchon : transmettent la poussée au cône', 110, -90],
-      [7.1, 10.5, '5200517@top', '18 ressorts : ferment le mandrin, toujours comprimés', 110, -70],
-      [10.6, 14.0, '2920390', 'Cône et mâchoires : serrent la tige', 110, -90],
-      [14.1, 17.5, 'B500-8000', 'Boulons du cône : retiennent la force des ressorts', 110, -80],
-      [17.6, 21, '3506870', 'Boîtier : cache tout le mécanisme', 110, -90],
-      [21.5, 28.6, '5200517@top', '18 ressorts', -80, -50],
+      ...sysEt(['Système hydraulique : ouvre le mandrin', 'Roulement et manchon : transmettent la poussée au cône', '18 ressorts : ferment le mandrin, toujours comprimés',
+        'Cône et mâchoires : serrent la tige', 'Boulons du cône : retiennent la force des ressorts', 'Boîtier : cache tout le mécanisme']),
+      [T0 + TG + 0.3, T0 + 11.4, '5200517@top', '18 ressorts', -80, -50],
     ],
-    // [début, fin, classe, icône, titre, texte] ; bandeau rouge à chaque ouverture des manettes
+    // [début, fin, classe, icône, titre, texte]
     cartes: [
-      [2.0, 4.6, 'bandeau', '⚠', '', 'Manettes ouvertes = ressorts comprimés au maximum.'],
-      [9.2, 11.8, 'bandeau', '⚠', '', 'Manettes ouvertes = ressorts comprimés au maximum.'],
-      [16.4, 19.0, 'bandeau', '⚠', '', 'Manettes ouvertes = ressorts comprimés au maximum.'],
-      [22.0, 25.8, 'alerte', 'cadenas', 'Manettes ouvertes', 'Ressorts comprimés au maximum. Si on cadenasse comme ça, le cadenas n\'y change rien : toute cette énergie reste prise dans le mandrin.'],
-      [26.4, 28.6, 'ok', '✓', 'Manettes fermées', 'Les ressorts sont étirés au maximum : c\'est là qu\'il reste le moins d\'énergie.'],
-      [28.6, 33, 'fin', 'cadenas', '', 'Avant de cadenasser : manettes fermées.'],
+      ...bandeaux('Manettes ouvertes = ressorts comprimés au maximum.'),
+      [T0 + 2.2, T0 + 7.0, 'alerte', 'cadenas', 'Manettes ouvertes', 'Ressorts comprimés au maximum. Si on cadenasse comme ça, le cadenas n\'y change rien : toute cette énergie reste prise dans le mandrin.'],
+      [T0 + 8.4, T0 + 11.4, 'ok', '✓', 'Manettes fermées', 'Les ressorts sont étirés au maximum : c\'est là qu\'il reste le moins d\'énergie.'],
+      [T0 + 11.4, T0 + F.T_FIN + 1, 'fin', 'cadenas', '', 'Avant de cadenasser : manettes fermées.'],
     ],
     huile: 'Huile',
     manettes: ['Manettes', 'ouvertes', 'fermées'],
@@ -54,29 +52,23 @@ const TX = {
   },
   en: {
     plans: [
-      [0.2, 21, '360° view', 'The systems of the chuck'],
-      [21, 33, 'Remember', 'Levers open or closed?'],
+      [0.2, T0, '360° view', 'The systems of the chuck'],
+      [T0 + 0.4, T0 + F.T_FIN + 1, 'Remember', 'Levers open or closed?'],
     ],
     etat: [
-      [1.4, 21, 'Levers open: the cone moves back, the springs compress, the jaws open.', 'Levers closed: the springs push the cone, the jaws close.'],
+      [1.4, T0, 'Levers open: the cone moves back, the springs compress, the jaws open.', 'Levers closed: the springs push the cone, the jaws close.'],
     ],
     legendes: [],
     etiquettes: [
-      [0.3, 3.5, '3506909', 'Hydraulic system: opens the chuck', 110, -90],
-      [3.6, 7.0, '5000199', 'Bearing and sleeve: carry the push to the cone', 110, -90],
-      [7.1, 10.5, '5200517@top', '18 springs: close the chuck, always compressed', 110, -70],
-      [10.6, 14.0, '2920390', 'Cone and jaws: grip the rod', 110, -90],
-      [14.1, 17.5, 'B500-8000', 'Cone bolts: hold back the force of the springs', 110, -80],
-      [17.6, 21, '3506870', 'Housing: hides the whole mechanism', 110, -90],
-      [21.5, 28.6, '5200517@top', '18 springs', -80, -50],
+      ...sysEt(['Hydraulic system: opens the chuck', 'Bearing and sleeve: carry the push to the cone', '18 springs: close the chuck, always compressed',
+        'Cone and jaws: grip the rod', 'Cone bolts: hold back the force of the springs', 'Housing: hides the whole mechanism']),
+      [T0 + TG + 0.3, T0 + 11.4, '5200517@top', '18 springs', -80, -50],
     ],
     cartes: [
-      [2.0, 4.6, 'bandeau', '⚠', '', 'Levers open = springs fully compressed.'],
-      [9.2, 11.8, 'bandeau', '⚠', '', 'Levers open = springs fully compressed.'],
-      [16.4, 19.0, 'bandeau', '⚠', '', 'Levers open = springs fully compressed.'],
-      [22.0, 25.8, 'alerte', 'cadenas', 'Levers open', 'Springs fully compressed. If you lock out like this, the lock changes nothing: all that energy stays trapped in the chuck.'],
-      [26.4, 28.6, 'ok', '✓', 'Levers closed', 'The springs are fully extended: that is where the least energy remains.'],
-      [28.6, 33, 'fin', 'cadenas', '', 'Before locking out: levers closed.'],
+      ...bandeaux('Levers open = springs fully compressed.'),
+      [T0 + 2.2, T0 + 7.0, 'alerte', 'cadenas', 'Levers open', 'Springs fully compressed. If you lock out like this, the lock changes nothing: all that energy stays trapped in the chuck.'],
+      [T0 + 8.4, T0 + 11.4, 'ok', '✓', 'Levers closed', 'The springs are fully extended: that is where the least energy remains.'],
+      [T0 + 11.4, T0 + F.T_FIN + 1, 'fin', 'cadenas', '', 'Before locking out: levers closed.'],
     ],
     huile: 'Oil',
     manettes: ['Levers', 'open', 'closed'],
@@ -137,7 +129,7 @@ html,body{margin:0;width:${W}px;height:${H}px;overflow:hidden;background:transpa
 
 const esc = s => s.replace(/&/g, '&amp;').replace(/</g, '&lt;');
 const nb = s => LANG === 'fr' ? s.replace(/ ([?!;:])/g, ' $1') : s;
-const fade = (t, a, b, d = .35) => Math.max(0, Math.min(1, (t - a) / d, (b - t) / d));
+const fade = (t, a, b, d = .5) => Math.max(0, Math.min(1, (t - a) / d, (b - t) / d));
 const CADENAS = `<svg width="54" height="64" viewBox="0 0 54 64"><path d="M14 28V18a13 13 0 0 1 26 0v10" fill="none" stroke="#f2c230" stroke-width="6"/>
 <rect x="5" y="27" width="44" height="34" rx="5" fill="#f2c230"/><circle cx="27" cy="41" r="5" fill="#111518"/><rect x="24.5" y="42" width="5" height="11" rx="2" fill="#111518"/></svg>`;
 // flèche épaisse (SVG) de (x, y) dans la direction (ux, uy), longueur L ; couleur c
@@ -157,13 +149,17 @@ function calque(k) {
   if (t >= 0.2 && t < F.N / F.FPS) {
     const d = leverAt(t), o = fade(t, 0.2, F.N / F.FPS + .5);
     // couleur de l'écran selon les manettes : cadre et voile rouges (ouvertes), verts (fermées)
-    out.unshift(`<div class="ecran ${d ? 'fer' : 'ouv'}" style="opacity:${o}"></div>`);   // sous les textes
-    const te = leverT(t), fl = te >= 0 && t < te + 1.2 && Math.floor((t - te) * 4) % 2 === 0;
+    const te = leverT(t), w = te >= 0 ? seg(t, te, te + 0.8) : 1;   // fondu d'une couleur à l'autre au basculement
+    out.unshift(`<div class="ecran ${d ? 'fer' : 'ouv'}" style="opacity:${o * w}"></div>`);   // sous les textes
+    if (w < 1) out.unshift(`<div class="ecran ${d ? 'ouv' : 'fer'}" style="opacity:${o * (1 - w)}"></div>`);
+    const fl = te >= 0 && t < te + 1.0 && Math.floor((t - te) * 2) % 2 === 0;   // un éclair, pas un clignotement
     out.push(`<div class="etat${fl ? ' flash' : ''}" style="opacity:${o}">${TX.manettes[0]} <b class="${d ? 'fer' : 'ouv'}">${TX.manettes[d ? 2 : 1]}</b></div>`);
     if (fr.dt < 1 / F.FPS - 1e-9) { const f = +(1 / (fr.dt * F.FPS)).toFixed(1); out.push(`<div class="lent" style="top:94px;opacity:${o}">${TX.ralenti} ×${LANG === 'fr' ? String(f).replace('.', ',') : f}</div>`); }
   }
   // ce qui bouge, selon l'état des manettes
-  for (const [a, b, ouv, fer] of TX.etat) { const o = fade(t, a, b); if (o > 0) out.push(`<div class="leg" style="opacity:${o}">${esc(nb(leverAt(t) ? fer : ouv))}</div>`); }
+  for (const [a, b, ouv, fer] of TX.etat) {   // au basculement, l'ancienne phrase s'efface puis la nouvelle apparaît
+    const u = t - leverT(t), d = u < 0.35 ? !leverAt(t) : leverAt(t), w = u < 0.35 ? 1 - u / 0.35 : Math.min(1, (u - 0.35) / 0.35);
+    const o = fade(t, a, b) * (leverT(t) >= 0 && leverT(t) > a ? w : 1); if (o > 0) out.push(`<div class="leg" style="opacity:${o}">${esc(nb(d ? fer : ouv))}</div>`); }
   // flèches pendant la course des pièces (puis 1 s encore), dans le sens réel du mouvement à l'écran
   const te = leverT(t), course = 1.8 * F.SLOW, u = t - te;
   const w = te < 0 ? 0 : Math.min(seg(u, .38 * course - .2, .38 * course), 1 - seg(u, course + 1, course + 1.4));
