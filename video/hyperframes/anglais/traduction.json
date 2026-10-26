@@ -380,6 +380,22 @@
   [
    "Le boulon casse : cône projeté",
    "The bolt breaks: cone thrown out"
+  ],
+  [
+   "Manettes ouvertes : les ressorts sont écrasés au maximum, et le cadenas n'y change rien. Fermées : ressorts étirés au maximum (procédure, point 1).",
+   "Levers open: the springs are squeezed to the max, and the lock changes nothing. Closed: springs stretched to the max (procedure, point 1)."
+  ],
+  [
+   "Cône boulonné : les ressorts poussent dessus",
+   "Cone bolted in: the springs push on it"
+  ],
+  [
+   "Les 3 boulons longs sans bushing le retiennent",
+   "The 3 long bolts without bushings hold it"
+  ],
+  [
+   "Les 6 autres un tour à la fois, dans l'ordre : l'énergie sort tranquillement",
+   "The other 6 one turn at a time, in order: the energy comes out slowly"
   ]
  ]
 }

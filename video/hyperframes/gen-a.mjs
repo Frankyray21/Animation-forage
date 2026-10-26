@@ -87,7 +87,7 @@ export async function genererA(C) {
   // synchro.json lui donne une phrase (« Cette énergie résiduelle… », retirée de script-v3)
   const V2 = SYN && SYN.questions.length === 7;
   const WHY_V2 = V2 ? {
-    '1': "Fermer les manettes coupe l'hydraulique, pas l'énergie résiduelle des ressorts.",
+    '1': "Manettes ouvertes : les ressorts sont écrasés au maximum, et le cadenas n'y change rien. Fermées : ressorts étirés au maximum (procédure, point 1).",
     ...(SYN.etapes['3'] && SYN.etapes['3'].p ? { '3': "Le cadenas isole la source. L'énergie résiduelle des ressorts : retenue à l'étape 6, relâchée à l'étape 7." } : {}),
     '6': 'Sans bushing : l’espace pour desserrer les 6 autres boulons, avec les 3 boulons longs comme sécurité.' } : {};
   const whyTxt = i => { if (WHY_V2[steps[i].n]) return WHY_V2[steps[i].n]; const nr = narrOf(i); return nr && nr.pourquoi_ecran ? nr.pourquoi_ecran : null; };
@@ -592,9 +592,9 @@ export async function genererA(C) {
       const [l1, l2, l3] = SYN.fin.lignes;
       writeComp('carton-fin.html', fill(tpl('carton-fin-synchro.html'), { ...common(true), ENTREE_DUREE: dureeCle(s.w), ENTREE_CLES: cle('fin-entree', s.w),
         DECALAGE: S(-T(d0)), KICKER: 'À retenir · PRO-OP-DD-005',
-        LIGNES: [ligne('Jamais un boulon du cône enlevé au complet sous charge', '#ff5d52', l1),   // mot pour mot l'audio (« un boulon »)
-          ligne('Les 3 boulons longs sans bushing, avant de desserrer les 6 autres', '#57c486', l2),   // suit la voix (script-v2)
-          ligne("Un tour à la fois, dans l'ordre de 1 à 6", '#f2c230', l3)].join('') }));
+        LIGNES: [ligne('Cône boulonné : les ressorts poussent dessus', '#ff5d52', l1),   // « Ce qu'il faut garder en tête » (script v4), phrase par phrase
+          ligne('Les 3 boulons longs sans bushing le retiennent', '#57c486', l2),
+          ligne("Les 6 autres un tour à la fois, dans l'ordre : l'énergie sort tranquillement", '#f2c230', l3)].join('') }));
       L.push(`${pad}<!-- carton « À retenir » (--synchro) : ${s.vis} images, lignes montrées à ${SYN.fin.lignes.map(x => ms(x)).join(', ')} s (audio) -->`);
       L.push(`${pad}<div id="carton-fin" class="clip hote-plein" style="z-index: ${z}" data-composition-id="carton-fin" data-composition-src="compositions/carton-fin.html" ${tl(g0 - A0, g1 - g0)} data-track-index="2" data-width="${W}" data-height="${H}" data-no-timeline></div>`);
     } else if (s.type === 'questions') {   // --synchro : « Questions de l'équipe »
