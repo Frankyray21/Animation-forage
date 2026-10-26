@@ -50,7 +50,7 @@
     b.title = title || (TEXT[state] ? TEXT[state][1] : '');
   });
   let busy = false, phase = '';   // phase 'files' : petits fichiers téléchargés par la page ; 'video' : vidéos suivies dans le service worker
-  const VID_EST = 30.8e6;   // taille des trois vidéos tant que le service worker ne l'a pas donnée
+  const VID_EST = 31.0e6;   // taille des trois vidéos tant que le service worker ne l'a pas donnée
   // état demandé au service worker actif (par canal privé) ; réponse d'une autre version ignorée
   async function ask(type, wait = 20000) {
     const reg = await navigator.serviceWorker.ready, sw = navigator.serviceWorker.controller || reg.active;
