@@ -5,7 +5,7 @@
 // elle-même les petits fichiers (requêtes cache: 'reload' + credentials: 'omit', laissées au réseau ici) ; les vidéos sont téléchargées
 // ici, l'une après l'autre (message offline-video), avec la progression cumulée envoyée aux pages, et continuent quand on change de page.
 // Le site partage l'origine frankyray21.github.io avec d'autres applications : seules les copies « clam-… » sont gérées ici.
-const VERSION = 'clam-v15';   // vidéo 1 : séquence du mécanisme avant l'étape 1
+const VERSION = 'clam-v16';   // vidéo 1 : passage des étapes 6 et 7 retiré de l'étape 3
 const PREFIX = 'clam-';
 const LOCAL = [
   './', 'index.html', 'animation.html', 'procedure.html', 'manifest.webmanifest', 'pwa.js',

@@ -191,7 +191,7 @@ Deux vidéos de formation, montées avec **HyperFrames** (HeyGen, licence Apache
 
 | Vidéo | Fichier | Durée | Taille | Où |
 | --- | --- | --- | --- | --- |
-| Procédure : scénario A « Procédure respectée », étapes 1 à 9 | `video/procedure_boyles_h.mp4`, aperçu `video/procedure_poster.jpg` | 5 min 57 s, avec le son | ≈ 18,4 Mo | `animation.html`, section repliable **Vidéo de la procédure** |
+| Procédure : scénario A « Procédure respectée », étapes 1 à 9 | `video/procedure_boyles_h.mp4`, aperçu `video/procedure_poster.jpg` | 5 min 40 s, avec le son | ≈ 17,6 Mo | `animation.html`, section repliable **Vidéo de la procédure** |
 | Accident : scénario D « Boulons retirés un par un : cône retenu », reconstitution | `video/accident_boyles_h.mp4`, aperçu `video/accident_poster.jpg` | 1 min 11 s | ≈ 4,1 Mo | accueil, section « Ce qui s'est passé » ; `animation.html`, section repliable **Vidéo de l'accident** |
 
 Plan de la procédure :
